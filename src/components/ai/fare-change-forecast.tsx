@@ -110,7 +110,7 @@ export default function FareChangeForecast() {
                   <Skeleton className="h-4 w-4/5" />
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">{result?.recommendations}</p>
+                <div className="text-sm text-muted-foreground space-y-2" dangerouslySetInnerHTML={{ __html: result?.recommendations.replace(/\n/g, '<br />') || '' }} />
               )}
             </CardContent>
           </Card>
@@ -127,7 +127,7 @@ export default function FareChangeForecast() {
                   <Skeleton className="h-4 w-2/3" />
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">{result?.forecast}</p>
+                <div className="text-sm text-muted-foreground space-y-2" dangerouslySetInnerHTML={{ __html: result?.forecast.replace(/\n/g, '<br />') || '' }} />
               )}
             </CardContent>
           </Card>
