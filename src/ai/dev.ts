@@ -1,1 +1,5 @@
-// Flows will be imported for their side effects in this file.
+import { config } from 'dotenv';
+config();
+
+import '@/ai/flows/fare-change-impact-forecast.ts';
+import '@/ai/flows/offer-rule-builder-nlp.ts';
