@@ -1,6 +1,264 @@
-import { PlaceholderContent } from "@/components/layout/placeholder-content";
-import { Container } from "lucide-react";
+'use client';
+
+import * as React from 'react';
+import {
+  MoreHorizontal,
+  PlusCircle,
+  Search,
+  ChevronDown,
+} from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+
+type Ancillary = {
+  id: string;
+  name: string;
+  category: 'Baggage' | 'Seat' | 'On-board' | 'Flexibility';
+  defaultPrice: number;
+  currency: string;
+  status: 'Active' | 'Disabled';
+};
+
+const initialAncillaries: Ancillary[] = [
+  {
+    id: 'ANC-001',
+    name: '1st Checked Bag (23kg)',
+    category: 'Baggage',
+    defaultPrice: 35,
+    currency: 'USD',
+    status: 'Active',
+  },
+  {
+    id: 'ANC-002',
+    name: 'Extra Legroom Seat',
+    category: 'Seat',
+    defaultPrice: 50,
+    currency: 'USD',
+    status: 'Active',
+  },
+  {
+    id: 'ANC-003',
+    name: 'In-flight Wi-Fi',
+    category: 'On-board',
+    defaultPrice: 8,
+    currency: 'USD',
+    status: 'Active',
+  },
+  {
+    id: 'ANC-004',
+    name: 'Priority Boarding',
+    category: 'On-board',
+    defaultPrice: 15,
+    currency: 'USD',
+    status: 'Disabled',
+  },
+  {
+    id: 'ANC-005',
+    name: 'Flight Change Fee',
+    category: 'Flexibility',
+    defaultPrice: 75,
+    currency: 'USD',
+    status: 'Active',
+  },
+  {
+    id: 'ANC-006',
+    name: 'Lounge Access',
+    category: 'On-board',
+    defaultPrice: 45,
+    currency: 'USD',
+    status: 'Active',
+  },
+];
 
 export default function AncillaryPricingPage() {
-    return <PlaceholderContent title="Ancillary Pricing" description="Manage pricing and bundling of ancillaries, with per-segment toggles and overrides." icon={Container} />
+  const [ancillaries, setAncillaries] =
+    React.useState<Ancillary[]>(initialAncillaries);
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [filters, setFilters] = React.useState<{ category: Set<string> }>({
+    category: new Set(),
+  });
+
+  const handleFilterChange = (category: string) => {
+    setFilters((prev) => {
+      const newCategories = new Set(prev.category);
+      if (newCategories.has(category)) {
+        newCategories.delete(category);
+      } else {
+        newCategories.add(category);
+      }
+      return { ...prev, category: newCategories };
+    });
+  };
+
+  const filteredAncillaries = ancillaries
+    .filter((anc) =>
+      anc.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .filter((anc) =>
+      filters.category.size > 0 ? filters.category.has(anc.category) : true
+    );
+
+  const getStatusBadgeVariant = (status: Ancillary['status']) => {
+    return status === 'Active' ? 'default' : 'outline';
+  };
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold tracking-tight">
+            Ancillary Pricing
+          </h1>
+          <p className="text-muted-foreground">
+            Manage pricing and bundling of ancillaries, with per-segment
+            toggles and overrides.
+          </p>
+        </div>
+        <Button>
+          <PlusCircle className="mr-2" />
+          Create Ancillary
+        </Button>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Ancillary Products</CardTitle>
+          <CardDescription>
+            Manage all ancillary products and their default pricing.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between py-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search ancillaries..."
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                className="max-w-sm pl-9"
+              />
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="ml-auto">
+                  Filter by Category <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {[...new Set(ancillaries.map((a) => a.category))].map(
+                  (category) => (
+                    <DropdownMenuCheckboxItem
+                      key={category}
+                      checked={filters.category.has(category)}
+                      onCheckedChange={() => handleFilterChange(category)}
+                    >
+                      {category}
+                    </DropdownMenuCheckboxItem>
+                  )
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Ancillary Name</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Default Price</TableHead>
+                  <TableHead>
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredAncillaries.length > 0 ? (
+                  filteredAncillaries.map((anc) => (
+                    <TableRow key={anc.id}>
+                      <TableCell className="font-medium">{anc.name}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{anc.category}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusBadgeVariant(anc.status)}>
+                          {anc.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {new Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: anc.currency,
+                        }).format(anc.defaultPrice)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                aria-haspopup="true"
+                                size="icon"
+                                variant="ghost"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Toggle menu</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem>Edit Price</DropdownMenuItem>
+                              <DropdownMenuItem>Manage Bundles</DropdownMenuItem>
+                              <DropdownMenuItem>
+                                Segment Overrides
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className={anc.status === 'Active' ? 'text-destructive' : ''}>
+                                {anc.status === 'Active' ? 'Disable' : 'Enable'}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center">
+                      No results found.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
