@@ -123,7 +123,7 @@ export default function FaresPage() {
   const handleFormSubmit = (data: Fare) => {
     if (editingFare) {
       // Update existing fare
-      setFares(fares.map((f) => (f.id === editingFare.id ? { ...f, ...data } : f)));
+      setFares(fares.map((f) => (f.id === editingFare.id ? { ...f, ...data, version: f.version ? f.version + 1 : 1 } : f)));
       toast({ title: "Fare Updated", description: `Fare ${data.id} has been successfully updated.` });
     } else {
       // Add new fare
