@@ -35,6 +35,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { searchFlightsNLP } from '@/ai/flows/search-flights-nlp';
+import { useUser } from '@/firebase';
 
 const offerSearchSchema = z.object({
   origin: z.string().length(3, 'Origin must be a 3-letter IATA code.').toUpperCase(),
@@ -55,6 +56,7 @@ export default function OfferComposerPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useUser();
 
   const form = useForm<z.infer<typeof offerSearchSchema>>({
     resolver: zodResolver(offerSearchSchema),
@@ -129,7 +131,7 @@ export default function OfferComposerPage() {
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">Offer Composer</h1>
         <p className="text-muted-foreground">
-          Compose NDC-compatible offers by discovering and pricing solutions and ancillaries.
+          Welcome{user?.displayName ? `, ${user.displayName}` : ''}. Compose NDC-compatible offers by discovering and pricing solutions and ancillaries.
         </p>
       </div>
       
