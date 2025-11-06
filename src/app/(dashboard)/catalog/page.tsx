@@ -26,7 +26,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -106,122 +105,86 @@ export default function CatalogPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Product Catalogue</h1>
+       <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold tracking-tight">Catalogue</h1>
         <p className="text-muted-foreground">
-          Define airline products with attributes, validity, and version
-          control.
+          Define fare products, corporate contracts, and sales channels.
         </p>
       </div>
 
-      <Tabs defaultValue="fare_products">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="fare_products">Fare Products</TabsTrigger>
-          <TabsTrigger value="ancillaries">Ancillary Services</TabsTrigger>
-          <TabsTrigger value="bundles">Product Bundles</TabsTrigger>
-        </TabsList>
-        <TabsContent value="fare_products">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Fare Products (Brands)</CardTitle>
-                <CardDescription>
-                  Manage the attributes and rules of your fare products.
-                </CardDescription>
-              </div>
-              <Button onClick={() => handleOpenDialog()}>
-                <PlusCircle className="mr-2" />
-                New Fare Product
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Product Name</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Version</TableHead>
-                    <TableHead className="w-[40%]">Description</TableHead>
-                    <TableHead>
-                      <span className="sr-only">Actions</span>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {fareProducts.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell className="font-medium">
-                        {product.name}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            product.status === 'Active'
-                              ? 'default'
-                              : 'secondary'
-                          }
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Fare Products (Brands)</CardTitle>
+            <CardDescription>
+              Manage the attributes and rules of your fare products.
+            </CardDescription>
+          </div>
+          <Button onClick={() => handleOpenDialog()}>
+            <PlusCircle className="mr-2" />
+            New Fare Product
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product Name</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Version</TableHead>
+                <TableHead className="w-[40%]">Description</TableHead>
+                <TableHead>
+                  <span className="sr-only">Actions</span>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {fareProducts.map((product) => (
+                <TableRow key={product.id}>
+                  <TableCell className="font-medium">
+                    {product.name}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        product.status === 'Active'
+                          ? 'default'
+                          : 'secondary'
+                      }
+                    >
+                      {product.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>v{product.version}</TableCell>
+                  <TableCell>{product.description}</TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          aria-haspopup="true"
+                          size="icon"
+                          variant="ghost"
                         >
-                          {product.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>v{product.version}</TableCell>
-                      <TableCell>{product.description}</TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              aria-haspopup="true"
-                              size="icon"
-                              variant="ghost"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Toggle menu</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleOpenDialog(product)}>Edit</DropdownMenuItem>
-                            <DropdownMenuItem>
-                              Create New Version
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>View History</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="ancillaries">
-             <Card>
-                 <CardHeader>
-                    <CardTitle>Ancillary Services</CardTitle>
-                    <CardDescription>Manage individual ancillary products and services.</CardDescription>
-                 </CardHeader>
-                 <CardContent>
-                    <div className="text-center py-12 text-muted-foreground">
-                        <p>Ancillary services will be managed here.</p>
-                    </div>
-                 </CardContent>
-            </Card>
-        </TabsContent>
-        <TabsContent value="bundles">
-             <Card>
-                 <CardHeader>
-                    <CardTitle>Product Bundles</CardTitle>
-                    <CardDescription>Create and manage bundles of fare products and ancillaries.</CardDescription>
-                 </CardHeader>
-                 <CardContent>
-                     <div className="text-center py-12 text-muted-foreground">
-                        <p>Product bundles will be managed here.</p>
-                    </div>
-                 </CardContent>
-            </Card>
-        </TabsContent>
-      </Tabs>
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Toggle menu</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => handleOpenDialog(product)}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem>
+                          Create New Version
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>View History</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>

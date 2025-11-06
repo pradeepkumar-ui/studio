@@ -9,6 +9,11 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
+  SidebarMenuCollapsible,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
+  SidebarMenuCollapsibleContent,
 } from '@/components/ui/sidebar';
 import {
   LayoutDashboard,
@@ -29,32 +34,84 @@ import {
   Handshake,
   CalendarDays,
   Waves,
+  ChevronRight,
+  Package,
 } from 'lucide-react';
+import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
+import { cn } from '@/lib/utils';
+import React from 'react';
 
-const menuItems = [
+type MenuItem = {
+  href: string;
+  label: string;
+  icon: React.ElementType;
+  subItems?: Omit<MenuItem, 'subItems'>[];
+};
+
+const menuItems: MenuItem[] = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/allotments', label: 'Allotments', icon: CalendarDays },
-  { href: '/offers', label: 'Offer Management', icon: Ticket },
-  { href: '/compliance', label: 'Offer Compliance', icon: Shield },
-  { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
-  { href: '/orders', label: 'Order Management', icon: ShoppingCart },
-  { href: '/disruption-waivers', label: 'Disruption Waivers', icon: Waves },
-  { href: '/offer-composer', label: 'Offer Composer', icon: Layers },
-  { href: '/fares', label: 'Fare Management', icon: DollarSign },
-  { href: '/promotions', label: 'Promotions', icon: Gift },
-  { href: '/analytics', label: 'Analytics & Simulation', icon: BarChart3 },
-  { href: '/offer-rules', label: 'Offer Rule Builder', icon: FileJson },
-  { href: '/pricing/dynamic', label: 'Dynamic Pricing', icon: DollarSign },
-  { href: '/pricing/ancillary', label: 'Ancillary Pricing', icon: Container },
-  { href: '/channels', label: 'Channel Management', icon: RadioTower },
-  { href: '/inventory', label: 'Flight & Inventory', icon: Plane },
-  { href: '/catalog', label: 'Catalogue', icon: BookOpen },
-  { href: '/corporate', label: 'Corporate Contracts', icon: Briefcase },
-  { href: '/atpco', label: 'ATPCO Integration', icon: Plane },
+  {
+    href: '/offers',
+    label: 'Offer Management',
+    icon: Ticket,
+    subItems: [
+      { href: '/offer-composer', label: 'Composer', icon: Layers },
+      { href: '/fares', label: 'Fare Management', icon: DollarSign },
+      { href: '/pricing/dynamic', label: 'Dynamic Pricing', icon: DollarSign },
+      {
+        href: '/pricing/ancillary',
+        label: 'Ancillary Pricing',
+        icon: Container,
+      },
+      { href: '/promotions', label: 'Promotions', icon: Gift },
+      { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
+      { href: '/compliance', label: 'Offer Compliance', icon: Shield },
+      { href: '/disruption-waivers', label: 'Disruption Waivers', icon: Waves },
+      { href: '/analytics', label: 'Analytics', icon: BarChart3 },
+      { href: '/offer-rules', label: 'Rule Builder', icon: FileJson },
+    ],
+  },
+  {
+    href: '/orders',
+    label: 'Order Management',
+    icon: ShoppingCart,
+  },
+  {
+    href: '/catalog',
+    label: 'Catalogue',
+    icon: BookOpen,
+    subItems: [
+      { href: '/catalog', label: 'Fare Products', icon: Package },
+      { href: '/corporate', label: 'Corporate Contracts', icon: Briefcase },
+      { href: '/channels', label: 'Channels', icon: RadioTower },
+    ]
+  },
+  {
+    href: '/inventory',
+    label: 'Stock Keeping',
+    icon: Plane,
+     subItems: [
+      { href: '/inventory', label: 'Flight & Inventory', icon: Plane },
+      { href: '/allotments', label: 'Allotments', icon: CalendarDays },
+      { href: '/atpco', label: 'ATPCO', icon: Plane },
+    ]
+  },
 ];
+
 
 export default function SidebarNav() {
   const pathname = usePathname();
+
+  const isSubItemActive = (subItems: Omit<MenuItem, 'subItems'>[] | undefined) => {
+    if (!subItems) return false;
+    // Check if the current path is exactly one of the sub-items' hrefs.
+    // This is more specific than startsWith to avoid parent-child conflicts.
+    return subItems.some(item => pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href)));
+  };
+  
+  const isPricingActive = () => {
+    return pathname.startsWith('/pricing');
+  }
 
   return (
     <>
@@ -70,21 +127,66 @@ export default function SidebarNav() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {menuItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <Link href={item.href} legacyBehavior passHref>
-                <SidebarMenuButton
-                  isActive={
-                    item.href === '/' ? pathname === item.href : pathname.startsWith(item.href)
-                  }
-                  tooltip={{ children: item.label, side: 'right' }}
+          {menuItems.map((item) =>
+            item.subItems ? (
+              <SidebarMenuItem key={item.href} asChild>
+                <SidebarMenuCollapsible
+                  defaultOpen={isSubItemActive(item.subItems) || (item.href === '/catalog' && isSubItemActive(item.subItems)) || (item.href === '/inventory' && isSubItemActive(item.subItems))}
                 >
-                  <item.icon />
-                  <span>{item.label}</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-          ))}
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton
+                      className="group/c-trigger"
+                      isActive={isSubItemActive(item.subItems)}
+                      tooltip={{ children: item.label, side: 'right' }}
+                    >
+                      <item.icon />
+                      <span>{item.label}</span>
+                      <ChevronRight className="ml-auto size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/c-trigger:rotate-90 group-data-[collapsible=icon]:hidden" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <SidebarMenuCollapsibleContent>
+                    <SidebarMenuSub>
+                      {item.subItems.map((subItem) => (
+                        <SidebarMenuSubItem key={subItem.href} asChild>
+                           <Link href={subItem.href} legacyBehavior passHref>
+                            <SidebarMenuSubButton
+                              isActive={
+                                subItem.href === '/'
+                                  ? pathname === subItem.href
+                                  : pathname.startsWith(subItem.href) || (subItem.href === '/pricing/dynamic' && isPricingActive())
+                              }
+                            >
+                              <subItem.icon className={cn(
+                                'transition-transform ease-in-out',
+                                (pathname.startsWith(subItem.href) || (subItem.href === '/pricing/dynamic' && isPricingActive())) && 'text-primary'
+                              )} />
+                              <span>{subItem.label}</span>
+                            </SidebarMenuSubButton>
+                          </Link>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
+                  </SidebarMenuCollapsibleContent>
+                </SidebarMenuCollapsible>
+              </SidebarMenuItem>
+            ) : (
+              <SidebarMenuItem key={item.href}>
+                <Link href={item.href} legacyBehavior passHref>
+                  <SidebarMenuButton
+                    isActive={
+                      item.href === '/'
+                        ? pathname === item.href
+                        : pathname.startsWith(item.href)
+                    }
+                    tooltip={{ children: item.label, side: 'right' }}
+                  >
+                    <item.icon />
+                    <span>{item.label}</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+            )
+          )}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>

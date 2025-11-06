@@ -18,6 +18,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { Collapsible, CollapsibleContent } from "./collapsible"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -405,7 +406,7 @@ const SidebarContent = React.forwardRef<
       ref={ref}
       data-sidebar="content"
       className={cn(
-        "flex min-h-0 flex-1 flex-col gap-2 overflow-auto group-data-[collapsible=icon]:overflow-hidden",
+        "flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overflow-x-hidden group-data-[collapsible=icon]:overflow-hidden",
         className
       )}
       {...props}
@@ -702,8 +703,20 @@ SidebarMenuSub.displayName = "SidebarMenuSub"
 
 const SidebarMenuSubItem = React.forwardRef<
   HTMLLIElement,
-  React.HTMLAttributes<HTMLLIElement>
->(({ ...props }, ref) => <li ref={ref} {...props} />)
+  React.HTMLAttributes<HTMLLIElement> & {
+    asChild?: boolean
+  }
+>(({ className, asChild, ...props }, ref) => {
+  const Comp = asChild ? Slot : "li"
+  return (
+    <Comp
+      ref={ref}
+      data-sidebar="menu-sub-item"
+      className={cn("min-w-0", className)}
+      {...props}
+    />
+  )
+})
 SidebarMenuSubItem.displayName = "SidebarMenuSubItem"
 
 const SidebarMenuSubButton = React.forwardRef<
@@ -736,6 +749,12 @@ const SidebarMenuSubButton = React.forwardRef<
 })
 SidebarMenuSubButton.displayName = "SidebarMenuSubButton"
 
+const SidebarMenuCollapsible = Collapsible
+SidebarMenuCollapsible.displayName = "SidebarMenuCollapsible"
+
+const SidebarMenuCollapsibleContent = CollapsibleContent
+SidebarMenuCollapsibleContent.displayName = "SidebarMenuCollapsibleContent"
+
 export {
   Sidebar,
   SidebarContent,
@@ -752,6 +771,8 @@ export {
   SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuCollapsible,
+  SidebarMenuCollapsibleContent,
   SidebarMenuSkeleton,
   SidebarMenuSub,
   SidebarMenuSubButton,
