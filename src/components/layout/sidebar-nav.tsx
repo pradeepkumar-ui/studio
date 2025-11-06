@@ -26,11 +26,13 @@ import {
   Container,
   Shield,
   Gift,
+  Handshake,
 } from 'lucide-react';
 
 const menuItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/offers', label: 'Offer Management', icon: Ticket },
+  { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
   { href: '/orders', label: 'Order Management', icon: ShoppingCart },
   { href: '/offer-composer', label: 'Offer Composer', icon: Layers },
   { href: '/fares', label: 'Fare Management', icon: DollarSign },
@@ -69,7 +71,7 @@ export default function SidebarNav() {
                 <SidebarMenuButton
                   isActive={
                     pathname === item.href ||
-                    (item.href !== '/' && pathname.startsWith(item.href))
+                    (item.href !== '/' && item.href !== '/dashboard' && pathname.startsWith(item.href))
                   }
                   tooltip={{ children: item.label, side: 'right' }}
                 >
