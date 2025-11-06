@@ -99,6 +99,7 @@ ${colorConfig
     />
   )
 }
+ChartStyle.displayName = "ChartStyle";
 
 const ChartTooltip = RechartsPrimitive.Tooltip
 
