@@ -83,7 +83,7 @@ export default function LoginPage() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
-    
+
     // Special handling for the admin user
     if (values.email.toLowerCase() === 'admin' && values.password === 'Admin123') {
         try {
