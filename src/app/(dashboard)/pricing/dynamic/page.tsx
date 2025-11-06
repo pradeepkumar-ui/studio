@@ -27,14 +27,16 @@ import {
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
+import { PricingRuleForm, type PricingRule } from '@/components/forms/pricing-rule-form';
 
-type PricingRule = {
-  id: string;
-  name: string;
-  conditions: string;
-  action: string;
-  status: 'Active' | 'Inactive' | 'Test';
-};
 
 const initialRules: PricingRule[] = [
   {
@@ -76,6 +78,31 @@ const initialRules: PricingRule[] = [
 
 export default function DynamicPricingPage() {
   const [rules, setRules] = useState<PricingRule[]>(initialRules);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingRule, setEditingRule] = useState<PricingRule | null>(null);
+  const { toast } = useToast();
+  
+  const handleOpenDialog = (rule: PricingRule | null = null) => {
+    setEditingRule(rule);
+    setIsDialogOpen(true);
+  };
+  
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setEditingRule(null);
+  };
+  
+  const handleFormSubmit = (data: PricingRule) => {
+    if (editingRule) {
+      setRules(rules.map((r) => (r.id === editingRule.id ? { ...r, ...data } : r)));
+      toast({ title: "Rule Updated", description: `Rule "${data.name}" has been updated.` });
+    } else {
+      const newRule = { ...data, id: `DPR-${String(rules.length + 1).padStart(3, '0')}` };
+      setRules([...rules, newRule]);
+      toast({ title: "Rule Created", description: `Rule "${newRule.name}" has been created.` });
+    }
+    handleDialogClose();
+  };
 
   const getStatusBadgeVariant = (status: PricingRule['status']) => {
     switch (status) {
@@ -101,7 +128,7 @@ export default function DynamicPricingPage() {
             Adjust pricing based on rules for route, demand, and channel.
           </p>
         </div>
-        <Button>
+        <Button onClick={() => handleOpenDialog()}>
           <PlusCircle className="mr-2" />
           Create Rule
         </Button>
@@ -152,7 +179,7 @@ export default function DynamicPricingPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleOpenDialog(rule)}>Edit</DropdownMenuItem>
                          <DropdownMenuItem>View Logs</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className={rule.status === 'Active' ? 'text-destructive' : ''}>
@@ -167,6 +194,23 @@ export default function DynamicPricingPage() {
           </Table>
         </CardContent>
       </Card>
+      
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>{editingRule ? 'Edit Pricing Rule' : 'Create New Pricing Rule'}</DialogTitle>
+                <DialogDescription>
+                    {editingRule ? `Editing rule "${editingRule.name}".` : 'Define the conditions and action for a new pricing rule.'}
+                </DialogDescription>
+            </DialogHeader>
+            <PricingRuleForm 
+                rule={editingRule}
+                onSubmit={handleFormSubmit}
+                onCancel={handleDialogClose}
+            />
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }

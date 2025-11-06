@@ -35,15 +35,16 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
+import { AncillaryForm, type Ancillary } from '@/components/forms/ancillary-form';
 
-type Ancillary = {
-  id: string;
-  name: string;
-  category: 'Baggage' | 'Seat' | 'On-board' | 'Flexibility';
-  defaultPrice: number;
-  currency: string;
-  status: 'Active' | 'Disabled';
-};
 
 const initialAncillaries: Ancillary[] = [
   {
@@ -97,8 +98,11 @@ const initialAncillaries: Ancillary[] = [
 ];
 
 export default function AncillaryPricingPage() {
-  const [ancillaries, setAncillaries] =
-    React.useState<Ancillary[]>(initialAncillaries);
+  const [ancillaries, setAncillaries] = React.useState<Ancillary[]>(initialAncillaries);
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [editingAncillary, setEditingAncillary] = React.useState<Ancillary | null>(null);
+  const { toast } = useToast();
+  
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filters, setFilters] = React.useState<{ category: Set<string> }>({
     category: new Set(),
@@ -114,6 +118,28 @@ export default function AncillaryPricingPage() {
       }
       return { ...prev, category: newCategories };
     });
+  };
+  
+  const handleOpenDialog = (ancillary: Ancillary | null = null) => {
+    setEditingAncillary(ancillary);
+    setIsDialogOpen(true);
+  };
+  
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setEditingAncillary(null);
+  };
+  
+  const handleFormSubmit = (data: Ancillary) => {
+    if (editingAncillary) {
+      setAncillaries(ancillaries.map((a) => (a.id === editingAncillary.id ? { ...a, ...data } : a)));
+      toast({ title: "Ancillary Updated", description: `Ancillary "${data.name}" has been updated.` });
+    } else {
+      const newAncillary = { ...data, id: `ANC-${String(ancillaries.length + 1).padStart(3, '0')}` };
+      setAncillaries([...ancillaries, newAncillary]);
+      toast({ title: "Ancillary Created", description: `Ancillary "${newAncillary.name}" has been created.` });
+    }
+    handleDialogClose();
   };
 
   const filteredAncillaries = ancillaries
@@ -140,7 +166,7 @@ export default function AncillaryPricingPage() {
             toggles and overrides.
           </p>
         </div>
-        <Button>
+        <Button onClick={() => handleOpenDialog()}>
           <PlusCircle className="mr-2" />
           Create Ancillary
         </Button>
@@ -232,7 +258,7 @@ export default function AncillaryPricingPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem>Edit Price</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleOpenDialog(anc)}>Edit Price</DropdownMenuItem>
                               <DropdownMenuItem>Manage Bundles</DropdownMenuItem>
                               <DropdownMenuItem>
                                 Segment Overrides
@@ -259,6 +285,22 @@ export default function AncillaryPricingPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent>
+              <DialogHeader>
+                  <DialogTitle>{editingAncillary ? 'Edit Ancillary' : 'Create New Ancillary'}</DialogTitle>
+                  <DialogDescription>
+                      {editingAncillary ? `Editing ancillary "${editingAncillary.name}".` : 'Define a new ancillary product.'}
+                  </DialogDescription>
+              </DialogHeader>
+              <AncillaryForm 
+                  ancillary={editingAncillary}
+                  onSubmit={handleFormSubmit}
+                  onCancel={handleDialogClose}
+              />
+          </DialogContent>
+      </Dialog>
     </div>
   );
 }
