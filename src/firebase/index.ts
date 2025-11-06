@@ -5,7 +5,7 @@ import { Firestore, getFirestore } from 'firebase/firestore';
 import { firebaseConfig } from './config';
 import { FirebaseProvider, useAuth, useFirebase, useFirebaseApp, useFirestore } from './provider';
 import { FirebaseClientProvider } from './client-provider';
-import { useUser } from './auth/use-user';
+
 
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
@@ -29,7 +29,6 @@ export {
   initializeFirebase,
   FirebaseProvider,
   FirebaseClientProvider,
-  useUser,
   useFirebase,
   useFirebaseApp,
   useFirestore,
