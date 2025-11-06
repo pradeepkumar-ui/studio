@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -61,6 +62,7 @@ const menuItems: MenuItem[] = [
     subItems: [
       { href: '/offers', label: 'Offer Catalogue', icon: Layers },
       { href: '/offer-composer', label: 'Composer', icon: Layers },
+      { href: '/optimisation', label: 'Offer Optimisation', icon: Wand2 },
       { href: '/fares', label: 'Fare Management', icon: DollarSign },
       { href: '/pricing/dynamic', label: 'Dynamic Pricing', icon: DollarSign },
       {
@@ -75,11 +77,6 @@ const menuItems: MenuItem[] = [
       { href: '/disruption-waivers', label: 'Disruption Waivers', icon: Waves },
       { href: '/offer-data', label: 'Data Management', icon: Database },
     ],
-  },
-  {
-    href: '/optimisation',
-    label: 'Offer Optimisation',
-    icon: Wand2,
   },
   {
     href: '/orders',
