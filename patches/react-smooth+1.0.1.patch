@@ -1,0 +1,33 @@
+diff --git a/node_modules/react-smooth/es6/Animate.js b/node_modules/react-smooth/es6/Animate.js
+index 731298c..5891398 100644
+--- a/node_modules/react-smooth/es6/Animate.js
++++ b/node_modules/react-smooth/es6/Animate.js
+@@ -1,5 +1,5 @@
+ import _objectWithoutProperties from 'babel-runtime/helpers/objectWithoutProperties';
+-import _classCallCheck from 'babel-runtime/helpers/classCallCheck';
++// import _classCallCheck from 'babel-runtime/helpers/classCallCheck';
+ import _possibleConstructorReturn from 'babel-runtime/helpers/possibleConstructorReturn';
+ import _inherits from 'babel-runtime/helpers/inherits';
+ import React, { Component, PropTypes, cloneElement, Children } from 'react';
+@@ -118,7 +118,7 @@ var Animate = function (_Component) {
+     return Animate;
+   }(Component), _class.propTypes = {
+     from: PropTypes.oneOfType([PropTypes.object, PropTypes.string]),
+-    to: PropTypes.oneOfType([PropTypes.object, PropTypes.string]),
++    to: PropTypes.oneOfType([PropTypes.object, PropTypes.string, PropTypes.array]),
+     attributeName: PropTypes.string,
+     // animation duration
+     duration: PropTypes.number,
+diff --git a/node_modules/react-smooth/es6/index.js b/node_modules/react-smooth/es6/index.js
+index 4514332..4198c62 100644
+--- a/node_modules/react-smooth/es6/index.js
++++ b/node_modules/react-smooth/es6/index.js
+@@ -1,5 +1,6 @@
+-import Animate from './Animate';
++import AnimateClass from './Animate';
+ import configUpdate from './configUpdate';
+ 
++var Animate = AnimateClass;
+ export { Animate, configUpdate };
+ export default Animate;
+\ No newline at end of file
