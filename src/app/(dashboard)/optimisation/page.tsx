@@ -26,12 +26,11 @@ export default function OptimisationPage() {
       </div>
 
       <Tabs defaultValue="dashboard">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
           <TabsTrigger value="ab-testing">A/B Test Centre</TabsTrigger>
           <TabsTrigger value="rules">Rules & Guardrails</TabsTrigger>
-          <TabsTrigger value="models">Model Monitor</TabsTrigger>
         </TabsList>
         
         <TabsContent value="dashboard">
@@ -62,21 +61,6 @@ export default function OptimisationPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="models">
-          <Card>
-            <CardHeader>
-              <CardTitle>Model & Drift Monitor</CardTitle>
-              <CardDescription>
-                View model versions, metrics, drift alerts, and canary status.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <p>Model monitoring dashboards will be displayed here.</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
     </div>
   );
