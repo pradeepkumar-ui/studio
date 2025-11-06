@@ -65,7 +65,7 @@ const ChartContainer = React.forwardRef<
     </ChartContext.Provider>
   )
 })
-ChartContainer.displayName = "Chart"
+ChartContainer.displayName = "ChartContainer"
 
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
@@ -104,7 +104,7 @@ const ChartTooltip = RechartsPrimitive.Tooltip
 
 const ChartTooltipContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
+  RechartsPrimitive.TooltipProps<any, any> &
     React.ComponentProps<"div"> & {
       hideLabel?: boolean
       hideIndicator?: boolean
@@ -254,7 +254,7 @@ const ChartTooltipContent = React.forwardRef<
     )
   }
 )
-ChartTooltipContent.displayName = "ChartTooltip"
+ChartTooltipContent.displayName = "ChartTooltipContent"
 
 const ChartLegend = RechartsPrimitive.Legend
 
@@ -314,7 +314,7 @@ const ChartLegendContent = React.forwardRef<
     )
   }
 )
-ChartLegendContent.displayName = "ChartLegend"
+ChartLegendContent.displayName = "ChartLegendContent"
 
 // Helper to extract item config from a payload.
 function getPayloadConfigFromPayload(
