@@ -27,6 +27,7 @@ import {
   Shield,
   Gift,
 } from 'lucide-react';
+import { useUser } from '@/firebase';
 
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -48,6 +49,11 @@ const menuItems = [
 
 export default function SidebarNav() {
   const pathname = usePathname();
+  const { user } = useUser();
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <>
