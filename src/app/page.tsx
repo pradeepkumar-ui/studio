@@ -6,8 +6,9 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/allotments');
+    router.replace('/');
   }, [router]);
 
+  // This will be shown briefly before redirection, or if redirection fails.
   return null;
 }
