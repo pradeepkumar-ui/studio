@@ -22,20 +22,21 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { FareProductForm, type FareProduct } from '@/components/forms/fare-product-form';
 
-type FareProduct = {
-  id: string;
-  name: string;
-  description: string;
-  status: 'Active' | 'Draft';
-  version: number;
-};
 
 const initialFareProducts: FareProduct[] = [
   {
@@ -76,8 +77,32 @@ const initialFareProducts: FareProduct[] = [
 ];
 
 export default function CatalogPage() {
-  const [fareProducts, setFareProducts] =
-    useState<FareProduct[]>(initialFareProducts);
+  const [fareProducts, setFareProducts] = useState<FareProduct[]>(initialFareProducts);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<FareProduct | null>(null);
+  const { toast } = useToast();
+  
+  const handleOpenDialog = (product: FareProduct | null = null) => {
+    setEditingProduct(product);
+    setIsDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setEditingProduct(null);
+  };
+  
+  const handleFormSubmit = (data: FareProduct) => {
+    if (editingProduct) {
+      setFareProducts(fareProducts.map((p) => (p.id === editingProduct.id ? { ...p, ...data, version: p.version + 1 } : p)));
+      toast({ title: "Product Updated", description: `Product ${data.name} has been successfully updated.` });
+    } else {
+      const newProduct = { ...data, id: `FP-${String(fareProducts.length + 1).padStart(3, '0')}`, version: 1 };
+      setFareProducts([...fareProducts, newProduct]);
+       toast({ title: "Product Created", description: `Product ${newProduct.name} has been successfully created.` });
+    }
+    handleDialogClose();
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -104,7 +129,7 @@ export default function CatalogPage() {
                   Manage the attributes and rules of your fare products.
                 </CardDescription>
               </div>
-              <Button>
+              <Button onClick={() => handleOpenDialog()}>
                 <PlusCircle className="mr-2" />
                 New Fare Product
               </Button>
@@ -155,7 +180,7 @@ export default function CatalogPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>Edit</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleOpenDialog(product)}>Edit</DropdownMenuItem>
                             <DropdownMenuItem>
                               Create New Version
                             </DropdownMenuItem>
@@ -197,6 +222,22 @@ export default function CatalogPage() {
             </Card>
         </TabsContent>
       </Tabs>
+      
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingProduct ? 'Edit Fare Product' : 'Create New Fare Product'}</DialogTitle>
+            <DialogDescription>
+              {editingProduct ? `Editing product "${editingProduct.name}".` : 'Enter the details for the new fare product.'}
+            </DialogDescription>
+          </DialogHeader>
+          <FareProductForm
+            product={editingProduct}
+            onSubmit={handleFormSubmit}
+            onCancel={handleDialogClose}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
