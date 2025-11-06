@@ -204,7 +204,7 @@ export default function PromotionsPage() {
                         <DropdownMenuItem>View Codes</DropdownMenuItem>
                         <DropdownMenuItem>Assign to Offer</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(promo.id)}>
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(promo.id!)}>
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
