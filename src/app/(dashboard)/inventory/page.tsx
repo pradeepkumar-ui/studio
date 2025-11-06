@@ -89,7 +89,7 @@ export default function InventoryPage() {
               </CardDescription>
             </div>
             <Button size="sm" onClick={() => alert('Create/Edit form for Booking Classes would appear here.')}>
-              <PlusCircle className="mr-2" /> Add Class
+              <PlusCircle className="mr-2 h-4 w-4" /> Add Class
             </Button>
           </CardHeader>
           <CardContent>
@@ -143,7 +143,7 @@ export default function InventoryPage() {
               </CardDescription>
             </div>
              <Button size="sm" onClick={() => alert('Create/Edit form for Fare Brand Mapping would appear here.')}>
-              <PlusCircle className="mr-2" /> Add Mapping
+              <PlusCircle className="mr-2 h-4 w-4" /> Add Mapping
             </Button>
           </CardHeader>
           <CardContent>
