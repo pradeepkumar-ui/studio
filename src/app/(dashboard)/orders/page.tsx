@@ -6,6 +6,8 @@ import {
   ChevronsUpDown,
   ChevronDown,
   MoreHorizontal,
+  PlusCircle,
+  File as FileIcon
 } from 'lucide-react';
 import {
   ColumnDef,
@@ -43,14 +45,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import {
   Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+  CardContent
 } from '@/components/ui/card';
-import { PlusCircle, File as FileIcon } from 'lucide-react';
 
-const data: Order[] = [
+const initialData: Order[] = [
   {
     id: 'ORD-001',
     customer: 'John Doe',
@@ -243,6 +241,7 @@ export const columns: ColumnDef<Order>[] = [
 ];
 
 export default function OrdersPage() {
+  const [data, setData] = React.useState<Order[]>(initialData);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -411,3 +410,5 @@ export default function OrdersPage() {
     </div>
   );
 }
+
+    
