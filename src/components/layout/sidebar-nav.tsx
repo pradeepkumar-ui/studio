@@ -27,12 +27,14 @@ import {
   Shield,
   Gift,
   Handshake,
+  CalendarDays,
 } from 'lucide-react';
 
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/offers', label: 'Offer Management', icon: Ticket },
   { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
+  { href: '/allotments', label: 'Allotments', icon: CalendarDays },
   { href: '/orders', label: 'Order Management', icon: ShoppingCart },
   { href: '/offer-composer', label: 'Offer Composer', icon: Layers },
   { href: '/fares', label: 'Fare Management', icon: DollarSign },
