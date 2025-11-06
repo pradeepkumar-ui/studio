@@ -33,10 +33,8 @@ import { Shield, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
-  email: z.string().min(1, { message: 'Please enter a valid email or username.' }),
-  password: z
-    .string()
-    .min(6, { message: 'Password must be at least 6 characters.' }),
+  email: z.string().optional(),
+  password: z.string().optional(),
 });
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -83,71 +81,36 @@ export default function LoginPage() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
-
-    // Special handling for the admin user
-    if (values.email.toLowerCase() === 'admin' && values.password === 'Admin123') {
-        try {
-            await signInWithEmailAndPassword(auth, 'admin@example.com', values.password);
-            toast({ title: 'Admin Signed In!', description: 'Welcome back, Admin.' });
-            router.push('/dashboard');
-        } catch (error: any) {
-            if (error.code === 'auth/invalid-credential') {
-                try {
-                    // If sign-in fails because the user doesn't exist, create it.
-                    await createUserWithEmailAndPassword(auth, 'admin@example.com', values.password);
-                    toast({ title: 'Admin Account Created!', description: 'You have been successfully signed up as Admin.' });
-                    router.push('/dashboard');
-                } catch (creationError: any) {
-                    toast({
-                        variant: 'destructive',
-                        title: 'Admin Creation Error',
-                        description: creationError.message || 'An unexpected error occurred during admin account creation.',
-                    });
-                }
-            } else {
-                 toast({
-                    variant: 'destructive',
-                    title: 'Admin Login Error',
-                    description: error.message || 'An unexpected error occurred.',
-                });
-            }
-        } finally {
-            setLoading(false);
-        }
-        return;
-    }
-
-    if (!values.email.includes('@')) {
-        toast({
-            variant: 'destructive',
-            title: 'Invalid Login',
-            description: 'Please enter a valid email address.',
-        });
-        setLoading(false);
-        return;
-    }
+    const defaultEmail = 'dev@example.com';
+    const defaultPassword = 'password123';
 
     try {
-      if (isSigningUp) {
-        await createUserWithEmailAndPassword(auth, values.email, values.password);
-        toast({ title: 'Account created!', description: 'You have been successfully signed up.' });
-      } else {
-        await signInWithEmailAndPassword(auth, values.email, values.password);
-        toast({ title: 'Signed in!', description: 'Welcome back.' });
-      }
+      // Try to sign in with the default user
+      await signInWithEmailAndPassword(auth, defaultEmail, defaultPassword);
+      toast({ title: 'Signed In!', description: 'Welcome, Developer.' });
       router.push('/dashboard');
     } catch (error: any) {
-      let errorMessage = 'An unexpected error occurred. Please try again.';
-      if (error.code === 'auth/invalid-credential') {
-        errorMessage = 'Invalid credentials. Please check your email and password.';
-      } else if (error.message) {
-        errorMessage = error.message;
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
+        // If the user doesn't exist, create it
+        try {
+          await createUserWithEmailAndPassword(auth, defaultEmail, defaultPassword);
+          toast({ title: 'Developer Account Created!', description: 'You have been successfully signed in.' });
+          router.push('/dashboard');
+        } catch (creationError: any) {
+          toast({
+            variant: 'destructive',
+            title: 'Developer Creation Error',
+            description: creationError.message || 'An unexpected error occurred during account creation.',
+          });
+        }
+      } else {
+        // Handle other login errors
+        toast({
+          variant: 'destructive',
+          title: 'Authentication Error',
+          description: error.message || 'An unexpected error occurred.',
+        });
       }
-      toast({
-        variant: 'destructive',
-        title: 'Authentication Error',
-        description: errorMessage,
-      });
     } finally {
       setLoading(false);
     }
