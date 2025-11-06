@@ -9,6 +9,8 @@ export default function Home() {
     router.replace('/');
   }, [router]);
 
-  // This will be shown briefly before redirection, or if redirection fails.
+  // This component will be rendered by the layout, which handles the dashboard view.
+  // The redirection ensures that any direct access to the root path is handled gracefully
+  // and the user is presented with the main dashboard.
   return null;
 }

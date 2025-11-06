@@ -15,11 +15,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // As page.tsx will be redirected to /allotments, we should also redirect here.
-  if (children === null) {
-    redirect('/allotments');
-  }
-  
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
