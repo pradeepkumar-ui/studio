@@ -59,5 +59,159 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <path
       fill="#4CAF50"
       d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.222,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"
-...
-```
+    />
+    <path
+      fill="#1976D2"
+      d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C39.99,35.091,44,29.891,44,24C44,22.659,43.862,21.35,43.611,20.083z"
+    />
+  </svg>
+);
+
+export default function LoginPage() {
+  const [loading, setLoading] = useState(false);
+  const [isSigningUp, setIsSigningUp] = useState(false);
+  const auth = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setLoading(true);
+    try {
+      if (isSigningUp) {
+        await createUserWithEmailAndPassword(auth, values.email, values.password);
+        toast({ title: 'Account created!', description: 'You have been successfully signed up.' });
+      } else {
+        await signInWithEmailAndPassword(auth, values.email, values.password);
+        toast({ title: 'Signed in!', description: 'Welcome back.' });
+      }
+      router.push('/dashboard');
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Authentication Error',
+        description: error.message,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      router.push('/dashboard');
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Google Sign-In Error',
+        description: error.message,
+      });
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <Card className="w-full max-w-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-2xl">
+            <Shield className="h-7 w-7 text-primary" />
+            OOSD Platform
+          </CardTitle>
+          <CardDescription>
+            {isSigningUp ? 'Create an account to get started.' : 'Enter your credentials to access your account.'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="m@example.com"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSigningUp ? 'Sign Up' : 'Sign In'}
+              </Button>
+            </form>
+          </Form>
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Or continue with
+              </span>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={handleGoogleSignIn}
+          >
+            <GoogleIcon className="mr-2 h-5 w-5" />
+            Google
+          </Button>
+          <div className="mt-4 text-center text-sm">
+            {isSigningUp ? (
+              <>
+                Already have an account?{' '}
+                <button
+                  onClick={() => setIsSigningUp(false)}
+                  className="underline"
+                >
+                  Sign in
+                </button>
+              </>
+            ) : (
+              <>
+                Don&apos;t have an account?{' '}
+                <button
+                  onClick={() => setIsSigningUp(true)}
+                  className="underline"
+                >
+                  Sign up
+                </button>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
