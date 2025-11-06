@@ -1,3 +1,6 @@
+
+'use client';
+
 import {
   Card,
   CardContent,
@@ -14,35 +17,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import {
-  Bar,
-  BarChart,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  Tooltip,
-} from "recharts";
-import {
-  ChartContainer,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { BarChart } from '@tremor/react';
 import { DollarSign, ShoppingCart, Ticket, Users } from "lucide-react";
 
 const chartData = [
-  { month: "January", revenue: 18600 },
-  { month: "February", revenue: 30500 },
-  { month: "March", revenue: 23700 },
-  { month: "April", revenue: 17300 },
-  { month: "May", revenue: 20900 },
-  { month: "June", revenue: 21400 },
+  { date: "Jan 24", "Revenue": 18600 },
+  { date: "Feb 24", "Revenue": 30500 },
+  { date: "Mar 24", "Revenue": 23700 },
+  { date: "Apr 24", "Revenue": 17300 },
+  { date: "May 24", "Revenue": 20900 },
+  { date: "Jun 24", "Revenue": 21400 },
 ];
 
-const chartConfig = {
-  revenue: {
-    label: "Revenue",
-    color: "hsl(var(--chart-1))",
-  },
-};
+const dataFormatter = (number: number) =>
+  `$${Intl.NumberFormat('us').format(number).toString()}`;
 
 const recentOrders = [
   {
@@ -139,16 +127,15 @@ export default function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="pl-2">
-            <ChartContainer config={chartConfig} className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
-                  <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
-                  <YAxis tickLine={false} axisLine={false} tickMargin={8} fontSize={12} tickFormatter={(value) => `$${Number(value) / 1000}k`} />
-                  <Tooltip cursor={false} content={<ChartTooltipContent />} />
-                  <Bar dataKey="revenue" fill="var(--color-revenue)" radius={4} />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
+            <BarChart
+              data={chartData}
+              index="date"
+              categories={['Revenue']}
+              colors={['blue']}
+              valueFormatter={dataFormatter}
+              yAxisWidth={60}
+              className="h-[300px] w-full"
+            />
           </CardContent>
         </Card>
         <Card className="col-span-1 lg:col-span-3">
