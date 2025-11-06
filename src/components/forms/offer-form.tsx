@@ -3,6 +3,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { format } from 'date-fns';
+import { CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -21,13 +23,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 
 const offerSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(5, 'Offer name is required and must be at least 5 characters.'),
-  channel: z.string().min(1, 'Channel is required'),
-  conditions: z.string().min(10, 'Conditions are required and must be at least 10 characters.'),
+  scope: z.enum(['Airline', 'Brand', 'Market']),
+  offerType: z.enum(['Discount', 'Fixed', 'Step']),
+  currency: z.string().length(3, 'Must be a 3-letter currency code.'),
+  rounding: z.enum(['None', 'Round Half-Up', 'Round Down']),
+  criteria: z.string().min(3, 'Criteria is required.'),
+  effectiveDate: z.date(),
+  expiryDate: z.date(),
+  notes: z.string().optional(),
   status: z.enum(['Active', 'Inactive', 'Draft', 'Expired']),
+  // Deprecated fields from old spec
+  channel: z.string().optional(),
+  conditions: z.string().optional(),
 });
 
 export type Offer = z.infer<typeof offerSchema>;
@@ -41,17 +55,27 @@ interface OfferFormProps {
 export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
   const form = useForm<Offer>({
     resolver: zodResolver(offerSchema),
-    defaultValues: offer || {
+    defaultValues: offer ? {
+      ...offer,
+      effectiveDate: offer.effectiveDate ? new Date(offer.effectiveDate) : new Date(),
+      expiryDate: offer.expiryDate ? new Date(offer.expiryDate) : new Date(),
+    } : {
       name: '',
-      channel: '',
-      conditions: '',
+      scope: 'Market',
+      offerType: 'Discount',
+      currency: 'USD',
+      rounding: 'Round Half-Up',
+      criteria: 'Channel: Web, POS: US',
+      effectiveDate: new Date(),
+      expiryDate: new Date(new Date().setDate(new Date().getDate() + 30)),
+      notes: '',
       status: 'Draft',
     },
   });
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
@@ -59,33 +83,170 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
             <FormItem>
               <FormLabel>Offer Name</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Summer Getaway Sale" {...field} />
+                <Input placeholder="e.g., Winter Flash Sale 2025" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <FormField
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="scope"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Scope</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a scope" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Airline">Airline</SelectItem>
+                    <SelectItem value="Brand">Brand</SelectItem>
+                    <SelectItem value="Market">Market</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="offerType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Offer Type</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an offer type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Discount">Discount (%)</SelectItem>
+                    <SelectItem value="Fixed">Fixed Amount</SelectItem>
+                    <SelectItem value="Step">Stepped Pricing</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="currency"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Currency</FormLabel>
+                <FormControl>
+                  <Input placeholder="USD" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+           <FormField
+            control={form.control}
+            name="rounding"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Rounding</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a rounding rule" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="None">None</SelectItem>
+                    <SelectItem value="Round Half-Up">Round Half-Up</SelectItem>
+                    <SelectItem value="Round Down">Round Down</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+         <FormField
           control={form.control}
-          name="channel"
+          name="criteria"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Channels</FormLabel>
+              <FormLabel>Criteria</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Website, Mobile App" {...field} />
+                <Input placeholder="e.g. Channel: Mobile, Market: DE" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="effectiveDate"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Effective Date</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={'outline'}
+                        className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
+                      >
+                        {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="expiryDate"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Expiry Date</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={'outline'}
+                        className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
+                      >
+                        {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         <FormField
           control={form.control}
-          name="conditions"
+          name="notes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Conditions</FormLabel>
+              <FormLabel>Notes</FormLabel>
               <FormControl>
-                <Textarea placeholder="e.g., 20% off Economy on NYC-MIA for travel in July." {...field} />
+                <Textarea placeholder="Internal notes about this offer configuration." {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -115,10 +276,10 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
           )}
         />
         <div className="flex justify-end gap-4 pt-4">
-            <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
-            </Button>
-            <Button type="submit">{offer ? 'Save Changes' : 'Create Offer'}</Button>
+          </Button>
+          <Button type="submit">{offer ? 'Save Changes' : 'Create Offer'}</Button>
         </div>
       </form>
     </Form>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { format } from 'date-fns';
 import {
   Table,
   TableBody,
@@ -45,37 +46,67 @@ const initialOffers: Offer[] = [
   {
     id: 'OFF-001',
     name: 'Summer Getaway Sale',
-    channel: 'Website, Mobile App',
-    conditions: '20% off Economy on NYC-MIA for travel in July.',
     status: 'Active',
+    scope: 'Market',
+    offerType: 'Discount',
+    currency: 'USD',
+    rounding: 'Round Half-Up',
+    criteria: 'Channel: Web, POS: US',
+    effectiveDate: new Date('2024-07-01'),
+    expiryDate: new Date('2024-07-31'),
+    notes: '20% off Economy on NYC-MIA for travel in July.'
   },
   {
     id: 'OFF-002',
     name: 'Business Class Upgrade',
-    channel: 'All Channels',
-    conditions: 'Complimentary upgrade on trans-Atlantic routes.',
     status: 'Active',
+    scope: 'Brand',
+    offerType: 'Fixed',
+    currency: 'USD',
+    rounding: 'None',
+    criteria: 'Complimentary upgrade on trans-Atlantic routes.',
+    effectiveDate: new Date('2024-06-01'),
+    expiryDate: new Date('2024-08-31'),
+    notes: ''
   },
   {
     id: 'OFF-003',
     name: 'Early Bird Europe',
-    channel: 'Website',
-    conditions: '15% off bookings to Europe made 90+ days in advance.',
     status: 'Draft',
+    scope: 'Airline',
+    offerType: 'Discount',
+    currency: 'EUR',
+    rounding: 'Round Half-Up',
+    criteria: '15% off bookings to Europe made 90+ days in advance.',
+    effectiveDate: new Date('2024-09-01'),
+    expiryDate: new Date('2024-12-31'),
+    notes: ''
   },
   {
     id: 'OFF-004',
     name: 'Last Minute Deals',
-    channel: 'Mobile App',
-    conditions: 'Up to 30% off flights departing within 48 hours.',
     status: 'Active',
+    scope: 'Channel',
+    offerType: 'Discount',
+    currency: 'USD',
+    rounding: 'Round Down',
+    criteria: 'Up to 30% off flights departing within 48 hours.',
+    effectiveDate: new Date('2024-01-01'),
+    expiryDate: new Date('2024-12-31'),
+    notes: 'Only on mobile app'
   },
   {
     id: 'OFF-005',
     name: 'Holiday Special',
-    channel: 'All Channels',
-    conditions: '10% off all routes for Christmas period.',
     status: 'Expired',
+    scope: 'Airline',
+    offerType: 'Discount',
+    currency: 'USD',
+    rounding: 'Round Half-Up',
+    criteria: '10% off all routes for Christmas period.',
+    effectiveDate: new Date('2023-12-01'),
+    expiryDate: new Date('2023-12-26'),
+    notes: ''
   },
 ];
 
@@ -134,10 +165,10 @@ export default function OffersPage() {
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold tracking-tight">
-            Offer Management
+            Offer Configuration
           </h1>
           <p className="text-muted-foreground">
-            Govern the creation, simulation, optimisation, and publication of retail offers.
+            Create, govern, and distribute retail offers and promotions.
           </p>
         </div>
         <div className="flex gap-2">
@@ -153,9 +184,9 @@ export default function OffersPage() {
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Active & Upcoming Offers</CardTitle>
+          <CardTitle>Offer Configurations</CardTitle>
           <CardDescription>
-            Monitor and manage all published retail offers.
+            Manage all published retail offers, promotions, and rules.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -164,8 +195,9 @@ export default function OffersPage() {
               <TableRow>
                 <TableHead>Offer Name</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Channels</TableHead>
-                <TableHead>Conditions</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Scope</TableHead>
+                <TableHead>Effective Dates</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -188,9 +220,10 @@ export default function OffersPage() {
                       {offer.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>{offer.channel}</TableCell>
-                  <TableCell className="max-w-xs truncate">
-                    {offer.conditions}
+                  <TableCell>{offer.offerType}</TableCell>
+                  <TableCell>{offer.scope}</TableCell>
+                  <TableCell>
+                    {format(offer.effectiveDate, 'PP')} - {format(offer.expiryDate, 'PP')}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -224,11 +257,11 @@ export default function OffersPage() {
       </Card>
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{editingOffer ? 'Edit Offer' : 'Create New Offer'}</DialogTitle>
+            <DialogTitle>{editingOffer ? 'Edit Offer Configuration' : 'Create New Offer Configuration'}</DialogTitle>
             <DialogDescription>
-              {editingOffer ? `Editing offer "${editingOffer.name}".` : 'Enter the details for the new offer.'}
+              {editingOffer ? `Editing configuration for "${editingOffer.name}".` : 'Enter the details for the new offer configuration.'}
             </DialogDescription>
           </DialogHeader>
           <OfferForm
