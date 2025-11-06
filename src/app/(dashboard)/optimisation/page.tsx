@@ -26,12 +26,11 @@ export default function OptimisationPage() {
       </div>
 
       <Tabs defaultValue="dashboard">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
           <TabsTrigger value="ab-testing">A/B Test Centre</TabsTrigger>
           <TabsTrigger value="rules">Rules & Guardrails</TabsTrigger>
-          <TabsTrigger value="bundles">Bundles Studio</TabsTrigger>
           <TabsTrigger value="models">Model Monitor</TabsTrigger>
         </TabsList>
         
@@ -58,22 +57,6 @@ export default function OptimisationPage() {
             <CardContent>
               <div className="text-center py-12 text-muted-foreground">
                 <p>Rule and guardrail configuration will be managed here.</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="bundles">
-          <Card>
-            <CardHeader>
-              <CardTitle>Bundles Studio</CardTitle>
-              <CardDescription>
-                Create ancillary bundles, eligibility rules, and discounts.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <p>Ancillary bundle management will be available here.</p>
               </div>
             </CardContent>
           </Card>

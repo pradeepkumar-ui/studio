@@ -68,6 +68,7 @@ const menuItems: MenuItem[] = [
         label: 'Ancillary Pricing',
         icon: Container,
       },
+      { href: '/bundles', label: 'Bundles Studio', icon: Package },
       { href: '/promotions', label: 'Promotions', icon: Gift },
       { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
       { href: '/compliance', label: 'Offer Compliance', icon: Shield },
