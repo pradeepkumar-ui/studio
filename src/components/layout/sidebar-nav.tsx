@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -38,6 +39,7 @@ import {
   Package,
   Database,
   BrainCircuit,
+  Wand2,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -72,6 +74,11 @@ const menuItems: MenuItem[] = [
       { href: '/disruption-waivers', label: 'Disruption Waivers', icon: Waves },
       { href: '/offer-data', label: 'Data Management', icon: Database },
     ],
+  },
+  {
+    href: '/optimisation',
+    label: 'Offer Optimisation',
+    icon: Wand2,
   },
   {
     href: '/orders',
