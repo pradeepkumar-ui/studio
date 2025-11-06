@@ -284,7 +284,7 @@ export default function OfferComposerPage() {
         </Card>
       </div>
       
-      {searchResults && (
+      {searchResults !== null && (
          <Card>
             <CardHeader>
                 <CardTitle>Search Results</CardTitle>
