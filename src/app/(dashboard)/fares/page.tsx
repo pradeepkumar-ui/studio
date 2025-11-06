@@ -238,7 +238,7 @@ export default function FaresPage() {
                         <DropdownMenuItem>Create New Version</DropdownMenuItem>
                         <DropdownMenuItem>View History</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(fare.id)}>
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(fare.id!)}>
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
