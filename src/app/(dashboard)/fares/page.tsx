@@ -26,6 +26,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import {
   FileUp,
   MoreHorizontal,
   PlusCircle,
@@ -33,16 +40,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-
-type Fare = {
-  id: string;
-  route: string;
-  class: string;
-  price: number;
-  currency: string;
-  status: 'Active' | 'Inactive' | 'Draft';
-  version: number;
-};
+import { FareForm, type Fare } from '@/components/forms/fare-form';
 
 const initialFares: Fare[] = [
   {
@@ -94,6 +92,8 @@ const initialFares: Fare[] = [
 
 export default function FaresPage() {
   const [fares, setFares] = useState<Fare[]>(initialFares);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingFare, setEditingFare] = useState<Fare | null>(null);
   const { toast } = useToast();
 
   const handleValidate = () => {
@@ -108,6 +108,39 @@ export default function FaresPage() {
         description: 'No issues found. All fares are valid.',
       });
     }, 2000);
+  };
+
+  const handleOpenDialog = (fare: Fare | null = null) => {
+    setEditingFare(fare);
+    setIsDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setEditingFare(null);
+  };
+
+  const handleFormSubmit = (data: Fare) => {
+    if (editingFare) {
+      // Update existing fare
+      setFares(fares.map((f) => (f.id === editingFare.id ? { ...f, ...data } : f)));
+      toast({ title: "Fare Updated", description: `Fare ${data.id} has been successfully updated.` });
+    } else {
+      // Add new fare
+      const newFare = { ...data, id: `FAR-${String(fares.length + 1).padStart(3, '0')}`, version: 1 };
+      setFares([...fares, newFare]);
+      toast({ title: "Fare Created", description: `Fare ${newFare.id} has been successfully created.` });
+    }
+    handleDialogClose();
+  };
+  
+   const handleDelete = (fareId: string) => {
+    setFares(fares.filter(f => f.id !== fareId));
+    toast({
+      variant: 'destructive',
+      title: 'Fare Deleted',
+      description: `Fare with ID ${fareId} has been deleted.`,
+    });
   };
 
   return (
@@ -127,7 +160,7 @@ export default function FaresPage() {
             <FileUp className="mr-2" />
             Upload Fares
           </Button>
-          <Button>
+          <Button onClick={() => handleOpenDialog()}>
             <PlusCircle className="mr-2" />
             Add Fare
           </Button>
@@ -199,11 +232,13 @@ export default function FaresPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleOpenDialog(fare)}>
+                          Edit
+                        </DropdownMenuItem>
                         <DropdownMenuItem>Create New Version</DropdownMenuItem>
                         <DropdownMenuItem>View History</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(fare.id)}>
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -215,6 +250,22 @@ export default function FaresPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingFare ? 'Edit Fare' : 'Create New Fare'}</DialogTitle>
+            <DialogDescription>
+              {editingFare ? `Editing fare ${editingFare.id}.` : 'Enter the details for the new fare.'}
+            </DialogDescription>
+          </DialogHeader>
+          <FareForm
+            fare={editingFare}
+            onSubmit={handleFormSubmit}
+            onCancel={handleDialogClose}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
