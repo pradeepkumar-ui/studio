@@ -41,6 +41,7 @@ import {
   BrainCircuit,
   Wand2,
   Signal,
+  Workflow,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -82,6 +83,11 @@ const menuItems: MenuItem[] = [
     href: '/orders',
     label: 'Order Management',
     icon: ShoppingCart,
+  },
+   {
+    href: '/orchestration',
+    label: 'Orchestration',
+    icon: Workflow,
   },
   {
     href: '/catalog',
@@ -196,7 +202,7 @@ export default function SidebarNav() {
                 </SidebarMenuCollapsible>
               </SidebarMenuItem>
             ) : (
-              <SidebarMenuItem key={item.href}>
+              <SidebarMenuItem key={item.href} asChild>
                 <Link href={item.href} legacyBehavior passHref>
                   <SidebarMenuButton
                     isActive={
