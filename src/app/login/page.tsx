@@ -10,6 +10,7 @@ import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
+  AuthErrorCodes,
 } from 'firebase/auth';
 import { useAuth } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -33,7 +34,7 @@ import { Shield, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email.' }),
+  email: z.string().min(1, { message: 'Please enter a valid email or username.' }),
   password: z
     .string()
     .min(6, { message: 'Password must be at least 6 characters.' }),
@@ -81,15 +82,55 @@ export default function LoginPage() {
     },
   });
 
+  const handleAdminLogin = async (values: z.infer<typeof formSchema>) => {
+    try {
+      // First, try to sign in.
+      await signInWithEmailAndPassword(auth, values.email, values.password);
+      toast({ title: 'Signed in!', description: 'Welcome back, Admin.' });
+    } catch (error: any) {
+      // If the user does not exist, create it.
+      if (error.code === AuthErrorCodes.USER_DELETED) {
+        try {
+          await createUserWithEmailAndPassword(auth, values.email, values.password);
+          toast({ title: 'Admin Account Created!', description: 'You have been successfully signed up as Admin.' });
+        } catch (creationError: any) {
+           throw creationError; // Throw inner error to be caught by outer catch
+        }
+      } else {
+        throw error; // Re-throw other sign-in errors
+      }
+    }
+  }
+
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
+    
+    let loginEmail = values.email;
+    if(values.email.toLowerCase() === 'admin' && values.password === 'Admin123'){
+        loginEmail = 'admin@example.com';
+    } else if (!values.email.includes('@')) {
+        toast({
+            variant: 'destructive',
+            title: 'Invalid Login',
+            description: 'Please enter a valid email address or the correct admin credentials.',
+        });
+        setLoading(false);
+        return;
+    }
+
+
     try {
       if (isSigningUp) {
-        await createUserWithEmailAndPassword(auth, values.email, values.password);
+        await createUserWithEmailAndPassword(auth, loginEmail, values.password);
         toast({ title: 'Account created!', description: 'You have been successfully signed up.' });
       } else {
-        await signInWithEmailAndPassword(auth, values.email, values.password);
-        toast({ title: 'Signed in!', description: 'Welcome back.' });
+          if(loginEmail === 'admin@example.com' && values.password === 'Admin123') {
+            await handleAdminLogin({email: loginEmail, password: values.password});
+          } else {
+            await signInWithEmailAndPassword(auth, loginEmail, values.password);
+            toast({ title: 'Signed in!', description: 'Welcome back.' });
+          }
       }
       router.push('/dashboard');
     } catch (error: any) {
@@ -137,11 +178,10 @@ export default function LoginPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Email or Username</FormLabel>
                     <FormControl>
                       <Input
-                        type="email"
-                        placeholder="m@example.com"
+                        placeholder="admin or m@example.com"
                         {...field}
                       />
                     </FormControl>
