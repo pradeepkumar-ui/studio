@@ -26,20 +26,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import {
   MoreHorizontal,
   PlusCircle,
   BarChartHorizontal,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-
-type Offer = {
-  id: string;
-  name: string;
-  channel: string;
-  conditions: string;
-  status: 'Active' | 'Inactive' | 'Draft' | 'Expired';
-};
+import { OfferForm, type Offer } from '@/components/forms/offer-form';
 
 const initialOffers: Offer[] = [
   {
@@ -81,6 +81,8 @@ const initialOffers: Offer[] = [
 
 export default function OffersPage() {
   const [offers, setOffers] = useState<Offer[]>(initialOffers);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
   const { toast } = useToast();
 
   const handleSimulate = () => {
@@ -94,6 +96,37 @@ export default function OffersPage() {
         description: 'Optimal offer strategies have been identified.',
       });
     }, 3000);
+  };
+  
+  const handleOpenDialog = (offer: Offer | null = null) => {
+    setEditingOffer(offer);
+    setIsDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setEditingOffer(null);
+  };
+
+  const handleFormSubmit = (data: Offer) => {
+    if (editingOffer) {
+      setOffers(offers.map((o) => (o.id === editingOffer.id ? { ...o, ...data } : o)));
+      toast({ title: "Offer Updated", description: `Offer ${data.name} has been successfully updated.` });
+    } else {
+      const newOffer = { ...data, id: `OFF-${String(offers.length + 1).padStart(3, '0')}` };
+      setOffers([...offers, newOffer]);
+      toast({ title: "Offer Created", description: `Offer ${newOffer.name} has been successfully created.` });
+    }
+    handleDialogClose();
+  };
+
+  const handleDelete = (offerId: string) => {
+    setOffers(offers.filter(o => o.id !== offerId));
+    toast({
+      variant: 'destructive',
+      title: 'Offer Deleted',
+      description: `Offer with ID ${offerId} has been deleted.`,
+    });
   };
 
   return (
@@ -112,7 +145,7 @@ export default function OffersPage() {
             <BarChartHorizontal className="mr-2" />
             Run Simulation
           </Button>
-          <Button>
+          <Button onClick={() => handleOpenDialog()}>
             <PlusCircle className="mr-2" />
             Create Offer
           </Button>
@@ -173,12 +206,12 @@ export default function OffersPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleOpenDialog(offer)}>Edit</DropdownMenuItem>
                         <DropdownMenuItem>View Performance</DropdownMenuItem>
                         <DropdownMenuItem>Duplicate</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className={offer.status === 'Active' ? '' : 'text-destructive'}>
-                          {offer.status === 'Active' ? 'Deactivate' : 'Activate'}
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(offer.id)}>
+                          Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -189,6 +222,23 @@ export default function OffersPage() {
           </Table>
         </CardContent>
       </Card>
+      
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingOffer ? 'Edit Offer' : 'Create New Offer'}</DialogTitle>
+            <DialogDescription>
+              {editingOffer ? `Editing offer "${editingOffer.name}".` : 'Enter the details for the new offer.'}
+            </DialogDescription>
+          </DialogHeader>
+          <OfferForm
+            offer={editingOffer}
+            onSubmit={handleFormSubmit}
+            onCancel={handleDialogClose}
+          />
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
