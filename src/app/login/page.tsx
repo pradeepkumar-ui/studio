@@ -10,7 +10,6 @@ import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
-  AuthErrorCodes,
 } from 'firebase/auth';
 import { useAuth } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -84,20 +83,18 @@ export default function LoginPage() {
 
   const handleAdminLogin = async (values: z.infer<typeof formSchema>) => {
     try {
-      // First, try to sign in.
       await signInWithEmailAndPassword(auth, values.email, values.password);
       toast({ title: 'Signed in!', description: 'Welcome back, Admin.' });
     } catch (error: any) {
-      // If the user does not exist, create it.
-      if (error.code === 'auth/user-not-found') {
+      if (error.code === 'auth/invalid-credential') {
         try {
           await createUserWithEmailAndPassword(auth, values.email, values.password);
           toast({ title: 'Admin Account Created!', description: 'You have been successfully signed up as Admin.' });
         } catch (creationError: any) {
-           throw creationError; // Throw inner error to be caught by outer catch
+           throw creationError;
         }
       } else {
-        throw error; // Re-throw other sign-in errors
+        throw error;
       }
     }
   }
@@ -106,26 +103,25 @@ export default function LoginPage() {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
     
-    let loginEmail = values.email;
-    if(values.email.toLowerCase() === 'admin' && values.password === 'Admin123'){
-        loginEmail = 'admin@example.com';
-    } else if (!values.email.includes('@')) {
+    const isPotentialAdmin = values.email.toLowerCase() === 'admin' && values.password === 'Admin123';
+    const loginEmail = isPotentialAdmin ? 'admin@example.com' : values.email;
+
+    if (!isPotentialAdmin && !values.email.includes('@')) {
         toast({
             variant: 'destructive',
             title: 'Invalid Login',
-            description: 'Please enter a valid email address or the correct admin credentials.',
+            description: 'Please enter a valid email address.',
         });
         setLoading(false);
         return;
     }
-
 
     try {
       if (isSigningUp) {
         await createUserWithEmailAndPassword(auth, loginEmail, values.password);
         toast({ title: 'Account created!', description: 'You have been successfully signed up.' });
       } else {
-          if(loginEmail === 'admin@example.com' && values.password === 'Admin123') {
+          if(isPotentialAdmin) {
             await handleAdminLogin({email: loginEmail, password: values.password});
           } else {
             await signInWithEmailAndPassword(auth, loginEmail, values.password);
@@ -134,9 +130,11 @@ export default function LoginPage() {
       }
       router.push('/dashboard');
     } catch (error: any) {
-      let errorMessage = error.message;
+      let errorMessage = 'An unexpected error occurred. Please try again.';
       if (error.code === 'auth/invalid-credential') {
         errorMessage = 'Invalid credentials. Please check your email and password.';
+      } else if (error.message) {
+        errorMessage = error.message;
       }
       toast({
         variant: 'destructive',
