@@ -34,6 +34,7 @@ const menuItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/allotments', label: 'Allotments', icon: CalendarDays },
   { href: '/offers', label: 'Offer Management', icon: Ticket },
+  { href: '/compliance', label: 'Offer Compliance', icon: Shield },
   { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
   { href: '/orders', label: 'Order Management', icon: ShoppingCart },
   { href: '/offer-composer', label: 'Offer Composer', icon: Layers },
