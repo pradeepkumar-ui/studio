@@ -83,12 +83,12 @@ export default function LoginPage() {
 
   const handleAdminLogin = async (values: z.infer<typeof formSchema>) => {
     try {
-      await signInWithEmailAndPassword(auth, values.email, values.password);
+      await signInWithEmailAndPassword(auth, 'admin@example.com', values.password);
       toast({ title: 'Signed in!', description: 'Welcome back, Admin.' });
     } catch (error: any) {
-      if (error.code === 'auth/invalid-credential') {
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
         try {
-          await createUserWithEmailAndPassword(auth, values.email, values.password);
+          await createUserWithEmailAndPassword(auth, 'admin@example.com', values.password);
           toast({ title: 'Admin Account Created!', description: 'You have been successfully signed up as Admin.' });
         } catch (creationError: any) {
            throw creationError;
@@ -104,9 +104,24 @@ export default function LoginPage() {
     setLoading(true);
     
     const isPotentialAdmin = values.email.toLowerCase() === 'admin' && values.password === 'Admin123';
-    const loginEmail = isPotentialAdmin ? 'admin@example.com' : values.email;
+    
+    if (isPotentialAdmin) {
+        try {
+            await handleAdminLogin(values);
+            router.push('/dashboard');
+        } catch (error: any) {
+            toast({
+                variant: 'destructive',
+                title: 'Admin Login Error',
+                description: error.message || 'An unexpected error occurred.',
+            });
+        } finally {
+            setLoading(false);
+        }
+        return;
+    }
 
-    if (!isPotentialAdmin && !values.email.includes('@')) {
+    if (!values.email.includes('@')) {
         toast({
             variant: 'destructive',
             title: 'Invalid Login',
@@ -118,15 +133,11 @@ export default function LoginPage() {
 
     try {
       if (isSigningUp) {
-        await createUserWithEmailAndPassword(auth, loginEmail, values.password);
+        await createUserWithEmailAndPassword(auth, values.email, values.password);
         toast({ title: 'Account created!', description: 'You have been successfully signed up.' });
       } else {
-          if(isPotentialAdmin) {
-            await handleAdminLogin({email: loginEmail, password: values.password});
-          } else {
-            await signInWithEmailAndPassword(auth, loginEmail, values.password);
-            toast({ title: 'Signed in!', description: 'Welcome back.' });
-          }
+        await signInWithEmailAndPassword(auth, values.email, values.password);
+        toast({ title: 'Signed in!', description: 'Welcome back.' });
       }
       router.push('/dashboard');
     } catch (error: any) {
