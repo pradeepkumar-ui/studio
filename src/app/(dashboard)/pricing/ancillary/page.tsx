@@ -206,7 +206,7 @@ export default function AncillaryPricingPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {[...new Set(ancillaries.map((a) => a.category))].map(
+                {[...new Set(initialAncillaries.map((a) => a.category))].map(
                   (category) => (
                     <DropdownMenuCheckboxItem
                       key={category}
