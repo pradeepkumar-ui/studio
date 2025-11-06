@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SchemaValidator } from '@/components/data-management/schema-validator';
 import { ReconciliationDashboard } from '@/components/data-management/reconciliation-dashboard';
 import { AuditViewer } from '@/components/data-management/audit-viewer';
+import { ArchivalManager } from '@/components/data-management/archival-manager';
 
 export default function OfferDataManagementPage() {
   return (
@@ -26,10 +27,11 @@ export default function OfferDataManagementPage() {
       </div>
 
       <Tabs defaultValue="validator">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="validator">Schema Validator</TabsTrigger>
           <TabsTrigger value="reconciliation">Reconciliation</TabsTrigger>
           <TabsTrigger value="audit">Audit Viewer</TabsTrigger>
+          <TabsTrigger value="archival">Archival Manager</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
         </TabsList>
         
@@ -45,6 +47,10 @@ export default function OfferDataManagementPage() {
             <AuditViewer />
         </TabsContent>
         
+        <TabsContent value="archival">
+            <ArchivalManager />
+        </TabsContent>
+
         <TabsContent value="performance">
           <Card>
             <CardHeader>

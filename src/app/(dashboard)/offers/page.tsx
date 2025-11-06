@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { format } from 'date-fns';
 import {
   Table,
@@ -299,7 +300,9 @@ export default function OffersPage() {
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => handleOpenDialog(offer)}>Edit</DropdownMenuItem>
                         <DropdownMenuItem>View Performance</DropdownMenuItem>
-                        <DropdownMenuItem>View Lineage</DropdownMenuItem>
+                         <DropdownMenuItem asChild>
+                           <Link href={`/offers/${offer.id}/lineage`}>View Lineage</Link>
+                         </DropdownMenuItem>
                         <DropdownMenuItem>Duplicate</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(offer.id!)}>
