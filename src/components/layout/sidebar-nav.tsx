@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 
 const menuItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/allotments', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/offers', label: 'Offer Management', icon: Ticket },
   { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
   { href: '/allotments', label: 'Allotments', icon: CalendarDays },
@@ -72,7 +72,7 @@ export default function SidebarNav() {
               <Link href={item.href} legacyBehavior passHref>
                 <SidebarMenuButton
                   isActive={
-                    item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
+                    item.href === '/allotments' ? pathname === item.href : pathname.startsWith(item.href) && item.href !== '/'
                   }
                   tooltip={{ children: item.label, side: 'right' }}
                 >

@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
 import AppLayout from '@/components/layout/app-layout';
+import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
   title: 'Offers & Orders System Design (OOSD)',
@@ -14,6 +15,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // As page.tsx will be redirected to /allotments, we should also redirect here.
+  if (children === null) {
+    redirect('/allotments');
+  }
+  
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
