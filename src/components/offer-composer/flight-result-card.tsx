@@ -3,8 +3,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { PlaneTakeoff, PlaneLanding, Clock, Dot, Briefcase, ChevronRight } from 'lucide-react';
-import { Badge } from '../ui/badge';
+import { PlaneTakeoff, PlaneLanding, Dot, Briefcase, ChevronRight } from 'lucide-react';
 
 export type FlightOffer = {
   id: string;
