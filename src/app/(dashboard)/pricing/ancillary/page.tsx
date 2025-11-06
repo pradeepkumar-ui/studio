@@ -154,6 +154,15 @@ export default function AncillaryPricingPage() {
     return status === 'Active' ? 'default' : 'outline';
   };
 
+  const toggleStatus = (ancillary: Ancillary) => {
+    const newStatus = ancillary.status === 'Active' ? 'Disabled' : 'Active';
+    setAncillaries(ancillaries.map(a => a.id === ancillary.id ? {...a, status: newStatus} : a));
+    toast({
+        title: `Ancillary ${newStatus === 'Active' ? 'Enabled' : 'Disabled'}`,
+        description: `"${ancillary.name}" is now ${newStatus.toLowerCase()}.`
+    })
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -264,7 +273,10 @@ export default function AncillaryPricingPage() {
                                 Segment Overrides
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem className={anc.status === 'Active' ? 'text-destructive' : ''}>
+                              <DropdownMenuItem
+                                onClick={() => toggleStatus(anc)}
+                                className={anc.status === 'Active' ? 'text-destructive' : ''}
+                              >
                                 {anc.status === 'Active' ? 'Disable' : 'Enable'}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
