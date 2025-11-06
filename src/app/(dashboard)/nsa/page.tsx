@@ -35,10 +35,12 @@ import {
 import {
   MoreHorizontal,
   PlusCircle,
+  Search,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { NsaForm, type NegotiatedSpaceAgreement } from '@/components/forms/nsa-form';
+import { Input } from '@/components/ui/input';
 
 const initialNsa: NegotiatedSpaceAgreement[] = [
   {
@@ -50,9 +52,9 @@ const initialNsa: NegotiatedSpaceAgreement[] = [
     status: 'Published',
     rbd: 'Q,N,V',
     brand: 'Value,Flex',
-    pricing: 'INR Ladder',
+    pricing: 'INR; base 8,999 -> 9,499; 8% commission',
     deadlines: 'Release: D-30, D-14. Name: D-14. Issue: D-7.',
-    finance: '10% at contract, 20% at D-45. Standard penalties.',
+    finance: '10% deposit at contract, 20% at D-45. Attrition penalties apply.',
   },
   {
     id: 'NSA-002',
@@ -99,6 +101,7 @@ export default function NsaPage() {
   const [agreements, setAgreements] = useState<NegotiatedSpaceAgreement[]>(initialNsa);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingNsa, setEditingNsa] = useState<NegotiatedSpaceAgreement | null>(null);
+  const [filters, setFilters] = useState({ code: '', partnerId: '' });
   const { toast } = useToast();
 
   const handleOpenDialog = (nsa: NegotiatedSpaceAgreement | null = null) => {
@@ -122,6 +125,18 @@ export default function NsaPage() {
     }
     handleDialogClose();
   };
+
+  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({...prev, [name]: value}));
+  }
+  
+  const filteredAgreements = agreements.filter(agreement => {
+    return (
+        agreement.code.toLowerCase().includes(filters.code.toLowerCase()) &&
+        agreement.partnerId.toLowerCase().includes(filters.partnerId.toLowerCase())
+    );
+  });
   
    const getStatusBadgeVariant = (status: NegotiatedSpaceAgreement['status']) => {
     switch (status) {
@@ -163,6 +178,28 @@ export default function NsaPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="flex items-center gap-4 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                name="code"
+                placeholder="Filter by Contract Code..."
+                value={filters.code}
+                onChange={handleFilterChange}
+                className="pl-9"
+              />
+            </div>
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+               <Input
+                name="partnerId"
+                placeholder="Filter by Partner ID..."
+                value={filters.partnerId}
+                onChange={handleFilterChange}
+                className="pl-9"
+              />
+            </div>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -177,7 +214,7 @@ export default function NsaPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {agreements.map((nsa) => (
+              {filteredAgreements.map((nsa) => (
                 <TableRow key={nsa.id}>
                   <TableCell className="font-medium">{nsa.code}</TableCell>
                   <TableCell>{nsa.partnerId}</TableCell>
