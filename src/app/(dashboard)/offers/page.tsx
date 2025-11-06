@@ -243,7 +243,7 @@ export default function OffersPage() {
                         <DropdownMenuItem>View Performance</DropdownMenuItem>
                         <DropdownMenuItem>Duplicate</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(offer.id)}>
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(offer.id!)}>
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>

@@ -30,7 +30,7 @@ import { cn } from '@/lib/utils';
 const offerSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(5, 'Offer name is required and must be at least 5 characters.'),
-  scope: z.enum(['Airline', 'Brand', 'Market']),
+  scope: z.enum(['Airline', 'Brand', 'Market', 'Channel']),
   offerType: z.enum(['Discount', 'Fixed', 'Step']),
   currency: z.string().length(3, 'Must be a 3-letter currency code.'),
   rounding: z.enum(['None', 'Round Half-Up', 'Round Down']),
@@ -39,9 +39,6 @@ const offerSchema = z.object({
   expiryDate: z.date(),
   notes: z.string().optional(),
   status: z.enum(['Active', 'Inactive', 'Draft', 'Expired']),
-  // Deprecated fields from old spec
-  channel: z.string().optional(),
-  conditions: z.string().optional(),
 });
 
 export type Offer = z.infer<typeof offerSchema>;
@@ -106,6 +103,7 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
                     <SelectItem value="Airline">Airline</SelectItem>
                     <SelectItem value="Brand">Brand</SelectItem>
                     <SelectItem value="Market">Market</SelectItem>
+                    <SelectItem value="Channel">Channel</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -246,7 +244,7 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
             <FormItem>
               <FormLabel>Notes</FormLabel>
               <FormControl>
-                <Textarea placeholder="Internal notes about this offer configuration." {...field} />
+                <Textarea placeholder="Internal notes about this offer configuration." {...field} value={field.value ?? ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
