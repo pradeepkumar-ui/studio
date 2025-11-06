@@ -22,9 +22,7 @@ export default function OfferRulesPage() {
         <CardHeader>
           <CardTitle>Natural Language Rule Generation</CardTitle>
           <CardDescription>
-            Describe the rule you want to create. For example, "Give a 10%
-            discount on all flights from LHR to JFK for business class, valid
-            for the month of December."
+            Describe the rule you want to create. For example, "Create a rule named 'Summer EU-US Promo' that gives a 15% discount on business class flights from any airport in Germany (FRA, MUC) to New York (JFK, EWR) for travel between June 1st and August 31st, 2024."
           </CardDescription>
         </CardHeader>
         <CardContent>

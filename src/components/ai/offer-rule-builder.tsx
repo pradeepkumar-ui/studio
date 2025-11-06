@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Wand2, Loader2 } from "lucide-react";
+import { Wand2, Loader2, ClipboardCopy } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -59,6 +59,17 @@ export default function OfferRuleBuilder() {
     }
   }
 
+  const handleCopyToClipboard = () => {
+    if (structuredRule) {
+      navigator.clipboard.writeText(structuredRule);
+      toast({
+        title: "Copied to clipboard!",
+        description: "The generated rule has been copied.",
+      });
+    }
+  };
+
+
   return (
     <div className="space-y-6">
       <Form {...form}>
@@ -93,15 +104,23 @@ export default function OfferRuleBuilder() {
       
       {(isLoading || structuredRule) && (
         <Card className="mt-6">
-          <CardHeader>
+          <CardHeader className="flex flex-row justify-between items-center">
             <CardTitle>Generated Rule (JSON)</CardTitle>
+            {structuredRule && !isLoading && (
+              <Button variant="ghost" size="sm" onClick={handleCopyToClipboard}>
+                <ClipboardCopy className="mr-2 h-4 w-4" />
+                Copy
+              </Button>
+            )}
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="space-y-2">
+              <div className="space-y-2 p-4 bg-secondary rounded-md">
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-4 w-1/2" />
                 <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-4 w-2/3" />
+                <Skeleton className="h-4 w-4/5" />
               </div>
             ) : (
               <pre className="p-4 bg-secondary rounded-md text-sm text-secondary-foreground overflow-x-auto">

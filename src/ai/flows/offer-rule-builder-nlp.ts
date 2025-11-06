@@ -3,7 +3,7 @@
 /**
  * @fileOverview This file defines a Genkit flow for building offer rules using natural language processing (NLP).
  *
- * The flow takes a natural language description of a rule as input and returns a structured representation
+ * The flow takes a natural language description of a rule as input and returns a structured JSON representation
  * of the rule that can be used by the offer creation system.
  *
  * @interface OfferRuleBuilderNLPInput - The input schema for the offer rule builder flow.
@@ -28,7 +28,7 @@ const OfferRuleBuilderNLPOutputSchema = z.object({
   structuredRule: z
     .string()
     .describe(
-      'A structured representation of the rule, such as JSON or a domain-specific language.'
+      'A structured JSON representation of the rule. This should be a stringified JSON object.'
     ),
 });
 
@@ -42,12 +42,14 @@ const offerRuleBuilderPrompt = ai.definePrompt({
   name: 'offerRuleBuilderPrompt',
   input: {schema: OfferRuleBuilderNLPInputSchema},
   output: {schema: OfferRuleBuilderNLPOutputSchema},
-  prompt: `You are an expert in converting natural language descriptions of offer rules into a structured format.
+  prompt: `You are an expert in converting natural language descriptions of airline offer rules into a structured JSON format.
 
-  The structured format should be suitable for use in an offer creation system. Consider factors such as pricing, availability, and customer segmentation.
+  Analyze the following rule description and generate a structured JSON object as a string. The JSON should be well-formed and include keys such as 'ruleName', 'description', 'conditions', and 'action'.
 
-  Based on the following rule description, generate a structured representation of the rule:
+  - 'conditions' should contain specifics like 'routes', 'travelDates', 'bookingClass', etc.
+  - 'action' should detail the outcome, like a discount type and value.
 
+  Rule Description:
   {{{ruleDescription}}}
   `,
 });
@@ -60,7 +62,15 @@ const offerRuleBuilderNLPFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await offerRuleBuilderPrompt(input);
+    
+    // Ensure the output is a nicely formatted JSON string.
+    try {
+        const parsedJson = JSON.parse(output!.structuredRule);
+        output!.structuredRule = JSON.stringify(parsedJson, null, 2);
+    } catch (e) {
+        // If it's not valid JSON, just return the raw output. The user can refine the prompt.
+    }
+    
     return output!;
   }
 );
-
