@@ -1,6 +1,6 @@
-
 'use client';
 
+import { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { BarChart } from '@tremor/react';
 import { DollarSign, ShoppingCart, Ticket, Users } from "lucide-react";
 
-const chartData = [
+const initialChartData = [
   { date: "Jan 24", "Revenue": 18600 },
   { date: "Feb 24", "Revenue": 30500 },
   { date: "Mar 24", "Revenue": 23700 },
@@ -29,10 +29,7 @@ const chartData = [
   { date: "Jun 24", "Revenue": 21400 },
 ];
 
-const dataFormatter = (number: number) =>
-  `$${Intl.NumberFormat('us').format(number).toString()}`;
-
-const recentOrders = [
+const initialRecentOrders = [
   {
     orderId: "ORD-001",
     customer: "John Doe",
@@ -65,7 +62,14 @@ const recentOrders = [
   },
 ];
 
+const dataFormatter = (number: number) =>
+  `$${Intl.NumberFormat('us').format(number).toString()}`;
+
+
 export default function DashboardPage() {
+  const [chartData, setChartData] = useState(initialChartData);
+  const [recentOrders, setRecentOrders] = useState(initialRecentOrders);
+
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
