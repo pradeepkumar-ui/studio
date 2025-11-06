@@ -89,7 +89,7 @@ export default function LoginPage() {
       toast({ title: 'Signed in!', description: 'Welcome back, Admin.' });
     } catch (error: any) {
       // If the user does not exist, create it.
-      if (error.code === AuthErrorCodes.USER_DELETED) {
+      if (error.code === 'auth/user-not-found') {
         try {
           await createUserWithEmailAndPassword(auth, values.email, values.password);
           toast({ title: 'Admin Account Created!', description: 'You have been successfully signed up as Admin.' });
@@ -134,10 +134,14 @@ export default function LoginPage() {
       }
       router.push('/dashboard');
     } catch (error: any) {
+      let errorMessage = error.message;
+      if (error.code === 'auth/invalid-credential') {
+        errorMessage = 'Invalid credentials. Please check your email and password.';
+      }
       toast({
         variant: 'destructive',
         title: 'Authentication Error',
-        description: error.message,
+        description: errorMessage,
       });
     } finally {
       setLoading(false);
