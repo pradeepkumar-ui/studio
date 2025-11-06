@@ -37,6 +37,7 @@ import {
   ChevronRight,
   Package,
   Database,
+  BrainCircuit,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -69,8 +70,6 @@ const menuItems: MenuItem[] = [
       { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
       { href: '/compliance', label: 'Offer Compliance', icon: Shield },
       { href: '/disruption-waivers', label: 'Disruption Waivers', icon: Waves },
-      { href: '/analytics', label: 'Analytics', icon: BarChart3 },
-      { href: '/offer-rules', label: 'Rule Builder', icon: FileJson },
       { href: '/offer-data', label: 'Data Management', icon: Database },
     ],
   },
@@ -99,6 +98,16 @@ const menuItems: MenuItem[] = [
       { href: '/atpco', label: 'ATPCO', icon: Plane },
     ]
   },
+  {
+    href: '/analytics',
+    label: 'Analytics & AI',
+    icon: BarChart3,
+    subItems: [
+        { href: '/analytics', label: 'Offer Performance', icon: BarChart3 },
+        { href: '/fare-change-forecast', label: 'Fare Change Forecast', icon: BrainCircuit },
+        { href: '/offer-rules', label: 'Offer Rule Builder', icon: FileJson },
+    ]
+  }
 ];
 
 
@@ -114,6 +123,10 @@ export default function SidebarNav() {
   
   const isPricingActive = () => {
     return pathname.startsWith('/pricing');
+  }
+  
+  const isAnalyticsActive = () => {
+    return pathname.startsWith('/analytics') || pathname.startsWith('/fare-change-forecast') || pathname.startsWith('/offer-rules');
   }
 
   return (
@@ -132,14 +145,14 @@ export default function SidebarNav() {
         <SidebarMenu>
           {menuItems.map((item) =>
             item.subItems ? (
-              <SidebarMenuItem key={item.href} asChild>
+              <SidebarMenuItem key={item.label} asChild>
                 <SidebarMenuCollapsible
-                  defaultOpen={isSubItemActive(item.subItems) || (item.href === '/catalog' && isSubItemActive(item.subItems)) || (item.href === '/inventory' && isSubItemActive(item.subItems))}
+                  defaultOpen={isSubItemActive(item.subItems) || (item.href === '/catalog' && isSubItemActive(item.subItems)) || (item.href === '/inventory' && isSubItemActive(item.subItems)) || (item.label === 'Analytics & AI' && isAnalyticsActive())}
                 >
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton
                       className="group/c-trigger"
-                      isActive={isSubItemActive(item.subItems)}
+                      isActive={isSubItemActive(item.subItems) || (item.label === 'Analytics & AI' && isAnalyticsActive())}
                       tooltip={{ children: item.label, side: 'right' }}
                     >
                       <item.icon />
