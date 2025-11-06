@@ -28,6 +28,7 @@ import {
   Gift,
   Handshake,
   CalendarDays,
+  Waves,
 } from 'lucide-react';
 
 const menuItems = [
@@ -37,6 +38,7 @@ const menuItems = [
   { href: '/compliance', label: 'Offer Compliance', icon: Shield },
   { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
   { href: '/orders', label: 'Order Management', icon: ShoppingCart },
+  { href: '/disruption-waivers', label: 'Disruption Waivers', icon: Waves },
   { href: '/offer-composer', label: 'Offer Composer', icon: Layers },
   { href: '/fares', label: 'Fare Management', icon: DollarSign },
   { href: '/promotions', label: 'Promotions', icon: Gift },
