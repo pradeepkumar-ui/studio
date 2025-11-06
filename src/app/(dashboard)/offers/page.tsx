@@ -37,12 +37,21 @@ import {
   MoreHorizontal,
   PlusCircle,
   BarChartHorizontal,
+  Search,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { OfferForm, type Offer } from '@/components/forms/offer-form';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
-const initialOffers: Offer[] = [
+const initialOffers: (Offer & { version: number, ttl: string })[] = [
   {
     id: 'OFF-001',
     name: 'Summer Getaway Sale',
@@ -54,7 +63,9 @@ const initialOffers: Offer[] = [
     criteria: 'Channel: Web, POS: US',
     effectiveDate: new Date('2024-07-01'),
     expiryDate: new Date('2024-07-31'),
-    notes: '20% off Economy on NYC-MIA for travel in July.'
+    notes: '20% off Economy on NYC-MIA for travel in July.',
+    version: 4,
+    ttl: '00:08:22'
   },
   {
     id: 'OFF-002',
@@ -67,7 +78,9 @@ const initialOffers: Offer[] = [
     criteria: 'Complimentary upgrade on trans-Atlantic routes.',
     effectiveDate: new Date('2024-06-01'),
     expiryDate: new Date('2024-08-31'),
-    notes: ''
+    notes: '',
+    version: 2,
+    ttl: '00:14:10'
   },
   {
     id: 'OFF-003',
@@ -80,7 +93,9 @@ const initialOffers: Offer[] = [
     criteria: '15% off bookings to Europe made 90+ days in advance.',
     effectiveDate: new Date('2024-09-01'),
     expiryDate: new Date('2024-12-31'),
-    notes: ''
+    notes: '',
+    version: 1,
+    ttl: 'N/A'
   },
   {
     id: 'OFF-004',
@@ -93,7 +108,9 @@ const initialOffers: Offer[] = [
     criteria: 'Up to 30% off flights departing within 48 hours.',
     effectiveDate: new Date('2024-01-01'),
     expiryDate: new Date('2024-12-31'),
-    notes: 'Only on mobile app'
+    notes: 'Only on mobile app',
+    version: 7,
+    ttl: '00:02:45'
   },
   {
     id: 'OFF-005',
@@ -106,14 +123,17 @@ const initialOffers: Offer[] = [
     criteria: '10% off all routes for Christmas period.',
     effectiveDate: new Date('2023-12-01'),
     expiryDate: new Date('2023-12-26'),
-    notes: ''
+    notes: '',
+    version: 3,
+    ttl: 'Expired'
   },
 ];
 
 export default function OffersPage() {
-  const [offers, setOffers] = useState<Offer[]>(initialOffers);
+  const [offers, setOffers] = useState<(Offer & { version: number; ttl: string; })[]>(initialOffers);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
+  const [filters, setFilters] = useState({ id: '', status: 'all' });
   const { toast } = useToast();
 
   const handleSimulate = () => {
@@ -141,11 +161,11 @@ export default function OffersPage() {
 
   const handleFormSubmit = (data: Offer) => {
     if (editingOffer) {
-      setOffers(offers.map((o) => (o.id === editingOffer.id ? { ...o, ...data } : o)));
+      setOffers(offers.map((o) => (o.id === editingOffer.id ? { ...o, ...data, version: o.version + 1, ttl: '00:15:00' } : o)));
       toast({ title: "Offer Updated", description: `Offer ${data.name} has been successfully updated.` });
     } else {
-      const newOffer = { ...data, id: `OFF-${String(offers.length + 1).padStart(3, '0')}` };
-      setOffers([...offers, newOffer]);
+      const newOffer = { ...data, id: `OFF-${String(offers.length + 1).padStart(3, '0')}`, version: 1, ttl: '00:15:00' };
+      setOffers([newOffer, ...offers]);
       toast({ title: "Offer Created", description: `Offer ${newOffer.name} has been successfully created.` });
     }
     handleDialogClose();
@@ -160,12 +180,28 @@ export default function OffersPage() {
     });
   };
 
+  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({...prev, [name]: value}));
+  };
+
+  const handleStatusFilterChange = (value: string) => {
+     setFilters(prev => ({...prev, status: value}));
+  }
+
+  const filteredOffers = offers.filter(offer => {
+    return (
+      (filters.id ? offer.id!.toLowerCase().includes(filters.id.toLowerCase()) : true) &&
+      (filters.status === 'all' || offer.status === filters.status)
+    )
+  })
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold tracking-tight">
-            Offer Management
+            Offer Catalogue
           </h1>
           <p className="text-muted-foreground">
             Create, govern, and distribute retail offers and promotions.
@@ -184,10 +220,32 @@ export default function OffersPage() {
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Offer Configurations</CardTitle>
-          <CardDescription>
-            Manage all published retail offers, promotions, and rules.
-          </CardDescription>
+           <div className="flex items-center gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                name="id"
+                placeholder="Filter by Offer ID..."
+                value={filters.id}
+                onChange={handleFilterChange}
+                className="pl-9"
+              />
+            </div>
+            <div className="w-48">
+              <Select onValueChange={handleStatusFilterChange} defaultValue={filters.status}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Draft">Draft</SelectItem>
+                  <SelectItem value="Expired">Expired</SelectItem>
+                  <SelectItem value="Inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -195,8 +253,8 @@ export default function OffersPage() {
               <TableRow>
                 <TableHead>Offer Name</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Scope</TableHead>
+                <TableHead>Version</TableHead>
+                <TableHead>TTL</TableHead>
                 <TableHead>Effective Dates</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -204,7 +262,7 @@ export default function OffersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {offers.map((offer) => (
+              {filteredOffers.map((offer) => (
                 <TableRow key={offer.id}>
                   <TableCell className="font-medium">{offer.name}</TableCell>
                   <TableCell>
@@ -220,8 +278,8 @@ export default function OffersPage() {
                       {offer.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>{offer.offerType}</TableCell>
-                  <TableCell>{offer.scope}</TableCell>
+                  <TableCell>v{offer.version}</TableCell>
+                  <TableCell>{offer.ttl}</TableCell>
                   <TableCell>
                     {format(offer.effectiveDate, 'PP')} - {format(offer.expiryDate, 'PP')}
                   </TableCell>
@@ -241,6 +299,7 @@ export default function OffersPage() {
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => handleOpenDialog(offer)}>Edit</DropdownMenuItem>
                         <DropdownMenuItem>View Performance</DropdownMenuItem>
+                        <DropdownMenuItem>View Lineage</DropdownMenuItem>
                         <DropdownMenuItem>Duplicate</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(offer.id!)}>

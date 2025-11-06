@@ -36,6 +36,7 @@ import {
   Waves,
   ChevronRight,
   Package,
+  Database,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -55,6 +56,7 @@ const menuItems: MenuItem[] = [
     label: 'Offer Management',
     icon: Ticket,
     subItems: [
+      { href: '/offers', label: 'Offer Catalogue', icon: Layers },
       { href: '/offer-composer', label: 'Composer', icon: Layers },
       { href: '/fares', label: 'Fare Management', icon: DollarSign },
       { href: '/pricing/dynamic', label: 'Dynamic Pricing', icon: DollarSign },
@@ -69,6 +71,7 @@ const menuItems: MenuItem[] = [
       { href: '/disruption-waivers', label: 'Disruption Waivers', icon: Waves },
       { href: '/analytics', label: 'Analytics', icon: BarChart3 },
       { href: '/offer-rules', label: 'Rule Builder', icon: FileJson },
+      { href: '/offer-data', label: 'Data Management', icon: Database },
     ],
   },
   {
