@@ -45,7 +45,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import {
   Card,
-  CardContent
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from '@/components/ui/card';
 
 const initialData: Order[] = [
@@ -157,7 +160,7 @@ export const columns: ColumnDef<Order>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => <div className="lowercase">{row.getValue('id')}</div>,
+    cell: ({ row }) => <div className="lowercase pl-4">{row.getValue('id')}</div>,
   },
   {
     accessorKey: 'customer',
@@ -177,7 +180,7 @@ export const columns: ColumnDef<Order>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => <div className="lowercase">{row.getValue('email')}</div>,
+    cell: ({ row }) => <div className="lowercase pl-4">{row.getValue('email')}</div>,
   },
   {
     accessorKey: 'status',
@@ -292,7 +295,13 @@ export default function OrdersPage() {
         </div>
       </div>
       <Card>
-        <CardContent className="p-6">
+         <CardHeader>
+          <CardTitle>All Orders</CardTitle>
+          <CardDescription>
+            Browse and manage all customer orders.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-0">
           <div className="flex items-center justify-between py-4">
             <Input
               placeholder="Filter orders by customer..."
@@ -410,3 +419,5 @@ export default function OrdersPage() {
     </div>
   );
 }
+
+    
