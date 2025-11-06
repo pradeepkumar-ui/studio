@@ -63,6 +63,7 @@ const menuItems: MenuItem[] = [
       { href: '/offers', label: 'Offer Catalogue', icon: Layers },
       { href: '/offer-composer', label: 'Composer', icon: Layers },
       { href: '/optimisation', label: 'Offer Optimisation', icon: Wand2 },
+      { href: '/bundles', label: 'Bundles Studio', icon: Package },
       { href: '/fares', label: 'Fare Management', icon: DollarSign },
       { href: '/pricing/dynamic', label: 'Dynamic Pricing', icon: DollarSign },
       {
@@ -70,7 +71,6 @@ const menuItems: MenuItem[] = [
         label: 'Ancillary Pricing',
         icon: Container,
       },
-      { href: '/bundles', label: 'Bundles Studio', icon: Package },
       { href: '/promotions', label: 'Promotions', icon: Gift },
       { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
       { href: '/compliance', label: 'Offer Compliance', icon: Shield },
@@ -133,6 +133,10 @@ export default function SidebarNav() {
   
   const isAnalyticsActive = () => {
     return pathname.startsWith('/analytics') || pathname.startsWith('/fare-change-forecast') || pathname.startsWith('/offer-rules');
+  }
+  
+  const isSettingsActive = () => {
+      return pathname.startsWith('/settings') || pathname.startsWith('/broker');
   }
 
   return (
@@ -213,16 +217,46 @@ export default function SidebarNav() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <Link href="/settings" legacyBehavior passHref>
-              <SidebarMenuButton
-                isActive={pathname.startsWith('/settings')}
-                tooltip={{ children: 'Settings', side: 'right' }}
-              >
-                <Settings />
-                <span>Settings</span>
-              </SidebarMenuButton>
-            </Link>
+          <SidebarMenuItem asChild>
+             <SidebarMenuCollapsible
+                  defaultOpen={isSettingsActive()}
+                >
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton
+                      className="group/c-trigger"
+                      isActive={isSettingsActive()}
+                      tooltip={{ children: 'Settings', side: 'right' }}
+                    >
+                      <Settings />
+                      <span>Settings</span>
+                      <ChevronRight className="ml-auto size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/c-trigger:rotate-90 group-data-[collapsible=icon]:hidden" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <SidebarMenuCollapsibleContent>
+                    <SidebarMenuSub>
+                        <SidebarMenuSubItem asChild>
+                           <Link href="/broker" legacyBehavior passHref>
+                            <SidebarMenuSubButton
+                              isActive={pathname.startsWith('/broker')}
+                            >
+                              <RadioTower className={cn('transition-transform ease-in-out', pathname.startsWith('/broker') && 'text-primary')} />
+                              <span>Broker Management</span>
+                            </SidebarMenuSubButton>
+                          </Link>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem asChild>
+                           <Link href="/settings" legacyBehavior passHref>
+                            <SidebarMenuSubButton
+                              isActive={pathname.startsWith('/settings')}
+                            >
+                              <Settings className={cn('transition-transform ease-in-out', pathname.startsWith('/settings') && 'text-primary')} />
+                              <span>General</span>
+                            </SidebarMenuSubButton>
+                          </Link>
+                        </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                  </SidebarMenuCollapsibleContent>
+                </SidebarMenuCollapsible>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
