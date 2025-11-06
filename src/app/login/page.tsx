@@ -81,40 +81,36 @@ export default function LoginPage() {
     },
   });
 
-  const handleAdminLogin = async (values: z.infer<typeof formSchema>) => {
-    try {
-      await signInWithEmailAndPassword(auth, 'admin@example.com', values.password);
-      toast({ title: 'Signed in!', description: 'Welcome back, Admin.' });
-    } catch (error: any) {
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
-        try {
-          await createUserWithEmailAndPassword(auth, 'admin@example.com', values.password);
-          toast({ title: 'Admin Account Created!', description: 'You have been successfully signed up as Admin.' });
-        } catch (creationError: any) {
-           throw creationError;
-        }
-      } else {
-        throw error;
-      }
-    }
-  }
-
-
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
     
-    const isPotentialAdmin = values.email.toLowerCase() === 'admin' && values.password === 'Admin123';
-    
-    if (isPotentialAdmin) {
+    // Special handling for the admin user
+    if (values.email.toLowerCase() === 'admin' && values.password === 'Admin123') {
         try {
-            await handleAdminLogin(values);
+            await signInWithEmailAndPassword(auth, 'admin@example.com', values.password);
+            toast({ title: 'Admin Signed In!', description: 'Welcome back, Admin.' });
             router.push('/dashboard');
         } catch (error: any) {
-            toast({
-                variant: 'destructive',
-                title: 'Admin Login Error',
-                description: error.message || 'An unexpected error occurred.',
-            });
+            if (error.code === 'auth/invalid-credential') {
+                try {
+                    // If sign-in fails because the user doesn't exist, create it.
+                    await createUserWithEmailAndPassword(auth, 'admin@example.com', values.password);
+                    toast({ title: 'Admin Account Created!', description: 'You have been successfully signed up as Admin.' });
+                    router.push('/dashboard');
+                } catch (creationError: any) {
+                    toast({
+                        variant: 'destructive',
+                        title: 'Admin Creation Error',
+                        description: creationError.message || 'An unexpected error occurred during admin account creation.',
+                    });
+                }
+            } else {
+                 toast({
+                    variant: 'destructive',
+                    title: 'Admin Login Error',
+                    description: error.message || 'An unexpected error occurred.',
+                });
+            }
         } finally {
             setLoading(false);
         }
