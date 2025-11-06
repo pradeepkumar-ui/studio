@@ -40,6 +40,7 @@ import {
   Database,
   BrainCircuit,
   Wand2,
+  Signal,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -102,6 +103,7 @@ const menuItems: MenuItem[] = [
      subItems: [
       { href: '/inventory', label: 'Flight & Inventory', icon: Plane },
       { href: '/allotments', label: 'Allotments', icon: CalendarDays },
+      { href: '/capacity', label: 'Capacity', icon: Signal },
       { href: '/atpco', label: 'ATPCO', icon: Plane },
     ]
   },
