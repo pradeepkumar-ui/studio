@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2 } from 'lucide-react';
+import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -35,6 +35,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { searchFlightsNLP } from '@/ai/flows/search-flights-nlp';
+import { FlightResultCard, type FlightOffer } from '@/components/offer-composer/flight-result-card';
 
 const offerSearchSchema = z.object({
   origin: z.string().length(3, 'Origin must be a 3-letter IATA code.').toUpperCase(),
@@ -44,14 +45,61 @@ const offerSearchSchema = z.object({
   }),
   returnDate: z.date().optional(),
   passengers: z.string().min(1),
+  cabinClass: z.enum(['ECONOMY', 'PREMIUM_ECONOMY', 'BUSINESS', 'FIRST']),
 });
 
 const aiSearchSchema = z.object({
   query: z.string().min(10, 'Please describe your search in at least 10 characters.'),
 });
 
+const mockFlightOffers: FlightOffer[] = [
+    {
+      id: 'OFF-FL-001',
+      departureTime: '06:30',
+      departureCode: 'JFK',
+      arrivalTime: '09:45',
+      arrivalCode: 'LAX',
+      duration: '6h 15m',
+      stops: 0,
+      airline: 'Airline A',
+      price: 350,
+      currency: 'USD',
+      cabinClass: 'Economy',
+      includedBaggage: '1 Carry-on',
+    },
+    {
+      id: 'OFF-FL-002',
+      departureTime: '09:00',
+      departureCode: 'JFK',
+      arrivalTime: '13:30',
+      arrivalCode: 'LAX',
+      duration: '7h 30m',
+      stops: 1,
+      airline: 'Airline B',
+      price: 295,
+      currency: 'USD',
+      cabinClass: 'Economy',
+      includedBaggage: '1 Carry-on',
+    },
+     {
+      id: 'OFF-FL-003',
+      departureTime: '14:00',
+      departureCode: 'JFK',
+      arrivalTime: '17:15',
+      arrivalCode: 'LAX',
+      duration: '6h 15m',
+      stops: 0,
+      airline: 'Airline A',
+      price: 1250,
+      currency: 'USD',
+      cabinClass: 'Business',
+      includedBaggage: '1 Carry-on, 2 Checked',
+    },
+];
+
+
 export default function OfferComposerPage() {
-  const [searchResults, setSearchResults] = useState<any[] | null>(null);
+  const [searchResults, setSearchResults] = useState<FlightOffer[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const { toast } = useToast();
@@ -62,6 +110,7 @@ export default function OfferComposerPage() {
       origin: '',
       destination: '',
       passengers: '1',
+      cabinClass: 'ECONOMY',
     },
   });
   
@@ -115,11 +164,14 @@ export default function OfferComposerPage() {
     
     // Simulate API call
     setTimeout(() => {
-        setSearchResults([]);
+        const results = mockFlightOffers.filter(
+            (offer) => offer.cabinClass.toUpperCase().replace(' ', '_') === data.cabinClass
+        );
+        setSearchResults(results);
         setIsLoading(false);
         toast({
             title: 'Search complete!',
-            description: 'No offers found for the selected criteria.',
+            description: `${results.length} offers found for the selected criteria.`,
           });
     }, 2000);
   }
@@ -142,112 +194,140 @@ export default function OfferComposerPage() {
             <CardContent>
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSearchSubmit)} className="space-y-8">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
-                    <FormField
-                    control={form.control}
-                    name="origin"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Origin</FormLabel>
-                        <div className="relative">
-                            <PlaneTakeoff className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <FormControl>
-                            <Input placeholder="e.g., JFK" {...field} className="pl-9" />
-                            </FormControl>
-                        </div>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                    control={form.control}
-                    name="destination"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Destination</FormLabel>
-                        <div className="relative">
-                            <PlaneLanding className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <FormControl>
-                            <Input placeholder="e.g., LAX" {...field} className="pl-9" />
-                            </FormControl>
-                        </div>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                    control={form.control}
-                    name="departureDate"
-                    render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                        <FormLabel>Departure Date</FormLabel>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                            <FormControl>
-                                <Button
-                                variant={'outline'}
-                                className={cn(
-                                    'w-full pl-3 text-left font-normal',
-                                    !field.value && 'text-muted-foreground'
-                                )}
-                                >
-                                {field.value ? (
-                                    format(field.value, 'PPP')
-                                ) : (
-                                    <span>Pick a date</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                            </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                disabled={(date) =>
-                                date < new Date(new Date().setHours(0,0,0,0))
-                                }
-                                initialFocus
-                            />
-                            </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                    control={form.control}
-                    name="passengers"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Passengers</FormLabel>
-                        <div className="relative">
-                            <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
-                                <FormControl>
-                                    <SelectTrigger className="pl-9">
-                                    <SelectValue placeholder="Select number of passengers" />
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {[...Array(8)].map((_, i) => (
-                                        <SelectItem key={i+1} value={String(i + 1)}>{i + 1} Passenger{i > 0 ? 's' : ''}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <div className="flex items-end">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                      <FormField
+                      control={form.control}
+                      name="origin"
+                      render={({ field }) => (
+                          <FormItem>
+                          <FormLabel>Origin</FormLabel>
+                          <div className="relative">
+                              <PlaneTakeoff className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                              <FormControl>
+                              <Input placeholder="e.g., JFK" {...field} className="pl-9" />
+                              </FormControl>
+                          </div>
+                          <FormMessage />
+                          </FormItem>
+                      )}
+                      />
+                      <FormField
+                      control={form.control}
+                      name="destination"
+                      render={({ field }) => (
+                          <FormItem>
+                          <FormLabel>Destination</FormLabel>
+                          <div className="relative">
+                              <PlaneLanding className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                              <FormControl>
+                              <Input placeholder="e.g., LAX" {...field} className="pl-9" />
+                              </FormControl>
+                          </div>
+                          <FormMessage />
+                          </FormItem>
+                      )}
+                      />
+                      <FormField
+                      control={form.control}
+                      name="departureDate"
+                      render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                          <FormLabel>Departure Date</FormLabel>
+                          <Popover>
+                              <PopoverTrigger asChild>
+                              <FormControl>
+                                  <Button
+                                  variant={'outline'}
+                                  className={cn(
+                                      'w-full pl-3 text-left font-normal',
+                                      !field.value && 'text-muted-foreground'
+                                  )}
+                                  >
+                                  {field.value ? (
+                                      format(field.value, 'PPP')
+                                  ) : (
+                                      <span>Pick a date</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                  </Button>
+                              </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                  mode="single"
+                                  selected={field.value}
+                                  onSelect={field.onChange}
+                                  disabled={(date) =>
+                                  date < new Date(new Date().setHours(0,0,0,0))
+                                  }
+                                  initialFocus
+                              />
+                              </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                          </FormItem>
+                      )}
+                      />
+                      <FormField
+                      control={form.control}
+                      name="passengers"
+                      render={({ field }) => (
+                          <FormItem>
+                          <FormLabel>Passengers</FormLabel>
+                          <div className="relative">
+                              <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                              <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                  <FormControl>
+                                      <SelectTrigger className="pl-9">
+                                      <SelectValue placeholder="Select number of passengers" />
+                                      </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                      {[...Array(8)].map((_, i) => (
+                                          <SelectItem key={i+1} value={String(i + 1)}>{i + 1} Passenger{i > 0 ? 's' : ''}</SelectItem>
+                                      ))}
+                                  </SelectContent>
+                              </Select>
+                          </div>
+                          <FormMessage />
+                          </FormItem>
+                      )}
+                      />
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                     <FormField
+                      control={form.control}
+                      name="cabinClass"
+                      render={({ field }) => (
+                          <FormItem>
+                          <FormLabel>Cabin Class</FormLabel>
+                           <div className="relative">
+                               <Armchair className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger className="pl-9">
+                                        <SelectValue placeholder="Select cabin class" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="ECONOMY">Economy</SelectItem>
+                                        <SelectItem value="PREMIUM_ECONOMY">Premium Economy</SelectItem>
+                                        <SelectItem value="BUSINESS">Business</SelectItem>
+                                        <SelectItem value="FIRST">First</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                          <FormMessage />
+                          </FormItem>
+                      )}
+                      />
+                    <div className="flex items-end lg:col-start-4">
                         <Button type="submit" className="w-full" disabled={isLoading}>
                             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
                              Search
                         </Button>
                     </div>
-                </div>
+                  </div>
                 </form>
             </Form>
             </CardContent>
@@ -268,7 +348,7 @@ export default function OfferComposerPage() {
                                 <FormItem>
                                     <FormLabel className="sr-only">AI Search Query</FormLabel>
                                     <FormControl>
-                                        <Textarea placeholder="e.g., Round trip for 2 people from NYC to London next month" {...field} />
+                                        <Textarea placeholder="e.g., Round trip for 2 people from NYC to London next month in Business class" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -291,13 +371,20 @@ export default function OfferComposerPage() {
                 <CardDescription>The best offers based on your search criteria.</CardDescription>
             </CardHeader>
             <CardContent>
-                {searchResults.length === 0 ? (
+                {isLoading ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                        <p>Loading offers...</p>
+                    </div>
+                ) : searchResults.length === 0 ? (
                      <div className="text-center py-12 text-muted-foreground">
                         <p>No offers found for the selected criteria.</p>
                         <p className="text-sm">Try adjusting your search parameters.</p>
                     </div>
                 ) : (
-                    <div>{/* Offer results will be rendered here */}</div>
+                    <div className="space-y-4">
+                        {searchResults.map(offer => <FlightResultCard key={offer.id} offer={offer} />)}
+                    </div>
                 )}
             </CardContent>
          </Card>
