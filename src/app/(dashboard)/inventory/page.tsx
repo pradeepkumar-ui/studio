@@ -63,6 +63,9 @@ export default function InventoryPage() {
   const [bookingClasses, setBookingClasses] = useState<BookingClass[]>(initialBookingClasses);
   const [fareBrandMaps, setFareBrandMaps] = useState<FareBrandMap[]>(initialFareBrandMaps);
 
+  // For simplicity, we are not adding create/edit forms for this module in this step.
+  // The buttons are present, but their functionality will be added in a future step.
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -85,7 +88,7 @@ export default function InventoryPage() {
                 Define the classes of service for inventory.
               </CardDescription>
             </div>
-            <Button size="sm">
+            <Button size="sm" onClick={() => alert('Create/Edit form for Booking Classes would appear here.')}>
               <PlusCircle className="mr-2" /> Add Class
             </Button>
           </CardHeader>
@@ -119,7 +122,7 @@ export default function InventoryPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem>Edit</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => alert('Create/Edit form for Booking Classes would appear here.')}>Edit</DropdownMenuItem>
                           <DropdownMenuItem>Change Status</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -139,7 +142,7 @@ export default function InventoryPage() {
                 Map fare brands to booking classes.
               </CardDescription>
             </div>
-             <Button size="sm">
+             <Button size="sm" onClick={() => alert('Create/Edit form for Fare Brand Mapping would appear here.')}>
               <PlusCircle className="mr-2" /> Add Mapping
             </Button>
           </CardHeader>
@@ -173,7 +176,7 @@ export default function InventoryPage() {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                    <DropdownMenuItem>Edit Mapping</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => alert('Create/Edit form for Fare Brand Mapping would appear here.')}>Edit Mapping</DropdownMenuItem>
                                     <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
