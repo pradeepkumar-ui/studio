@@ -50,7 +50,9 @@ const initialNsa: NegotiatedSpaceAgreement[] = [
     status: 'Published',
     rbd: 'Q,N,V',
     brand: 'Value,Flex',
-    pricing: 'INR Ladder'
+    pricing: 'INR Ladder',
+    deadlines: 'Release: D-30, D-14. Name: D-14. Issue: D-7.',
+    finance: '10% at contract, 20% at D-45. Standard penalties.',
   },
   {
     id: 'NSA-002',
@@ -61,7 +63,9 @@ const initialNsa: NegotiatedSpaceAgreement[] = [
     status: 'Published',
     rbd: 'J,C',
     brand: 'Business Flex',
-    pricing: 'Corporate Rates'
+    pricing: 'Corporate Rates',
+    deadlines: 'Release: D-14. Name: D-7. Issue: D-3.',
+    finance: 'Monthly billing. No penalties.',
   },
   {
     id: 'NSA-003',
@@ -72,7 +76,9 @@ const initialNsa: NegotiatedSpaceAgreement[] = [
     status: 'Approved',
     rbd: 'Y,B,M',
     brand: 'Economy Standard',
-    pricing: 'Fixed Fare'
+    pricing: 'Fixed Fare',
+    deadlines: 'Release: D-45. Name: D-21. Issue: D-14.',
+    finance: '50% deposit required. Attrition penalties apply.',
   },
   {
     id: 'NSA-004',
@@ -83,7 +89,9 @@ const initialNsa: NegotiatedSpaceAgreement[] = [
     status: 'Draft',
     rbd: 'Y',
     brand: 'Economy',
-    pricing: 'Pending'
+    pricing: 'Pending',
+    deadlines: 'Not set',
+    finance: 'Not set',
   },
 ];
 
@@ -162,7 +170,7 @@ export default function NsaPage() {
                 <TableHead>Partner</TableHead>
                 <TableHead>Scope</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Capacity</TableHead>
+                <TableHead>Pricing</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -179,7 +187,7 @@ export default function NsaPage() {
                       {nsa.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>{nsa.capacity} seats/flight</TableCell>
+                  <TableCell>{nsa.pricing}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -214,7 +222,7 @@ export default function NsaPage() {
       </Card>
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} >
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>{editingNsa ? 'Edit Agreement' : 'Create New Agreement'}</DialogTitle>
             <DialogDescription>

@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 
 const nsaSchema = z.object({
   id: z.string().optional(),
@@ -31,6 +32,8 @@ const nsaSchema = z.object({
   rbd: z.string().min(1, 'At least one RBD is required.'),
   brand: z.string().min(3, 'Brand mapping is required.'),
   pricing: z.string().min(5, 'Pricing details are required.'),
+  deadlines: z.string().min(5, 'Deadline details are required.'),
+  finance: z.string().min(5, 'Finance details are required.'),
   status: z.enum(['Draft', 'Approved', 'Published', 'Amended', 'Expired']),
 });
 
@@ -53,13 +56,15 @@ export function NsaForm({ nsa, onSubmit, onCancel }: NsaFormProps) {
       rbd: 'Q, N, V',
       brand: 'Value, Flex',
       pricing: 'INR; base 8,999 -> 9,499; 8% commission',
+      deadlines: 'Release: D-30, D-14. Name: D-14. Issue: D-7.',
+      finance: '10% deposit at contract, 20% at D-45. Attrition penalties apply.',
       status: 'Draft',
     },
   });
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto pr-4">
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -159,7 +164,41 @@ export function NsaForm({ nsa, onSubmit, onCancel }: NsaFormProps) {
             </FormItem>
           )}
         />
+
+        <Separator />
         
+        <h4 className="text-md font-semibold">Rules & Deadlines</h4>
+        
+        <FormField
+          control={form.control}
+          name="deadlines"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Deadlines</FormLabel>
+              <FormControl>
+                <Textarea placeholder="e.g., Release: D-30, D-14. Name: D-14. Issue: D-7." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="finance"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Deposits & Penalties</FormLabel>
+              <FormControl>
+                <Textarea placeholder="e.g., 10% deposit at contract, 20% at D-45. Attrition penalties apply." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <Separator />
+
         <FormField
           control={form.control}
           name="status"
