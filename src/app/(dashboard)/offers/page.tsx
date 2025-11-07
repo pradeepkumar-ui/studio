@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import {
@@ -71,23 +71,22 @@ const mockOffers: Offer[] = [
 
 export default function OffersPage() {
   const firestore = useFirestore();
-  // By default, we will use mock data for a faster prototype experience.
-  // The useCollection hook is still here and can be re-enabled when needed.
-  const [offers, setOffers] = useState(mockOffers);
   const { data: firestoreData, loading, error } = useCollection(firestore ? collection(firestore, 'offers') : undefined);
   
+  const [offers, setOffers] = useState<Offer[]>(mockOffers);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
   const [filters, setFilters] = useState({ id: '', status: 'all' });
   const { toast } = useToast();
   
-  // This effect can be enabled to switch to live Firestore data.
-  // useEffect(() => {
-  //   if (!loading && firestoreData) {
-  //     const liveOffers = firestoreData.length > 0 ? firestoreData : mockOffers;
-  //     setOffers(liveOffers as Offer[]);
-  //   }
-  // }, [firestoreData, loading]);
+  // By default, we will use mock data for a faster prototype experience.
+  // The useCollection hook is still here and can be re-enabled when needed.
+  useEffect(() => {
+    if (!loading && firestoreData) {
+      const liveOffers = firestoreData.length > 0 ? firestoreData as Offer[] : mockOffers;
+      setOffers(liveOffers);
+    }
+  }, [firestoreData, loading]);
 
   const handleSimulate = () => {
     toast({
@@ -180,7 +179,7 @@ export default function OffersPage() {
     }
     // Check if it's a plain object with seconds and nanoseconds, a possible format from Firestore
     if (date && typeof date === 'object' && 'seconds' in date && 'nanoseconds' in date) {
-      return format(new Date((date as Timestamp).seconds * 1000), 'PP');
+      return format(new Date((date as any).seconds * 1000), 'PP');
     }
     if (date instanceof Date) {
       return format(date, 'PP');
@@ -336,5 +335,3 @@ export default function OffersPage() {
     </div>
   );
 }
-
-    
