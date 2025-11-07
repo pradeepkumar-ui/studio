@@ -5,6 +5,8 @@ import { Firestore, getFirestore } from 'firebase/firestore';
 import { firebaseConfig } from './config';
 import { FirebaseProvider, useAuth, useFirebase, useFirebaseApp, useFirestore } from './provider';
 import { FirebaseClientProvider } from './client-provider';
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { useSubcollection } from './firestore/use-subcollection';
 
 
 let app: FirebaseApp | undefined;
@@ -33,4 +35,6 @@ export {
   useFirebaseApp,
   useFirestore,
   useAuth,
+  useCollection,
+  useSubcollection,
 };

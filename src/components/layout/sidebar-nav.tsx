@@ -69,7 +69,6 @@ const menuItems: MenuItem[] = [
       { href: '/optimisation', label: 'Offer Optimisation', icon: Wand2 },
       { href: '/bundles', label: 'Bundles Studio', icon: Package },
       { href: '/fares', label: 'Fare Management', icon: DollarSign },
-      { href: '/pricing/dynamic', label: 'Dynamic Pricing', icon: DollarSign },
       {
         href: '/pricing/ancillary',
         label: 'Ancillary Pricing',
@@ -128,7 +127,7 @@ const menuItems: MenuItem[] = [
     subItems: [
         { href: '/analytics', label: 'Offer Performance', icon: BarChart3 },
         { href: '/fare-change-forecast', label: 'Fare Change Forecast', icon: BrainCircuit },
-        { href: 'offer-rules', label: 'Offer Rule Builder', icon: FileJson },
+        { href: '/offer-rules', label: 'Offer Rule Builder', icon: FileJson },
     ]
   }
 ];
