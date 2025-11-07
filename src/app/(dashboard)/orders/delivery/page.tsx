@@ -36,31 +36,32 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const kpiData = [
-  { title: 'Active Deliveries', value: '1,230' },
-  { title: 'Completed (24h)', value: '5,412' },
-  { title: 'Failed (24h)', value: '23' },
-  { title: 'SLA Success', value: '99.4%' },
+  { title: 'Orders Delivered (24h)', value: '5,412' },
+  { title: 'Pending Delivery', value: '12' },
+  { title: 'Delivery Failures', value: '3' },
+  { title: 'SLA Success Rate', value: '99.8%' },
 ];
 
-type DeliveryStatus = 'Delivered' | 'Pending' | 'Failed' | 'In-Progress';
+type DeliveryStatus = 'Delivered' | 'Pending' | 'Failed' | 'Partially Delivered';
 
 const mockDeliveries = [
-  { deliveryId: 'DLV_45213', orderId: 'ORD_98765', channel: 'Email', service: 'E-Ticket', status: 'Delivered' as DeliveryStatus, timestamp: '1 min ago' },
-  { deliveryId: 'DLV_45214', orderId: 'ORD_98765', channel: 'Partner API', service: 'Lounge Pass', status: 'Delivered' as DeliveryStatus, timestamp: '1 min ago' },
-  { deliveryId: 'DLV_45215', orderId: 'ORD_98766', channel: 'SMS', service: 'Boarding Pass', status: 'In-Progress' as DeliveryStatus, timestamp: '3 mins ago' },
-  { deliveryId: 'DLV_45216', orderId: 'ORD_98767', channel: 'Email', service: 'Itinerary', status: 'Failed' as DeliveryStatus, timestamp: '5 mins ago' },
-  { deliveryId: 'DLV_45217', orderId: 'ORD_98768', channel: 'DCS', service: 'Seat Change', status: 'Delivered' as DeliveryStatus, timestamp: '8 mins ago' },
+  { orderId: 'ORD_98765', customer: 'Voyage Travel Co.', status: 'Delivered' as DeliveryStatus, channels: 'Email, API', timestamp: '1 min ago' },
+  { orderId: 'ORD_98766', customer: 'Jane Smith', status: 'Pending' as DeliveryStatus, channels: 'SMS, Email', timestamp: '3 mins ago' },
+  { orderId: 'ORD_98767', customer: 'Globex Corp.', status: 'Failed' as DeliveryStatus, channels: 'Email', timestamp: '5 mins ago' },
+  { orderId: 'ORD_98768', customer: 'InnoTech Solutions', status: 'Delivered' as DeliveryStatus, channels: 'GDS', timestamp: '8 mins ago' },
+  { orderId: 'ORD_98769', customer: 'John Doe', status: 'Partially Delivered' as DeliveryStatus, channels: 'Email, API', timestamp: '12 mins ago' },
 ];
 
 const getStatusBadgeVariant = (status: DeliveryStatus) => {
   switch (status) {
     case 'Delivered':
       return 'default';
-    case 'In-Progress':
     case 'Pending':
       return 'secondary';
     case 'Failed':
       return 'destructive';
+    case 'Partially Delivered':
+      return 'outline';
     default:
       return 'outline';
   }
@@ -69,9 +70,9 @@ const getStatusBadgeVariant = (status: DeliveryStatus) => {
 const getStatusIcon = (status: DeliveryStatus) => {
     switch (status) {
         case 'Delivered': return <CheckCircle className="h-4 w-4 text-green-500" />;
-        case 'In-Progress':
         case 'Pending': return <Clock className="h-4 w-4 text-yellow-500" />;
         case 'Failed': return <AlertTriangle className="h-4 w-4 text-red-500" />;
+        case 'Partially Delivered': return <AlertTriangle className="h-4 w-4 text-orange-500" />;
     }
 }
 
@@ -117,7 +118,7 @@ export default function OrderDeliveryPage() {
 
       <Card>
         <CardHeader>
-            <CardTitle>Delivery Log</CardTitle>
+            <CardTitle>Order Delivery Queue</CardTitle>
             <CardDescription>Live feed of Order delivery jobs and their statuses.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -125,21 +126,28 @@ export default function OrderDeliveryPage() {
                 <TableHeader>
                     <TableRow>
                         <TableHead>Order ID</TableHead>
-                        <TableHead>Service / Channel</TableHead>
-                        <TableHead>Status</TableHead>
+                        <TableHead>Customer</TableHead>
+                        <TableHead>Channels</TableHead>
+                        <TableHead>Overall Status</TableHead>
                         <TableHead>Last Update</TableHead>
                         <TableHead><span className="sr-only">Actions</span></TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {mockDeliveries.map(item => (
-                        <TableRow key={item.deliveryId}>
+                        <TableRow key={item.orderId}>
                             <TableCell className="font-mono">{item.orderId}</TableCell>
                             <TableCell>
-                                <div>{item.service}</div>
-                                <div className="text-xs text-muted-foreground">{item.channel}</div>
+                                <div>{item.customer}</div>
                             </TableCell>
                             <TableCell>
+                                <div className="flex gap-1">
+                                {item.channels.split(', ').map(channel => (
+                                    <Badge key={channel} variant="outline">{channel}</Badge>
+                                ))}
+                                </div>
+                            </TableCell>
+                             <TableCell>
                                 <Badge variant={getStatusBadgeVariant(item.status)} className="gap-1 pl-1.5">
                                     {getStatusIcon(item.status)}
                                     {item.status}
@@ -158,7 +166,7 @@ export default function OrderDeliveryPage() {
                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                         <DropdownMenuItem>View Delivery Details</DropdownMenuItem>
                                         <DropdownMenuItem>View Order</DropdownMenuItem>
-                                        <DropdownMenuItem disabled={item.status !== 'Failed'}>Retry Delivery</DropdownMenuItem>
+                                        <DropdownMenuItem disabled={item.status !== 'Failed' && item.status !== 'Partially Delivered'}>Retry All for Order</DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </TableCell>
