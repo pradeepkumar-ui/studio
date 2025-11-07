@@ -89,7 +89,7 @@ export function OrderFinalisationForm({ order, onSubmit, onCancel }: OrderFinali
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit" disabled={!order.payment || !order.inventory || !order.services}>Finalise Order</Button>
+          <Button type="submit" disabled={!order.payment || !order.inventory || !order.services}>Close Order</Button>
         </div>
       </form>
     </Form>

@@ -56,6 +56,7 @@ import {
   FileText,
   MessageSquare,
   Send,
+  Archive,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -98,7 +99,7 @@ const menuItems: MenuItem[] = [
     subItems: [
         { href: '/orders', label: 'Order Dashboard', icon: LayoutDashboard },
         { href: '/orders/creation', label: 'Creation', icon: PlusSquare },
-        { href: '/orders/finalisation', label: 'Finalisation', icon: BadgeCheck },
+        { href: '/orders/finalisation', label: 'Finalisation & Closure', icon: BadgeCheck },
         { href: '/orders/delivery', label: 'Delivery', icon: Send },
         { href: '/orders/supplier-orders', label: 'Supplier Orders', icon: Building },
         { href: '/orders/large-party', label: 'Large Party Orders', icon: Users },

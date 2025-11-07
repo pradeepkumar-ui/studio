@@ -24,7 +24,7 @@ import {
   XCircle,
   MoreHorizontal,
   FileDown,
-  Sparkles,
+  Archive,
   Loader2,
 } from 'lucide-react';
 import {
@@ -45,13 +45,13 @@ import { OrderFinalisationForm, type FinaliseOrder } from '@/components/forms/or
 import { useToast } from '@/hooks/use-toast';
 
 const kpiData = [
-  { title: 'Ready for Finalisation', value: '1,240' },
-  { title: 'Processing', value: '8' },
-  { title: 'Errors', value: '2' },
-  { title: 'Avg. Finalisation Time', value: '1.8s' },
+  { title: 'Pending Closure', value: '1,240' },
+  { title: 'Validated', value: '1,180' },
+  { title: 'Closed', value: '1,160' },
+  { title: 'Exceptions', value: '20' },
 ];
 
-type Status = 'Ready' | 'Pending' | 'Error';
+type Status = 'Ready' | 'Pending' | 'Error' | 'Closed';
 
 type ValidationItem = {
   orderId: string;
@@ -67,7 +67,7 @@ const validationQueue: ValidationItem[] = [
   { orderId: 'ORD_9010', status: 'Pending', payment: true, inventory: true, services: false, timestamp: '5 mins ago' },
   { orderId: 'ORD_9009', status: 'Ready', payment: true, inventory: true, services: true, timestamp: '8 mins ago' },
   { orderId: 'ORD_9008', status: 'Error', payment: false, inventory: true, services: true, timestamp: '15 mins ago' },
-  { orderId: 'ORD_9007', status: 'Ready', payment: true, inventory: true, services: true, timestamp: '22 mins ago' },
+  { orderId: 'ORD_9007', status: 'Closed', payment: true, inventory: true, services: true, timestamp: '22 mins ago' },
 ];
 
 const getStatusBadgeVariant = (status: Status) => {
@@ -78,6 +78,8 @@ const getStatusBadgeVariant = (status: Status) => {
       return 'secondary';
     case 'Error':
       return 'destructive';
+    case 'Closed':
+      return 'outline';
   }
 };
 
@@ -103,8 +105,8 @@ export default function OrderFinalisationPage() {
     const handleFormSubmit = (data: FinaliseOrder) => {
         console.log(data);
         toast({
-        title: "Order Finalisation Initiated",
-        description: `Manual finalisation process started for Order ID: ${data.orderId}`,
+        title: "Order Closure Initiated",
+        description: `Manual closure process started for Order ID: ${data.orderId}`,
         });
         setIsDialogOpen(false);
         setSelectedOrder(null);
@@ -116,20 +118,20 @@ export default function OrderFinalisationPage() {
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold tracking-tight">
-            Order Finalisation Console
+            Order Finalisation & Closure Console
           </h1>
           <p className="text-muted-foreground">
-            Monitor, validate, and commit Orders for fulfilment and settlement.
+            Monitor, validate, and commit Orders for fulfilment, settlement, and archival.
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline">
             <FileDown className="mr-2" />
-            Export Finalisation Logs
+            Export Audit
           </Button>
           <Button>
-            <Sparkles className="mr-2" />
-            Trigger Batch Finalisation
+            <Archive className="mr-2" />
+            Trigger Batch Closure
           </Button>
         </div>
       </div>
@@ -151,8 +153,8 @@ export default function OrderFinalisationPage() {
 
       <Card>
         <CardHeader>
-            <CardTitle>Finalisation Queue</CardTitle>
-            <CardDescription>Live view of Orders pending finalisation and their validation status.</CardDescription>
+            <CardTitle>Closure & Finalisation Queue</CardTitle>
+            <CardDescription>Live view of Orders pending finalisation, closure, and their validation status.</CardDescription>
         </CardHeader>
         <CardContent>
             <Table>
@@ -181,14 +183,14 @@ export default function OrderFinalisationPage() {
                             <TableCell>
                                  <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button aria-haspopup="true" size="icon" variant="ghost" disabled={item.status === 'Error'}>
+                                        <Button aria-haspopup="true" size="icon" variant="ghost" disabled={item.status === 'Error' || item.status === 'Closed'}>
                                             <MoreHorizontal className="h-4 w-4" />
                                             <span className="sr-only">Toggle menu</span>
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                        <DropdownMenuItem onClick={() => handleOpenDialog(item)}>Review & Finalise</DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleOpenDialog(item)}>Review & Close</DropdownMenuItem>
                                         <DropdownMenuItem>View Order Details</DropdownMenuItem>
                                         <DropdownMenuItem>Reprocess Validations</DropdownMenuItem>
                                     </DropdownMenuContent>
@@ -204,9 +206,9 @@ export default function OrderFinalisationPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>Manual Order Finalisation</DialogTitle>
+            <DialogTitle>Manual Order Closure</DialogTitle>
             <DialogDescription>
-              Review and manually finalise Order <span className="font-mono">{selectedOrder?.orderId}</span>.
+              Review and manually close Order <span className="font-mono">{selectedOrder?.orderId}</span>.
             </DialogDescription>
           </DialogHeader>
           <OrderFinalisationForm
