@@ -79,11 +79,9 @@ export default function OffersPage() {
   const [filters, setFilters] = useState({ id: '', status: 'all' });
   const { toast } = useToast();
   
-  // By default, we will use mock data for a faster prototype experience.
-  // The useCollection hook is still here and can be re-enabled when needed.
   useEffect(() => {
     if (!loading && firestoreData) {
-      const liveOffers = firestoreData.length > 0 ? firestoreData as Offer[] : mockOffers;
+      const liveOffers = firestoreData.length > 0 ? (firestoreData as Offer[]) : mockOffers;
       setOffers(liveOffers);
     }
   }, [firestoreData, loading]);
