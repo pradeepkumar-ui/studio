@@ -43,6 +43,7 @@ import {
   Workflow,
   Palette,
   Award,
+  Armchair,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -73,6 +74,7 @@ const menuItems: MenuItem[] = [
         label: 'Ancillary Pricing',
         icon: Container,
       },
+       { href: '/pricing/seat', label: 'Seat Pricing', icon: Armchair },
       { href: '/promotions', label: 'Promotions', icon: Gift },
       { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
       { href: '/compliance', label: 'Offer Compliance', icon: Shield },
@@ -188,12 +190,12 @@ export default function SidebarNav() {
                               isActive={
                                 subItem.href === '/'
                                   ? pathname === subItem.href
-                                  : pathname.startsWith(subItem.href) || (subItem.href === '/pricing/dynamic' && isPricingActive())
+                                  : pathname.startsWith(subItem.href) || (subItem.href.startsWith('/pricing') && isPricingActive())
                               }
                             >
                               <subItem.icon className={cn(
                                 'transition-transform ease-in-out',
-                                (pathname.startsWith(subItem.href) || (subItem.href === '/pricing/dynamic' && isPricingActive())) && 'text-primary'
+                                (pathname.startsWith(subItem.href) || (subItem.href.startsWith('/pricing') && isPricingActive())) && 'text-primary'
                               )} />
                               <span>{subItem.label}</span>
                             </SidebarMenuSubButton>
