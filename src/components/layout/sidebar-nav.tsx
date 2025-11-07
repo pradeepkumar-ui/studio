@@ -53,6 +53,7 @@ import {
   Users,
   CreditCard,
   ReceiptText,
+  BarChartHorizontal,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -145,7 +146,8 @@ const menuItems: MenuItem[] = [
         { href: '/fare-change-forecast', label: 'Fare Change Forecast', icon: BrainCircuit },
         { href: '/offer-rules', label: 'Offer Rule Builder', icon: FileJson },
     ]
-  }
+  },
+  { href: '/reporting', label: 'Reporting', icon: BarChartHorizontal },
 ];
 
 
