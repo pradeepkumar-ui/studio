@@ -102,8 +102,8 @@ const menuItems: MenuItem[] = [
     subItems: [
         { href: '/orders', label: 'Order Dashboard', icon: LayoutDashboard },
         { href: '/orders/creation', label: 'Creation', icon: PlusSquare },
-        { href: '/orders/finalisation', label: 'Finalisation & Closure', icon: BadgeCheck },
         { href: '/orders/delivery', label: 'Delivery', icon: Send },
+        { href: '/orders/finalisation', label: 'Finalisation & Closure', icon: BadgeCheck },
         { href: '/orders/supplier-orders', label: 'Supplier Orders', icon: Building },
         { href: '/orders/large-party', label: 'Large Party Orders', icon: Users },
         { href: '/orders/servicing', label: 'Servicing', icon: Wrench },
