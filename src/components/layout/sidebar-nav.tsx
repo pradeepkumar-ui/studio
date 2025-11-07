@@ -110,7 +110,6 @@ const menuItems: MenuItem[] = [
         { href: '/orders/finalisation', label: 'Finalisation & Closure', icon: BadgeCheck },
         { href: '/orders/supplier-orders', label: 'Supplier Orders', icon: Building },
         { href: '/orders/large-party', label: 'Large Party Orders', icon: Users },
-        { href: '/orders/ground-handling', label: 'Ground Handling', icon: Truck },
         { href: '/orders/servicing', label: 'Servicing', icon: GitBranch },
     ]
   },
@@ -121,6 +120,7 @@ const menuItems: MenuItem[] = [
     subItems: [
         { href: '/check-in', label: 'Check-in', icon: UserCheck },
         { href: '/boarding', label: 'Boarding Gate', icon: PlaneTakeoff },
+        { href: '/orders/ground-handling', label: 'Ground Handling', icon: Truck },
         { href: '/consumption', label: 'Service Consumption', icon: ClipboardCheck },
         { href: '/communication', label: 'Communication', icon: MessageSquare },
         { href: '/documentation', label: 'Documentation', icon: FileText },
@@ -207,7 +207,7 @@ export default function SidebarNav() {
   }
   
   const isOrderDeliveryActive = () => {
-    return pathname.startsWith('/check-in') || pathname.startsWith('/boarding') || pathname.startsWith('/consumption') || pathname.startsWith('/documentation') || pathname.startsWith('/communication');
+    return pathname.startsWith('/check-in') || pathname.startsWith('/boarding') || pathname.startsWith('/consumption') || pathname.startsWith('/documentation') || pathname.startsWith('/communication') || pathname.startsWith('/orders/ground-handling');
   }
 
   return (
