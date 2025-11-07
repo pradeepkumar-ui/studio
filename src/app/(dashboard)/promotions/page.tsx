@@ -40,6 +40,13 @@ import { PromotionForm, type Promotion } from '@/components/forms/promotion-form
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 
+const mockPromotions: Promotion[] = [
+    { id: 'PRO-001', name: 'Winter Sale', description: '10% off on all flights to Europe', prefix: 'WINTER10', poolSize: 10000, usageType: 'multi', expiryDate: new Date('2025-03-31'), status: 'Active' },
+    { id: 'PRO-002', name: 'Business Special', description: '25% off on business class tickets', prefix: 'BIZ25', poolSize: 5000, usageType: 'single', expiryDate: new Date('2025-06-30'), status: 'Active' },
+    { id: 'PRO-003', name: 'New Route Launch', description: '50% off on flights to Tokyo', prefix: 'TOKYO50', poolSize: 1000, usageType: 'single', expiryDate: new Date('2025-04-30'), status: 'Draft' },
+    { id: 'PRO-004', name: 'Summer Getaway', description: '15% off on all flights', prefix: 'SUMMER15', poolSize: 20000, usageType: 'multi', expiryDate: new Date('2024-09-30'), status: 'Expired' },
+];
+
 const otherProducts = [
     { sku: 'GC-1000-INR', name: '₹1000 Gift Card', category: 'Gift Cards', price: '₹1000', stock: 482, status: 'Active' },
     { sku: 'LP-SIN-01', name: 'SIN Lounge Pass', category: 'Lounge Access', price: '$45', stock: 'N/A', status: 'Active' },
@@ -51,6 +58,8 @@ export default function PromotionsPage() {
   const firestore = useFirestore();
   const { data: promotions, loading, error } = useCollection(firestore ? collection(firestore, 'promotions') : undefined);
   
+  const displayPromotions = !loading && promotions && promotions.length > 0 ? promotions : mockPromotions;
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null);
   const { toast } = useToast();
@@ -105,7 +114,7 @@ export default function PromotionsPage() {
         toast({
             variant: "destructive",
             title: "Uh oh! Something went wrong.",
-            description: e.message || "There was a problem with your request.",
+            description: e.message || "Could not delete the promotion.",
         });
     }
   };
@@ -156,12 +165,12 @@ export default function PromotionsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading && (
+          {loading && (!promotions || promotions.length === 0) && (
              <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
              </div>
            )}
-           {!loading && !error && promotions && (
+           {(!loading || (promotions && promotions.length > 0)) && !error && (
             <Table>
                 <TableHeader>
                 <TableRow>
@@ -177,7 +186,7 @@ export default function PromotionsPage() {
                 </TableRow>
                 </TableHeader>
                 <TableBody>
-                {promotions.map((promo) => (
+                {displayPromotions.map((promo) => (
                     <TableRow key={promo.id}>
                     <TableCell className="font-medium">{promo.name}</TableCell>
                     <TableCell>

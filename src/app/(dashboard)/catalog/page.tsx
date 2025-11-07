@@ -38,10 +38,19 @@ import { FareProductForm, type FareProduct } from '@/components/forms/fare-produ
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
+const mockFareProducts: FareProduct[] = [
+    { id: 'FP-001', name: 'Economy Light', description: 'Basic economy fare with no checked baggage.', status: 'Active', version: 1 },
+    { id: 'FP-002', name: 'Economy Flex', description: 'Flexible economy fare with seat selection and one checked bag.', status: 'Active', version: 2 },
+    { id: 'FP-003', name: 'Business Saver', description: 'Promotional business class fare with some restrictions.', status: 'Active', version: 1 },
+    { id: 'FP-004', name: 'Business Flex', description: 'Fully flexible business class fare with all benefits.', status: 'Draft', version: 1 },
+    { id: 'FP-005', name: 'First Class', description: 'Premium first-class experience.', status: 'Active', version: 1 },
+];
 
 export default function CatalogPage() {
   const firestore = useFirestore();
   const { data: fareProducts, loading, error } = useCollection(firestore ? collection(firestore, 'fareProducts') : undefined);
+  
+  const displayFareProducts = !loading && fareProducts && fareProducts.length > 0 ? fareProducts : mockFareProducts;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<FareProduct | null>(null);
@@ -128,12 +137,12 @@ export default function CatalogPage() {
           </Button>
         </CardHeader>
         <CardContent>
-          {loading && (
+          {loading && (!fareProducts || fareProducts.length === 0) && (
              <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
              </div>
            )}
-           {!loading && !error && fareProducts && (
+           {(!loading || (fareProducts && fareProducts.length > 0)) && !error && (
             <Table>
                 <TableHeader>
                 <TableRow>
@@ -147,7 +156,7 @@ export default function CatalogPage() {
                 </TableRow>
                 </TableHeader>
                 <TableBody>
-                {fareProducts.sort((a, b) => (a.name! > b.name!) ? 1 : (a.name === b.name) ? ((a.version || 0) > (b.version || 0) ? -1 : 1) : -1).map((product) => (
+                {displayFareProducts.sort((a, b) => (a.name! > b.name!) ? 1 : (a.name === b.name) ? ((a.version || 0) > (b.version || 0) ? -1 : 1) : -1).map((product) => (
                     <TableRow key={product.id}>
                     <TableCell className="font-medium">
                         {product.name}

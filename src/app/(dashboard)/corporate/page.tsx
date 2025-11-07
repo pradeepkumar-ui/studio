@@ -56,7 +56,7 @@ export default function CorporatePage() {
   const firestore = useFirestore();
   const { data, loading, error } = useCollection(firestore ? collection(firestore, 'corporateContracts') : undefined);
 
-  const contracts = loading === false && data?.length === 0 ? mockContracts : data || [];
+  const contracts = !loading && data && data.length > 0 ? data : mockContracts;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<CorporateContract | null>(null);
@@ -151,12 +151,12 @@ export default function CorporatePage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading && (
+          {loading && (!data || data.length === 0) && (
             <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           )}
-          {!loading && !error && contracts && (
+          {(!loading || (data && data.length > 0)) && !error && (
             <Table>
               <TableHeader>
                 <TableRow>

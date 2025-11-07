@@ -57,7 +57,7 @@ export default function BundlesPage() {
   const firestore = useFirestore();
   const { data: bundles, loading, error } = useCollection(firestore ? collection(firestore, 'bundles') : undefined);
   
-  const displayBundles = loading === false && bundles && bundles.length === 0 ? mockBundles : bundles || [];
+  const displayBundles = !loading && bundles && bundles.length > 0 ? bundles : mockBundles;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBundle, setEditingBundle] = useState<Bundle | null>(null);
@@ -134,12 +134,12 @@ export default function BundlesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading && (
+          {loading && (!bundles || bundles.length === 0) && (
              <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
              </div>
            )}
-           {!loading && !error && (
+           {(!loading || (bundles && bundles.length > 0)) && !error && (
             <Table>
               <TableHeader>
                 <TableRow>

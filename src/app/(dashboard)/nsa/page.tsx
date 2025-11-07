@@ -62,7 +62,7 @@ export default function NsaPage() {
   const firestore = useFirestore();
   const { data, loading, error } = useCollection(firestore ? collection(firestore, 'negotiatedSpaceAgreements') : undefined);
   
-  const agreements = loading === false && data?.length === 0 ? mockAgreements : data || [];
+  const agreements = !loading && data && data.length > 0 ? data : mockAgreements;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingNsa, setEditingNsa] = useState<NegotiatedSpaceAgreement | null>(null);
@@ -195,12 +195,12 @@ export default function NsaPage() {
               />
             </div>
           </div>
-          {loading && (
+          {loading && (!data || data.length === 0) && (
             <div className="flex justify-center items-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           )}
-          {!loading && !error && (
+          {(!loading || (data && data.length > 0)) && !error && (
             <Table>
               <TableHeader>
                 <TableRow>

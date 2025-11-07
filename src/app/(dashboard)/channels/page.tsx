@@ -55,7 +55,7 @@ export default function ChannelsPage() {
   const firestore = useFirestore();
   const { data, loading, error } = useCollection(firestore ? collection(firestore, 'channels') : undefined);
   
-  const channels = loading === false && data?.length === 0 ? mockChannels : data || [];
+  const channels = !loading && data && data.length > 0 ? data : mockChannels;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingChannel, setEditingChannel] = useState<Channel | null>(null);
@@ -165,12 +165,12 @@ export default function ChannelsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {loading && (
+            {loading && (!data || data.length === 0) && (
               <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             )}
-            {!loading && !error && channels && (
+            {(!loading || (data && data.length > 0)) && !error && (
               <Table>
                 <TableHeader>
                   <TableRow>

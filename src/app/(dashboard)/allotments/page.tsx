@@ -71,7 +71,7 @@ export default function AllotmentPage() {
   
   const { data: seriesCollection, loading: seriesLoading } = useCollection(firestore ? collection(firestore, 'series') : undefined);
   const seriesList = seriesCollection?.map(doc => ({ id: doc.id, ...doc.data() } as Series)) || [];
-  const displaySeries = seriesLoading === false && seriesList.length === 0 ? mockSeriesList : seriesList;
+  const displaySeries = !seriesLoading && seriesList.length > 0 ? seriesList : mockSeriesList;
   
   const [selectedSeriesId, setSelectedSeriesId] = useState<string | null>(null);
   
@@ -84,9 +84,11 @@ export default function AllotmentPage() {
   const { data: allotments, loading: allotmentsLoading } = useCollection(
       firestore && selectedSeriesId ? collection(firestore, 'series', selectedSeriesId, 'allotments') : undefined
   );
-  const displayAllotments = allotmentsLoading === false && allotments && allotments.length === 0 ? mockAllotments : allotments;
+  
+  const displayAllotments = !allotmentsLoading && allotments && allotments.length > 0 ? allotments : mockAllotments;
   
   const selectedSeries = displaySeries.find(s => s.id === selectedSeriesId);
+  const isLoading = seriesLoading || (selectedSeriesId && allotmentsLoading);
   
   return (
     <div className="flex flex-col gap-6">
@@ -101,7 +103,7 @@ export default function AllotmentPage() {
         </div>
         <div className="flex items-center gap-4">
             <div className="w-64">
-                {seriesLoading ? <Loader2 className="animate-spin" /> : (
+                {(seriesLoading && seriesList.length === 0) ? <Loader2 className="animate-spin" /> : (
                   <Select onValueChange={setSelectedSeriesId} value={selectedSeriesId || ''}>
                       <SelectTrigger>
                           <SelectValue placeholder="Select a series" />
@@ -128,12 +130,12 @@ export default function AllotmentPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {(allotmentsLoading || seriesLoading) && (
+          {(isLoading && (!allotments || allotments.length === 0)) && (
             <div className="flex justify-center items-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           )}
-          {!(allotmentsLoading || seriesLoading) && selectedSeriesId && (
+          {(!isLoading || (allotments && allotments.length > 0)) && selectedSeriesId && (
               <Table>
                 <TableHeader>
                   <TableRow>

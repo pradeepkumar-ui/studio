@@ -45,10 +45,19 @@ import { FareForm, type Fare } from '@/components/forms/fare-form';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
+const mockFares: Fare[] = [
+    { id: 'F-001', route: 'JFK-LAX', class: 'Economy', price: 350, currency: 'USD', status: 'Active', version: 1 },
+    { id: 'F-002', route: 'LHR-DXB', class: 'Business', price: 2500, currency: 'GBP', status: 'Active', version: 2 },
+    { id: 'F-003', route: 'SIN-HKG', class: 'Economy', price: 280, currency: 'SGD', status: 'Active', version: 1 },
+    { id: 'F-004', route: 'JFK-LHR', class: 'First', price: 5500, currency: 'USD', status: 'Draft', version: 1 },
+    { id: 'F-005', route: 'CDG-IST', class: 'Economy', price: 180, currency: 'EUR', status: 'Inactive', version: 3 },
+];
 
 export default function FaresPage() {
   const firestore = useFirestore();
   const { data: fares, loading, error } = useCollection(firestore ? collection(firestore, 'fares') : undefined);
+  
+  const displayFares = !loading && fares && fares.length > 0 ? fares : mockFares;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingFare, setEditingFare] = useState<Fare | null>(null);
@@ -188,12 +197,12 @@ export default function FaresPage() {
           </Button>
         </CardHeader>
         <CardContent>
-           {loading && (
+           {loading && (!fares || fares.length === 0) && (
              <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
              </div>
            )}
-           {!loading && !error && fares && (
+           {(!loading || (fares && fares.length > 0)) && !error && (
             <Table>
                 <TableHeader>
                 <TableRow>
@@ -208,7 +217,7 @@ export default function FaresPage() {
                 </TableRow>
                 </TableHeader>
                 <TableBody>
-                {fares.map((fare) => (
+                {displayFares.map((fare) => (
                     <TableRow key={fare.id}>
                     <TableCell className="font-medium">{fare.route}</TableCell>
                     <TableCell>{fare.class}</TableCell>
