@@ -55,10 +55,26 @@ import {
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 
+const mockOffers: Offer[] = [
+  { id: 'OFF-001', name: 'Winter Flash Sale', scope: 'Market', offerType: 'Discount', currency: 'USD', rounding: 'Round Half-Up', criteria: 'Market: US, EU', effectiveDate: new Date('2024-12-01'), expiryDate: new Date('2024-12-20'), status: 'Active', version: 2, ttl: '00:10:00' },
+  { id: 'OFF-002', name: 'Business Class Upgrade', scope: 'Brand', offerType: 'Fixed', currency: 'EUR', rounding: 'None', criteria: 'Brand: Premium', effectiveDate: new Date('2024-11-01'), expiryDate: new Date('2025-01-31'), status: 'Active', version: 1, ttl: '00:20:00' },
+  { id: 'OFF-003', name: 'Early Bird 2025', scope: 'Airline', offerType: 'Discount', currency: 'GBP', rounding: 'Round Down', criteria: 'All', effectiveDate: new Date('2024-10-01'), expiryDate: new Date('2024-12-31'), status: 'Active', version: 3, ttl: '00:15:00' },
+  { id: 'OFF-004', name: 'Mobile App Exclusive', scope: 'Channel', offerType: 'Discount', currency: 'USD', rounding: 'None', criteria: 'Channel: Mobile', effectiveDate: new Date('2024-11-15'), expiryDate: new Date('2024-11-30'), status: 'Draft', version: 1, ttl: '00:05:00' },
+  { id: 'OFF-005', name: 'Summer Getaway', scope: 'Market', offerType: 'Fixed', currency: 'EUR', rounding: 'Round Half-Up', criteria: 'Market: EU', effectiveDate: new Date('2025-06-01'), expiryDate: new Date('2025-08-31'), status: 'Inactive', version: 1, ttl: '00:15:00' },
+  { id: 'OFF-006', name: 'Last Minute Deals', scope: 'Market', offerType: 'Step', currency: 'USD', rounding: 'Round Half-Up', criteria: 'Departure < 72h', effectiveDate: new Date('2024-01-01'), expiryDate: new Date('2025-12-31'), status: 'Active', version: 5, ttl: '00:05:00' },
+  { id: 'OFF-007', name: 'Corporate Traveler Discount', scope: 'Channel', offerType: 'Discount', currency: 'USD', rounding: 'None', criteria: 'Channel: TMC', effectiveDate: new Date('2024-01-01'), expiryDate: new Date('2024-12-31'), status: 'Active', version: 2, ttl: '01:00:00' },
+  { id: 'OFF-008', name: 'Asia Pacific Promotion', scope: 'Market', offerType: 'Discount', currency: 'SGD', rounding: 'Round Half-Up', criteria: 'Market: APAC', effectiveDate: new Date('2025-02-01'), expiryDate: new Date('2025-04-30'), status: 'Draft', version: 1, ttl: '00:15:00' },
+  { id: 'OFF-009', name: 'Black Friday Special', scope: 'Airline', offerType: 'Discount', currency: 'USD', rounding: 'None', criteria: 'All', effectiveDate: new Date('2024-11-28'), expiryDate: new Date('2024-11-29'), status: 'Expired', version: 1, ttl: '00:02:00' },
+  { id: 'OFF-010', name: 'New Route Launch: NYC-TKY', scope: 'Market', offerType: 'Fixed', currency: 'JPY', rounding: 'Round Down', criteria: 'Route: JFK-HND', effectiveDate: new Date('2025-03-01'), expiryDate: new Date('2025-03-31'), status: 'Active', version: 1, ttl: '00:30:00' },
+];
+
+
 export default function OffersPage() {
   const firestore = useFirestore();
-  const { data: offers, loading, error } = useCollection(firestore ? collection(firestore, 'offers') : undefined);
+  const { data, loading, error } = useCollection(firestore ? collection(firestore, 'offers') : undefined);
   
+  const offers = loading === false && data?.length === 0 ? mockOffers : data || [];
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
   const [filters, setFilters] = useState({ id: '', status: 'all' });
@@ -144,10 +160,9 @@ export default function OffersPage() {
   }
 
   const filteredOffers = offers ? offers.filter(offer => {
-    return (
-      (filters.id ? offer.id!.toLowerCase().includes(filters.id.toLowerCase()) : true) &&
-      (filters.status === 'all' || offer.status === filters.status)
-    )
+    const offerIdMatch = filters.id ? (offer.id ?? '').toLowerCase().includes(filters.id.toLowerCase()) : true;
+    const statusMatch = filters.status === 'all' || offer.status === filters.status;
+    return offerIdMatch && statusMatch;
   }) : [];
 
   return (
