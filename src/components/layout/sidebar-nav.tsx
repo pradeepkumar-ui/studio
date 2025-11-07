@@ -129,7 +129,7 @@ const menuItems: MenuItem[] = [
   { href: '/offer-data', label: 'Data Management', icon: Database },
   { href: '/invoicing', label: 'Invoicing', icon: ReceiptText },
   { href: '/payments', label: 'Payments', icon: CreditCard },
-  { href: '/accounting', label: 'Reconciliation', icon: GitCompare },
+  { href: '/reconciliation', label: 'Reconciliation', icon: GitCompare },
   { href: '/airline-revenue', label: 'Airline Revenue', icon: Landmark },
   { href: '/communication', label: 'Communication', icon: MessageSquare },
   { href: '/content', label: 'Content Management', icon: Palette },
