@@ -60,6 +60,7 @@ import {
   Landmark,
   GitCompare,
   KeyRound,
+  UserCheck,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -115,6 +116,11 @@ const menuItems: MenuItem[] = [
     href: '/orchestration',
     label: 'Orchestration',
     icon: Workflow,
+  },
+  {
+    href: '/check-in',
+    label: 'Check-in',
+    icon: UserCheck,
   },
   {
     href: '/catalog',
