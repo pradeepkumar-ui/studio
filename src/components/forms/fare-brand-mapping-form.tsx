@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input';
 const fareBrandMappingSchema = z.object({
   id: z.string().optional(),
   brandName: z.string().min(3, 'Brand Name is required.'),
-  mappedClasses: z.string().min(1, 'At least one booking class is required.').regex(/^[A-Z](,[A-Z])*$/, 'Must be a comma-separated list of single uppercase letters.'),
+  mappedClasses: z.string().min(1, 'At least one booking class is required.'),
   channel: z.string().min(3, 'Channel is required'),
 });
 
@@ -60,7 +60,7 @@ export function FareBrandMappingForm({ mapping, onSubmit, onCancel }: FareBrandM
           name="mappedClasses"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Mapped Booking Classes</FormLabel>
+              <FormLabel>Mapped Booking Classes (comma-separated)</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., Y,B,M" {...field} />
               </FormControl>

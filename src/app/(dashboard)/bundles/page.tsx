@@ -40,16 +40,16 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 const mockBundles: Bundle[] = [
-  { id: 'BUN-001', name: 'Business Saver+', description: 'Front seat, 1 checked bag, and a meal.', status: 'Published', scope: 'Brand: Flex, Premium', components: 'Seat(Front), Bag(23kg), Meal(Any)', pricingStrategy: 'Percent Discount', discount: 15, itemCount: 3 },
-  { id: 'BUN-002', name: 'Family Pack', description: 'Adjacent seats, extra baggage, and child meals.', status: 'Published', scope: 'Passenger Type: ADT, CHD', components: 'Seat(Adjacent), Bag(15kg, 2), Meal(Child)', pricingStrategy: 'Fixed Discount', discount: 50, itemCount: 3 },
-  { id: 'BUN-003', name: 'Weekend Getaway', description: 'Late checkout, priority boarding.', status: 'Draft', scope: 'Route: JFK-MIA, Day: Fri-Sun', components: 'Hotel(Late Checkout), Boarding(Priority)', pricingStrategy: 'Absolute Price', discount: 75, itemCount: 2 },
-  { id: 'BUN-004', name: 'Long Haul Comfort', description: 'Extra legroom seat, amenity kit, and Wi-Fi.', status: 'Published', scope: 'Flight Duration > 6h', components: 'Seat(Legroom), Amenity Kit, Wi-Fi(Unlimited)', pricingStrategy: 'Percent Discount', discount: 20, itemCount: 3 },
-  { id: 'BUN-005', name: 'Flexi Traveler', description: 'Flight change waiver and seat selection.', status: 'Published', scope: 'Brand: Flex', components: 'Flexibility(Change), Seat(Any)', pricingStrategy: 'Absolute Price', discount: 99, itemCount: 2 },
-  { id: 'BUN-006', name: 'TMC Premium Package', description: 'Lounge access, fast-track security, chauffeur.', status: 'Archived', scope: 'Channel: TMC', components: 'Lounge, Security(Fast), Chauffeur', pricingStrategy: 'Absolute Price', discount: 250, itemCount: 3 },
-  { id: 'BUN-007', name: 'Ancillary Starter', description: 'A basic package for testing.', status: 'Draft', scope: 'All', components: 'Bag(15kg)', pricingStrategy: 'Fixed Discount', discount: 5, itemCount: 1 },
-  { id: 'BUN-008', name: 'Golfer\'s Paradise', description: 'Oversized baggage for golf clubs and a complimentary drink.', status: 'Published', scope: 'Route: DUB-FAO', components: 'Bag(Oversized), Drink(Any)', pricingStrategy: 'Absolute Price', discount: 60, itemCount: 2 },
-  { id: 'BUN-009', name: 'Ski Enthusiast', description: 'Ski equipment carriage and winter meal.', status: 'Published', scope: 'Route: LHR-GVA', components: 'Bag(Ski), Meal(Winter)', pricingStrategy: 'Percent Discount', discount: 10, itemCount: 2 },
-  { id: 'BUN-010', name: 'Eco-Traveler Pack', description: 'Carbon offset and a digital magazine subscription.', status: 'Published', scope: 'All', components: 'Carbon Offset, Magazine(Digital)', pricingStrategy: 'Absolute Price', discount: 15, itemCount: 2 },
+  { id: 'BUN-001', name: 'Business Saver+', description: 'Front seat, 1 checked bag, and a meal.', status: 'Published', scope: { brand: 'Flex, Premium' }, components: { seat: 'Front', baggage: '23kg', meal: 'Any'}, pricingStrategy: 'Percent Discount', discount: 15, itemCount: 3 },
+  { id: 'BUN-002', name: 'Family Pack', description: 'Adjacent seats, extra baggage, and child meals.', status: 'Published', scope: { brand: 'ADT, CHD' }, components: { seat: 'Adjacent', baggage: '15kg, 2', meal: 'Child' }, pricingStrategy: 'Fixed Discount', discount: 50, itemCount: 3 },
+  { id: 'BUN-003', name: 'Weekend Getaway', description: 'Late checkout, priority boarding.', status: 'Draft', scope: { route: 'JFK-MIA', channel: 'Direct' }, components: { other: 'Hotel(Late Checkout), Boarding(Priority)' }, pricingStrategy: 'Absolute Price', discount: 75, itemCount: 2 },
+  { id: 'BUN-004', name: 'Long Haul Comfort', description: 'Extra legroom seat, amenity kit, and Wi-Fi.', status: 'Published', scope: { brand: 'Flight Duration > 6h' }, components: { seat: 'Legroom', other: 'Amenity Kit, Wi-Fi(Unlimited)' }, pricingStrategy: 'Percent Discount', discount: 20, itemCount: 3 },
+  { id: 'BUN-005', name: 'Flexi Traveler', description: 'Flight change waiver and seat selection.', status: 'Published', scope: { brand: 'Flex' }, components: { other: 'Flexibility(Change)', seat: 'Any' }, pricingStrategy: 'Absolute Price', discount: 99, itemCount: 2 },
+  { id: 'BUN-006', name: 'TMC Premium Package', description: 'Lounge access, fast-track security, chauffeur.', status: 'Archived', scope: { channel: 'TMC' }, components: { other: 'Lounge, Security(Fast), Chauffeur' }, pricingStrategy: 'Absolute Price', discount: 250, itemCount: 3 },
+  { id: 'BUN-007', name: 'Ancillary Starter', description: 'A basic package for testing.', status: 'Draft', scope: {}, components: { baggage: '15kg' }, pricingStrategy: 'Fixed Discount', discount: 5, itemCount: 1 },
+  { id: 'BUN-008', name: 'Golfer\'s Paradise', description: 'Oversized baggage for golf clubs and a complimentary drink.', status: 'Published', scope: { route: 'DUB-FAO' }, components: { baggage: 'Oversized', other: 'Drink(Any)' }, pricingStrategy: 'Absolute Price', discount: 60, itemCount: 2 },
+  { id: 'BUN-009', name: 'Ski Enthusiast', description: 'Ski equipment carriage and winter meal.', status: 'Published', scope: { route: 'LHR-GVA' }, components: { baggage: 'Ski', meal: 'Winter' }, pricingStrategy: 'Percent Discount', discount: 10, itemCount: 2 },
+  { id: 'BUN-010', name: 'Eco-Traveler Pack', description: 'Carbon offset and a digital magazine subscription.', status: 'Published', scope: {}, components: { other: 'Carbon Offset, Magazine(Digital)' }, pricingStrategy: 'Absolute Price', discount: 15, itemCount: 2 },
 ];
 
 
@@ -57,8 +57,9 @@ export default function BundlesPage() {
   const firestore = useFirestore();
   const { data: bundlesCollection, loading, error } = useCollection(firestore ? collection(firestore, 'bundles') : undefined);
   
-  const bundles = bundlesCollection ? bundlesCollection as Bundle[] : [];
-  const displayBundles = bundles.length > 0 ? bundles : mockBundles;
+  const [bundles, setBundles] = useState<Bundle[]>(mockBundles);
+  
+  const displayBundles = loading ? mockBundles : (bundlesCollection ? bundlesCollection as Bundle[] : bundles);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBundle, setEditingBundle] = useState<Bundle | null>(null);
@@ -77,9 +78,10 @@ export default function BundlesPage() {
   const handleFormSubmit = async (data: Bundle) => {
     if (!firestore) return;
     try {
+      const itemCount = Object.values(data.components || {}).filter(Boolean).length;
       const bundleData = { 
         ...data, 
-        itemCount: data.components?.split(',').length || 0 
+        itemCount
       };
 
       if (editingBundle?.id) {
@@ -135,7 +137,7 @@ export default function BundlesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading && displayBundles.length === 0 && (
+          {(loading && displayBundles.length === 0) && (
              <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
              </div>
@@ -162,7 +164,9 @@ export default function BundlesPage() {
                         {bundle.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{bundle.scope}</TableCell>
+                    <TableCell>
+                      {Object.entries(bundle.scope || {}).map(([key, value]) => value ? `${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}` : '').filter(Boolean).join('; ')}
+                    </TableCell>
                     <TableCell>{bundle.itemCount}</TableCell>
                     <TableCell>
                       <DropdownMenu>

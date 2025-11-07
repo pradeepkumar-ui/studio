@@ -13,7 +13,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -28,8 +27,17 @@ const bundleSchema = z.object({
   name: z.string().min(3, 'Bundle name is required.'),
   description: z.string().min(5, 'Description is required.'),
   status: z.enum(['Draft', 'Published', 'Archived']),
-  scope: z.string().min(3, 'Scope is required.'),
-  components: z.string().min(3, 'At least one component is required.'),
+  scope: z.object({
+    brand: z.string().optional(),
+    channel: z.string().optional(),
+    route: z.string().optional(),
+  }),
+  components: z.object({
+    seat: z.string().optional(),
+    baggage: z.string().optional(),
+    meal: z.string().optional(),
+    other: z.string().optional(),
+  }),
   pricingStrategy: z.enum(['Percent Discount', 'Fixed Discount', 'Absolute Price']),
   discount: z.coerce.number().min(0),
   itemCount: z.number().optional()
@@ -50,8 +58,15 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
       name: '',
       description: '',
       status: 'Draft',
-      scope: '',
-      components: '',
+      scope: {
+        brand: 'Flex, Premium',
+        channel: 'Direct',
+      },
+      components: {
+        seat: 'Front',
+        baggage: '15kg',
+        meal: 'Veg'
+      },
       pricingStrategy: 'Percent Discount',
       discount: 10,
     },
@@ -92,32 +107,103 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
         <Separator className="my-6" />
 
         <h4 className="text-md font-semibold">Scope & Rules</h4>
-        <FormField
-          control={form.control}
-          name="scope"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Scope</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., Brand: Flex, Premium; Channel: Direct" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="components"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Components (comma-separated)</FormLabel>
-              <FormControl>
-                <Textarea placeholder="e.g., Seat(Front), Bag(15kg), Meal(Veg)" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <FormField
+            control={form.control}
+            name="scope.brand"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Brand</FormLabel>
+                <FormControl>
+                    <Input placeholder="e.g., Flex, Premium" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+            <FormField
+            control={form.control}
+            name="scope.channel"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Channel</FormLabel>
+                <FormControl>
+                    <Input placeholder="e.g., Direct" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+            <FormField
+            control={form.control}
+            name="scope.route"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Route</FormLabel>
+                <FormControl>
+                    <Input placeholder="e.g., JFK-MIA" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+        </div>
+        
+        <h4 className="text-md font-semibold pt-4">Components</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+            <FormField
+            control={form.control}
+            name="components.seat"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Seat</FormLabel>
+                <FormControl>
+                    <Input placeholder="e.g., Front" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+            <FormField
+            control={form.control}
+            name="components.baggage"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Baggage</FormLabel>
+                <FormControl>
+                    <Input placeholder="e.g., 15kg, 2" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+            <FormField
+            control={form.control}
+            name="components.meal"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Meal</FormLabel>
+                <FormControl>
+                    <Input placeholder="e.g., Veg, Child" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+             <FormField
+            control={form.control}
+            name="components.other"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Other</FormLabel>
+                <FormControl>
+                    <Input placeholder="e.g., Wifi, Lounge" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+        </div>
 
         <Separator className="my-6" />
 

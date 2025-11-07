@@ -52,7 +52,14 @@
         "offerType": { "type": "string", "enum": ["Discount", "Fixed", "Step"] },
         "currency": { "type": "string" },
         "rounding": { "type": "string", "enum": ["None", "Round Half-Up", "Round Down"] },
-        "criteria": { "type": "string" },
+        "criteria": {
+          "type": "object",
+          "properties": {
+            "channel": { "type": "string" },
+            "market": { "type": "string" },
+            "brand": { "type": "string" }
+          }
+        },
         "effectiveDate": { "type": "string", "format": "date-time" },
         "expiryDate": { "type": "string", "format": "date-time" },
         "notes": { "type": "string" },
@@ -99,10 +106,28 @@
         "name": { "type": "string" },
         "description": { "type": "string" },
         "status": { "type": "string", "enum": ["Draft", "Published", "Archived"] },
-        "scope": { "type": "string" },
+        "scope": {
+          "type": "object",
+          "properties": {
+            "brand": { "type": "string" },
+            "channel": { "type": "string" },
+            "route": { "type": "string" }
+          }
+        },
+        "components": {
+          "type": "object",
+          "properties": {
+            "seat": { "type": "string" },
+            "baggage": { "type": "string" },
+            "meal": { "type": "string" },
+            "other": { "type": "string" }
+          }
+        },
+        "pricingStrategy": { "type": "string" },
+        "discount": { "type": "number" },
         "itemCount": { "type": "number" }
       },
-      "required": ["name", "description", "status", "scope", "itemCount"]
+      "required": ["name", "description", "status", "scope", "itemCount", "components", "pricingStrategy", "discount"]
     },
     "corporateContract": {
       "title": "Corporate Contract",
@@ -147,13 +172,40 @@
       "properties": {
         "code": { "type": "string" },
         "partnerId": { "type": "string" },
-        "scope": { "type": "string" },
+        "scope": {
+          "type": "object",
+          "properties": {
+            "route": { "type": "string" },
+            "season": { "type": "string" },
+            "dow": { "type": "string" }
+          }
+        },
         "capacity": { "type": "number" },
         "rbd": { "type": "string" },
         "brand": { "type": "string" },
-        "pricing": { "type": "string" },
-        "deadlines": { "type": "string" },
-        "finance": { "type": "string" },
+        "pricing": {
+          "type": "object",
+          "properties": {
+            "currency": { "type": "string" },
+            "baseFareRange": { "type": "string" },
+            "commission": { "type": "string" }
+          }
+        },
+        "deadlines": {
+          "type": "object",
+          "properties": {
+            "release": { "type": "string" },
+            "name": { "type": "string" },
+            "issue": { "type": "string" }
+          }
+        },
+        "finance": {
+          "type": "object",
+          "properties": {
+            "deposit": { "type": "string" },
+            "penalties": { "type": "string" }
+          }
+        },
         "status": { "type": "string", "enum": ["Draft", "Approved", "Published", "Amended", "Expired"] }
       },
       "required": ["code", "partnerId", "scope", "capacity", "rbd", "brand", "pricing", "deadlines", "finance", "status"]

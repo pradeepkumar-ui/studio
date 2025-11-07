@@ -15,7 +15,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -27,6 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { Timestamp } from 'firebase/firestore';
+import { Textarea } from '../ui/textarea';
 
 const offerSchema = z.object({
   id: z.string().optional(),
@@ -35,7 +35,11 @@ const offerSchema = z.object({
   offerType: z.enum(['Discount', 'Fixed', 'Step']),
   currency: z.string().length(3, 'Must be a 3-letter currency code.'),
   rounding: z.enum(['None', 'Round Half-Up', 'Round Down']),
-  criteria: z.string().min(3, 'Criteria is required.'),
+  criteria: z.object({
+    channel: z.string().optional(),
+    market: z.string().optional(),
+    brand: z.string().optional(),
+  }),
   effectiveDate: z.union([z.instanceof(Date), z.instanceof(Timestamp)]),
   expiryDate: z.union([z.instanceof(Date), z.instanceof(Timestamp)]),
   notes: z.string().optional(),
@@ -71,7 +75,11 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
       offerType: 'Discount',
       currency: 'USD',
       rounding: 'Round Half-Up',
-      criteria: 'Channel: Web, POS: US',
+      criteria: {
+        channel: 'Web',
+        market: 'US',
+        brand: ''
+      },
       effectiveDate: new Date(),
       expiryDate: new Date(new Date().setDate(new Date().getDate() + 30)),
       notes: '',
@@ -179,19 +187,47 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
             )}
           />
         </div>
-         <FormField
-          control={form.control}
-          name="criteria"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Criteria</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. Channel: Mobile, Market: DE" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+         <div className='space-y-2'>
+            <FormLabel>Criteria</FormLabel>
+            <div className="grid grid-cols-3 gap-2">
+                <FormField
+                control={form.control}
+                name="criteria.channel"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormControl>
+                        <Input placeholder="Channel (e.g. Web)" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="criteria.market"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormControl>
+                        <Input placeholder="Market (e.g. US)" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                 <FormField
+                control={form.control}
+                name="criteria.brand"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormControl>
+                        <Input placeholder="Brand (e.g. Flex)" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
+         </div>
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
