@@ -22,6 +22,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -31,49 +32,20 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { CorporateContractForm, type CorporateContract } from '@/components/forms/corporate-contract-form';
+import { useFirestore } from '@/firebase';
+import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { useCollection } from 'react-firebase-hooks/firestore';
 
-
-const initialContracts: CorporateContract[] = [
-  {
-    id: 'CORP-001',
-    companyName: 'Globex Corporation',
-    contractId: 'GLX-2024',
-    status: 'Active',
-    activeFares: 12,
-    administrator: 'Alice Johnson',
-  },
-  {
-    id: 'CORP-002',
-    companyName: 'Stark Industries',
-    contractId: 'STRK-2023',
-    status: 'Active',
-    activeFares: 8,
-    administrator: 'Bob Williams',
-  },
-  {
-    id: 'CORP-003',
-    companyName: 'Wayne Enterprises',
-    contractId: 'WYN-2025',
-    status: 'Negotiation',
-    activeFares: 0,
-    administrator: 'Charlie Brown',
-  },
-  {
-    id: 'CORP-004',
-    companyName: 'Cyberdyne Systems',
-    contractId: 'CYD-2022',
-    status: 'Expired',
-    activeFares: 0,
-    administrator: 'Diana Prince',
-  },
-];
 
 export default function CorporatePage() {
-  const [contracts, setContracts] = useState<CorporateContract[]>(initialContracts);
+  const firestore = useFirestore();
+  const [contractsCollection, loading, error] = useCollection(firestore ? collection(firestore, 'corporateContracts') : undefined);
+  const contracts = contractsCollection?.docs.map(doc => ({ id: doc.id, ...doc.data() } as CorporateContract)) || [];
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<CorporateContract | null>(null);
   const { toast } = useToast();
@@ -88,16 +60,46 @@ export default function CorporatePage() {
     setEditingContract(null);
   };
 
-  const handleFormSubmit = (data: CorporateContract) => {
-    if (editingContract) {
-      setContracts(contracts.map((c) => (c.id === editingContract.id ? { ...c, ...data } : c)));
-      toast({ title: "Contract Updated", description: `Contract for ${data.companyName} has been updated.` });
-    } else {
-      const newContract = { ...data, id: `CORP-${String(contracts.length + 1).padStart(3, '0')}` };
-      setContracts([newContract, ...contracts]);
-      toast({ title: "Contract Created", description: `New contract for ${newContract.companyName} has been created.` });
+  const handleFormSubmit = async (data: CorporateContract) => {
+    if (!firestore) return;
+
+    try {
+      if (editingContract?.id) {
+        const contractRef = doc(firestore, 'corporateContracts', editingContract.id);
+        await setDoc(contractRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
+        toast({ title: "Contract Updated", description: `Contract for ${data.companyName} has been updated.` });
+      } else {
+        await addDoc(collection(firestore, 'corporateContracts'), { ...data, createdAt: serverTimestamp() });
+        toast({ title: "Contract Created", description: `New contract for ${data.companyName} has been created.` });
+      }
+    } catch (e: any) {
+        console.error(e);
+        toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: e.message || "There was a problem with your request.",
+        });
     }
     handleDialogClose();
+  };
+
+  const handleDelete = async (contractId: string) => {
+    if (!contractId || !firestore) return;
+    try {
+        await deleteDoc(doc(firestore, 'corporateContracts', contractId));
+        toast({
+            variant: 'destructive',
+            title: 'Contract Deleted',
+            description: 'The contract has been successfully deleted.'
+        });
+    } catch (e: any) {
+        console.error(e);
+        toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: e.message || "Could not delete the contract.",
+        });
+    }
   };
 
   const getStatusBadgeVariant = (status: CorporateContract['status']) => {
@@ -137,57 +139,67 @@ export default function CorporatePage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Company Name</TableHead>
-                <TableHead>Contract ID</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Active Fares</TableHead>
-                <TableHead>Administrator</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {contracts.map((contract) => (
-                <TableRow key={contract.id}>
-                  <TableCell className="font-medium">
-                    {contract.companyName}
-                  </TableCell>
-                  <TableCell>{contract.contractId}</TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusBadgeVariant(contract.status)}>
-                      {contract.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{contract.activeFares}</TableCell>
-                  <TableCell>{contract.administrator}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          aria-haspopup="true"
-                          size="icon"
-                          variant="ghost"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleOpenDialog(contract)}>Edit Contract</DropdownMenuItem>
-                        <DropdownMenuItem>Manage Privileges</DropdownMenuItem>
-                        <DropdownMenuItem>View History</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          {loading && (
+            <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          )}
+          {!loading && !error && (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Company Name</TableHead>
+                  <TableHead>Contract ID</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Active Fares</TableHead>
+                  <TableHead>Administrator</TableHead>
+                  <TableHead>
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {contracts.map((contract) => (
+                  <TableRow key={contract.id}>
+                    <TableCell className="font-medium">
+                      {contract.companyName}
+                    </TableCell>
+                    <TableCell>{contract.contractId}</TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeVariant(contract.status)}>
+                        {contract.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{contract.activeFares}</TableCell>
+                    <TableCell>{contract.administrator}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            aria-haspopup="true"
+                            size="icon"
+                            variant="ghost"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => handleOpenDialog(contract)}>Edit Contract</DropdownMenuItem>
+                          <DropdownMenuItem>Manage Privileges</DropdownMenuItem>
+                          <DropdownMenuItem>View History</DropdownMenuItem>
+                           <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(contract.id!)}>Delete</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+          {error && <p className="text-destructive">Error loading contracts: {error.message}</p>}
         </CardContent>
       </Card>
     </div>

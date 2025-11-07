@@ -103,6 +103,21 @@
         "itemCount": { "type": "number" }
       },
       "required": ["name", "description", "status", "scope", "itemCount"]
+    },
+    "corporateContract": {
+      "title": "Corporate Contract",
+      "description": "Represents a corporate contract agreement.",
+      "type": "object",
+      "properties": {
+        "companyName": { "type": "string" },
+        "contractId": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Expired", "Negotiation"] },
+        "activeFares": { "type": "number" },
+        "administrator": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["companyName", "contractId", "status", "activeFares", "administrator"]
     }
   },
   "auth": {
@@ -138,6 +153,12 @@
         "$ref": "#/entities/bundle"
       },
       "description": "Stores ancillary bundle documents."
+    },
+    "/corporateContracts/{contractId}": {
+      "schema": {
+        "$ref": "#/entities/corporateContract"
+      },
+      "description": "Stores corporate contract documents."
     }
   }
 }
