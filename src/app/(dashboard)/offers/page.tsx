@@ -71,14 +71,23 @@ const mockOffers: Offer[] = [
 
 export default function OffersPage() {
   const firestore = useFirestore();
-  const { data, loading, error } = useCollection(firestore ? collection(firestore, 'offers') : undefined);
+  // By default, we will use mock data for a faster prototype experience.
+  // The useCollection hook is still here and can be re-enabled when needed.
+  const [offers, setOffers] = useState(mockOffers);
+  const { data: firestoreData, loading, error } = useCollection(firestore ? collection(firestore, 'offers') : undefined);
   
-  const offers = loading === false && data?.length === 0 ? mockOffers : data || [];
-
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
   const [filters, setFilters] = useState({ id: '', status: 'all' });
   const { toast } = useToast();
+  
+  // This effect can be enabled to switch to live Firestore data.
+  // useEffect(() => {
+  //   if (!loading && firestoreData) {
+  //     const liveOffers = firestoreData.length > 0 ? firestoreData : mockOffers;
+  //     setOffers(liveOffers as Offer[]);
+  //   }
+  // }, [firestoreData, loading]);
 
   const handleSimulate = () => {
     toast({
@@ -173,8 +182,10 @@ export default function OffersPage() {
     if (date && typeof date === 'object' && 'seconds' in date && 'nanoseconds' in date) {
       return format(new Date((date as Timestamp).seconds * 1000), 'PP');
     }
-    // Finally, assume it's a Date object or something Date constructor can handle
-    return format(date, 'PP');
+    if (date instanceof Date) {
+      return format(date, 'PP');
+    }
+    return '';
   };
 
   return (
