@@ -111,7 +111,7 @@ const menuItems: MenuItem[] = [
         { href: '/orders/supplier-orders', label: 'Supplier Orders', icon: Building },
         { href: '/orders/large-party', label: 'Large Party Orders', icon: Users },
         { href: '/orders/ground-handling', label: 'Ground Handling', icon: Truck },
-        { href: '/orders/servicing', label: 'Servicing', icon: Wrench },
+        { href: '/orders/servicing', label: 'Servicing', icon: GitBranch },
         { href: '/consumption', label: 'Service Consumption', icon: ClipboardCheck },
         { href: '/documentation', label: 'Documentation', icon: FileText },
     ]
