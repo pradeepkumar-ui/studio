@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -142,7 +141,7 @@ export default function SidebarNav() {
   }
   
   const isSettingsActive = () => {
-      return pathname.startsWith('/settings') || pathname.startsWith('/broker');
+      return pathname.startsWith('/settings') || pathname.startsWith('/broker') || pathname.startsWith('/offer-construction-settings');
   }
 
   return (
@@ -247,6 +246,16 @@ export default function SidebarNav() {
                             >
                               <RadioTower className={cn('transition-transform ease-in-out', pathname.startsWith('/broker') && 'text-primary')} />
                               <span>Broker Management</span>
+                            </SidebarMenuSubButton>
+                          </Link>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem asChild>
+                           <Link href="/offer-construction-settings" legacyBehavior passHref>
+                            <SidebarMenuSubButton
+                              isActive={pathname.startsWith('/offer-construction-settings')}
+                            >
+                              <FileJson className={cn('transition-transform ease-in-out', pathname.startsWith('/offer-construction-settings') && 'text-primary')} />
+                              <span>Construction Settings</span>
                             </SidebarMenuSubButton>
                           </Link>
                         </SidebarMenuSubItem>
