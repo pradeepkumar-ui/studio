@@ -26,6 +26,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, RadioTower, CheckCircle, AlertTriangle, XCircle, FileJson, RotateCw, ShieldOff, PlusCircle } from 'lucide-react';
 
+const kpiData = [
+  { title: 'Active Partners', value: '42' },
+  { title: 'Pending Approvals', value: '3' },
+  { title: 'SLA Health', value: '99.1%' },
+  { title: 'Avg. API Latency', value: '250ms' },
+];
+
 const connectors = [
   {
     id: 'ndc_a',
@@ -65,12 +72,13 @@ const connectors = [
   },
 ];
 
-const travelServices = [
-    { id: 'TRS-001', name: 'Allied Travel Insurance', supplier: 'Allied Insurance', status: 'Active', apiHealth: '99.9%' },
-    { id: 'TRS-002', name: 'Global Airport Transfers', supplier: 'Global Transfers', status: 'Active', apiHealth: '99.8%' },
-    { id: 'TRS-003', name: 'City Hotels Gateway', supplier: 'City Hotels', status: 'Inactive', apiHealth: 'N/A' },
-    { id: 'TRS-004', name: 'Event Packages', supplier: 'EventsCo', status: 'Active', apiHealth: '99.5%' },
+const partnerAgreements = [
+    { id: 'PNR-001', name: 'OTA360', type: 'OTA', status: 'Active', commercialModel: '15% Commission' },
+    { id: 'PNR-002', name: 'CorpTravel Inc.', type: 'TMC', status: 'Active', commercialModel: 'Net Rate' },
+    { id: 'PNR-003', name: 'Global GDS', type: 'GDS', status: 'Active', commercialModel: 'Segment Fee' },
+    { id: 'PNR-004', name: 'NewDistributor', type: 'NDC', status: 'Pending Approval', commercialModel: 'N/A' },
 ];
+
 
 const getStatusBadgeVariant = (status: string) => {
   switch (status) {
@@ -78,6 +86,7 @@ const getStatusBadgeVariant = (status: string) => {
     case 'Active':
       return 'default';
     case 'DEGRADED':
+    case 'Pending Approval':
       return 'secondary';
     case 'DOWN':
     case 'Inactive':
@@ -103,20 +112,88 @@ const getStatusIcon = (status: string) => {
 export default function BrokerPage() {
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-4">
-        <RadioTower className="w-8 h-8 text-muted-foreground" />
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Partner & API Management
-          </h1>
-          <p className="text-muted-foreground">
-            Manage partner integrations, travel services, schema mappings, and resilience for all provider communications.
-          </p>
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2">
+            <h1 className="text-3xl font-bold tracking-tight">
+                Partner Management
+            </h1>
+            <p className="text-muted-foreground">
+                Onboard, configure, and monitor all external ecosystem partners.
+            </p>
         </div>
+        <Button>
+            <PlusCircle className="mr-2" /> Add Partner
+        </Button>
       </div>
+
+       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {kpiData.map((kpi) => (
+          <Card key={kpi.title}>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium">
+                {kpi.title}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{kpi.value}</div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
       <Card>
         <CardHeader>
-            <CardTitle>Connectors Registry</CardTitle>
+            <CardTitle>Partner Agreements</CardTitle>
+            <CardDescription>Manage all onboarded partners and their commercial configurations.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Partner Name</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Commercial Model</TableHead>
+                        <TableHead><span className="sr-only">Actions</span></TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {partnerAgreements.map((partner) => (
+                        <TableRow key={partner.id}>
+                            <TableCell className="font-medium">{partner.name}</TableCell>
+                            <TableCell><Badge variant="outline">{partner.type}</Badge></TableCell>
+                            <TableCell>
+                                <Badge variant={getStatusBadgeVariant(partner.status)}>
+                                    {partner.status}
+                                </Badge>
+                            </TableCell>
+                            <TableCell>{partner.commercialModel}</TableCell>
+                            <TableCell>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button aria-haspopup="true" size="icon" variant="ghost">
+                                            <MoreHorizontal className="h-4 w-4" />
+                                            <span className="sr-only">Toggle menu</span>
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                        <DropdownMenuItem>View Profile</DropdownMenuItem>
+                                        <DropdownMenuItem>Manage Credentials</DropdownMenuItem>
+                                        <DropdownMenuItem>View Performance</DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+            <CardTitle>Partner Connectivity</CardTitle>
             <CardDescription>Live status of all integrated partner adapters and system connectors.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -157,61 +234,6 @@ export default function BrokerPage() {
                                         <DropdownMenuItem><FileJson className="mr-2 h-4 w-4" /> View Mappings ({connector.mappingVersion})</DropdownMenuItem>
                                         <DropdownMenuItem><RotateCw className="mr-2 h-4 w-4" /> Rotate Secrets</DropdownMenuItem>
                                         <DropdownMenuItem className="text-destructive"><ShieldOff className="mr-2 h-4 w-4" /> Disable Connector</DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </CardContent>
-      </Card>
-      
-       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-                <CardTitle>Travel Related Services (TRS)</CardTitle>
-                <CardDescription>Manage non-air ancillary services like insurance, hotels, and transfers.</CardDescription>
-            </div>
-            <Button>
-                <PlusCircle className="mr-2 h-4 w-4" /> Add New Service
-            </Button>
-        </CardHeader>
-        <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Service Name</TableHead>
-                        <TableHead>Supplier</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>API Health</TableHead>
-                        <TableHead><span className="sr-only">Actions</span></TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {travelServices.map((service) => (
-                        <TableRow key={service.id}>
-                            <TableCell className="font-medium">{service.name}</TableCell>
-                            <TableCell>{service.supplier}</TableCell>
-                             <TableCell>
-                                <Badge variant={getStatusBadgeVariant(service.status)}>
-                                    {service.status}
-                                </Badge>
-                            </TableCell>
-                            <TableCell>{service.apiHealth}</TableCell>
-                            <TableCell>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                                            <MoreHorizontal className="h-4 w-4" />
-                                            <span className="sr-only">Toggle menu</span>
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                        <DropdownMenuItem>Edit Configuration</DropdownMenuItem>
-                                        <DropdownMenuItem>View API Settings</DropdownMenuItem>
-                                        <DropdownMenuItem className="text-destructive">Deactivate</DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </TableCell>
