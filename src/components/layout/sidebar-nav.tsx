@@ -42,6 +42,7 @@ import {
   Signal,
   Workflow,
   Palette,
+  Award,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -100,6 +101,7 @@ const menuItems: MenuItem[] = [
     ]
   },
   { href: '/content', label: 'Content Management', icon: Palette },
+  { href: '/loyalty', label: 'Loyalty', icon: Award },
   {
     href: '/inventory',
     label: 'Stock Keeping',
