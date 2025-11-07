@@ -32,48 +32,19 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { BundleForm, type Bundle } from '@/components/forms/bundle-form';
-
-const initialBundles: Bundle[] = [
-  {
-    id: 'BNDL-001',
-    name: 'Business Saver+',
-    description: 'Seat, Bag, and Meal for business travelers.',
-    status: 'Published',
-    scope: 'Brand: Flex, Premium',
-    itemCount: 3,
-  },
-  {
-    id: 'BNDL-002',
-    name: 'Family Fun Pack',
-    description: 'Bags for everyone and seat selection.',
-    status: 'Published',
-    scope: 'Cohort: Family',
-    itemCount: 2,
-  },
-  {
-    id: 'BNDL-003',
-    name: 'Weekend Getaway',
-    description: 'Late checkout and lounge access.',
-    status: 'Draft',
-    scope: 'Route: JFK-MIA',
-    itemCount: 2,
-  },
-  {
-    id: 'BNDL-004',
-    name: 'Long Haul Comfort',
-    description: 'Extra legroom seat and priority boarding.',
-    status: 'Archived',
-    scope: 'Segment > 6 hours',
-    itemCount: 2,
-  },
-];
+import { useFirestore } from '@/firebase';
+import { collection, addDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { useCollection } from 'react-firebase-hooks/firestore';
 
 export default function BundlesPage() {
-  const [bundles, setBundles] = useState<Bundle[]>(initialBundles);
+  const firestore = useFirestore();
+  const [bundlesCollection, loading, error] = useCollection(firestore ? collection(firestore, 'bundles') : undefined);
+  const bundles = bundlesCollection?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Bundle)) || [];
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBundle, setEditingBundle] = useState<Bundle | null>(null);
   const { toast } = useToast();
@@ -88,14 +59,29 @@ export default function BundlesPage() {
     setEditingBundle(null);
   };
 
-  const handleFormSubmit = (data: Bundle) => {
-    if (editingBundle) {
-      setBundles(bundles.map((b) => (b.id === editingBundle.id ? { ...b, ...data } : b)));
-      toast({ title: 'Bundle Updated', description: `Bundle "${data.name}" has been updated.` });
-    } else {
-      const newBundle = { ...data, id: `BNDL-${String(bundles.length + 1).padStart(3, '0')}`, itemCount: data.components?.split(',').length || 0 };
-      setBundles([...bundles, newBundle]);
-      toast({ title: 'Bundle Created', description: `Bundle "${newBundle.name}" has been created.` });
+  const handleFormSubmit = async (data: Bundle) => {
+    if (!firestore) return;
+    try {
+      const bundleData = { 
+        ...data, 
+        itemCount: data.components?.split(',').length || 0 
+      };
+
+      if (editingBundle?.id) {
+        const bundleRef = doc(firestore, 'bundles', editingBundle.id);
+        await setDoc(bundleRef, { ...bundleData, updatedAt: serverTimestamp() }, { merge: true });
+        toast({ title: 'Bundle Updated', description: `Bundle "${data.name}" has been updated.` });
+      } else {
+        await addDoc(collection(firestore, 'bundles'), { ...bundleData, createdAt: serverTimestamp() });
+        toast({ title: 'Bundle Created', description: `Bundle "${data.name}" has been created.` });
+      }
+    } catch (e: any) {
+        console.error(e);
+        toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: e.message || "There was a problem with your request.",
+        });
     }
     handleDialogClose();
   };
@@ -134,59 +120,67 @@ export default function BundlesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Bundle Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Scope</TableHead>
-                <TableHead>Items</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {bundles.map((bundle) => (
-                <TableRow key={bundle.id}>
-                  <TableCell className="font-medium">{bundle.name}</TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusBadgeVariant(bundle.status)}>
-                      {bundle.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{bundle.scope}</TableCell>
-                  <TableCell>{bundle.itemCount}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          aria-haspopup="true"
-                          size="icon"
-                          variant="ghost"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleOpenDialog(bundle)}>
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>Duplicate</DropdownMenuItem>
-                        <DropdownMenuItem>View Performance</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">
-                          Archive
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          {loading && (
+             <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+             </div>
+           )}
+           {!loading && !error && (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Bundle Name</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Scope</TableHead>
+                  <TableHead>Items</TableHead>
+                  <TableHead>
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {bundles.map((bundle) => (
+                  <TableRow key={bundle.id}>
+                    <TableCell className="font-medium">{bundle.name}</TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeVariant(bundle.status)}>
+                        {bundle.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{bundle.scope}</TableCell>
+                    <TableCell>{bundle.itemCount}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            aria-haspopup="true"
+                            size="icon"
+                            variant="ghost"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => handleOpenDialog(bundle)}>
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                          <DropdownMenuItem>View Performance</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-destructive">
+                            Archive
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+           )}
+           {error && <p className="text-destructive">Error loading bundles: {error.message}</p>}
         </CardContent>
       </Card>
       

@@ -90,6 +90,19 @@
         "version": { "type": "number" }
       },
       "required": ["name", "description", "status", "version"]
+    },
+    "bundle": {
+      "title": "Ancillary Bundle",
+      "description": "Represents a bundle of ancillary products.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["Draft", "Published", "Archived"] },
+        "scope": { "type": "string" },
+        "itemCount": { "type": "number" }
+      },
+      "required": ["name", "description", "status", "scope", "itemCount"]
     }
   },
   "auth": {
@@ -119,6 +132,12 @@
         "$ref": "#/entities/fareProduct"
       },
       "description": "Stores fare product (brand) documents."
+    },
+    "/bundles/{bundleId}": {
+      "schema": {
+        "$ref": "#/entities/bundle"
+      },
+      "description": "Stores ancillary bundle documents."
     }
   }
 }
