@@ -245,7 +245,7 @@ export default function SidebarNav() {
                     <SidebarMenuSub>
                       {item.subItems.map((subItem) => (
                         <SidebarMenuSubItem key={subItem.href} asChild>
-                           <Link href={subItem.href} legacyBehavior passHref>
+                           <Link href={subItem.href}>
                             <SidebarMenuSubButton
                               isActive={
                                 subItem.href === '/'
@@ -268,7 +268,7 @@ export default function SidebarNav() {
               </SidebarMenuItem>
             ) : (
               <SidebarMenuItem key={item.href} asChild>
-                <Link href={item.href} legacyBehavior passHref>
+                <Link href={item.href}>
                   <SidebarMenuButton
                     isActive={
                       item.href === '/'
@@ -306,7 +306,7 @@ export default function SidebarNav() {
                   <SidebarMenuCollapsibleContent>
                     <SidebarMenuSub>
                         <SidebarMenuSubItem asChild>
-                           <Link href="/broker" legacyBehavior passHref>
+                           <Link href="/broker">
                             <SidebarMenuSubButton
                               isActive={pathname.startsWith('/broker')}
                             >
@@ -316,7 +316,7 @@ export default function SidebarNav() {
                           </Link>
                         </SidebarMenuSubItem>
                         <SidebarMenuSubItem asChild>
-                           <Link href="/offer-construction-settings" legacyBehavior passHref>
+                           <Link href="/offer-construction-settings">
                             <SidebarMenuSubButton
                               isActive={pathname.startsWith('/offer-construction-settings')}
                             >
@@ -326,7 +326,7 @@ export default function SidebarNav() {
                           </Link>
                         </SidebarMenuSubItem>
                         <SidebarMenuSubItem asChild>
-                           <Link href="/settings/user-management" legacyBehavior passHref>
+                           <Link href="/settings/user-management">
                             <SidebarMenuSubButton
                               isActive={pathname.startsWith('/settings/user-management')}
                             >
@@ -336,7 +336,7 @@ export default function SidebarNav() {
                           </Link>
                         </SidebarMenuSubItem>
                         <SidebarMenuSubItem asChild>
-                           <Link href="/settings" legacyBehavior passHref>
+                           <Link href="/settings">
                             <SidebarMenuSubButton
                               isActive={pathname === '/settings'}
                             >
