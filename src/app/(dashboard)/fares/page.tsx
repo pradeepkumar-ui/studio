@@ -42,15 +42,13 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { FareForm, type Fare } from '@/components/forms/fare-form';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
-import { useCollection } from 'react-firebase-hooks/firestore';
 
 
 export default function FaresPage() {
   const firestore = useFirestore();
-  const [faresCollection, loading, error] = useCollection(firestore ? collection(firestore, 'fares') : undefined);
-  const fares = faresCollection?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Fare)) || [];
+  const { data: fares, loading, error } = useCollection(firestore ? collection(firestore, 'fares') : undefined);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingFare, setEditingFare] = useState<Fare | null>(null);
@@ -195,7 +193,7 @@ export default function FaresPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
              </div>
            )}
-           {!loading && !error && (
+           {!loading && !error && fares && (
             <Table>
                 <TableHeader>
                 <TableRow>

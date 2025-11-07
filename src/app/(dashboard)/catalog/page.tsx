@@ -35,15 +35,13 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { FareProductForm, type FareProduct } from '@/components/forms/fare-product-form';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { useCollection } from 'react-firebase-hooks/firestore';
 
 
 export default function CatalogPage() {
   const firestore = useFirestore();
-  const [fareProductsCollection, loading, error] = useCollection(firestore ? collection(firestore, 'fareProducts') : undefined);
-  const fareProducts = fareProductsCollection?.docs.map(doc => ({ id: doc.id, ...doc.data() } as FareProduct)) || [];
+  const { data: fareProducts, loading, error } = useCollection(firestore ? collection(firestore, 'fareProducts') : undefined);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<FareProduct | null>(null);
@@ -135,7 +133,7 @@ export default function CatalogPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
              </div>
            )}
-           {!loading && !error && (
+           {!loading && !error && fareProducts && (
             <Table>
                 <TableHeader>
                 <TableRow>

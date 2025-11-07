@@ -52,28 +52,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useFirestore } from '@/firebase';
-import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
-import { useCollection } from 'react-firebase-hooks/firestore';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 
 export default function OffersPage() {
   const firestore = useFirestore();
-  const [offersCollection, loading, error] = useCollection(firestore ? collection(firestore, 'offers') : undefined);
+  const { data: offers, loading, error } = useCollection(firestore ? collection(firestore, 'offers') : undefined);
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
   const [filters, setFilters] = useState({ id: '', status: 'all' });
   const { toast } = useToast();
-
-  const offers = offersCollection?.docs.map(doc => {
-      const data = doc.data();
-      return { 
-        id: doc.id, 
-        ...data,
-        effectiveDate: data.effectiveDate?.toDate(),
-        expiryDate: data.expiryDate?.toDate(),
-      } as Offer;
-  }) || [];
 
   const handleSimulate = () => {
     toast({
@@ -101,12 +90,17 @@ export default function OffersPage() {
   const handleFormSubmit = async (data: Offer) => {
     if (!firestore) return;
     try {
+      const offerData = {
+        ...data,
+        effectiveDate: Timestamp.fromDate(data.effectiveDate as Date),
+        expiryDate: Timestamp.fromDate(data.expiryDate as Date),
+      }
       if (editingOffer?.id) {
         const offerRef = doc(firestore, 'offers', editingOffer.id);
-        await setDoc(offerRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
+        await setDoc(offerRef, { ...offerData, updatedAt: serverTimestamp() }, { merge: true });
         toast({ title: "Offer Updated", description: `Offer ${data.name} has been successfully updated.` });
       } else {
-        const newOffer = { ...data, version: 1, ttl: '00:15:00', createdAt: serverTimestamp() };
+        const newOffer = { ...offerData, version: 1, ttl: '00:15:00', createdAt: serverTimestamp() };
         await addDoc(collection(firestore, 'offers'), newOffer);
         toast({ title: "Offer Created", description: `Offer ${newOffer.name} has been successfully created.` });
       }
@@ -149,12 +143,12 @@ export default function OffersPage() {
      setFilters(prev => ({...prev, status: value}));
   }
 
-  const filteredOffers = offers.filter(offer => {
+  const filteredOffers = offers ? offers.filter(offer => {
     return (
       (filters.id ? offer.id!.toLowerCase().includes(filters.id.toLowerCase()) : true) &&
       (filters.status === 'all' || offer.status === filters.status)
     )
-  })
+  }) : [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -247,7 +241,7 @@ export default function OffersPage() {
                     <TableCell>v{offer.version}</TableCell>
                     <TableCell>{offer.ttl}</TableCell>
                     <TableCell>
-                        {offer.effectiveDate && offer.expiryDate ? `${format(offer.effectiveDate, 'PP')} - ${format(offer.expiryDate, 'PP')}`: ''}
+                        {offer.effectiveDate && offer.expiryDate ? `${format((offer.effectiveDate as Timestamp).toDate(), 'PP')} - ${format((offer.expiryDate as Timestamp).toDate(), 'PP')}`: ''}
                     </TableCell>
                     <TableCell>
                         <DropdownMenu>

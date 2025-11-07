@@ -36,15 +36,13 @@ import { MoreHorizontal, PlusCircle, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { CorporateContractForm, type CorporateContract } from '@/components/forms/corporate-contract-form';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
-import { useCollection } from 'react-firebase-hooks/firestore';
 
 
 export default function CorporatePage() {
   const firestore = useFirestore();
-  const [contractsCollection, loading, error] = useCollection(firestore ? collection(firestore, 'corporateContracts') : undefined);
-  const contracts = contractsCollection?.docs.map(doc => ({ id: doc.id, ...doc.data() } as CorporateContract)) || [];
+  const { data: contracts, loading, error } = useCollection(firestore ? collection(firestore, 'corporateContracts') : undefined);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<CorporateContract | null>(null);
@@ -144,7 +142,7 @@ export default function CorporatePage() {
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           )}
-          {!loading && !error && (
+          {!loading && !error && contracts && (
             <Table>
               <TableHeader>
                 <TableRow>

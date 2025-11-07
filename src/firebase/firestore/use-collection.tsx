@@ -10,12 +10,12 @@ import {
   QuerySnapshot,
 } from 'firebase/firestore';
 
-export const useSubcollection = (subcollectionQuery: Query<DocumentData> | undefined) => {
+export const useCollection = (collectionQuery: Query<DocumentData> | undefined) => {
   const [data, setData] = useState<DocumentData[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const memoizedQuery = useMemo(() => subcollectionQuery, [subcollectionQuery]);
+  const memoizedQuery = useMemo(() => collectionQuery, [collectionQuery]);
 
   useEffect(() => {
     if (!memoizedQuery) {
@@ -39,7 +39,7 @@ export const useSubcollection = (subcollectionQuery: Query<DocumentData> | undef
       (err: Error) => {
         setError(err);
         setLoading(false);
-        console.error("Error fetching subcollection: ", err);
+        console.error("Error fetching collection: ", err);
       }
     );
 

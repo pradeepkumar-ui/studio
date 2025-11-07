@@ -37,9 +37,8 @@ import { MoreHorizontal, PlusCircle, Import, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { PromotionForm, type Promotion } from '@/components/forms/promotion-form';
-import { useFirestore } from '@/firebase';
-import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 
 const otherProducts = [
     { sku: 'GC-1000-INR', name: '₹1000 Gift Card', category: 'Gift Cards', price: '₹1000', stock: 482, status: 'Active' },
@@ -50,17 +49,8 @@ const otherProducts = [
 
 export default function PromotionsPage() {
   const firestore = useFirestore();
-  const [promotionsCollection, loading, error] = useCollection(firestore ? collection(firestore, 'promotions') : undefined);
+  const { data: promotions, loading, error } = useCollection(firestore ? collection(firestore, 'promotions') : undefined);
   
-  const promotions = promotionsCollection?.docs.map(doc => {
-      const data = doc.data();
-      return { 
-        id: doc.id, 
-        ...data,
-        expiryDate: data.expiryDate?.toDate(),
-      } as Promotion;
-  }) || [];
-
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null);
   const { toast } = useToast();
@@ -78,12 +68,16 @@ export default function PromotionsPage() {
   const handleFormSubmit = async (data: Promotion) => {
     if (!firestore) return;
     try {
+      const promoData = {
+        ...data,
+        expiryDate: Timestamp.fromDate(data.expiryDate as Date),
+      };
       if (editingPromotion?.id) {
         const promoRef = doc(firestore, 'promotions', editingPromotion.id);
-        await setDoc(promoRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
+        await setDoc(promoRef, { ...promoData, updatedAt: serverTimestamp() }, { merge: true });
         toast({ title: 'Promotion Updated', description: `Promotion "${data.name}" has been successfully updated.` });
       } else {
-        await addDoc(collection(firestore, 'promotions'), { ...data, createdAt: serverTimestamp() });
+        await addDoc(collection(firestore, 'promotions'), { ...promoData, createdAt: serverTimestamp() });
         toast({ title: 'Promotion Created', description: `Promotion "${data.name}" has been successfully created.` });
       }
     } catch (e: any) {
@@ -160,7 +154,7 @@ export default function PromotionsPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
              </div>
            )}
-           {!loading && !error && (
+           {!loading && !error && promotions && (
             <Table>
                 <TableHeader>
                 <TableRow>
@@ -188,7 +182,7 @@ export default function PromotionsPage() {
                     <TableCell>{promo.poolSize.toLocaleString()}</TableCell>
                     <TableCell className="capitalize">{promo.usageType}</TableCell>
                     <TableCell>
-                        {promo.expiryDate && format(promo.expiryDate, 'PP')}
+                        {promo.expiryDate && format((promo.expiryDate as Timestamp).toDate(), 'PP')}
                     </TableCell>
                     <TableCell>
                         <DropdownMenu>

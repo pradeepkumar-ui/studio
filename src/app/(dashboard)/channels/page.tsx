@@ -35,14 +35,12 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { ChannelForm, type Channel } from '@/components/forms/channel-form';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
-import { useCollection } from 'react-firebase-hooks/firestore';
 
 export default function ChannelsPage() {
   const firestore = useFirestore();
-  const [channelsCollection, loading, error] = useCollection(firestore ? collection(firestore, 'channels') : undefined);
-  const channels = channelsCollection?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Channel)) || [];
+  const { data: channels, loading, error } = useCollection(firestore ? collection(firestore, 'channels') : undefined);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingChannel, setEditingChannel] = useState<Channel | null>(null);
@@ -157,7 +155,7 @@ export default function ChannelsPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             )}
-            {!loading && !error && (
+            {!loading && !error && channels && (
               <Table>
                 <TableHeader>
                   <TableRow>

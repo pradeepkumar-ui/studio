@@ -36,9 +36,8 @@ import { MoreHorizontal, PlusCircle, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { BundleForm, type Bundle } from '@/components/forms/bundle-form';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { useCollection } from 'react-firebase-hooks/firestore';
 
 const mockBundles: Bundle[] = [
   { id: 'BUN-001', name: 'Business Saver+', description: 'Front seat, 1 checked bag, and a meal.', status: 'Published', scope: 'Brand: Flex, Premium', components: 'Seat(Front), Bag(23kg), Meal(Any)', pricingStrategy: 'Percent Discount', discount: 15, itemCount: 3 },
@@ -56,10 +55,9 @@ const mockBundles: Bundle[] = [
 
 export default function BundlesPage() {
   const firestore = useFirestore();
-  const [bundlesCollection, loading, error] = useCollection(firestore ? collection(firestore, 'bundles') : undefined);
+  const { data: bundles, loading, error } = useCollection(firestore ? collection(firestore, 'bundles') : undefined);
   
-  const bundles = bundlesCollection?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Bundle)) || [];
-  const displayBundles = loading === false && bundles.length === 0 ? mockBundles : bundles;
+  const displayBundles = loading === false && bundles && bundles.length === 0 ? mockBundles : bundles || [];
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBundle, setEditingBundle] = useState<Bundle | null>(null);

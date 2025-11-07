@@ -69,8 +69,8 @@ const mockAllotments: Allotment[] = Array.from({ length: 12 }, (_, i) => {
 export default function AllotmentPage() {
   const firestore = useFirestore();
   
-  const [seriesCollection, seriesLoading] = useCollection(firestore ? collection(firestore, 'series') : undefined);
-  const seriesList = seriesCollection?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Series)) || [];
+  const { data: seriesCollection, loading: seriesLoading } = useCollection(firestore ? collection(firestore, 'series') : undefined);
+  const seriesList = seriesCollection?.map(doc => ({ id: doc.id, ...doc.data() } as Series)) || [];
   const displaySeries = seriesLoading === false && seriesList.length === 0 ? mockSeriesList : seriesList;
   
   const [selectedSeriesId, setSelectedSeriesId] = useState<string | null>(null);
@@ -81,7 +81,7 @@ export default function AllotmentPage() {
     }
   }, [displaySeries, selectedSeriesId]);
 
-  const [allotments, allotmentsLoading] = useSubcollection(
+  const { data: allotments, loading: allotmentsLoading } = useSubcollection(
       firestore && selectedSeriesId ? collection(doc(firestore, 'series', selectedSeriesId), 'allotments') : undefined
   );
   const displayAllotments = allotmentsLoading === false && allotments.length === 0 ? mockAllotments : allotments;

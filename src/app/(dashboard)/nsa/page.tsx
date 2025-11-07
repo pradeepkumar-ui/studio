@@ -42,14 +42,12 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { NsaForm, type NegotiatedSpaceAgreement } from '@/components/forms/nsa-form';
 import { Input } from '@/components/ui/input';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
-import { useCollection } from 'react-firebase-hooks/firestore';
 
 export default function NsaPage() {
   const firestore = useFirestore();
-  const [agreementsCollection, loading, error] = useCollection(firestore ? collection(firestore, 'negotiatedSpaceAgreements') : undefined);
-  const agreements = agreementsCollection?.docs.map(doc => ({ id: doc.id, ...doc.data() } as NegotiatedSpaceAgreement)) || [];
+  const { data: agreements, loading, error } = useCollection(firestore ? collection(firestore, 'negotiatedSpaceAgreements') : undefined);
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingNsa, setEditingNsa] = useState<NegotiatedSpaceAgreement | null>(null);
@@ -113,12 +111,12 @@ export default function NsaPage() {
     setFilters(prev => ({...prev, [name]: value}));
   }
   
-  const filteredAgreements = agreements.filter(agreement => {
+  const filteredAgreements = agreements ? agreements.filter(agreement => {
     return (
         agreement.code.toLowerCase().includes(filters.code.toLowerCase()) &&
         agreement.partnerId.toLowerCase().includes(filters.partnerId.toLowerCase())
     );
-  });
+  }) : [];
   
    const getStatusBadgeVariant = (status: NegotiatedSpaceAgreement['status']) => {
     switch (status) {
