@@ -1,13 +1,15 @@
-
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import {
   ChevronsUpDown,
-  ChevronDown,
   MoreHorizontal,
-  PlusCircle,
-  File as FileIcon
+  Search,
+  ShoppingCart,
+  ReceiptText,
+  AlertCircle,
+  FileBox,
 } from 'lucide-react';
 import {
   ColumnDef,
@@ -23,10 +25,8 @@ import {
 } from '@tanstack/react-table';
 
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -51,56 +51,48 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 
-const initialData: Order[] = [
-  {
-    id: 'ORD-001',
-    customer: 'John Doe',
-    email: 'ken99@yahoo.com',
-    status: 'Fulfilled',
-    date: '2023-06-23',
-    amount: 250.75,
-  },
-  {
-    id: 'ORD-002',
-    customer: 'Jane Smith',
-    email: 'jane.smith@example.com',
-    status: 'Pending',
-    date: '2023-06-24',
-    amount: 150.0,
-  },
-  {
-    id: 'ORD-003',
-    customer: 'Acme Corp',
-    email: 'contact@acme.com',
-    status: 'Fulfilled',
-    date: '2023-06-25',
-    amount: 550.5,
-  },
-  {
-    id: 'ORD-004',
-    customer: 'Sam Wilson',
-    email: 'sam.wilson@me.com',
-    status: 'Canceled',
-    date: '2023-06-26',
-    amount: 75.0,
-  },
-  {
-    id: 'ORD-005',
-    customer: 'Globex Inc.',
-    email: 'sales@globex.com',
-    status: 'Fulfilled',
-    date: '2023-06-27',
-    amount: 1250.25,
-  },
-  {
-    id: 'ORD-006',
-    customer: 'Peter Jones',
-    email: 'peter.jones@aol.com',
-    status: 'Pending',
-    date: '2023-06-28',
-    amount: 85.9,
-  },
-];
+const mockRecentOrders: Order[] = [
+    {
+      id: 'ORD-073',
+      customer: 'Voyage Travel Co.',
+      email: 'contact@voyagetravel.com',
+      status: 'Fulfilled',
+      date: '2024-07-15',
+      amount: 12500,
+    },
+    {
+      id: 'ORD-072',
+      customer: 'Globex Corporation',
+      email: 'accounts@globex.corp',
+      status: 'Fulfilled',
+      date: '2024-07-15',
+      amount: 8400,
+    },
+    {
+      id: 'ORD-071',
+      customer: 'Jane Smith',
+      email: 'jane.smith@example.com',
+      status: 'Pending',
+      date: '2024-07-14',
+      amount: 450,
+    },
+    {
+      id: 'ORD-070',
+      customer: 'InnoTech Solutions',
+      email: 'procurement@innotech.com',
+      status: 'Fulfilled',
+      date: '2024-07-13',
+      amount: 22000,
+    },
+    {
+      id: 'ORD-069',
+      customer: 'Adventure Seekers',
+      email: 'bookings@adventureseekers.io',
+      status: 'Canceled',
+      date: '2024-07-12',
+      amount: 1800,
+    },
+  ];
 
 export type Order = {
   id: string;
@@ -124,29 +116,14 @@ const getStatusBadgeVariant = (status: Order['status']) => {
   }
 };
 
+const kpiData = [
+  { title: 'Total Orders', value: '4,320', icon: ShoppingCart },
+  { title: 'Active Orders', value: '3,980', icon: ReceiptText },
+  { title: 'Open Refunds', value: '55', icon: AlertCircle },
+  { title: 'Services Attached', value: '12,600', icon: FileBox },
+];
+
 export const columns: ColumnDef<Order>[] = [
-  {
-    id: 'select',
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && 'indeterminate')
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
   {
     accessorKey: 'id',
     header: ({ column }) => {
@@ -160,27 +137,16 @@ export const columns: ColumnDef<Order>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => <div className="lowercase pl-4">{row.getValue('id')}</div>,
+    cell: ({ row }) => (
+      <Link href={`/orders/${row.getValue('id')}`} className="pl-4 font-medium text-primary hover:underline">
+        {row.getValue('id')}
+      </Link>
+    ),
   },
   {
     accessorKey: 'customer',
     header: 'Customer',
     cell: ({ row }) => <div>{row.getValue('customer')}</div>,
-  },
-  {
-    accessorKey: 'email',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Email
-          <ChevronsUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => <div className="lowercase pl-4">{row.getValue('email')}</div>,
   },
   {
     accessorKey: 'status',
@@ -228,14 +194,16 @@ export const columns: ColumnDef<Order>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem asChild>
+                <Link href={`/orders/${order.id}`}>View Order Details</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem>View Customer</DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => navigator.clipboard.writeText(order.id)}
             >
               Copy order ID
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View order details</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -244,14 +212,11 @@ export const columns: ColumnDef<Order>[] = [
 ];
 
 export default function OrdersPage() {
-  const [data, setData] = React.useState<Order[]>(initialData);
+  const [data] = React.useState<Order[]>(mockRecentOrders);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
 
   const table = useReactTable({
     data,
@@ -262,83 +227,63 @@ export default function OrdersPage() {
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
     state: {
       sorting,
       columnFilters,
-      columnVisibility,
-      rowSelection,
     },
   });
+  
+  const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    table.getColumn('id')?.setFilterValue(value);
+    table.getColumn('customer')?.setFilterValue(value);
+  }
 
   return (
     <div className="flex flex-col gap-6">
        <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold tracking-tight">
-            Order Management
+            Order Management Console
           </h1>
           <p className="text-muted-foreground">
-            Manage the full lifecycle of orders from creation to fulfillment.
+            Central hub for viewing, managing, and fulfilling all orders.
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <FileIcon className="mr-2" />
-            Export
-          </Button>
-          <Button>
-            <PlusCircle className="mr-2" />
-            Create Order
-          </Button>
-        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {kpiData.map((kpi) => (
+          <Card key={kpi.title}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">
+                {kpi.title}
+              </CardTitle>
+              <kpi.icon className="w-4 h-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{kpi.value}</div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
       <Card>
          <CardHeader>
-          <CardTitle>All Orders</CardTitle>
+          <CardTitle>Recent Orders</CardTitle>
           <CardDescription>
-            Browse and manage all customer orders.
+            A summary of the most recent orders placed across all channels.
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex items-center justify-between py-4">
-            <Input
-              placeholder="Filter orders by customer..."
-              value={
-                (table.getColumn('customer')?.getFilterValue() as string) ?? ''
-              }
-              onChange={(event) =>
-                table.getColumn('customer')?.setFilterValue(event.target.value)
-              }
-              className="max-w-sm"
-            />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="ml-auto">
-                  Columns <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {table
-                  .getAllColumns()
-                  .filter((column) => column.getCanHide())
-                  .map((column) => {
-                    return (
-                      <DropdownMenuCheckboxItem
-                        key={column.id}
-                        className="capitalize"
-                        checked={column.getIsVisible()}
-                        onCheckedChange={(value) =>
-                          column.toggleVisibility(!!value)
-                        }
-                      >
-                        {column.id}
-                      </DropdownMenuCheckboxItem>
-                    );
-                  })}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by Order ID, Customer Name..."
+                onChange={handleFilterChange}
+                className="max-w-sm pl-9"
+              />
+            </div>
+            
           </div>
           <div className="rounded-md border">
             <Table>
@@ -391,10 +336,6 @@ export default function OrdersPage() {
             </Table>
           </div>
           <div className="flex items-center justify-end space-x-2 py-4">
-            <div className="flex-1 text-sm text-muted-foreground">
-              {table.getFilteredSelectedRowModel().rows.length} of{' '}
-              {table.getFilteredRowModel().rows.length} row(s) selected.
-            </div>
             <div className="space-x-2">
               <Button
                 variant="outline"
@@ -419,5 +360,3 @@ export default function OrdersPage() {
     </div>
   );
 }
-
-    

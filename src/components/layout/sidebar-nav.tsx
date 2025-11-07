@@ -45,6 +45,7 @@ import {
   Award,
   Armchair,
   ClipboardCheck,
+  Wrench,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -87,7 +88,8 @@ const menuItems: MenuItem[] = [
     label: 'Order Management',
     icon: ShoppingCart,
     subItems: [
-        { href: '/orders', label: 'Order Book', icon: BookOpen },
+        { href: '/orders', label: 'Order Dashboard', icon: LayoutDashboard },
+        { href: '/orders/service-config', label: 'Service Config', icon: Wrench },
         { href: '/consumption', label: 'Service Consumption', icon: ClipboardCheck },
     ]
   },
