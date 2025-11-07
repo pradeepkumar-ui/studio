@@ -126,6 +126,7 @@ const menuItems: MenuItem[] = [
   },
   { href: '/compliance', label: 'Compliance', icon: Shield },
   { href: '/offer-data', label: 'Data Management', icon: Database },
+  { href: '/billing', label: 'Billing', icon: ReceiptText },
   { href: '/payments', label: 'Payments', icon: CreditCard },
   { href: '/accounting', label: 'Accounting', icon: ReceiptText },
   { href: '/airline-revenue', label: 'Airline Revenue', icon: Landmark },
