@@ -135,6 +135,7 @@ const menuItems: MenuItem[] = [
       { href: '/invoicing', label: 'Invoicing', icon: ReceiptText },
       { href: '/payments', label: 'Payments', icon: CreditCard },
       { href: '/airline-revenue', label: 'Airline Revenue', icon: Landmark },
+      { href: '/reporting', label: 'Reporting', icon: BarChartHorizontal },
     ],
   },
   { href: '/compliance', label: 'Compliance', icon: Shield },
@@ -164,7 +165,6 @@ const menuItems: MenuItem[] = [
         { href: '/offer-rules', label: 'Offer Rule Builder', icon: FileJson },
     ]
   },
-  { href: '/reporting', label: 'Reporting', icon: BarChartHorizontal },
 ];
 
 
@@ -185,7 +185,7 @@ export default function SidebarNav() {
   }
   
   const isAccountingActive = () => {
-    return pathname.startsWith('/accounting') || pathname.startsWith('/invoicing') || pathname.startsWith('/payments') || pathname.startsWith('/airline-revenue');
+    return pathname.startsWith('/accounting') || pathname.startsWith('/invoicing') || pathname.startsWith('/payments') || pathname.startsWith('/airline-revenue') || pathname.startsWith('/reporting');
   }
 
   const isSettingsActive = () => {

@@ -3,8 +3,8 @@ import { BarChartHorizontal } from "lucide-react";
 
 export default function ReportingPage() {
     return <PlaceholderContent 
-        title="Sales Outlet Reporting" 
-        description="A module for consolidated, near-real-time visibility into sales activity across all retail outlets." 
+        title="Accounting Reporting" 
+        description="A unified, configurable reporting framework for financial intelligence and analytics." 
         icon={BarChartHorizontal} 
     />
 }
