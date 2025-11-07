@@ -112,7 +112,17 @@ const menuItems: MenuItem[] = [
         { href: '/orders/large-party', label: 'Large Party Orders', icon: Users },
         { href: '/orders/ground-handling', label: 'Ground Handling', icon: Truck },
         { href: '/orders/servicing', label: 'Servicing', icon: GitBranch },
+    ]
+  },
+  {
+    href: '/check-in',
+    label: 'Order Delivery',
+    icon: Truck,
+    subItems: [
+        { href: '/check-in', label: 'Check-in', icon: UserCheck },
+        { href: '/boarding', label: 'Boarding Gate', icon: PlaneTakeoff },
         { href: '/consumption', label: 'Service Consumption', icon: ClipboardCheck },
+        { href: '/communication', label: 'Communication', icon: MessageSquare },
         { href: '/documentation', label: 'Documentation', icon: FileText },
     ]
   },
@@ -120,16 +130,6 @@ const menuItems: MenuItem[] = [
     href: '/orchestration',
     label: 'Orchestration',
     icon: Workflow,
-  },
-  {
-    href: '/check-in',
-    label: 'Check-in',
-    icon: UserCheck,
-  },
-  {
-    href: '/boarding',
-    label: 'Boarding Gate',
-    icon: PlaneTakeoff,
   },
   {
     href: '/catalog',
@@ -155,7 +155,6 @@ const menuItems: MenuItem[] = [
   },
   { href: '/compliance', label: 'Compliance', icon: Shield },
   { href: '/offer-data', label: 'Data Management', icon: Database },
-  { href: '/communication', label: 'Communication', icon: MessageSquare },
   { href: '/content', label: 'Content Management', icon: Palette },
   { href: '/loyalty', label: 'Loyalty', icon: Award },
   {
