@@ -47,12 +47,18 @@ interface PromotionFormProps {
   onCancel: () => void;
 }
 
+const toDate = (date: Date | Timestamp | undefined): Date => {
+    if (!date) return new Date();
+    if (date instanceof Timestamp) return date.toDate();
+    return date;
+}
+
 export function PromotionForm({ promotion, onSubmit, onCancel }: PromotionFormProps) {
   const form = useForm<Promotion>({
     resolver: zodResolver(promotionSchema),
     defaultValues: promotion ? {
       ...promotion,
-      expiryDate: promotion.expiryDate ? (promotion.expiryDate as Timestamp).toDate() : new Date(),
+      expiryDate: toDate(promotion.expiryDate),
     } : {
       name: '',
       description: '',
@@ -63,13 +69,6 @@ export function PromotionForm({ promotion, onSubmit, onCancel }: PromotionFormPr
       status: 'Draft',
     },
   });
-
-  const formatDate = (date: Date | Timestamp) => {
-    if (date instanceof Timestamp) {
-      return format(date.toDate(), 'PPP');
-    }
-    return format(date, 'PPP');
-  };
 
   return (
     <Form {...form}>
@@ -164,13 +163,13 @@ export function PromotionForm({ promotion, onSubmit, onCancel }: PromotionFormPr
                         variant={'outline'}
                         className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
                       >
-                        {field.value ? formatDate(field.value) : <span>Pick a date</span>}
+                        {field.value ? format(toDate(field.value), 'PPP') : <span>Pick a date</span>}
                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={field.value instanceof Timestamp ? field.value.toDate() : field.value} onSelect={field.onChange} initialFocus />
+                    <Calendar mode="single" selected={toDate(field.value)} onSelect={field.onChange} initialFocus />
                   </PopoverContent>
                 </Popover>
                 <FormMessage />
