@@ -75,7 +75,7 @@ const menuItems: MenuItem[] = [
         icon: Container,
       },
        { href: '/pricing/seat', label: 'Seat Pricing', icon: Armchair },
-      { href: '/promotions', label: 'Promotions', icon: Gift },
+      { href: '/promotions', label: 'Promotions & Products', icon: Gift },
       { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
       { href: '/compliance', label: 'Offer Compliance', icon: Shield },
       { href: '/disruption-waivers', label: 'Disruption Waivers', icon: Waves },
