@@ -1,10 +1,10 @@
 import { PlaceholderContent } from "@/components/layout/placeholder-content";
 import { Wrench } from "lucide-react";
 
-export default function ServiceConfigPage() {
+export default function OrderServicingPage() {
     return <PlaceholderContent 
-        title="Service Configuration" 
-        description="A module to manage rules for service attachment, modification, and fulfilment." 
+        title="Order Servicing Console" 
+        description="A module to modify, cancel, refund, revalidate, or reissue Orders." 
         icon={Wrench} 
     />
 }
