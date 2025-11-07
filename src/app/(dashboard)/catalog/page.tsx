@@ -102,6 +102,21 @@ export default function CatalogPage() {
     }
     handleDialogClose();
   };
+  
+  const handleCreateNewVersion = (product: FareProduct) => {
+    const newVersion = {
+        ...product,
+        id: `${product.id}-v${product.version + 1}`,
+        version: product.version + 1,
+        status: 'Draft' as const,
+    };
+    setFareProducts(prev => [newVersion, ...prev]);
+    toast({
+        title: 'New Draft Version Created',
+        description: `A new draft (v${newVersion.version}) of "${product.name}" has been created.`
+    })
+  };
+
 
   return (
     <div className="flex flex-col gap-6">
@@ -139,7 +154,7 @@ export default function CatalogPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {fareProducts.map((product) => (
+              {fareProducts.sort((a, b) => (a.name > b.name) ? 1 : (a.name === b.name) ? (a.version > b.version ? -1 : 1) : -1).map((product) => (
                 <TableRow key={product.id}>
                   <TableCell className="font-medium">
                     {product.name}
@@ -172,7 +187,7 @@ export default function CatalogPage() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => handleOpenDialog(product)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleCreateNewVersion(product)}>
                           Create New Version
                         </DropdownMenuItem>
                         <DropdownMenuItem>View History</DropdownMenuItem>
