@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GateMonitor } from '@/components/compliance/gate-monitor';
 import { PolicyPacks } from '@/components/compliance/policy-packs';
 import { DecisionInspector } from '@/components/compliance/decision-inspector';
+import { NfrMonitor } from '@/components/compliance/nfr-monitor';
 
 export default function CompliancePage() {
   return (
@@ -24,11 +25,12 @@ export default function CompliancePage() {
       </div>
 
       <Tabs defaultValue="monitor">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="monitor">Gate Monitor</TabsTrigger>
           <TabsTrigger value="policies">Policy Packs</TabsTrigger>
           <TabsTrigger value="inspector">Decision Inspector</TabsTrigger>
           <TabsTrigger value="reasons">Reason Code Explorer</TabsTrigger>
+          <TabsTrigger value="nfr">NFR Monitor</TabsTrigger>
         </TabsList>
         
         <TabsContent value="monitor">
@@ -57,6 +59,10 @@ export default function CompliancePage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="nfr">
+            <NfrMonitor />
         </TabsContent>
       </Tabs>
     </div>
