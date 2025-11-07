@@ -206,13 +206,13 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
                         variant={'outline'}
                         className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
                       >
-                        {field.value ? format(field.value instanceof Timestamp ? field.value.toDate() : field.value, 'PPP') : <span>Pick a date</span>}
+                        {field.value ? format(toDate(field.value), 'PPP') : <span>Pick a date</span>}
                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={field.value instanceof Timestamp ? field.value.toDate() : field.value} onSelect={field.onChange} initialFocus />
+                    <Calendar mode="single" selected={toDate(field.value)} onSelect={field.onChange} initialFocus />
                   </PopoverContent>
                 </Popover>
                 <FormMessage />
@@ -232,13 +232,13 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
                         variant={'outline'}
                         className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
                       >
-                        {field.value ? format(field.value instanceof Timestamp ? field.value.toDate() : field.value, 'PPP') : <span>Pick a date</span>}
+                        {field.value ? format(toDate(field.value), 'PPP') : <span>Pick a date</span>}
                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={field.value instanceof Timestamp ? field.value.toDate() : field.value} onSelect={field.onChange} initialFocus />
+                    <Calendar mode="single" selected={toDate(field.value)} onSelect={field.onChange} initialFocus />
                   </PopoverContent>
                 </Popover>
                 <FormMessage />
