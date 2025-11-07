@@ -45,25 +45,48 @@ type Series = {
     description: string;
 }
 
+const mockSeriesList: Series[] = [
+  { id: 'tour-operator-a', name: 'Tour Operator A', description: 'Winter 2025 Block for LHR-DXB' },
+  { id: 'corporate-b', name: 'Corporate Client B', description: 'Guaranteed seats for NYC-SFO commute' },
+];
+
+const mockAllotments: Allotment[] = Array.from({ length: 12 }, (_, i) => {
+    const date = new Date(2025, 10, 15 + i);
+    const capacity = 20 + Math.floor(Math.random() * 10);
+    const booked = Math.floor(Math.random() * capacity);
+    return {
+        id: `allot-${i}`,
+        date: date.toISOString().split('T')[0],
+        capacity,
+        booked,
+        releaseDays: 30 - i,
+        recallDays: 14,
+        nameTtlDays: 7,
+    }
+});
+
+
 export default function AllotmentPage() {
   const firestore = useFirestore();
+  
   const [seriesCollection, seriesLoading] = useCollection(firestore ? collection(firestore, 'series') : undefined);
   const seriesList = seriesCollection?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Series)) || [];
-
+  const displaySeries = seriesLoading === false && seriesList.length === 0 ? mockSeriesList : seriesList;
+  
   const [selectedSeriesId, setSelectedSeriesId] = useState<string | null>(null);
   
-  // Set default selected series when data loads
   useEffect(() => {
-    if (!selectedSeriesId && seriesList.length > 0) {
-      setSelectedSeriesId(seriesList[0].id);
+    if (!selectedSeriesId && displaySeries.length > 0) {
+      setSelectedSeriesId(displaySeries[0].id);
     }
-  }, [seriesList, selectedSeriesId]);
+  }, [displaySeries, selectedSeriesId]);
 
   const [allotments, allotmentsLoading] = useSubcollection(
       firestore && selectedSeriesId ? collection(doc(firestore, 'series', selectedSeriesId), 'allotments') : undefined
   );
+  const displayAllotments = allotmentsLoading === false && allotments.length === 0 ? mockAllotments : allotments;
   
-  const selectedSeries = seriesList.find(s => s.id === selectedSeriesId);
+  const selectedSeries = displaySeries.find(s => s.id === selectedSeriesId);
   
   return (
     <div className="flex flex-col gap-6">
@@ -84,7 +107,7 @@ export default function AllotmentPage() {
                           <SelectValue placeholder="Select a series" />
                       </SelectTrigger>
                       <SelectContent>
-                          {seriesList.map(series => (
+                          {displaySeries.map(series => (
                                <SelectItem key={series.id} value={series.id}>{series.name}</SelectItem>
                           ))}
                       </SelectContent>
@@ -105,12 +128,12 @@ export default function AllotmentPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {allotmentsLoading && (
+          {(allotmentsLoading || seriesLoading) && (
             <div className="flex justify-center items-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           )}
-          {!allotmentsLoading && selectedSeriesId && (
+          {!(allotmentsLoading || seriesLoading) && selectedSeriesId && (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -125,7 +148,7 @@ export default function AllotmentPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(allotments as Allotment[]).map((allotment) => {
+                  {(displayAllotments as Allotment[]).map((allotment) => {
                     const remaining = allotment.capacity - allotment.booked;
                     const utilization = (allotment.booked / allotment.capacity) * 100;
                     return (
