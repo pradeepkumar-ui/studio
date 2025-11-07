@@ -169,6 +169,11 @@ export default function OffersPage() {
     if (date instanceof Timestamp) {
       return format(date.toDate(), 'PP');
     }
+    // Check if it's a plain object with seconds and nanoseconds, a possible format from Firestore
+    if (date && typeof date === 'object' && 'seconds' in date && 'nanoseconds' in date) {
+      return format(new Date((date as Timestamp).seconds * 1000), 'PP');
+    }
+    // Finally, assume it's a Date object or something Date constructor can handle
     return format(date, 'PP');
   };
 
