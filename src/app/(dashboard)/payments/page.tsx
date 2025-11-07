@@ -95,7 +95,7 @@ export default function PaymentsPage() {
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold tracking-tight">
-            Order Payment Console
+            Order Accounting Payment Console
           </h1>
           <p className="text-muted-foreground">
             Monitor, capture, and reconcile all payment transactions.
