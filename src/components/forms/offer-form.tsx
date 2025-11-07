@@ -26,6 +26,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
+import { Timestamp } from 'firebase/firestore';
 
 const offerSchema = z.object({
   id: z.string().optional(),
@@ -35,10 +36,12 @@ const offerSchema = z.object({
   currency: z.string().length(3, 'Must be a 3-letter currency code.'),
   rounding: z.enum(['None', 'Round Half-Up', 'Round Down']),
   criteria: z.string().min(3, 'Criteria is required.'),
-  effectiveDate: z.date(),
-  expiryDate: z.date(),
+  effectiveDate: z.union([z.instanceof(Date), z.instanceof(Timestamp)]),
+  expiryDate: z.union([z.instanceof(Date), z.instanceof(Timestamp)]),
   notes: z.string().optional(),
   status: z.enum(['Active', 'Inactive', 'Draft', 'Expired']),
+  version: z.number().optional(),
+  ttl: z.string().optional(),
 });
 
 export type Offer = z.infer<typeof offerSchema>;
@@ -54,8 +57,8 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
     resolver: zodResolver(offerSchema),
     defaultValues: offer ? {
       ...offer,
-      effectiveDate: offer.effectiveDate ? new Date(offer.effectiveDate) : new Date(),
-      expiryDate: offer.expiryDate ? new Date(offer.expiryDate) : new Date(),
+      effectiveDate: offer.effectiveDate ? (offer.effectiveDate as Timestamp).toDate() : new Date(),
+      expiryDate: offer.expiryDate ? (offer.expiryDate as Timestamp).toDate() : new Date(),
     } : {
       name: '',
       scope: 'Market',
@@ -197,13 +200,13 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
                         variant={'outline'}
                         className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
                       >
-                        {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                        {field.value ? format(field.value instanceof Timestamp ? field.value.toDate() : field.value, 'PPP') : <span>Pick a date</span>}
                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                    <Calendar mode="single" selected={field.value instanceof Timestamp ? field.value.toDate() : field.value} onSelect={field.onChange} initialFocus />
                   </PopoverContent>
                 </Popover>
                 <FormMessage />
@@ -223,13 +226,13 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
                         variant={'outline'}
                         className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
                       >
-                        {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                        {field.value ? format(field.value instanceof Timestamp ? field.value.toDate() : field.value, 'PPP') : <span>Pick a date</span>}
                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                    <Calendar mode="single" selected={field.value instanceof Timestamp ? field.value.toDate() : field.value} onSelect={field.onChange} initialFocus />
                   </PopoverContent>
                 </Popover>
                 <FormMessage />

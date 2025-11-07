@@ -41,6 +41,28 @@
         }
       },
       "required": ["route", "class", "price", "currency", "status", "version"]
+    },
+    "offer": {
+      "title": "Offer",
+      "description": "Represents a retail offer or promotion.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "scope": { "type": "string", "enum": ["Airline", "Brand", "Market", "Channel"] },
+        "offerType": { "type": "string", "enum": ["Discount", "Fixed", "Step"] },
+        "currency": { "type": "string" },
+        "rounding": { "type": "string", "enum": ["None", "Round Half-Up", "Round Down"] },
+        "criteria": { "type": "string" },
+        "effectiveDate": { "type": "string", "format": "date-time" },
+        "expiryDate": { "type": "string", "format": "date-time" },
+        "notes": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Inactive", "Draft", "Expired"] },
+        "version": { "type": "number" },
+        "ttl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "scope", "offerType", "currency", "rounding", "criteria", "effectiveDate", "expiryDate", "status", "version"]
     }
   },
   "auth": {
@@ -52,6 +74,12 @@
         "$ref": "#/entities/fare"
       },
       "description": "Stores individual fare documents."
+    },
+    "/offers/{offerId}": {
+      "schema": {
+        "$ref": "#/entities/offer"
+      },
+      "description": "Stores offer configuration documents."
     }
   }
 }
