@@ -44,6 +44,7 @@ import {
   Palette,
   Award,
   Armchair,
+  ClipboardCheck,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -86,6 +87,10 @@ const menuItems: MenuItem[] = [
     href: '/orders',
     label: 'Order Management',
     icon: ShoppingCart,
+    subItems: [
+        { href: '/orders', label: 'Order Book', icon: BookOpen },
+        { href: '/consumption', label: 'Service Consumption', icon: ClipboardCheck },
+    ]
   },
    {
     href: '/orchestration',
