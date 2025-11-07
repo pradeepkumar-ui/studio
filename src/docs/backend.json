@@ -1,0 +1,57 @@
+{
+  "entities": {
+    "fare": {
+      "title": "Fare",
+      "description": "Represents a fare for a specific route and class.",
+      "type": "object",
+      "properties": {
+        "route": {
+          "type": "string",
+          "description": "The route for the fare, e.g., NYC-LAX."
+        },
+        "class": {
+          "type": "string",
+          "description": "The class of the fare, e.g., Economy, Business."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of the fare."
+        },
+        "currency": {
+          "type": "string",
+          "description": "The currency of the price."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the fare (e.g., Active, Draft, Inactive)."
+        },
+        "version": {
+          "type": "number",
+          "description": "The version number of the fare record."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the fare was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the fare was last updated."
+        }
+      },
+      "required": ["route", "class", "price", "currency", "status", "version"]
+    }
+  },
+  "auth": {
+    "providers": []
+  },
+  "firestore": {
+    "/fares/{fareId}": {
+      "schema": {
+        "$ref": "#/entities/fare"
+      },
+      "description": "Stores individual fare documents."
+    }
+  }
+}

@@ -37,61 +37,21 @@ import {
   MoreHorizontal,
   PlusCircle,
   CheckCircle,
+  Loader2,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { FareForm, type Fare } from '@/components/forms/fare-form';
+import { useFirestore } from '@/firebase';
+import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { useCollection } from 'react-firebase-hooks/firestore';
 
-const initialFares: Fare[] = [
-  {
-    id: 'FAR-001',
-    route: 'NYC-LAX',
-    class: 'Economy',
-    price: 350,
-    currency: 'USD',
-    status: 'Active',
-    version: 3,
-  },
-  {
-    id: 'FAR-002',
-    route: 'NYC-LAX',
-    class: 'Business',
-    price: 1200,
-    currency: 'USD',
-    status: 'Active',
-    version: 2,
-  },
-  {
-    id: 'FAR-003',
-    route: 'LHR-JFK',
-    class: 'Economy',
-    price: 550,
-    currency: 'GBP',
-    status: 'Active',
-    version: 5,
-  },
-  {
-    id: 'FAR-004',
-    route: 'SFO-DXB',
-    class: 'First',
-    price: 4500,
-    currency: 'USD',
-    status: 'Draft',
-    version: 1,
-  },
-  {
-    id: 'FAR-005',
-    route: 'SIN-SYD',
-    class: 'Economy',
-    price: 400,
-    currency: 'SGD',
-    status: 'Inactive',
-    version: 4,
-  },
-];
 
 export default function FaresPage() {
-  const [fares, setFares] = useState<Fare[]>(initialFares);
+  const firestore = useFirestore();
+  const [faresCollection, loading, error] = useCollection(collection(firestore, 'fares'));
+  const fares = faresCollection?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Fare)) || [];
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingFare, setEditingFare] = useState<Fare | null>(null);
   const { toast } = useToast();
@@ -120,27 +80,43 @@ export default function FaresPage() {
     setEditingFare(null);
   };
 
-  const handleFormSubmit = (data: Fare) => {
-    if (editingFare) {
-      // Update existing fare
-      setFares(fares.map((f) => (f.id === editingFare.id ? { ...f, ...data, version: f.version ? f.version + 1 : 1 } : f)));
-      toast({ title: "Fare Updated", description: `Fare ${data.id} has been successfully updated.` });
-    } else {
-      // Add new fare
-      const newFare = { ...data, id: `FAR-${String(fares.length + 1).padStart(3, '0')}`, version: 1 };
-      setFares([...fares, newFare]);
-      toast({ title: "Fare Created", description: `Fare ${newFare.id} has been successfully created.` });
+  const handleFormSubmit = async (data: Fare) => {
+    try {
+        if (editingFare?.id) {
+          const fareRef = doc(firestore, 'fares', editingFare.id);
+          await setDoc(fareRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
+          toast({ title: "Fare Updated", description: `Fare for ${data.route} has been successfully updated.` });
+        } else {
+          await addDoc(collection(firestore, 'fares'), { ...data, createdAt: serverTimestamp() });
+          toast({ title: "Fare Created", description: `New fare for ${data.route} has been successfully created.` });
+        }
+    } catch(e) {
+        console.error(e);
+        toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: "There was a problem with your request.",
+        });
     }
     handleDialogClose();
   };
   
-   const handleDelete = (fareId: string) => {
-    setFares(fares.filter(f => f.id !== fareId));
-    toast({
-      variant: 'destructive',
-      title: 'Fare Deleted',
-      description: `Fare with ID ${fareId} has been deleted.`,
-    });
+   const handleDelete = async (fareId: string) => {
+    if (!fareId) return;
+    try {
+        await deleteDoc(doc(firestore, 'fares', fareId));
+        toast({
+          title: 'Fare Deleted',
+          description: `Fare with ID ${fareId} has been deleted.`,
+        });
+    } catch(e) {
+         console.error(e);
+        toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: "There was a problem with your request.",
+        });
+    }
   };
 
   return (
@@ -180,74 +156,82 @@ export default function FaresPage() {
           </Button>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Route</TableHead>
-                <TableHead>Class</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Version</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {fares.map((fare) => (
-                <TableRow key={fare.id}>
-                  <TableCell className="font-medium">{fare.route}</TableCell>
-                  <TableCell>{fare.class}</TableCell>
-                  <TableCell>
-                    {new Intl.NumberFormat('en-US', {
-                      style: 'currency',
-                      currency: fare.currency,
-                    }).format(fare.price)}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        fare.status === 'Active'
-                          ? 'default'
-                          : fare.status === 'Draft'
-                          ? 'secondary'
-                          : 'outline'
-                      }
-                    >
-                      {fare.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>v{fare.version}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          aria-haspopup="true"
-                          size="icon"
-                          variant="ghost"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleOpenDialog(fare)}>
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>Create New Version</DropdownMenuItem>
-                        <DropdownMenuItem>View History</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(fare.id!)}>
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+           {loading && (
+             <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+             </div>
+           )}
+           {!loading && !error && (
+            <Table>
+                <TableHeader>
+                <TableRow>
+                    <TableHead>Route</TableHead>
+                    <TableHead>Class</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Version</TableHead>
+                    <TableHead>
+                    <span className="sr-only">Actions</span>
+                    </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                {fares.map((fare) => (
+                    <TableRow key={fare.id}>
+                    <TableCell className="font-medium">{fare.route}</TableCell>
+                    <TableCell>{fare.class}</TableCell>
+                    <TableCell>
+                        {new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: fare.currency,
+                        }).format(fare.price)}
+                    </TableCell>
+                    <TableCell>
+                        <Badge
+                        variant={
+                            fare.status === 'Active'
+                            ? 'default'
+                            : fare.status === 'Draft'
+                            ? 'secondary'
+                            : 'outline'
+                        }
+                        >
+                        {fare.status}
+                        </Badge>
+                    </TableCell>
+                    <TableCell>v{fare.version}</TableCell>
+                    <TableCell>
+                        <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                            aria-haspopup="true"
+                            size="icon"
+                            variant="ghost"
+                            >
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleOpenDialog(fare)}>
+                            Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>Create New Version</DropdownMenuItem>
+                            <DropdownMenuItem>View History</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(fare.id!)}>
+                            Delete
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                        </DropdownMenu>
+                    </TableCell>
+                    </TableRow>
+                ))}
+                </TableBody>
+            </Table>
+           )}
+           {error && <p className="text-destructive">Error loading fares: {error.message}</p>}
         </CardContent>
       </Card>
 
