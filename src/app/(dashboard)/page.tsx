@@ -15,35 +15,55 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Ticket, DollarSign, Handshake, PieChart, MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Grid, BarChart, Text } from '@tremor/react';
+import { KpiCard } from '@/components/analytics/kpi-card';
 
 const kpiData = [
   {
-    title: 'Active Offers',
-    value: '34',
-    change: '+12.5%',
-    icon: Ticket,
+    title: 'Offers Created (24h)',
+    metric: '12,553',
+    progress: 15.9,
+    target: '10,000',
+    deltaType: 'moderateIncrease',
   },
   {
-    title: 'Total Revenue (Month)',
-    value: '$1.2M',
-    change: '+8.2%',
-    icon: DollarSign,
+    title: 'Conversion Rate',
+    metric: '15.1%',
+    progress: 5.2,
+    target: '12%',
+    deltaType: 'moderateIncrease',
   },
   {
-    title: 'Active Contracts',
-    value: '18',
-    change: '+2',
-    icon: Handshake,
+    title: 'Ancillary Attach Rate',
+    metric: '28.4%',
+    progress: -2.1,
+    target: '30%',
+    deltaType: 'moderateDecrease',
   },
   {
-    title: 'Overall Utilisation',
-    value: '76%',
-    change: '-1.5%',
-    icon: PieChart,
+    title: 'Revenue Today',
+    metric: '$1.2M',
+    progress: 8.2,
+    target: '$1.1M',
+    deltaType: 'moderateIncrease',
   },
+];
+
+const funnelData = [
+  { name: 'Created', value: 124553 },
+  { name: 'Selected (Locked)', value: 83219 },
+  { name: 'Validated', value: 79004 },
+  { name: 'Converted', value: 18771 },
+  { name: 'Expired', value: 31992 },
 ];
 
 const recentOrders = [
@@ -84,14 +104,21 @@ const recentOrders = [
   },
 ];
 
+const chartFormatter = (number: number) =>
+  `${Intl.NumberFormat('us').format(number).toString()}`;
+
 const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-        case 'Fulfilled': return 'default';
-        case 'Pending': return 'secondary';
-        case 'Canceled': return 'destructive';
-        default: return 'outline';
-    }
-}
+  switch (status) {
+    case 'Fulfilled':
+      return 'default';
+    case 'Pending':
+      return 'secondary';
+    case 'Canceled':
+      return 'destructive';
+    default:
+      return 'outline';
+  }
+};
 
 export default function DashboardPage() {
   return (
@@ -104,69 +131,90 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {kpiData.map((kpi) => (
-          <Card key={kpi.title}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">
-                {kpi.title}
-              </CardTitle>
-              <kpi.icon className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{kpi.value}</div>
-              <p className="text-xs text-muted-foreground">{kpi.change} from last month</p>
-            </CardContent>
-          </Card>
+      <Grid numItemsSm={2} numItemsLg={4} className="gap-6">
+        {kpiData.map((item) => (
+          <KpiCard key={item.title} item={item} />
         ))}
-      </div>
+      </Grid>
 
-      <div className="grid grid-cols-1 gap-6">
-        <Card>
-            <CardHeader>
-                <CardTitle>Recent Orders</CardTitle>
-                <CardDescription>A summary of the most recent orders placed.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Order ID</TableHead>
-                            <TableHead>Customer</TableHead>
-                            <TableHead>Amount</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Date</TableHead>
-                            <TableHead><span className="sr-only">Actions</span></TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {recentOrders.map(order => (
-                            <TableRow key={order.orderId}>
-                                <TableCell className="font-medium">{order.orderId}</TableCell>
-                                <TableCell>{order.customer}</TableCell>
-                                <TableCell>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(order.amount)}</TableCell>
-                                <TableCell><Badge variant={getStatusBadgeVariant(order.status)}>{order.status}</Badge></TableCell>
-                                <TableCell>{order.date}</TableCell>
-                                <TableCell>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button aria-haspopup="true" size="icon" variant="ghost">
-                                                <MoreHorizontal className="h-4 w-4" />
-                                                <span className="sr-only">Toggle menu</span>
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                            <DropdownMenuItem>View Order</DropdownMenuItem>
-                                            <DropdownMenuItem>View Customer</DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+        <Card className="lg:col-span-3">
+          <CardHeader>
+            <CardTitle>Recent Orders</CardTitle>
+            <CardDescription>
+              A summary of the most recent orders placed across all channels.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Order ID</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recentOrders.map((order) => (
+                  <TableRow key={order.orderId}>
+                    <TableCell className="font-medium">{order.orderId}</TableCell>
+                    <TableCell>{order.customer}</TableCell>
+                    <TableCell>
+                      {new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                      }).format(order.amount)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeVariant(order.status)}>
+                        {order.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{order.date}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button aria-haspopup="true" size="icon" variant="ghost">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem>View Order</DropdownMenuItem>
+                          <DropdownMenuItem>View Customer</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Offer Funnel (Last 30 days)</CardTitle>
+            <Text>Offers moving through lifecycle stages</Text>
+          </CardHeader>
+          <CardContent>
+            <BarChart
+              className="mt-6"
+              data={funnelData}
+              index="name"
+              categories={['value']}
+              colors={['blue']}
+              valueFormatter={chartFormatter}
+              yAxisWidth={80}
+              layout="vertical"
+              showLegend={false}
+            />
+          </CardContent>
         </Card>
       </div>
     </div>
