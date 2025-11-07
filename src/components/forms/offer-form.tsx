@@ -52,13 +52,19 @@ interface OfferFormProps {
   onCancel: () => void;
 }
 
+const toDate = (date: Date | Timestamp | undefined): Date => {
+    if (!date) return new Date();
+    if (date instanceof Timestamp) return date.toDate();
+    return date;
+}
+
 export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
   const form = useForm<Offer>({
     resolver: zodResolver(offerSchema),
     defaultValues: offer ? {
       ...offer,
-      effectiveDate: offer.effectiveDate ? (offer.effectiveDate as Timestamp).toDate() : new Date(),
-      expiryDate: offer.expiryDate ? (offer.expiryDate as Timestamp).toDate() : new Date(),
+      effectiveDate: toDate(offer.effectiveDate),
+      expiryDate: toDate(offer.expiryDate),
     } : {
       name: '',
       scope: 'Market',
