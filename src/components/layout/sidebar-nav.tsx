@@ -125,12 +125,19 @@ const menuItems: MenuItem[] = [
       { href: '/channels', label: 'Channels', icon: RadioTower },
     ]
   },
+  {
+    href: '/accounting',
+    label: 'Accounting',
+    icon: BookOpen,
+    subItems: [
+      { href: '/accounting', label: 'Reconciliation', icon: GitCompare },
+      { href: '/invoicing', label: 'Invoicing', icon: ReceiptText },
+      { href: '/payments', label: 'Payments', icon: CreditCard },
+      { href: '/airline-revenue', label: 'Airline Revenue', icon: Landmark },
+    ],
+  },
   { href: '/compliance', label: 'Compliance', icon: Shield },
   { href: '/offer-data', label: 'Data Management', icon: Database },
-  { href: '/invoicing', label: 'Invoicing', icon: ReceiptText },
-  { href: '/payments', label: 'Payments', icon: CreditCard },
-  { href: '/reconciliation', label: 'Reconciliation', icon: GitCompare },
-  { href: '/airline-revenue', label: 'Airline Revenue', icon: Landmark },
   { href: '/communication', label: 'Communication', icon: MessageSquare },
   { href: '/content', label: 'Content Management', icon: Palette },
   { href: '/loyalty', label: 'Loyalty', icon: Award },
@@ -165,8 +172,6 @@ export default function SidebarNav() {
 
   const isSubItemActive = (subItems: Omit<MenuItem, 'subItems'>[] | undefined) => {
     if (!subItems) return false;
-    // Check if the current path is exactly one of the sub-items' hrefs.
-    // This is more specific than startsWith to avoid parent-child conflicts.
     return subItems.some(item => pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href)));
   };
   
@@ -178,6 +183,10 @@ export default function SidebarNav() {
     return pathname.startsWith('/analytics') || pathname.startsWith('/fare-change-forecast') || pathname.startsWith('/offer-rules');
   }
   
+  const isAccountingActive = () => {
+    return pathname.startsWith('/accounting') || pathname.startsWith('/invoicing') || pathname.startsWith('/payments') || pathname.startsWith('/airline-revenue');
+  }
+
   const isSettingsActive = () => {
       return pathname.startsWith('/settings') || pathname.startsWith('/broker') || pathname.startsWith('/offer-construction-settings');
   }
@@ -200,12 +209,12 @@ export default function SidebarNav() {
             item.subItems ? (
               <SidebarMenuItem key={item.label} asChild>
                 <SidebarMenuCollapsible
-                  defaultOpen={isSubItemActive(item.subItems) || (item.href === '/catalog' && isSubItemActive(item.subItems)) || (item.href === '/inventory' && isSubItemActive(item.subItems)) || (item.label === 'Analytics & AI' && isAnalyticsActive())}
+                  defaultOpen={isSubItemActive(item.subItems) || (item.href === '/catalog' && isSubItemActive(item.subItems)) || (item.href === '/inventory' && isSubItemActive(item.subItems)) || (item.label === 'Analytics & AI' && isAnalyticsActive()) || (item.label === 'Accounting' && isAccountingActive())}
                 >
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton
                       className="group/c-trigger"
-                      isActive={isSubItemActive(item.subItems) || (item.label === 'Analytics & AI' && isAnalyticsActive())}
+                      isActive={isSubItemActive(item.subItems) || (item.label === 'Analytics & AI' && isAnalyticsActive()) || (item.label === 'Accounting' && isAccountingActive())}
                       tooltip={{ children: item.label, side: 'right' }}
                     >
                       <item.icon />
