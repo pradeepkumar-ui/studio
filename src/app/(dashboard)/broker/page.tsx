@@ -24,7 +24,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, RadioTower, CheckCircle, AlertTriangle, XCircle, FileJson, RotateCw, ShieldOff } from 'lucide-react';
+import { MoreHorizontal, RadioTower, CheckCircle, AlertTriangle, XCircle, FileJson, RotateCw, ShieldOff, PlusCircle } from 'lucide-react';
 
 const connectors = [
   {
@@ -65,13 +65,22 @@ const connectors = [
   },
 ];
 
+const travelServices = [
+    { id: 'TRS-001', name: 'Allied Travel Insurance', supplier: 'Allied Insurance', status: 'Active', apiHealth: '99.9%' },
+    { id: 'TRS-002', name: 'Global Airport Transfers', supplier: 'Global Transfers', status: 'Active', apiHealth: '99.8%' },
+    { id: 'TRS-003', name: 'City Hotels Gateway', supplier: 'City Hotels', status: 'Inactive', apiHealth: 'N/A' },
+    { id: 'TRS-004', name: 'Event Packages', supplier: 'EventsCo', status: 'Active', apiHealth: '99.5%' },
+];
+
 const getStatusBadgeVariant = (status: string) => {
   switch (status) {
     case 'UP':
+    case 'Active':
       return 'default';
     case 'DEGRADED':
       return 'secondary';
     case 'DOWN':
+    case 'Inactive':
       return 'destructive';
     default:
       return 'outline';
@@ -98,17 +107,17 @@ export default function BrokerPage() {
         <RadioTower className="w-8 h-8 text-muted-foreground" />
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Broker Management
+            Partner & API Management
           </h1>
           <p className="text-muted-foreground">
-            Manage routing, partner integrations, schema mappings, and resilience for all offer provider communications.
+            Manage partner integrations, travel services, schema mappings, and resilience for all provider communications.
           </p>
         </div>
       </div>
       <Card>
         <CardHeader>
             <CardTitle>Connectors Registry</CardTitle>
-            <CardDescription>Live status of all integrated partner adapters and connectors.</CardDescription>
+            <CardDescription>Live status of all integrated partner adapters and system connectors.</CardDescription>
         </CardHeader>
         <CardContent>
             <Table>
@@ -145,9 +154,9 @@ export default function BrokerPage() {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                        <DropdownMenuItem><FileJson className="mr-2" /> View Mappings ({connector.mappingVersion})</DropdownMenuItem>
-                                        <DropdownMenuItem><RotateCw className="mr-2" /> Rotate Secrets</DropdownMenuItem>
-                                        <DropdownMenuItem className="text-destructive"><ShieldOff className="mr-2" /> Disable Connector</DropdownMenuItem>
+                                        <DropdownMenuItem><FileJson className="mr-2 h-4 w-4" /> View Mappings ({connector.mappingVersion})</DropdownMenuItem>
+                                        <DropdownMenuItem><RotateCw className="mr-2 h-4 w-4" /> Rotate Secrets</DropdownMenuItem>
+                                        <DropdownMenuItem className="text-destructive"><ShieldOff className="mr-2 h-4 w-4" /> Disable Connector</DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </TableCell>
@@ -157,6 +166,62 @@ export default function BrokerPage() {
             </Table>
         </CardContent>
       </Card>
+      
+       <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+                <CardTitle>Travel Related Services (TRS)</CardTitle>
+                <CardDescription>Manage non-air ancillary services like insurance, hotels, and transfers.</CardDescription>
+            </div>
+            <Button>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add New Service
+            </Button>
+        </CardHeader>
+        <CardContent>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Service Name</TableHead>
+                        <TableHead>Supplier</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>API Health</TableHead>
+                        <TableHead><span className="sr-only">Actions</span></TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {travelServices.map((service) => (
+                        <TableRow key={service.id}>
+                            <TableCell className="font-medium">{service.name}</TableCell>
+                            <TableCell>{service.supplier}</TableCell>
+                             <TableCell>
+                                <Badge variant={getStatusBadgeVariant(service.status)}>
+                                    {service.status}
+                                </Badge>
+                            </TableCell>
+                            <TableCell>{service.apiHealth}</TableCell>
+                            <TableCell>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button aria-haspopup="true" size="icon" variant="ghost">
+                                            <MoreHorizontal className="h-4 w-4" />
+                                            <span className="sr-only">Toggle menu</span>
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                        <DropdownMenuItem>Edit Configuration</DropdownMenuItem>
+                                        <DropdownMenuItem>View API Settings</DropdownMenuItem>
+                                        <DropdownMenuItem className="text-destructive">Deactivate</DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </CardContent>
+      </Card>
+
     </div>
   );
 }
