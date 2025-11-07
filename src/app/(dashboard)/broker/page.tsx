@@ -27,10 +27,10 @@ import {
 import { MoreHorizontal, RadioTower, CheckCircle, AlertTriangle, XCircle, FileJson, RotateCw, ShieldOff, PlusCircle } from 'lucide-react';
 
 const kpiData = [
-  { title: 'Active Partners', value: '42' },
-  { title: 'Pending Approvals', value: '3' },
-  { title: 'SLA Health', value: '99.1%' },
-  { title: 'Avg. API Latency', value: '250ms' },
+  { title: 'Active Interfaces', value: '112' },
+  { title: 'Partners', value: '45' },
+  { title: 'Uptime (24h)', value: '99.98%' },
+  { title: 'Avg. Latency (24h)', value: '820ms' },
 ];
 
 const connectors = [
@@ -115,14 +115,14 @@ export default function BrokerPage() {
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
             <h1 className="text-3xl font-bold tracking-tight">
-                Partner Management
+                System Interfaces &amp; Broker
             </h1>
             <p className="text-muted-foreground">
-                Onboard, configure, and monitor all external ecosystem partners.
+                Onboard partners, manage integrations, and monitor system interface health.
             </p>
         </div>
         <Button>
-            <PlusCircle className="mr-2" /> Add Partner
+            <PlusCircle className="mr-2" /> Register Interface
         </Button>
       </div>
 
@@ -140,6 +140,59 @@ export default function BrokerPage() {
           </Card>
         ))}
       </div>
+
+      <Card>
+        <CardHeader>
+            <CardTitle>Interface &amp; Partner Connectivity</CardTitle>
+            <CardDescription>Live status of all integrated partner adapters and system connectors.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Interface / Connector</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>p95 Latency</TableHead>
+                        <TableHead>Error Rate</TableHead>
+                        <TableHead>Traffic</TableHead>
+                        <TableHead><span className="sr-only">Actions</span></TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {connectors.map((connector) => (
+                        <TableRow key={connector.id}>
+                            <TableCell className="font-medium">{connector.name}</TableCell>
+                            <TableCell>
+                                <Badge variant={getStatusBadgeVariant(connector.status)} className="gap-1 pl-1.5">
+                                    {getStatusIcon(connector.status)}
+                                    {connector.status}
+                                </Badge>
+                            </TableCell>
+                            <TableCell>{connector.latency}</TableCell>
+                            <TableCell>{connector.errorRate}</TableCell>
+                            <TableCell>{connector.calls}</TableCell>
+                            <TableCell>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button aria-haspopup="true" size="icon" variant="ghost">
+                                            <MoreHorizontal className="h-4 w-4" />
+                                            <span className="sr-only">Toggle menu</span>
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                        <DropdownMenuItem><FileJson className="mr-2 h-4 w-4" /> View Mappings ({connector.mappingVersion})</DropdownMenuItem>
+                                        <DropdownMenuItem><RotateCw className="mr-2 h-4 w-4" /> Rotate Secrets</DropdownMenuItem>
+                                        <DropdownMenuItem className="text-destructive"><ShieldOff className="mr-2 h-4 w-4" /> Disable Interface</DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -191,59 +244,6 @@ export default function BrokerPage() {
         </CardContent>
       </Card>
       
-      <Card>
-        <CardHeader>
-            <CardTitle>Partner Connectivity</CardTitle>
-            <CardDescription>Live status of all integrated partner adapters and system connectors.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Connector</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>p95 Latency</TableHead>
-                        <TableHead>Error Rate</TableHead>
-                        <TableHead>Traffic</TableHead>
-                        <TableHead><span className="sr-only">Actions</span></TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {connectors.map((connector) => (
-                        <TableRow key={connector.id}>
-                            <TableCell className="font-medium">{connector.name}</TableCell>
-                            <TableCell>
-                                <Badge variant={getStatusBadgeVariant(connector.status)} className="gap-1 pl-1.5">
-                                    {getStatusIcon(connector.status)}
-                                    {connector.status}
-                                </Badge>
-                            </TableCell>
-                            <TableCell>{connector.latency}</TableCell>
-                            <TableCell>{connector.errorRate}</TableCell>
-                            <TableCell>{connector.calls}</TableCell>
-                            <TableCell>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                                            <MoreHorizontal className="h-4 w-4" />
-                                            <span className="sr-only">Toggle menu</span>
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                        <DropdownMenuItem><FileJson className="mr-2 h-4 w-4" /> View Mappings ({connector.mappingVersion})</DropdownMenuItem>
-                                        <DropdownMenuItem><RotateCw className="mr-2 h-4 w-4" /> Rotate Secrets</DropdownMenuItem>
-                                        <DropdownMenuItem className="text-destructive"><ShieldOff className="mr-2 h-4 w-4" /> Disable Connector</DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </CardContent>
-      </Card>
-
     </div>
   );
 }
