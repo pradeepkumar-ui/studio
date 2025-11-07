@@ -33,53 +33,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, PlusCircle, Import } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Import, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { PromotionForm, type Promotion } from '@/components/forms/promotion-form';
-
-const initialPromotions: Promotion[] = [
-  {
-    id: 'PROMO-001',
-    name: 'Weekend Special',
-    description: '15% off for mobile app purchases in India on weekends.',
-    prefix: 'WEEKEND15',
-    poolSize: 10000,
-    usageType: 'multi',
-    status: 'Active',
-    expiryDate: new Date('2025-12-31'),
-  },
-  {
-    id: 'PROMO-002',
-    name: 'New User Welcome Offer',
-    description: '$50 off first booking for new accounts.',
-    prefix: 'NEWUSER50',
-    poolSize: 50000,
-    usageType: 'single',
-    status: 'Active',
-    expiryDate: new Date('2025-12-31'),
-  },
-  {
-    id: 'PROMO-003',
-    name: 'Summer Sale',
-    description: 'General summer sale promotion code.',
-    prefix: 'SUMMER24',
-    poolSize: 100000,
-    usageType: 'unlimited',
-    status: 'Expired',
-    expiryDate: new Date('2024-08-31'),
-  },
-   {
-    id: 'PROMO-004',
-    name: 'Corporate Partner Discount',
-    description: 'Special discount for corporate partners.',
-    prefix: 'CORPBIZ',
-    poolSize: 500,
-    usageType: 'multi',
-    status: 'Draft',
-    expiryDate: new Date('2026-06-30'),
-  },
-];
+import { useFirestore } from '@/firebase';
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
 const otherProducts = [
     { sku: 'GC-1000-INR', name: '₹1000 Gift Card', category: 'Gift Cards', price: '₹1000', stock: 482, status: 'Active' },
@@ -89,7 +49,18 @@ const otherProducts = [
 ]
 
 export default function PromotionsPage() {
-  const [promotions, setPromotions] = useState<Promotion[]>(initialPromotions);
+  const firestore = useFirestore();
+  const [promotionsCollection, loading, error] = useCollection(firestore ? collection(firestore, 'promotions') : undefined);
+  
+  const promotions = promotionsCollection?.docs.map(doc => {
+      const data = doc.data();
+      return { 
+        id: doc.id, 
+        ...data,
+        expiryDate: data.expiryDate?.toDate(),
+      } as Promotion;
+  }) || [];
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null);
   const { toast } = useToast();
@@ -104,25 +75,45 @@ export default function PromotionsPage() {
     setEditingPromotion(null);
   };
 
-  const handleFormSubmit = (data: Promotion) => {
-    if (editingPromotion) {
-      setPromotions(promotions.map((p) => (p.id === editingPromotion.id ? { ...p, ...data } : p)));
-      toast({ title: 'Promotion Updated', description: `Promotion "${data.name}" has been successfully updated.` });
-    } else {
-      const newPromotion = { ...data, id: `PROMO-${String(promotions.length + 1).padStart(3, '0')}` };
-      setPromotions([...promotions, newPromotion]);
-      toast({ title: 'Promotion Created', description: `Promotion "${newPromotion.name}" has been successfully created.` });
+  const handleFormSubmit = async (data: Promotion) => {
+    if (!firestore) return;
+    try {
+      if (editingPromotion?.id) {
+        const promoRef = doc(firestore, 'promotions', editingPromotion.id);
+        await setDoc(promoRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
+        toast({ title: 'Promotion Updated', description: `Promotion "${data.name}" has been successfully updated.` });
+      } else {
+        await addDoc(collection(firestore, 'promotions'), { ...data, createdAt: serverTimestamp() });
+        toast({ title: 'Promotion Created', description: `Promotion "${data.name}" has been successfully created.` });
+      }
+    } catch (e: any) {
+        console.error(e);
+        toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: e.message || "There was a problem with your request.",
+        });
     }
     handleDialogClose();
   };
 
-  const handleDelete = (promoId: string) => {
-    setPromotions(promotions.filter((p) => p.id !== promoId));
-    toast({
-      variant: 'destructive',
-      title: 'Promotion Deleted',
-      description: `Promotion with ID ${promoId} has been deleted.`,
-    });
+  const handleDelete = async (promoId: string) => {
+     if (!promoId || !firestore) return;
+    try {
+        await deleteDoc(doc(firestore, 'promotions', promoId));
+        toast({
+          variant: 'destructive',
+          title: 'Promotion Deleted',
+          description: `Promotion with ID ${promoId} has been deleted.`,
+        });
+    } catch (e: any) {
+        console.error(e);
+        toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: e.message || "There was a problem with your request.",
+        });
+    }
   };
   
   const getStatusBadgeVariant = (status: Promotion['status'] | string) => {
@@ -164,63 +155,71 @@ export default function PromotionsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Promotion Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Code Prefix</TableHead>
-                <TableHead>Pool Size</TableHead>
-                <TableHead>Usage Type</TableHead>
-                <TableHead>Expiry Date</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {promotions.map((promo) => (
-                <TableRow key={promo.id}>
-                  <TableCell className="font-medium">{promo.name}</TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusBadgeVariant(promo.status)}>
-                      {promo.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="font-mono">{promo.prefix}</TableCell>
-                  <TableCell>{promo.poolSize.toLocaleString()}</TableCell>
-                  <TableCell className="capitalize">{promo.usageType}</TableCell>
-                  <TableCell>
-                    {format(promo.expiryDate, 'PP')}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          aria-haspopup="true"
-                          size="icon"
-                          variant="ghost"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleOpenDialog(promo)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>View Codes</DropdownMenuItem>
-                        <DropdownMenuItem>Assign to Offer</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(promo.id!)}>
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          {loading && (
+             <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+             </div>
+           )}
+           {!loading && !error && (
+            <Table>
+                <TableHeader>
+                <TableRow>
+                    <TableHead>Promotion Name</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Code Prefix</TableHead>
+                    <TableHead>Pool Size</TableHead>
+                    <TableHead>Usage Type</TableHead>
+                    <TableHead>Expiry Date</TableHead>
+                    <TableHead>
+                    <span className="sr-only">Actions</span>
+                    </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                {promotions.map((promo) => (
+                    <TableRow key={promo.id}>
+                    <TableCell className="font-medium">{promo.name}</TableCell>
+                    <TableCell>
+                        <Badge variant={getStatusBadgeVariant(promo.status)}>
+                        {promo.status}
+                        </Badge>
+                    </TableCell>
+                    <TableCell className="font-mono">{promo.prefix}</TableCell>
+                    <TableCell>{promo.poolSize.toLocaleString()}</TableCell>
+                    <TableCell className="capitalize">{promo.usageType}</TableCell>
+                    <TableCell>
+                        {promo.expiryDate && format(promo.expiryDate, 'PP')}
+                    </TableCell>
+                    <TableCell>
+                        <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                            aria-haspopup="true"
+                            size="icon"
+                            variant="ghost"
+                            >
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleOpenDialog(promo)}>Edit</DropdownMenuItem>
+                            <DropdownMenuItem>View Codes</DropdownMenuItem>
+                            <DropdownMenuItem>Assign to Offer</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(promo.id!)}>
+                            Delete
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                        </DropdownMenu>
+                    </TableCell>
+                    </TableRow>
+                ))}
+                </TableBody>
+            </Table>
+           )}
+           {error && <p className="text-destructive">Error loading promotions: {error.message}</p>}
         </CardContent>
       </Card>
 

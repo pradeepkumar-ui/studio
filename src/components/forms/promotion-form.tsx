@@ -26,6 +26,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
+import { Timestamp } from 'firebase/firestore';
 
 const promotionSchema = z.object({
   id: z.string().optional(),
@@ -34,7 +35,7 @@ const promotionSchema = z.object({
   prefix: z.string().min(3, 'A code prefix is required.').max(10, 'Prefix cannot exceed 10 characters.'),
   poolSize: z.coerce.number().min(1, 'Pool size must be at least 1.'),
   usageType: z.enum(['single', 'multi', 'unlimited']),
-  expiryDate: z.date(),
+  expiryDate: z.union([z.instanceof(Date), z.instanceof(Timestamp)]),
   status: z.enum(['Active', 'Draft', 'Expired']),
 });
 
@@ -51,7 +52,7 @@ export function PromotionForm({ promotion, onSubmit, onCancel }: PromotionFormPr
     resolver: zodResolver(promotionSchema),
     defaultValues: promotion ? {
       ...promotion,
-      expiryDate: promotion.expiryDate ? new Date(promotion.expiryDate) : new Date(),
+      expiryDate: promotion.expiryDate ? (promotion.expiryDate as Timestamp).toDate() : new Date(),
     } : {
       name: '',
       description: '',
@@ -156,13 +157,13 @@ export function PromotionForm({ promotion, onSubmit, onCancel }: PromotionFormPr
                         variant={'outline'}
                         className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
                       >
-                        {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                        {field.value ? format(field.value instanceof Timestamp ? field.value.toDate() : field.value, 'PPP') : <span>Pick a date</span>}
                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                    <Calendar mode="single" selected={field.value instanceof Timestamp ? field.value.toDate() : field.value} onSelect={field.onChange} initialFocus />
                   </PopoverContent>
                 </Popover>
                 <FormMessage />
