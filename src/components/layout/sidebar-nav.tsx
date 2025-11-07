@@ -59,6 +59,7 @@ import {
   Archive,
   Landmark,
   GitCompare,
+  KeyRound,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -307,11 +308,21 @@ export default function SidebarNav() {
                           </Link>
                         </SidebarMenuSubItem>
                         <SidebarMenuSubItem asChild>
+                           <Link href="/settings/user-management" legacyBehavior passHref>
+                            <SidebarMenuSubButton
+                              isActive={pathname.startsWith('/settings/user-management')}
+                            >
+                              <KeyRound className={cn('transition-transform ease-in-out', pathname.startsWith('/settings/user-management') && 'text-primary')} />
+                              <span>User Management</span>
+                            </SidebarMenuSubButton>
+                          </Link>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem asChild>
                            <Link href="/settings" legacyBehavior passHref>
                             <SidebarMenuSubButton
-                              isActive={pathname.startsWith('/settings')}
+                              isActive={pathname === '/settings'}
                             >
-                              <Settings className={cn('transition-transform ease-in-out', pathname.startsWith('/settings') && 'text-primary')} />
+                              <Settings className={cn('transition-transform ease-in-out', pathname === '/settings' && 'text-primary')} />
                               <span>General</span>
                             </SidebarMenuSubButton>
                           </Link>
