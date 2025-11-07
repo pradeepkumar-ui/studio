@@ -49,12 +49,12 @@ import {
   PlusSquare,
   BadgeCheck,
   Building,
-  MessageSquare,
   Users,
   CreditCard,
   ReceiptText,
   BarChartHorizontal,
   FileText,
+  MessageSquare,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -102,7 +102,7 @@ const menuItems: MenuItem[] = [
         { href: '/orders/finalisation', label: 'Finalisation', icon: BadgeCheck },
         { href: '/orders/supplier-orders', label: 'Supplier Orders', icon: Building },
         { href: '/orders/large-party', label: 'Large Party Orders', icon: Users },
-        { href: '/orders/service-config', label: 'Servicing', icon: Wrench },
+        { href: '/orders/servicing', label: 'Servicing', icon: Wrench },
         { href: '/consumption', label: 'Service Consumption', icon: ClipboardCheck },
         { href: '/documentation', label: 'Documentation', icon: FileText },
     ]
