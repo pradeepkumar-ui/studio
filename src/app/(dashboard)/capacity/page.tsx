@@ -1,4 +1,3 @@
-
 'use client';
 
 import { LiveUtilization } from '@/components/capacity/live-utilization';
