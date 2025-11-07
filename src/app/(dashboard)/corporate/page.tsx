@@ -24,17 +24,18 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { CorporateContractForm, type CorporateContract } from '@/components/forms/corporate-contract-form';
 
-type CorporateContract = {
-  id: string;
-  companyName: string;
-  contractId: string;
-  status: 'Active' | 'Expired' | 'Negotiation';
-  activeFares: number;
-  administrator: string;
-};
 
 const initialContracts: CorporateContract[] = [
   {
@@ -73,6 +74,31 @@ const initialContracts: CorporateContract[] = [
 
 export default function CorporatePage() {
   const [contracts, setContracts] = useState<CorporateContract[]>(initialContracts);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingContract, setEditingContract] = useState<CorporateContract | null>(null);
+  const { toast } = useToast();
+
+  const handleOpenDialog = (contract: CorporateContract | null = null) => {
+    setEditingContract(contract);
+    setIsDialogOpen(true);
+  };
+  
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setEditingContract(null);
+  };
+
+  const handleFormSubmit = (data: CorporateContract) => {
+    if (editingContract) {
+      setContracts(contracts.map((c) => (c.id === editingContract.id ? { ...c, ...data } : c)));
+      toast({ title: "Contract Updated", description: `Contract for ${data.companyName} has been updated.` });
+    } else {
+      const newContract = { ...data, id: `CORP-${String(contracts.length + 1).padStart(3, '0')}` };
+      setContracts([newContract, ...contracts]);
+      toast({ title: "Contract Created", description: `New contract for ${newContract.companyName} has been created.` });
+    }
+    handleDialogClose();
+  };
 
   const getStatusBadgeVariant = (status: CorporateContract['status']) => {
     switch (status) {
@@ -86,6 +112,7 @@ export default function CorporatePage() {
   };
 
   return (
+    <>
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
@@ -96,7 +123,7 @@ export default function CorporatePage() {
             Define and manage fare privileges for corporate customers.
           </p>
         </div>
-        <Button onClick={() => alert('New contract form would appear here.')}>
+        <Button onClick={() => handleOpenDialog()}>
           <PlusCircle className="mr-2" />
           New Contract
         </Button>
@@ -151,7 +178,7 @@ export default function CorporatePage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Edit Contract</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleOpenDialog(contract)}>Edit Contract</DropdownMenuItem>
                         <DropdownMenuItem>Manage Privileges</DropdownMenuItem>
                         <DropdownMenuItem>View History</DropdownMenuItem>
                       </DropdownMenuContent>
@@ -164,5 +191,22 @@ export default function CorporatePage() {
         </CardContent>
       </Card>
     </div>
+
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{editingContract ? 'Edit Corporate Contract' : 'Create New Corporate Contract'}</DialogTitle>
+          <DialogDescription>
+            {editingContract ? `Editing contract for ${editingContract.companyName}.` : 'Enter the details for the new corporate agreement.'}
+          </DialogDescription>
+        </DialogHeader>
+        <CorporateContractForm
+          contract={editingContract}
+          onSubmit={handleFormSubmit}
+          onCancel={handleDialogClose}
+        />
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
