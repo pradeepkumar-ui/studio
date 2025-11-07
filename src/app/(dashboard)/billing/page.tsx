@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { FileDown, FilePlus, GitCompareArrows, RefreshCw, MoreHorizontal } from 'lucide-react';
+import { FileDown, FilePlus, Send, CheckSquare, MoreHorizontal } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,10 +28,10 @@ import {
 
 
 const kpiData = [
-  { title: 'Pending Invoices', value: '240' },
-  { title: 'Posted Invoices', value: '1,125' },
-  { title: 'Disputed Invoices', value: '6' },
-  { title: 'Reconciliation Rate', value: '99.97%' },
+  { title: 'Draft', value: '180' },
+  { title: 'Approved', value: '2,940' },
+  { title: 'Delivered', value: '2,935' },
+  { title: 'Exceptions', value: '5' },
 ];
 
 type Invoice = {
@@ -40,25 +40,27 @@ type Invoice = {
   customer: string;
   amount: number;
   currency: string;
-  status: 'Posted' | 'Pending' | 'Paid' | 'Disputed' | 'Overdue';
-  dueDate: string;
+  status: 'Draft' | 'Approved' | 'Sent' | 'Failed';
+  issueDate: string;
 };
 
 const mockInvoices: Invoice[] = [
-  { invoiceId: 'INV_56214', orderId: 'ORD_87321', customer: 'Globex Corporation', amount: 1250.00, currency: 'EUR', status: 'Paid', dueDate: '2025-11-15' },
-  { invoiceId: 'INV_56215', orderId: 'ORD_87322', customer: 'Initech', amount: 880.00, currency: 'USD', status: 'Posted', dueDate: '2025-11-20' },
-  { invoiceId: 'INV_56216', orderId: 'ORD_87323', customer: 'Hooli', amount: 450.00, currency: 'USD', status: 'Pending', dueDate: '2025-11-22' },
-  { invoiceId: 'INV_56217', orderId: 'ORD_87324', customer: 'Stark Industries', amount: 3200.00, currency: 'USD', status: 'Overdue', dueDate: '2025-10-25' },
-  { invoiceId: 'INV_56218', orderId: 'ORD_87325', customer: 'Wayne Enterprises', amount: 7500.00, currency: 'USD', status: 'Disputed', dueDate: '2025-11-18' },
+  { invoiceId: 'INV_55123', orderId: 'ORD_88214', customer: 'Agency TRV789', amount: 1050.75, currency: 'EUR', status: 'Sent', issueDate: '2025-10-31' },
+  { invoiceId: 'INV_55124', orderId: 'ORD_88215', customer: 'Globex Inc.', amount: 880.00, currency: 'USD', status: 'Approved', issueDate: '2025-10-31' },
+  { invoiceId: 'INV_55125', orderId: 'ORD_88216', customer: 'Hooli Ltd.', amount: 450.00, currency: 'USD', status: 'Draft', issueDate: '2025-10-31' },
+  { invoiceId: 'INV_55126', orderId: 'ORD_88217', customer: 'Stark Industries', amount: 3200.00, currency: 'USD', status: 'Failed', issueDate: '2025-10-30' },
+  { invoiceId: 'INV_55127', orderId: 'ORD_88218', customer: 'Wayne Enterprises', amount: 7500.00, currency: 'USD', status: 'Sent', issueDate: '2025-10-30' },
 ];
 
 const getStatusBadgeVariant = (status: Invoice['status']) => {
   switch (status) {
-    case 'Paid': return 'default';
-    case 'Posted': return 'secondary';
-    case 'Pending': return 'outline';
-    case 'Disputed':
-    case 'Overdue': return 'destructive';
+    case 'Sent':
+    case 'Approved': 
+      return 'default';
+    case 'Draft': 
+      return 'secondary';
+    case 'Failed': 
+      return 'destructive';
     default: return 'outline';
   }
 };
@@ -70,16 +72,17 @@ export default function BillingPage() {
             <div className="flex items-center justify-between">
                 <div className="flex flex-col gap-2">
                 <h1 className="text-3xl font-bold tracking-tight">
-                    Order Accounting Billing Console
+                    Order Accounting Invoicing Console
                 </h1>
                 <p className="text-muted-foreground">
-                    Manage billing generation, validation, and synchronisation.
+                    Manage invoice generation, validation, and distribution.
                 </p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline"><FilePlus className="mr-2 h-4 w-4" /> Generate Invoice</Button>
-                    <Button variant="outline"><GitCompareArrows className="mr-2 h-4 w-4" /> Run Reconciliation</Button>
-                    <Button><FileDown className="mr-2 h-4 w-4" /> Export Ledger</Button>
+                    <Button variant="outline"><FilePlus className="mr-2 h-4 w-4" /> Generate</Button>
+                    <Button variant="outline"><CheckSquare className="mr-2 h-4 w-4" /> Approve</Button>
+                    <Button variant="outline"><Send className="mr-2 h-4 w-4" /> Send</Button>
+                    <Button><FileDown className="mr-2 h-4 w-4" /> Export Audit</Button>
                 </div>
             </div>
 
@@ -100,9 +103,9 @@ export default function BillingPage() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Recent Invoices</CardTitle>
+                    <CardTitle>Invoice Queue</CardTitle>
                     <CardDescription>
-                        A log of recently generated invoices and their statuses.
+                        A log of recently generated invoices and their lifecycle statuses.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -114,7 +117,7 @@ export default function BillingPage() {
                                 <TableHead>Customer</TableHead>
                                 <TableHead>Amount</TableHead>
                                 <TableHead>Status</TableHead>
-                                <TableHead>Due Date</TableHead>
+                                <TableHead>Issue Date</TableHead>
                                 <TableHead><span className="sr-only">Actions</span></TableHead>
                             </TableRow>
                         </TableHeader>
@@ -128,7 +131,7 @@ export default function BillingPage() {
                                     <TableCell>
                                         <Badge variant={getStatusBadgeVariant(invoice.status)}>{invoice.status}</Badge>
                                     </TableCell>
-                                    <TableCell>{invoice.dueDate}</TableCell>
+                                    <TableCell>{invoice.issueDate}</TableCell>
                                      <TableCell>
                                         <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
@@ -144,8 +147,8 @@ export default function BillingPage() {
                                         <DropdownMenuContent align="end">
                                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                             <DropdownMenuItem>View Invoice</DropdownMenuItem>
-                                            <DropdownMenuItem>View Audit</DropdownMenuItem>
-                                            <DropdownMenuItem>Post to Ledger</DropdownMenuItem>
+                                            <DropdownMenuItem>Approve</DropdownMenuItem>
+                                            <DropdownMenuItem>Send</DropdownMenuItem>
                                         </DropdownMenuContent>
                                         </DropdownMenu>
                                     </TableCell>
