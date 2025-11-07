@@ -24,6 +24,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { PlusCircle } from 'lucide-react';
 
 type Allotment = {
   date: string;
@@ -59,27 +61,33 @@ export default function AllotmentPage() {
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold tracking-tight">
-            Allotment Board
+            Seat Entitlement Dashboard
           </h1>
           <p className="text-muted-foreground">
-            Manage and monitor series allotments for Negotiated Space Agreements.
+            Manage and monitor seat allocation entitlements for partners and channels.
           </p>
         </div>
-        <div className="w-64">
-            <Select onValueChange={setSelectedSeries} defaultValue={selectedSeries}>
-                <SelectTrigger>
-                    <SelectValue placeholder="Select a series" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="NSA-THR-2026">NSA-THR-2026 (SZX-BOM)</SelectItem>
-                    <SelectItem value="NSA-CORP-ACME">NSA-CORP-ACME (LHR-JFK)</SelectItem>
-                </SelectContent>
-            </Select>
+        <div className="flex items-center gap-4">
+            <div className="w-64">
+                <Select onValueChange={setSelectedSeries} defaultValue={selectedSeries}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select a series" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="NSA-THR-2026">NSA-THR-2026 (SZX-BOM)</SelectItem>
+                        <SelectItem value="NSA-CORP-ACME">NSA-CORP-ACME (LHR-JFK)</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            <Button>
+                <PlusCircle className="mr-2" />
+                Create Entitlement
+            </Button>
         </div>
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Series Allotment Grid</CardTitle>
+          <CardTitle>Entitlement Utilisation Grid</CardTitle>
           <CardDescription>
             Series: {selectedSeries === 'NSA-THR-2026' ? 'Sat out / Wed in' : 'Daily'} for {selectedSeries}
           </CardDescription>
