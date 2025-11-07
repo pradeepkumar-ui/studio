@@ -44,7 +44,7 @@ const mockContracts: CorporateContract[] = [
     { id: 'CTR-002', companyName: 'Stark Industries', contractId: 'STRK-2025', status: 'Active', activeFares: 25, administrator: 'Bob Williams' },
     { id: 'CTR-003', companyName: 'Wayne Enterprises', contractId: 'WYN-2023', status: 'Expired', activeFares: 10, administrator: 'Alice Johnson' },
     { id: 'CTR-004', companyName: 'Cyberdyne Systems', contractId: 'CYB-2024', status: 'Active', activeFares: 8, administrator: 'Charlie Brown' },
-    { id: 'CTR-005', companyName: 'Hooli', contractId: 'HLI-2025', status: 'Negotiation', activeFares: 0, administrator: 'Diana Miller' },
+    { id: 'CTR-005', name: 'Hooli', contractId: 'HLI-2025', status: 'Negotiation', activeFares: 0, administrator: 'Diana Miller' },
     { id: 'CTR-006', companyName: 'Soylent Corp', contractId: 'SYL-2024', status: 'Active', activeFares: 5, administrator: 'Bob Williams' },
     { id: 'CTR-007', companyName: 'Initech', contractId: 'INT-2023', status: 'Expired', activeFares: 12, administrator: 'Ethan Davis' },
     { id: 'CTR-008', companyName: 'Vehement Capital', contractId: 'VCP-2025', status: 'Active', activeFares: 30, administrator: 'Fiona Green' },
@@ -54,9 +54,10 @@ const mockContracts: CorporateContract[] = [
 
 export default function CorporatePage() {
   const firestore = useFirestore();
-  const { data, loading, error } = useCollection(firestore ? collection(firestore, 'corporateContracts') : undefined);
+  const { data: contractsCollection, loading, error } = useCollection(firestore ? collection(firestore, 'corporateContracts') : undefined);
 
-  const contracts = !loading && data && data.length > 0 ? data : mockContracts;
+  const contracts = contractsCollection ? contractsCollection as CorporateContract[] : [];
+  const displayContracts = contracts.length > 0 ? contracts : mockContracts;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<CorporateContract | null>(null);
@@ -151,12 +152,12 @@ export default function CorporatePage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading && (!data || data.length === 0) && (
+          {loading && displayContracts.length === 0 && (
             <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           )}
-          {(!loading || (data && data.length > 0)) && !error && (
+          {displayContracts.length > 0 && !error && (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -171,7 +172,7 @@ export default function CorporatePage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {contracts.map((contract) => (
+                {displayContracts.map((contract) => (
                   <TableRow key={contract.id}>
                     <TableCell className="font-medium">
                       {contract.companyName}

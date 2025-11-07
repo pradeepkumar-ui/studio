@@ -70,10 +70,11 @@ export default function AllotmentPage() {
   const firestore = useFirestore();
   
   const { data: seriesCollection, loading: seriesLoading } = useCollection(firestore ? collection(firestore, 'series') : undefined);
-  const seriesList = seriesCollection?.map(doc => ({ id: doc.id, ...doc.data() } as Series)) || [];
-  const displaySeries = !seriesLoading && seriesList.length > 0 ? seriesList : mockSeriesList;
   
   const [selectedSeriesId, setSelectedSeriesId] = useState<string | null>(null);
+
+  const seriesList = seriesCollection?.map(doc => ({ id: doc.id, ...doc.data() } as Series)) || [];
+  const displaySeries = seriesList.length > 0 ? seriesList : mockSeriesList;
   
   useEffect(() => {
     if (!selectedSeriesId && displaySeries.length > 0) {
@@ -81,11 +82,12 @@ export default function AllotmentPage() {
     }
   }, [displaySeries, selectedSeriesId]);
 
-  const { data: allotments, loading: allotmentsLoading } = useCollection(
+  const { data: allotmentsCollection, loading: allotmentsLoading } = useCollection(
       firestore && selectedSeriesId ? collection(firestore, 'series', selectedSeriesId, 'allotments') : undefined
   );
   
-  const displayAllotments = !allotmentsLoading && allotments && allotments.length > 0 ? allotments : mockAllotments;
+  const allotments = allotmentsCollection ? allotmentsCollection as Allotment[] : [];
+  const displayAllotments = allotments.length > 0 ? allotments : mockAllotments;
   
   const selectedSeries = displaySeries.find(s => s.id === selectedSeriesId);
   const isLoading = seriesLoading || (selectedSeriesId && allotmentsLoading);
@@ -103,7 +105,7 @@ export default function AllotmentPage() {
         </div>
         <div className="flex items-center gap-4">
             <div className="w-64">
-                {(seriesLoading && seriesList.length === 0) ? <Loader2 className="animate-spin" /> : (
+                {seriesLoading && displaySeries.length === 0 ? <Loader2 className="animate-spin" /> : (
                   <Select onValueChange={setSelectedSeriesId} value={selectedSeriesId || ''}>
                       <SelectTrigger>
                           <SelectValue placeholder="Select a series" />
@@ -130,12 +132,12 @@ export default function AllotmentPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {(isLoading && (!allotments || allotments.length === 0)) && (
+          {isLoading && displayAllotments.length === 0 && (
             <div className="flex justify-center items-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           )}
-          {(!isLoading || (allotments && allotments.length > 0)) && selectedSeriesId && (
+          {displayAllotments.length > 0 && selectedSeriesId && (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -150,7 +152,7 @@ export default function AllotmentPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(displayAllotments as Allotment[]).map((allotment) => {
+                  {displayAllotments.map((allotment) => {
                     const remaining = allotment.capacity - allotment.booked;
                     const utilization = (allotment.booked / allotment.capacity) * 100;
                     return (

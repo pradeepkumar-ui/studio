@@ -55,9 +55,10 @@ const mockFares: Fare[] = [
 
 export default function FaresPage() {
   const firestore = useFirestore();
-  const { data: fares, loading, error } = useCollection(firestore ? collection(firestore, 'fares') : undefined);
+  const { data: faresCollection, loading, error } = useCollection(firestore ? collection(firestore, 'fares') : undefined);
   
-  const displayFares = !loading && fares && fares.length > 0 ? fares : mockFares;
+  const fares = faresCollection ? faresCollection as Fare[] : [];
+  const displayFares = fares.length > 0 ? fares : mockFares;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingFare, setEditingFare] = useState<Fare | null>(null);
@@ -197,12 +198,12 @@ export default function FaresPage() {
           </Button>
         </CardHeader>
         <CardContent>
-           {loading && (!fares || fares.length === 0) && (
+           {loading && displayFares.length === 0 && (
              <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
              </div>
            )}
-           {(!loading || (fares && fares.length > 0)) && !error && (
+           {displayFares.length > 0 && !error && (
             <Table>
                 <TableHeader>
                 <TableRow>

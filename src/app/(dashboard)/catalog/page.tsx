@@ -48,9 +48,10 @@ const mockFareProducts: FareProduct[] = [
 
 export default function CatalogPage() {
   const firestore = useFirestore();
-  const { data: fareProducts, loading, error } = useCollection(firestore ? collection(firestore, 'fareProducts') : undefined);
+  const { data: fareProductsCollection, loading, error } = useCollection(firestore ? collection(firestore, 'fareProducts') : undefined);
   
-  const displayFareProducts = !loading && fareProducts && fareProducts.length > 0 ? fareProducts : mockFareProducts;
+  const fareProducts = fareProductsCollection ? fareProductsCollection as FareProduct[] : [];
+  const displayFareProducts = fareProducts.length > 0 ? fareProducts : mockFareProducts;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<FareProduct | null>(null);
@@ -137,12 +138,12 @@ export default function CatalogPage() {
           </Button>
         </CardHeader>
         <CardContent>
-          {loading && (!fareProducts || fareProducts.length === 0) && (
+          {loading && displayFareProducts.length === 0 && (
              <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
              </div>
            )}
-           {(!loading || (fareProducts && fareProducts.length > 0)) && !error && (
+           {displayFareProducts.length > 0 && !error && (
             <Table>
                 <TableHeader>
                 <TableRow>

@@ -56,9 +56,10 @@ const otherProducts = [
 
 export default function PromotionsPage() {
   const firestore = useFirestore();
-  const { data: promotions, loading, error } = useCollection(firestore ? collection(firestore, 'promotions') : undefined);
+  const { data: promotionsCollection, loading, error } = useCollection(firestore ? collection(firestore, 'promotions') : undefined);
   
-  const displayPromotions = !loading && promotions && promotions.length > 0 ? promotions : mockPromotions;
+  const promotions = promotionsCollection ? promotionsCollection as Promotion[] : [];
+  const displayPromotions = promotions.length > 0 ? promotions : mockPromotions;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null);
@@ -165,12 +166,12 @@ export default function PromotionsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading && (!promotions || promotions.length === 0) && (
+          {loading && displayPromotions.length === 0 && (
              <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
              </div>
            )}
-           {(!loading || (promotions && promotions.length > 0)) && !error && (
+           {displayPromotions.length > 0 && !error && (
             <Table>
                 <TableHeader>
                 <TableRow>

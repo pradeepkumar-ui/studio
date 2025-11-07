@@ -53,9 +53,10 @@ const mockChannels: Channel[] = [
 
 export default function ChannelsPage() {
   const firestore = useFirestore();
-  const { data, loading, error } = useCollection(firestore ? collection(firestore, 'channels') : undefined);
+  const { data: channelsCollection, loading, error } = useCollection(firestore ? collection(firestore, 'channels') : undefined);
   
-  const channels = !loading && data && data.length > 0 ? data : mockChannels;
+  const channels = channelsCollection ? channelsCollection as Channel[] : [];
+  const displayChannels = channels.length > 0 ? channels : mockChannels;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingChannel, setEditingChannel] = useState<Channel | null>(null);
@@ -165,12 +166,12 @@ export default function ChannelsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {loading && (!data || data.length === 0) && (
+            {loading && displayChannels.length === 0 && (
               <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             )}
-            {(!loading || (data && data.length > 0)) && !error && (
+            {displayChannels.length > 0 && !error && (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -184,7 +185,7 @@ export default function ChannelsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {channels.map((channel) => (
+                  {displayChannels.map((channel) => (
                     <TableRow key={channel.id}>
                       <TableCell className="font-medium">{channel.name}</TableCell>
                       <TableCell>
