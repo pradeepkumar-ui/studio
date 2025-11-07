@@ -99,18 +99,18 @@ export default function OffersPage() {
   const firestore = useFirestore();
   const { data: firestoreData, loading, error } = useCollection(firestore ? collection(firestore, 'offers') : undefined);
 
-  const [offers, setOffers] = useState<Offer[]>(mockOffers);
+  const [data, setData] = useState<Offer[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
   const [filters, setFilters] = useState({ id: '', status: 'all' });
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!loading && firestoreData) {
-      if (firestoreData.length > 0) {
-        setOffers(firestoreData as Offer[]);
+    if (!loading) {
+      if (firestoreData && firestoreData.length > 0) {
+        setData(firestoreData as Offer[]);
       } else {
-        setOffers(mockOffers);
+        setData(mockOffers);
       }
     }
   }, [firestoreData, loading]);
@@ -194,7 +194,7 @@ export default function OffersPage() {
      setFilters(prev => ({...prev, status: value}));
   }
 
-  const filteredOffers = offers.filter(offer => {
+  const filteredData = data.filter(offer => {
     const offerIdMatch = filters.id ? (offer.id ?? '').toLowerCase().includes(filters.id.toLowerCase()) : true;
     const statusMatch = filters.status === 'all' || offer.status === filters.status;
     return offerIdMatch && statusMatch;
@@ -265,12 +265,11 @@ export default function OffersPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {loading && (
+          {(loading && data.length === 0) ? (
              <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
              </div>
-           )}
-           {!loading && !error && (
+           ) : !error && filteredData.length > 0 ? (
             <Table>
                 <TableHeader>
                 <TableRow>
@@ -285,7 +284,7 @@ export default function OffersPage() {
                 </TableRow>
                 </TableHeader>
                 <TableBody>
-                {filteredOffers.map((offer) => (
+                {filteredData.map((offer) => (
                     <TableRow key={offer.id}>
                     <TableCell className="font-medium">{offer.name}</TableCell>
                     <TableCell>
@@ -337,6 +336,10 @@ export default function OffersPage() {
                 ))}
                 </TableBody>
             </Table>
+           ) : (
+             <div className="text-center py-12 text-muted-foreground">
+                <p>No results found for the current filters.</p>
+             </div>
            )}
            {error && <p className="text-destructive">Error loading offers: {error.message}</p>}
         </CardContent>
