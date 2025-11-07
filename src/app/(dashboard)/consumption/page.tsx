@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -108,4 +107,3 @@ export default function ConsumptionPage() {
     </div>
   );
 }
-
