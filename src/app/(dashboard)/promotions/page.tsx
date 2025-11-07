@@ -119,6 +119,13 @@ export default function PromotionsPage() {
     }
   }
 
+  const formatDate = (date: Date | Timestamp) => {
+    if (date instanceof Timestamp) {
+      return format(date.toDate(), 'PP');
+    }
+    return format(date, 'PP');
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -182,7 +189,7 @@ export default function PromotionsPage() {
                     <TableCell>{promo.poolSize.toLocaleString()}</TableCell>
                     <TableCell className="capitalize">{promo.usageType}</TableCell>
                     <TableCell>
-                        {promo.expiryDate && format((promo.expiryDate as Timestamp).toDate(), 'PP')}
+                        {promo.expiryDate && formatDate(promo.expiryDate)}
                     </TableCell>
                     <TableCell>
                         <DropdownMenu>

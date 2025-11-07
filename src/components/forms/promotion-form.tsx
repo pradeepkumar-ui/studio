@@ -64,6 +64,13 @@ export function PromotionForm({ promotion, onSubmit, onCancel }: PromotionFormPr
     },
   });
 
+  const formatDate = (date: Date | Timestamp) => {
+    if (date instanceof Timestamp) {
+      return format(date.toDate(), 'PPP');
+    }
+    return format(date, 'PPP');
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -157,7 +164,7 @@ export function PromotionForm({ promotion, onSubmit, onCancel }: PromotionFormPr
                         variant={'outline'}
                         className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
                       >
-                        {field.value ? format(field.value instanceof Timestamp ? field.value.toDate() : field.value, 'PPP') : <span>Pick a date</span>}
+                        {field.value ? formatDate(field.value) : <span>Pick a date</span>}
                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
                     </FormControl>

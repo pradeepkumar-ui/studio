@@ -165,6 +165,13 @@ export default function OffersPage() {
     return offerIdMatch && statusMatch;
   }) : [];
 
+  const formatDate = (date: Date | Timestamp) => {
+    if (date instanceof Timestamp) {
+      return format(date.toDate(), 'PP');
+    }
+    return format(date, 'PP');
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -256,7 +263,7 @@ export default function OffersPage() {
                     <TableCell>v{offer.version}</TableCell>
                     <TableCell>{offer.ttl}</TableCell>
                     <TableCell>
-                        {offer.effectiveDate && offer.expiryDate ? `${format((offer.effectiveDate as Timestamp).toDate(), 'PP')} - ${format((offer.expiryDate as Timestamp).toDate(), 'PP')}`: ''}
+                        {offer.effectiveDate && offer.expiryDate ? `${formatDate(offer.effectiveDate)} - ${formatDate(offer.expiryDate)}`: ''}
                     </TableCell>
                     <TableCell>
                         <DropdownMenu>
