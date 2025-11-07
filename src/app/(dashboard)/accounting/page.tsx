@@ -17,13 +17,20 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { FileDown, FileEdit, Repeat } from 'lucide-react';
+import { FileDown, FileEdit, MoreHorizontal, RefreshCw } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const kpiData = [
-  { title: 'Journals Posted', value: '25,280' },
-  { title: 'Pending Reconciliation', value: '60' },
-  { title: 'Deferred Revenue', value: '$3.2M' },
-  { title: 'Realised Revenue', value: '$12.8M' },
+  { title: 'Processed Journals', value: '42,180' },
+  { title: 'Pending Journals', value: '64' },
+  { title: 'Failed Journals', value: '8' },
+  { title: 'Reconciliation Rate', value: '99.98%' },
 ];
 
 type JournalEntry = {
@@ -33,15 +40,16 @@ type JournalEntry = {
   amount: number;
   currency: string;
   status: 'Posted' | 'Pending' | 'Reversed';
+  reconStatus: 'Reconciled' | 'Pending' | 'Mismatch';
   timestamp: string;
 };
 
 const mockJournals: JournalEntry[] = [
-  { journalId: 'JRN_900145', orderId: 'ORD_52190', eventType: 'OrderPaid', amount: 1540.50, currency: 'USD', status: 'Posted', timestamp: '2 mins ago' },
-  { journalId: 'JRN_900146', orderId: 'ORD_52191', eventType: 'OrderFulfilled', amount: 880.00, currency: 'EUR', status: 'Posted', timestamp: '5 mins ago' },
-  { journalId: 'JRN_900147', orderId: 'ORD_52192', eventType: 'OrderPaid', amount: 450.00, currency: 'USD', status: 'Pending', timestamp: '12 mins ago' },
-  { journalId: 'JRN_900148', orderId: 'ORD_52193', eventType: 'OrderRefunded', amount: -210.00, currency: 'GBP', status: 'Reversed', timestamp: '25 mins ago' },
-  { journalId: 'JRN_900149', orderId: 'ORD_52194', eventType: 'OrderPaid', amount: 3200.00, currency: 'USD', status: 'Posted', timestamp: '45 mins ago' },
+  { journalId: 'JRN_900145', orderId: 'ORD_52190', eventType: 'OrderPaid', amount: 1540.50, currency: 'USD', status: 'Posted', reconStatus: 'Reconciled', timestamp: '2 mins ago' },
+  { journalId: 'JRN_900146', orderId: 'ORD_52191', eventType: 'OrderFulfilled', amount: 880.00, currency: 'EUR', status: 'Posted', reconStatus: 'Reconciled', timestamp: '5 mins ago' },
+  { journalId: 'JRN_900147', orderId: 'ORD_52192', eventType: 'OrderPaid', amount: 450.00, currency: 'USD', status: 'Pending', reconStatus: 'Pending', timestamp: '12 mins ago' },
+  { journalId: 'JRN_900148', orderId: 'ORD_52193', eventType: 'OrderRefunded', amount: -210.00, currency: 'GBP', status: 'Reversed', reconStatus: 'Reconciled', timestamp: '25 mins ago' },
+  { journalId: 'JRN_900149', orderId: 'ORD_52194', eventType: 'OrderPaid', amount: 3200.00, currency: 'USD', status: 'Posted', reconStatus: 'Mismatch', timestamp: '45 mins ago' },
 ];
 
 const getStatusBadgeVariant = (status: JournalEntry['status']) => {
@@ -53,22 +61,32 @@ const getStatusBadgeVariant = (status: JournalEntry['status']) => {
   }
 };
 
+const getReconBadgeVariant = (status: JournalEntry['reconStatus']) => {
+  switch (status) {
+    case 'Reconciled': return 'default';
+    case 'Pending': return 'secondary';
+    case 'Mismatch': return 'destructive';
+    default: return 'outline';
+  }
+};
+
+
 export default function AccountingPage() {
     return (
         <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
                 <div className="flex flex-col gap-2">
                 <h1 className="text-3xl font-bold tracking-tight">
-                    Order Accounting & Settlement
+                    Order Accounting Processing
                 </h1>
                 <p className="text-muted-foreground">
-                    A module for revenue posting, billing, settlement, and reconciliation.
+                    A module for financial posting, reconciliation, and reporting of all order events.
                 </p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline"><FileEdit className="mr-2 h-4 w-4" /> Define Rules</Button>
-                    <Button variant="outline"><Repeat className="mr-2 h-4 w-4" /> Run Reconciliation</Button>
-                    <Button><FileDown className="mr-2 h-4 w-4" /> Export Trial Balance</Button>
+                    <Button variant="outline"><FileEdit className="mr-2 h-4 w-4" /> Manage Rules</Button>
+                    <Button variant="outline"><RefreshCw className="mr-2 h-4 w-4" /> Reprocess Failed</Button>
+                    <Button><FileDown className="mr-2 h-4 w-4" /> Export Ledger</Button>
                 </div>
             </div>
 
@@ -103,7 +121,8 @@ export default function AccountingPage() {
                                 <TableHead>Event Type</TableHead>
                                 <TableHead>Amount</TableHead>
                                 <TableHead>Status</TableHead>
-                                <TableHead>Timestamp</TableHead>
+                                <TableHead>Reconciliation</TableHead>
+                                <TableHead><span className="sr-only">Actions</span></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -116,7 +135,28 @@ export default function AccountingPage() {
                                     <TableCell>
                                         <Badge variant={getStatusBadgeVariant(journal.status)}>{journal.status}</Badge>
                                     </TableCell>
-                                    <TableCell>{journal.timestamp}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={getReconBadgeVariant(journal.reconStatus)}>{journal.reconStatus}</Badge>
+                                    </TableCell>
+                                     <TableCell>
+                                        <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button
+                                            aria-haspopup="true"
+                                            size="icon"
+                                            variant="ghost"
+                                            >
+                                            <MoreHorizontal className="h-4 w-4" />
+                                            <span className="sr-only">Toggle menu</span>
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                            <DropdownMenuItem>View Details</DropdownMenuItem>
+                                            <DropdownMenuItem>View Audit</DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
