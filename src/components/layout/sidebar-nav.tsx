@@ -52,6 +52,7 @@ import {
   MessageSquare,
   Users,
   CreditCard,
+  ReceiptText,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -119,6 +120,7 @@ const menuItems: MenuItem[] = [
     ]
   },
   { href: '/payments', label: 'Payments', icon: CreditCard },
+  { href: '/accounting', label: 'Accounting', icon: ReceiptText },
   { href: '/communication', label: 'Communication', icon: MessageSquare },
   { href: '/content', label: 'Content Management', icon: Palette },
   { href: '/loyalty', label: 'Loyalty', icon: Award },
