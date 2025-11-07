@@ -128,7 +128,7 @@ const menuItems: MenuItem[] = [
     subItems: [
         { href: '/analytics', label: 'Offer Performance', icon: BarChart3 },
         { href: '/fare-change-forecast', label: 'Fare Change Forecast', icon: BrainCircuit },
-        { href: '/offer-rules', label: 'Offer Rule Builder', icon: FileJson },
+        { href: 'offer-rules', label: 'Offer Rule Builder', icon: FileJson },
     ]
   }
 ];
