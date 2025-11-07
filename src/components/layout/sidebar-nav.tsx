@@ -88,7 +88,6 @@ const menuItems: MenuItem[] = [
        { href: '/pricing/seat', label: 'Seat Pricing', icon: Armchair },
       { href: '/promotions', label: 'Promotions & Products', icon: Gift },
       { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
-      { href: '/compliance', label: 'Offer Compliance', icon: Shield },
       { href: '/disruption-waivers', label: 'Disruption Waivers', icon: Waves },
     ],
   },
@@ -123,6 +122,7 @@ const menuItems: MenuItem[] = [
       { href: '/channels', label: 'Channels', icon: RadioTower },
     ]
   },
+  { href: '/compliance', label: 'Compliance', icon: Shield },
   { href: '/offer-data', label: 'Data Management', icon: Database },
   { href: '/payments', label: 'Payments', icon: CreditCard },
   { href: '/accounting', label: 'Accounting', icon: ReceiptText },

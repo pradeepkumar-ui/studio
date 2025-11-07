@@ -17,10 +17,12 @@ export default function CompliancePage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Offer Compliance</h1>
+        <h1 className="text-3xl font-bold tracking-tight">
+          Offer & Order Compliance
+        </h1>
         <p className="text-muted-foreground">
           Monitor, manage, and audit the rules that govern offer construction
-          and conversion.
+          and order conversion.
         </p>
       </div>
 
