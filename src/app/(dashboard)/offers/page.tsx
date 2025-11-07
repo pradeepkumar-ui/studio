@@ -72,17 +72,17 @@ const mockOffers: Offer[] = [
 export default function OffersPage() {
   const firestore = useFirestore();
   const { data: firestoreData, loading, error } = useCollection(firestore ? collection(firestore, 'offers') : undefined);
-  
+
   const [offers, setOffers] = useState<Offer[]>(mockOffers);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
   const [filters, setFilters] = useState({ id: '', status: 'all' });
   const { toast } = useToast();
-  
+
   useEffect(() => {
-    if (!loading && firestoreData) {
-      const liveOffers = firestoreData.length > 0 ? (firestoreData as Offer[]) : mockOffers;
-      setOffers(liveOffers);
+    // Only update from Firestore if firestoreData is available and not empty
+    if (!loading && firestoreData && firestoreData.length > 0) {
+      setOffers(firestoreData as Offer[]);
     }
   }, [firestoreData, loading]);
 
@@ -165,11 +165,11 @@ export default function OffersPage() {
      setFilters(prev => ({...prev, status: value}));
   }
 
-  const filteredOffers = offers ? offers.filter(offer => {
+  const filteredOffers = offers.filter(offer => {
     const offerIdMatch = filters.id ? (offer.id ?? '').toLowerCase().includes(filters.id.toLowerCase()) : true;
     const statusMatch = filters.status === 'all' || offer.status === filters.status;
     return offerIdMatch && statusMatch;
-  }) : [];
+  });
 
   const formatDate = (date: Date | Timestamp) => {
     if (date instanceof Timestamp) {
@@ -237,12 +237,12 @@ export default function OffersPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {loading && (
+          {loading && !firestoreData && (
              <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
              </div>
            )}
-           {!loading && !error && (
+           {(!loading || firestoreData) && !error && (
             <Table>
                 <TableHeader>
                 <TableRow>
