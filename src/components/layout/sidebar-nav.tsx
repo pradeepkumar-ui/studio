@@ -293,7 +293,7 @@ export default function SidebarNav() {
                               isActive={pathname.startsWith('/broker')}
                             >
                               <RadioTower className={cn('transition-transform ease-in-out', pathname.startsWith('/broker') && 'text-primary')} />
-                              <span>System Interfaces</span>
+                              <span>Integrations</span>
                             </SidebarMenuSubButton>
                           </Link>
                         </SidebarMenuSubItem>

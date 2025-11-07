@@ -24,72 +24,71 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, RadioTower, CheckCircle, AlertTriangle, XCircle, FileJson, RotateCw, ShieldOff, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, RadioTower, CheckCircle, AlertTriangle, XCircle, FileJson, RotateCw, ShieldOff, PlusCircle, Clock } from 'lucide-react';
 
 const kpiData = [
-  { title: 'Active Interfaces', value: '112' },
+  { title: 'Active Endpoints', value: '13' },
   { title: 'Partners', value: '45' },
-  { title: 'Uptime (24h)', value: '99.98%' },
-  { title: 'Avg. Latency (24h)', value: '820ms' },
+  { title: 'Jobs (24h)', value: '118' },
+  { title: 'Failed Jobs (24h)', value: '2' },
 ];
 
 const connectors = [
   {
-    id: 'ndc_a',
-    name: 'NDC Provider A',
-    status: 'UP',
+    id: 'erp_sync',
+    name: 'ERP Journal Sync (SAP)',
+    status: 'OPERATIONAL',
     latency: '820ms',
-    errorRate: '0.9%',
-    calls: '18k/day',
-    mappingVersion: 'v12',
+    errorRate: '0.1%',
   },
   {
-    id: 'gds_b',
-    name: 'GDS Provider B',
+    id: 'pg_recon',
+    name: 'Payment Gateway Reconciliation (Stripe)',
+    status: 'OPERATIONAL',
+    latency: '450ms',
+    errorRate: '0.05%',
+  },
+  {
+    id: 'tax_api',
+    name: 'Tax & Regulatory API',
     status: 'DEGRADED',
     latency: '1.6s',
     errorRate: '3.4%',
-    calls: '42k/day',
-    mappingVersion: 'v8',
+  },
+   {
+    id: 'bsp_file_exchange',
+    name: 'BSP/ARC File Exchange (SFTP)',
+    status: 'OPERATIONAL',
+    latency: 'N/A',
+    errorRate: '0.0%',
   },
   {
-    id: 'anc_c',
-    name: 'Ancillary Aggregator C',
-    status: 'UP',
-    latency: '450ms',
-    errorRate: '0.2%',
-    calls: '112k/day',
-    mappingVersion: 'v4',
-  },
-  {
-    id: 'tax_d',
-    name: 'Tax Engine D',
+    id: 'bi_export',
+    name: 'BI Data Warehouse Sync',
     status: 'DOWN',
     latency: 'N/A',
     errorRate: '100%',
-    calls: '5k/day',
-    mappingVersion: 'v2',
   },
 ];
 
-const partnerAgreements = [
-    { id: 'PNR-001', name: 'OTA360', type: 'OTA', status: 'Active', commercialModel: '15% Commission' },
-    { id: 'PNR-002', name: 'CorpTravel Inc.', type: 'TMC', status: 'Active', commercialModel: 'Net Rate' },
-    { id: 'PNR-003', name: 'Global GDS', type: 'GDS', status: 'Active', commercialModel: 'Segment Fee' },
-    { id: 'PNR-004', name: 'NewDistributor', type: 'NDC', status: 'Pending Approval', commercialModel: 'N/A' },
+const recentJobs = [
+    { id: 'JOB-001', name: 'ERP Journal Sync', status: 'Success', timestamp: '2 mins ago' },
+    { id: 'JOB-002', name: 'Payment Gateway Reconciliation', status: 'Success', timestamp: '5 mins ago' },
+    { id: 'JOB-003', name: 'BI Data Warehouse Sync', status: 'Failed', timestamp: '12 mins ago' },
+    { id: 'JOB-004', name: 'BSP File Upload', status: 'Success', timestamp: '25 mins ago' },
+    { id: 'JOB-005', name: 'ERP Journal Sync', status: 'Success', timestamp: '1 hour ago' },
 ];
 
 
 const getStatusBadgeVariant = (status: string) => {
   switch (status) {
-    case 'UP':
-    case 'Active':
+    case 'OPERATIONAL':
+    case 'Success':
       return 'default';
     case 'DEGRADED':
-    case 'Pending Approval':
       return 'secondary';
     case 'DOWN':
-    case 'Inactive':
+    case 'Failed':
       return 'destructive';
     default:
       return 'outline';
@@ -98,11 +97,13 @@ const getStatusBadgeVariant = (status: string) => {
 
 const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'UP':
+      case 'OPERATIONAL':
+      case 'Success':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'DEGRADED':
         return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
       case 'DOWN':
+      case 'Failed':
         return <XCircle className="h-4 w-4 text-red-500" />;
       default:
         return null;
@@ -115,14 +116,14 @@ export default function BrokerPage() {
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
             <h1 className="text-3xl font-bold tracking-tight">
-                System Interfaces &amp; Broker
+                Accounting Integration Console
             </h1>
             <p className="text-muted-foreground">
-                Onboard partners, manage integrations, and monitor system interface health.
+                Manage system endpoints, data mappings, and monitor financial data exchange.
             </p>
         </div>
         <Button>
-            <PlusCircle className="mr-2" /> Register Interface
+            <PlusCircle className="mr-2" /> Add Endpoint
         </Button>
       </div>
 
@@ -143,18 +144,17 @@ export default function BrokerPage() {
 
       <Card>
         <CardHeader>
-            <CardTitle>Interface &amp; Partner Connectivity</CardTitle>
-            <CardDescription>Live status of all integrated partner adapters and system connectors.</CardDescription>
+            <CardTitle>Integration Endpoints</CardTitle>
+            <CardDescription>Live status of all integrated financial system endpoints.</CardDescription>
         </CardHeader>
         <CardContent>
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Interface / Connector</TableHead>
+                        <TableHead>Endpoint</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>p95 Latency</TableHead>
                         <TableHead>Error Rate</TableHead>
-                        <TableHead>Traffic</TableHead>
                         <TableHead><span className="sr-only">Actions</span></TableHead>
                     </TableRow>
                 </TableHeader>
@@ -170,7 +170,6 @@ export default function BrokerPage() {
                             </TableCell>
                             <TableCell>{connector.latency}</TableCell>
                             <TableCell>{connector.errorRate}</TableCell>
-                            <TableCell>{connector.calls}</TableCell>
                             <TableCell>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
@@ -181,9 +180,9 @@ export default function BrokerPage() {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                        <DropdownMenuItem><FileJson className="mr-2 h-4 w-4" /> View Mappings ({connector.mappingVersion})</DropdownMenuItem>
+                                        <DropdownMenuItem><FileJson className="mr-2 h-4 w-4" /> View Mappings</DropdownMenuItem>
                                         <DropdownMenuItem><RotateCw className="mr-2 h-4 w-4" /> Rotate Secrets</DropdownMenuItem>
-                                        <DropdownMenuItem className="text-destructive"><ShieldOff className="mr-2 h-4 w-4" /> Disable Interface</DropdownMenuItem>
+                                        <DropdownMenuItem className="text-destructive"><ShieldOff className="mr-2 h-4 w-4" /> Disable Endpoint</DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </TableCell>
@@ -196,31 +195,35 @@ export default function BrokerPage() {
 
       <Card>
         <CardHeader>
-            <CardTitle>Partner Agreements</CardTitle>
-            <CardDescription>Manage all onboarded partners and their commercial configurations.</CardDescription>
+            <CardTitle>Recent Integration Jobs</CardTitle>
+            <CardDescription>Monitor the status of financial data synchronization tasks.</CardDescription>
         </CardHeader>
         <CardContent>
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Partner Name</TableHead>
-                        <TableHead>Type</TableHead>
+                        <TableHead>Job Name</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Commercial Model</TableHead>
+                        <TableHead>Timestamp</TableHead>
                         <TableHead><span className="sr-only">Actions</span></TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {partnerAgreements.map((partner) => (
-                        <TableRow key={partner.id}>
-                            <TableCell className="font-medium">{partner.name}</TableCell>
-                            <TableCell><Badge variant="outline">{partner.type}</Badge></TableCell>
+                    {recentJobs.map((job) => (
+                        <TableRow key={job.id}>
+                            <TableCell className="font-medium">{job.name}</TableCell>
                             <TableCell>
-                                <Badge variant={getStatusBadgeVariant(partner.status)}>
-                                    {partner.status}
+                                <Badge variant={getStatusBadgeVariant(job.status)} className="gap-1 pl-1.5">
+                                    {getStatusIcon(job.status)}
+                                    {job.status}
                                 </Badge>
                             </TableCell>
-                            <TableCell>{partner.commercialModel}</TableCell>
+                            <TableCell>
+                                <div className="flex items-center gap-2">
+                                    <Clock className="h-4 w-4 text-muted-foreground" />
+                                    {job.timestamp}
+                                </div>
+                            </TableCell>
                             <TableCell>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
@@ -231,9 +234,9 @@ export default function BrokerPage() {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                        <DropdownMenuItem>View Profile</DropdownMenuItem>
-                                        <DropdownMenuItem>Manage Credentials</DropdownMenuItem>
-                                        <DropdownMenuItem>View Performance</DropdownMenuItem>
+                                        <DropdownMenuItem>View Details</DropdownMenuItem>
+                                        <DropdownMenuItem>View Audit Log</DropdownMenuItem>
+                                        {job.status === 'Failed' && <DropdownMenuItem><RotateCw className="mr-2 h-4 w-4"/>Retry Job</DropdownMenuItem>}
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </TableCell>
