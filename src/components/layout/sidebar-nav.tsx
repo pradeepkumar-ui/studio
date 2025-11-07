@@ -190,12 +190,12 @@ export default function SidebarNav() {
                               isActive={
                                 subItem.href === '/'
                                   ? pathname === subItem.href
-                                  : pathname.startsWith(subItem.href) || (subItem.href.startsWith('/pricing') && isPricingActive())
+                                  : pathname.startsWith(subItem.href)
                               }
                             >
                               <subItem.icon className={cn(
                                 'transition-transform ease-in-out',
-                                (pathname.startsWith(subItem.href) || (subItem.href.startsWith('/pricing') && isPricingActive())) && 'text-primary'
+                                (pathname.startsWith(subItem.href)) && 'text-primary'
                               )} />
                               <span>{subItem.label}</span>
                             </SidebarMenuSubButton>
