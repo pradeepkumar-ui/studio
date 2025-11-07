@@ -41,6 +41,7 @@ import {
   Wand2,
   Signal,
   Workflow,
+  Palette,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -98,6 +99,7 @@ const menuItems: MenuItem[] = [
       { href: '/channels', label: 'Channels', icon: RadioTower },
     ]
   },
+  { href: '/content', label: 'Content Management', icon: Palette },
   {
     href: '/inventory',
     label: 'Stock Keeping',
