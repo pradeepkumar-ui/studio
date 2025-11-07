@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { FileDown, FileEdit, MoreHorizontal, RefreshCw } from 'lucide-react';
+import { FileDown, GitCompare, Search, MoreHorizontal } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,10 +27,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const kpiData = [
-  { title: 'Processed Journals', value: '42,180' },
-  { title: 'Pending Journals', value: '64' },
-  { title: 'Failed Journals', value: '8' },
-  { title: 'Reconciliation Rate', value: '99.98%' },
+  { title: 'Match Rate', value: '99.97%' },
+  { title: 'Total Variances', value: '45' },
+  { title: 'Pending Exceptions', value: '12' },
+  { title: 'Last Run', value: 'Success' },
 ];
 
 type JournalEntry = {
@@ -77,16 +77,16 @@ export default function AccountingPage() {
             <div className="flex items-center justify-between">
                 <div className="flex flex-col gap-2">
                 <h1 className="text-3xl font-bold tracking-tight">
-                    Order Accounting Processing
+                    Order Accounting Reconciliation Console
                 </h1>
                 <p className="text-muted-foreground">
-                    A module for financial posting, reconciliation, and reporting of all order events.
+                    Reconcile financial transactions against the accounting ledger and ERP.
                 </p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline"><FileEdit className="mr-2 h-4 w-4" /> Manage Rules</Button>
-                    <Button variant="outline"><RefreshCw className="mr-2 h-4 w-4" /> Reprocess Failed</Button>
-                    <Button><FileDown className="mr-2 h-4 w-4" /> Export Ledger</Button>
+                    <Button variant="outline"><GitCompare className="mr-2 h-4 w-4" /> Run Reconciliation</Button>
+                    <Button variant="outline"><Search className="mr-2 h-4 w-4" /> Review Variance</Button>
+                    <Button><FileDown className="mr-2 h-4 w-4" /> Export Audit</Button>
                 </div>
             </div>
 
@@ -107,9 +107,9 @@ export default function AccountingPage() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Recent Journal Entries</CardTitle>
+                    <CardTitle>Reconciliation Queue</CardTitle>
                     <CardDescription>
-                        A log of the most recent accounting entries generated from order events.
+                        A log of recent accounting entries and their reconciliation status.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>

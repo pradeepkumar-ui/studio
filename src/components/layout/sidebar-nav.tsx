@@ -58,6 +58,7 @@ import {
   Send,
   Archive,
   Landmark,
+  GitCompare,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -126,9 +127,9 @@ const menuItems: MenuItem[] = [
   },
   { href: '/compliance', label: 'Compliance', icon: Shield },
   { href: '/offer-data', label: 'Data Management', icon: Database },
-  { href: '/billing', label: 'Invoicing', icon: ReceiptText },
+  { href: '/invoicing', label: 'Invoicing', icon: ReceiptText },
   { href: '/payments', label: 'Payments', icon: CreditCard },
-  { href: '/accounting', label: 'Accounting', icon: ReceiptText },
+  { href: '/accounting', label: 'Reconciliation', icon: GitCompare },
   { href: '/airline-revenue', label: 'Airline Revenue', icon: Landmark },
   { href: '/communication', label: 'Communication', icon: MessageSquare },
   { href: '/content', label: 'Content Management', icon: Palette },
