@@ -118,6 +118,27 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["companyName", "contractId", "status", "activeFares", "administrator"]
+    },
+    "channel": {
+      "title": "Sales Channel",
+      "description": "Represents a sales channel and its configuration.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Active", "Inactive"]
+        },
+        "fareBrand": {
+          "type": "string"
+        },
+        "campaigns": {
+          "type": "number"
+        }
+      },
+      "required": ["name", "status", "fareBrand"]
     }
   },
   "auth": {
@@ -159,6 +180,12 @@
         "$ref": "#/entities/corporateContract"
       },
       "description": "Stores corporate contract documents."
+    },
+    "/channels/{channelId}": {
+      "schema": {
+        "$ref": "#/entities/channel"
+      },
+      "description": "Stores sales channel documents."
     }
   }
 }

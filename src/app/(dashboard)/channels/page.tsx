@@ -17,7 +17,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -35,47 +35,15 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { ChannelForm, type Channel } from '@/components/forms/channel-form';
-
-const initialChannels: Channel[] = [
-  {
-    id: 'WEB',
-    name: 'Airline Website',
-    status: 'Active',
-    fareBrand: 'All Brands',
-    campaigns: 5,
-  },
-  {
-    id: 'APP',
-    name: 'Mobile App',
-    status: 'Active',
-    fareBrand: 'All Brands',
-    campaigns: 5,
-  },
-  {
-    id: 'GDS',
-    name: 'Global Distribution System (GDS)',
-    status: 'Active',
-    fareBrand: 'Public Fares',
-    campaigns: 2,
-  },
-  {
-    id: 'API',
-    name: 'Direct API',
-    status: 'Inactive',
-    fareBrand: 'Negotiated Fares',
-    campaigns: 0,
-  },
-  {
-    id: 'CORP',
-    name: 'Corporate Booker Portal',
-    status: 'Active',
-    fareBrand: 'Contracted Fares',
-    campaigns: 1,
-  },
-];
+import { useFirestore } from '@/firebase';
+import { collection, addDoc, doc, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
+import { useCollection } from 'react-firebase-hooks/firestore';
 
 export default function ChannelsPage() {
-  const [channels, setChannels] = useState<Channel[]>(initialChannels);
+  const firestore = useFirestore();
+  const [channelsCollection, loading, error] = useCollection(firestore ? collection(firestore, 'channels') : undefined);
+  const channels = channelsCollection?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Channel)) || [];
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingChannel, setEditingChannel] = useState<Channel | null>(null);
   const { toast } = useToast();
@@ -90,38 +58,74 @@ export default function ChannelsPage() {
     setEditingChannel(null);
   };
 
-  const handleFormSubmit = (data: Channel) => {
-    if (editingChannel) {
-      setChannels(
-        channels.map((c) => (c.id === editingChannel.id ? { ...c, ...data } : c))
-      );
-      toast({
-        title: 'Channel Updated',
-        description: `Channel "${data.name}" has been successfully updated.`,
-      });
-    } else {
-      const newChannel = {
-        ...data,
-        id: data.name.toUpperCase().slice(0, 4) + channels.length,
-        campaigns: 0,
-      };
-      setChannels([...channels, newChannel]);
-      toast({
-        title: 'Channel Created',
-        description: `Channel "${newChannel.name}" has been successfully created.`,
-      });
+  const handleFormSubmit = async (data: Channel) => {
+    if (!firestore) return;
+
+    try {
+      if (editingChannel?.id) {
+        const channelRef = doc(firestore, 'channels', editingChannel.id);
+        await setDoc(channelRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
+        toast({
+          title: 'Channel Updated',
+          description: `Channel "${data.name}" has been successfully updated.`,
+        });
+      } else {
+        await addDoc(collection(firestore, 'channels'), { ...data, campaigns: 0, createdAt: serverTimestamp() });
+        toast({
+          title: 'Channel Created',
+          description: `Channel "${data.name}" has been successfully created.`,
+        });
+      }
+    } catch (e: any) {
+        console.error(e);
+        toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: e.message || "There was a problem with your request.",
+        });
     }
+
     handleDialogClose();
   };
   
-  const toggleStatus = (channel: Channel) => {
+  const toggleStatus = async (channel: Channel) => {
+    if (!firestore) return;
     const newStatus = channel.status === 'Active' ? 'Inactive' : 'Active';
-    setChannels(channels.map(c => c.id === channel.id ? {...c, status: newStatus} : c));
-    toast({
-        title: `Channel ${newStatus === 'Active' ? 'Activated' : 'Deactivated'}`,
-        description: `"${channel.name}" is now ${newStatus.toLowerCase()}.`
-    })
+    const channelRef = doc(firestore, 'channels', channel.id!);
+    try {
+        await setDoc(channelRef, { status: newStatus }, { merge: true });
+        toast({
+            title: `Channel ${newStatus === 'Active' ? 'Activated' : 'Deactivated'}`,
+            description: `"${channel.name}" is now ${newStatus.toLowerCase()}.`
+        });
+    } catch (e: any) {
+        console.error(e);
+        toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: e.message || "Could not update channel status.",
+        });
+    }
   }
+
+  const handleDelete = async (channelId: string) => {
+    if (!channelId || !firestore) return;
+    try {
+      await deleteDoc(doc(firestore, 'channels', channelId));
+      toast({
+        variant: 'destructive',
+        title: 'Channel Deleted',
+        description: 'The channel has been successfully deleted.',
+      });
+    } catch (e: any) {
+      console.error(e);
+      toast({
+        variant: 'destructive',
+        title: 'Uh oh! Something went wrong.',
+        description: e.message || 'Could not delete the channel.',
+      });
+    }
+  };
 
   return (
     <>
@@ -148,57 +152,65 @@ export default function ChannelsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Channel Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Default Fare Brand</TableHead>
-                  <TableHead>Active Campaigns</TableHead>
-                  <TableHead>
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {channels.map((channel) => (
-                  <TableRow key={channel.id}>
-                    <TableCell className="font-medium">{channel.name}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={channel.status === 'Active' ? 'default' : 'outline'}
-                      >
-                        {channel.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{channel.fareBrand}</TableCell>
-                    <TableCell>{channel.campaigns}</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            aria-haspopup="true"
-                            size="icon"
-                            variant="ghost"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => handleOpenDialog(channel)}>Edit</DropdownMenuItem>
-                           <DropdownMenuItem onClick={() => toggleStatus(channel)}>
-                            Set to {channel.status === 'Active' ? 'Inactive' : 'Active'}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>Manage Branding</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+            {loading && (
+              <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            )}
+            {!loading && !error && (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Channel Name</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Default Fare Brand</TableHead>
+                    <TableHead>Active Campaigns</TableHead>
+                    <TableHead>
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {channels.map((channel) => (
+                    <TableRow key={channel.id}>
+                      <TableCell className="font-medium">{channel.name}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={channel.status === 'Active' ? 'default' : 'outline'}
+                        >
+                          {channel.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{channel.fareBrand}</TableCell>
+                      <TableCell>{channel.campaigns}</TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              aria-haspopup="true"
+                              size="icon"
+                              variant="ghost"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Toggle menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleOpenDialog(channel)}>Edit</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => toggleStatus(channel)}>
+                              Set to {channel.status === 'Active' ? 'Inactive' : 'Active'}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(channel.id!)}>Delete</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+            {error && <p className="text-destructive">Error loading channels: {error.message}</p>}
           </CardContent>
         </Card>
       </div>
