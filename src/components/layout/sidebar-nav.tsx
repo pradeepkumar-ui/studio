@@ -61,6 +61,7 @@ import {
   GitCompare,
   KeyRound,
   UserCheck,
+  PlaneTakeoff,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -121,6 +122,11 @@ const menuItems: MenuItem[] = [
     href: '/check-in',
     label: 'Check-in',
     icon: UserCheck,
+  },
+  {
+    href: '/boarding',
+    label: 'Boarding Gate',
+    icon: PlaneTakeoff,
   },
   {
     href: '/catalog',
