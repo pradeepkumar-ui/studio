@@ -26,7 +26,7 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Loader2 } from 'lucide-react';
-import { useFirestore, useCollection, useSubcollection } from '@/firebase';
+import { useFirestore, useCollection } from '@/firebase';
 import { collection, doc, DocumentData } from 'firebase/firestore';
 
 type Allotment = {
@@ -81,10 +81,10 @@ export default function AllotmentPage() {
     }
   }, [displaySeries, selectedSeriesId]);
 
-  const { data: allotments, loading: allotmentsLoading } = useSubcollection(
-      firestore && selectedSeriesId ? collection(doc(firestore, 'series', selectedSeriesId), 'allotments') : undefined
+  const { data: allotments, loading: allotmentsLoading } = useCollection(
+      firestore && selectedSeriesId ? collection(firestore, 'series', selectedSeriesId, 'allotments') : undefined
   );
-  const displayAllotments = allotmentsLoading === false && allotments.length === 0 ? mockAllotments : allotments;
+  const displayAllotments = allotmentsLoading === false && allotments && allotments.length === 0 ? mockAllotments : allotments;
   
   const selectedSeries = displaySeries.find(s => s.id === selectedSeriesId);
   
