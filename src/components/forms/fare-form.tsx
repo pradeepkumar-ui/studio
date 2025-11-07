@@ -26,7 +26,8 @@ const fareSchema = z.object({
   id: z.string().optional(),
   route: z
     .string()
-    .min(3, 'Route is required')
+    .min(7, 'Route must be in XXX-YYY format.')
+    .max(7, 'Route must be in XXX-YYY format.')
     .regex(/^[A-Z]{3}-[A-Z]{3}$/, 'Route must be in XXX-YYY format'),
   class: z.string().min(1, 'Class is required'),
   price: z.coerce.number().min(0, 'Price must be a positive number'),
@@ -48,7 +49,7 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
     resolver: zodResolver(fareSchema),
     defaultValues: fare || {
       route: '',
-      class: '',
+      class: 'Economy',
       price: 0,
       currency: 'USD',
       status: 'Draft',
@@ -65,7 +66,7 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
             <FormItem>
               <FormLabel>Route</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., NYC-LAX" {...field} />
+                <Input placeholder="e.g., JFK-LAX" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -85,6 +86,7 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="Economy">Economy</SelectItem>
+                  <SelectItem value="Premium Economy">Premium Economy</SelectItem>
                   <SelectItem value="Business">Business</SelectItem>
                   <SelectItem value="First">First</SelectItem>
                 </SelectContent>

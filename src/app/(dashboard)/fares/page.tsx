@@ -49,7 +49,7 @@ import { useCollection } from 'react-firebase-hooks/firestore';
 
 export default function FaresPage() {
   const firestore = useFirestore();
-  const [faresCollection, loading, error] = useCollection(collection(firestore, 'fares'));
+  const [faresCollection, loading, error] = useCollection(firestore ? collection(firestore, 'fares') : undefined);
   const fares = faresCollection?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Fare)) || [];
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -81,40 +81,74 @@ export default function FaresPage() {
   };
 
   const handleFormSubmit = async (data: Fare) => {
+    if (!firestore) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Firestore is not initialized.",
+        });
+        return;
+    }
     try {
         if (editingFare?.id) {
           const fareRef = doc(firestore, 'fares', editingFare.id);
           await setDoc(fareRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
           toast({ title: "Fare Updated", description: `Fare for ${data.route} has been successfully updated.` });
         } else {
-          await addDoc(collection(firestore, 'fares'), { ...data, createdAt: serverTimestamp() });
+          await addDoc(collection(firestore, 'fares'), { ...data, createdAt: serverTimestamp(), version: 1 });
           toast({ title: "Fare Created", description: `New fare for ${data.route} has been successfully created.` });
         }
-    } catch(e) {
+    } catch(e: any) {
         console.error(e);
         toast({
             variant: "destructive",
             title: "Uh oh! Something went wrong.",
-            description: "There was a problem with your request.",
+            description: e.message || "There was a problem with your request.",
         });
     }
     handleDialogClose();
   };
   
    const handleDelete = async (fareId: string) => {
-    if (!fareId) return;
+    if (!fareId || !firestore) return;
     try {
         await deleteDoc(doc(firestore, 'fares', fareId));
         toast({
           title: 'Fare Deleted',
           description: `Fare with ID ${fareId} has been deleted.`,
         });
-    } catch(e) {
+    } catch(e: any) {
          console.error(e);
         toast({
             variant: "destructive",
             title: "Uh oh! Something went wrong.",
-            description: "There was a problem with your request.",
+            description: e.message || "There was a problem with your request.",
+        });
+    }
+  };
+  
+  const handleCreateNewVersion = async (fare: Fare) => {
+    if (!firestore) return;
+    
+    const newVersion = {
+        ...fare,
+        version: (fare.version || 1) + 1,
+        status: 'Draft' as const,
+        id: undefined, // Let firestore generate a new ID
+    };
+    
+    try {
+        await addDoc(collection(firestore, 'fares'), { ...newVersion, createdAt: serverTimestamp() });
+        toast({
+            title: 'New Draft Version Created',
+            description: `A new draft (v${newVersion.version}) of fare for "${fare.route}" has been created.`
+        })
+    } catch(e: any) {
+        console.error(e);
+        toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: e.message || "Could not create new version.",
         });
     }
   };
@@ -217,7 +251,7 @@ export default function FaresPage() {
                             <DropdownMenuItem onClick={() => handleOpenDialog(fare)}>
                             Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem>Create New Version</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleCreateNewVersion(fare)}>Create New Version</DropdownMenuItem>
                             <DropdownMenuItem>View History</DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(fare.id!)}>
@@ -240,7 +274,7 @@ export default function FaresPage() {
           <DialogHeader>
             <DialogTitle>{editingFare ? 'Edit Fare' : 'Create New Fare'}</DialogTitle>
             <DialogDescription>
-              {editingFare ? `Editing fare ${editingFare.id}.` : 'Enter the details for the new fare.'}
+              {editingFare ? `Editing fare for route ${editingFare.route}.` : 'Enter the details for the new fare.'}
             </DialogDescription>
           </DialogHeader>
           <FareForm
