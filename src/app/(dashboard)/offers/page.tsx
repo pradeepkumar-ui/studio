@@ -106,9 +106,12 @@ export default function OffersPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Only update from Firestore if firestoreData is available and not empty
-    if (!loading && firestoreData && firestoreData.length > 0) {
-      setOffers(firestoreData as Offer[]);
+    if (!loading && firestoreData) {
+      if (firestoreData.length > 0) {
+        setOffers(firestoreData as Offer[]);
+      } else {
+        setOffers(mockOffers);
+      }
     }
   }, [firestoreData, loading]);
 
@@ -262,12 +265,12 @@ export default function OffersPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {loading && !firestoreData && (
+          {loading && (
              <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
              </div>
            )}
-           {(!loading || firestoreData) && !error && (
+           {!loading && !error && (
             <Table>
                 <TableHeader>
                 <TableRow>

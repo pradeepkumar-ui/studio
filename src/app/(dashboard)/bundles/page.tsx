@@ -128,7 +128,7 @@ export default function BundlesPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Bundle Catalogue</CardTitle>
+          <CardTitle>Bundles</CardTitle>
           <CardDescription>
             Manage all ancillary bundles and their rules.
           </CardDescription>
