@@ -112,6 +112,7 @@ const menuItems: MenuItem[] = [
       { href: '/inventory', label: 'Flight & Inventory', icon: Plane },
       { href: '/allotments', label: 'Allotments', icon: CalendarDays },
       { href: '/capacity', label: 'Capacity', icon: Signal },
+      { href: '/stock-keeper', label: 'Stock Keeper', icon: Package },
       { href: '/atpco', label: 'ATPCO', icon: Plane },
     ]
   },
