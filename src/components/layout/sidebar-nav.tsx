@@ -55,6 +55,7 @@ import {
   BarChartHorizontal,
   FileText,
   MessageSquare,
+  Send,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -100,6 +101,7 @@ const menuItems: MenuItem[] = [
         { href: '/orders', label: 'Order Dashboard', icon: LayoutDashboard },
         { href: '/orders/creation', label: 'Creation', icon: PlusSquare },
         { href: '/orders/finalisation', label: 'Finalisation', icon: BadgeCheck },
+        { href: '/orders/delivery', label: 'Delivery', icon: Send },
         { href: '/orders/supplier-orders', label: 'Supplier Orders', icon: Building },
         { href: '/orders/large-party', label: 'Large Party Orders', icon: Users },
         { href: '/orders/servicing', label: 'Servicing', icon: Wrench },
