@@ -54,6 +54,7 @@ import {
   CreditCard,
   ReceiptText,
   BarChartHorizontal,
+  FileText,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -103,6 +104,7 @@ const menuItems: MenuItem[] = [
         { href: '/orders/large-party', label: 'Large Party Orders', icon: Users },
         { href: '/orders/service-config', label: 'Service Config', icon: Wrench },
         { href: '/consumption', label: 'Service Consumption', icon: ClipboardCheck },
+        { href: '/documentation', label: 'Documentation', icon: FileText },
     ]
   },
    {
