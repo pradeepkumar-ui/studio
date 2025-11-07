@@ -139,6 +139,24 @@
         }
       },
       "required": ["name", "status", "fareBrand"]
+    },
+    "negotiatedSpaceAgreement": {
+      "title": "Negotiated Space Agreement",
+      "description": "Represents a negotiated space agreement with a partner.",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "partnerId": { "type": "string" },
+        "scope": { "type": "string" },
+        "capacity": { "type": "number" },
+        "rbd": { "type": "string" },
+        "brand": { "type": "string" },
+        "pricing": { "type": "string" },
+        "deadlines": { "type": "string" },
+        "finance": { "type": "string" },
+        "status": { "type": "string", "enum": ["Draft", "Approved", "Published", "Amended", "Expired"] }
+      },
+      "required": ["code", "partnerId", "scope", "capacity", "rbd", "brand", "pricing", "deadlines", "finance", "status"]
     }
   },
   "auth": {
@@ -186,6 +204,12 @@
         "$ref": "#/entities/channel"
       },
       "description": "Stores sales channel documents."
+    },
+    "/negotiatedSpaceAgreements/{nsaId}": {
+      "schema": {
+        "$ref": "#/entities/negotiatedSpaceAgreement"
+      },
+      "description": "Stores negotiated space agreement documents."
     }
   }
 }

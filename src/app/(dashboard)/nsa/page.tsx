@@ -36,69 +36,21 @@ import {
   MoreHorizontal,
   PlusCircle,
   Search,
+  Loader2,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { NsaForm, type NegotiatedSpaceAgreement } from '@/components/forms/nsa-form';
 import { Input } from '@/components/ui/input';
-
-const initialNsa: NegotiatedSpaceAgreement[] = [
-  {
-    id: 'NSA-001',
-    code: 'NSA-THR-2026',
-    partnerId: 'TOUR-ALPHA',
-    scope: 'SZX-BOM, Jan-Mar 2026',
-    capacity: 30,
-    status: 'Published',
-    rbd: 'Q,N,V',
-    brand: 'Value,Flex',
-    pricing: 'INR; base 8,999 -> 9,499; 8% commission',
-    deadlines: 'Release: D-30, D-14. Name: D-14. Issue: D-7.',
-    finance: '10% deposit at contract, 20% at D-45. Attrition penalties apply.',
-  },
-  {
-    id: 'NSA-002',
-    code: 'NSA-CORP-ACME',
-    partnerId: 'ACME-CORP',
-    scope: 'LHR-JFK, Full Year 2025',
-    capacity: 10,
-    status: 'Published',
-    rbd: 'J,C',
-    brand: 'Business Flex',
-    pricing: 'Corporate Rates',
-    deadlines: 'Release: D-14. Name: D-7. Issue: D-3.',
-    finance: 'Monthly billing. No penalties.',
-  },
-  {
-    id: 'NSA-003',
-    code: 'NSA-MICE-CONF',
-    partnerId: 'CONF-XYZ',
-    scope: 'SIN-HKG, 15-20 May 2025',
-    capacity: 150,
-    status: 'Approved',
-    rbd: 'Y,B,M',
-    brand: 'Economy Standard',
-    pricing: 'Fixed Fare',
-    deadlines: 'Release: D-45. Name: D-21. Issue: D-14.',
-    finance: '50% deposit required. Attrition penalties apply.',
-  },
-  {
-    id: 'NSA-004',
-    code: 'NSA-DRAFT-01',
-    partnerId: 'NEW-PARTNER',
-    scope: 'FRA-DXB, Winter 2025',
-    capacity: 20,
-    status: 'Draft',
-    rbd: 'Y',
-    brand: 'Economy',
-    pricing: 'Pending',
-    deadlines: 'Not set',
-    finance: 'Not set',
-  },
-];
+import { useFirestore } from '@/firebase';
+import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { useCollection } from 'react-firebase-hooks/firestore';
 
 export default function NsaPage() {
-  const [agreements, setAgreements] = useState<NegotiatedSpaceAgreement[]>(initialNsa);
+  const firestore = useFirestore();
+  const [agreementsCollection, loading, error] = useCollection(firestore ? collection(firestore, 'negotiatedSpaceAgreements') : undefined);
+  const agreements = agreementsCollection?.docs.map(doc => ({ id: doc.id, ...doc.data() } as NegotiatedSpaceAgreement)) || [];
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingNsa, setEditingNsa] = useState<NegotiatedSpaceAgreement | null>(null);
   const [filters, setFilters] = useState({ code: '', partnerId: '' });
@@ -114,17 +66,47 @@ export default function NsaPage() {
     setEditingNsa(null);
   };
 
-  const handleFormSubmit = (data: NegotiatedSpaceAgreement) => {
-    if (editingNsa) {
-      setAgreements(agreements.map((a) => (a.id === editingNsa.id ? { ...a, ...data } : a)));
-      toast({ title: 'Agreement Updated', description: `NSA "${data.code}" has been successfully updated.` });
-    } else {
-      const newNsa = { ...data, id: `NSA-${String(agreements.length + 1).padStart(3, '0')}` };
-      setAgreements([...agreements, newNsa]);
-      toast({ title: 'Agreement Created', description: `NSA "${newNsa.code}" has been successfully created.` });
+  const handleFormSubmit = async (data: NegotiatedSpaceAgreement) => {
+    if (!firestore) return;
+    try {
+      if (editingNsa?.id) {
+        const nsaRef = doc(firestore, 'negotiatedSpaceAgreements', editingNsa.id);
+        await setDoc(nsaRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
+        toast({ title: 'Agreement Updated', description: `NSA "${data.code}" has been successfully updated.` });
+      } else {
+        await addDoc(collection(firestore, 'negotiatedSpaceAgreements'), { ...data, createdAt: serverTimestamp() });
+        toast({ title: 'Agreement Created', description: `NSA "${data.code}" has been successfully created.` });
+      }
+    } catch(e: any) {
+        console.error(e);
+        toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: e.message || "There was a problem with your request.",
+        });
     }
     handleDialogClose();
   };
+
+  const handleDelete = async (nsaId: string) => {
+    if (!nsaId || !firestore) return;
+    try {
+      await deleteDoc(doc(firestore, 'negotiatedSpaceAgreements', nsaId));
+      toast({
+        variant: 'destructive',
+        title: 'Agreement Deleted',
+        description: 'The agreement has been successfully deleted.',
+      });
+    } catch (e: any) {
+      console.error(e);
+      toast({
+        variant: 'destructive',
+        title: 'Uh oh! Something went wrong.',
+        description: e.message || 'Could not delete the agreement.',
+      });
+    }
+  };
+
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -200,61 +182,69 @@ export default function NsaPage() {
               />
             </div>
           </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Contract Code</TableHead>
-                <TableHead>Partner</TableHead>
-                <TableHead>Scope</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Pricing</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredAgreements.map((nsa) => (
-                <TableRow key={nsa.id}>
-                  <TableCell className="font-medium">{nsa.code}</TableCell>
-                  <TableCell>{nsa.partnerId}</TableCell>
-                  <TableCell>{nsa.scope}</TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusBadgeVariant(nsa.status)}>
-                      {nsa.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{nsa.pricing}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          aria-haspopup="true"
-                          size="icon"
-                          variant="ghost"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleOpenDialog(nsa)}>
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>View Details</DropdownMenuItem>
-                        <DropdownMenuItem>View Performance</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">
-                          Expire
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          {loading && (
+            <div className="flex justify-center items-center h-64">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          )}
+          {!loading && !error && (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Contract Code</TableHead>
+                  <TableHead>Partner</TableHead>
+                  <TableHead>Scope</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Pricing</TableHead>
+                  <TableHead>
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredAgreements.map((nsa) => (
+                  <TableRow key={nsa.id}>
+                    <TableCell className="font-medium">{nsa.code}</TableCell>
+                    <TableCell>{nsa.partnerId}</TableCell>
+                    <TableCell>{nsa.scope}</TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeVariant(nsa.status)}>
+                        {nsa.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{nsa.pricing}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            aria-haspopup="true"
+                            size="icon"
+                            variant="ghost"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => handleOpenDialog(nsa)}>
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>View Details</DropdownMenuItem>
+                          <DropdownMenuItem>View Performance</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(nsa.id!)}>
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+          {error && <p className="text-destructive">Error loading agreements: {error.message}</p>}
         </CardContent>
       </Card>
       
