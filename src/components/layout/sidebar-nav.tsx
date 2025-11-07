@@ -84,7 +84,7 @@ const menuItems: MenuItem[] = [
     label: 'Offer Management',
     icon: Ticket,
     subItems: [
-      { href: '/offers', label: 'Offer Catalogue', icon: Layers },
+      { href: '/offers', label: 'Offers', icon: Layers },
       { href: '/offer-composer', label: 'Composer', icon: Layers },
       { href: '/optimisation', label: 'Offer Optimisation', icon: Wand2 },
       { href: '/bundles', label: 'Bundles Studio', icon: Package },

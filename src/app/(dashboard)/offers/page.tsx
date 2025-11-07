@@ -2,23 +2,41 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import {
+  ChevronsUpDown,
+  MoreHorizontal,
+  Search,
+  ShoppingCart,
+  ReceiptText,
+  AlertCircle,
+  FileBox,
+  BarChartHorizontal,
+  PlusCircle,
+} from 'lucide-react';
+import {
+  ColumnDef,
+  ColumnFiltersState,
+  SortingState,
+  VisibilityState,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
 import { format } from 'date-fns';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  Timestamp,
+  collection,
+  addDoc,
+  doc,
+  setDoc,
+  deleteDoc,
+  serverTimestamp,
+} from 'firebase/firestore';
+
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +45,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -34,17 +69,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import {
-  MoreHorizontal,
-  PlusCircle,
-  BarChartHorizontal,
-  Search,
-  Loader2,
-} from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { OfferForm, type Offer } from '@/components/forms/offer-form';
-import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -53,7 +79,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { Loader2 } from 'lucide-react';
 
 const mockOffers: Offer[] = [
   { id: 'OFF-001', name: 'Winter Flash Sale', scope: 'Market', offerType: 'Discount', currency: 'USD', rounding: 'Round Half-Up', criteria: 'Market: US, EU', effectiveDate: new Date('2024-12-01'), expiryDate: new Date('2024-12-20'), status: 'Active', version: 2, ttl: '00:10:00' },
@@ -171,16 +197,15 @@ export default function OffersPage() {
     return offerIdMatch && statusMatch;
   });
 
-  const formatDate = (date: Date | Timestamp) => {
+  const formatDate = (date: Date | Timestamp | { seconds: number, nanoseconds: number }) => {
     if (date instanceof Timestamp) {
       return format(date.toDate(), 'PP');
     }
-    // Check if it's a plain object with seconds and nanoseconds, a possible format from Firestore
-    if (date && typeof date === 'object' && 'seconds' in date && 'nanoseconds' in date) {
-      return format(new Date((date as any).seconds * 1000), 'PP');
-    }
     if (date instanceof Date) {
       return format(date, 'PP');
+    }
+    if (date && typeof date === 'object' && 'seconds' in date) {
+      return format(new Date(date.seconds * 1000), 'PP');
     }
     return '';
   };
@@ -190,7 +215,7 @@ export default function OffersPage() {
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold tracking-tight">
-            Offer Catalogue
+            Offers
           </h1>
           <p className="text-muted-foreground">
             Create, govern, and distribute retail offers and promotions.
