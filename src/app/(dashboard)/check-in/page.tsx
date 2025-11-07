@@ -17,19 +17,20 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { UserCheck, RotateCcw, DownloadCloud, MoreHorizontal } from 'lucide-react';
+import { UserCheck, RotateCcw, DownloadCloud, MoreHorizontal, FileText } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
 const kpiData = [
   { title: 'Total Check-Ins (24h)', value: '12,380' },
-  { title: 'Completed', value: '12,122' },
-  { title: 'Failed', value: '258' },
+  { title: 'Boarding Passes Issued', value: '12,122' },
+  { title: 'Delivery Failures', value: '258' },
   { title: 'DCS Sync Health', value: '99.9%' },
 ];
 
@@ -65,7 +66,8 @@ export default function CheckInPage() {
                 </p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline"><RotateCcw className="mr-2 h-4 w-4" /> Retry Failed</Button>
+                    <Button variant="outline"><FileText className="mr-2 h-4 w-4" /> Re-Issue Boarding Pass</Button>
+                    <Button variant="outline"><RotateCcw className="mr-2 h-4 w-4" /> Retry Failed Check-ins</Button>
                     <Button variant="outline"><DownloadCloud className="mr-2 h-4 w-4" /> Export Logs</Button>
                 </div>
             </div>
@@ -131,8 +133,15 @@ export default function CheckInPage() {
                                         <DropdownMenuContent align="end">
                                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                             <DropdownMenuItem>View Details</DropdownMenuItem>
-                                            <DropdownMenuItem>Re-Issue Boarding Pass</DropdownMenuItem>
-                                            <DropdownMenuItem>Cancel Check-In</DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                            {checkIn.status === 'Completed' && (
+                                                <>
+                                                    <DropdownMenuItem>Re-Issue Boarding Pass</DropdownMenuItem>
+                                                    <DropdownMenuItem className="text-destructive">Cancel Check-In</DropdownMenuItem>
+                                                </>
+                                            )}
+                                            {checkIn.status === 'Failed' && <DropdownMenuItem>Retry Check-In</DropdownMenuItem>}
+                                            {checkIn.status === 'Pending' && <DropdownMenuItem>View Progress</DropdownMenuItem>}
                                         </DropdownMenuContent>
                                         </DropdownMenu>
                                     </TableCell>
