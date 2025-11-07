@@ -30,6 +30,11 @@ const consumptionEvents = [
     { id: 'EVT-003', service: 'Pre-paid Meal', passenger: 'S. Lee', orderId: 'ORD-E6F7', status: 'Pending', timestamp: 'N/A' },
     { id: 'EVT-004', service: 'Fast-Track Security', passenger: 'M. Williams', orderId: 'ORD-G8H9', status: 'Expired', timestamp: 'N/A' },
     { id: 'EVT-005', service: 'Hotel Voucher', passenger: 'T. Johnson', orderId: 'ORD-I1J2', status: 'Consumed', timestamp: '2025-10-28 14:22:01' },
+    { id: 'EVT-006', service: 'Checked Bag (23kg)', passenger: 'B. Davis', orderId: 'ORD-K3L4', status: 'Consumed', timestamp: '2025-10-28 11:15:45' },
+    { id: 'EVT-007', service: 'Seat Selection', passenger: 'C. Wilson', orderId: 'ORD-M5N6', status: 'Pending', timestamp: 'N/A' },
+    { id: 'EVT-008', service: 'Carbon Offset', passenger: 'R. Garcia', orderId: 'ORD-O7P8', status: 'Consumed', timestamp: '2025-10-27 20:30:00' },
+    { id: 'EVT-009', service: 'Travel Insurance', passenger: 'E. Martinez', orderId: 'ORD-Q9R0', status: 'Expired', timestamp: 'N/A' },
+    { id: 'EVT-010', service: 'Lounge Access (JFK)', passenger: 'F. Brown', orderId: 'ORD-S1T2', status: 'Consumed', timestamp: '2025-10-27 18:55:10' },
 ];
 
 const getStatusBadgeVariant = (status: string) => {

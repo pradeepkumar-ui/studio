@@ -38,10 +38,16 @@ import { FareBrandMappingForm, type FareBrandMap } from '@/components/forms/fare
 
 
 const initialFareBrandMaps: FareBrandMap[] = [
-    { id: 'FBM-01', brandName: 'Business Flex', mappedClasses: 'J,C', channel: 'All' },
-    { id: 'FBM-02', brandName: 'Economy Saver', mappedClasses: 'M,B,Q', channel: 'Website' },
-    { id: 'FBM-03', brandName: 'Economy Full', mappedClasses: 'Y', channel: 'All' },
-    { id: 'FBM-04', brandName: 'First Class', mappedClasses: 'F', channel: 'All' },
+    { id: 'FBM-01', brandName: 'Business Flex', mappedClasses: 'J,C,D', channel: 'All' },
+    { id: 'FBM-02', brandName: 'Business Saver', mappedClasses: 'I,Z', channel: 'All' },
+    { id: 'FBM-03', brandName: 'Premium Flex', mappedClasses: 'W,S', channel: 'All' },
+    { id: 'FBM-04', brandName: 'Premium Saver', mappedClasses: 'E,N', channel: 'All' },
+    { id: 'FBM-05', brandName: 'Economy Flex', mappedClasses: 'Y,B,M', channel: 'All' },
+    { id: 'FBM-06', brandName: 'Economy Saver', mappedClasses: 'H,K,L', channel: 'Website' },
+    { id: 'FBM-07', brandName: 'Economy Basic', mappedClasses: 'Q,T,V', channel: 'Website' },
+    { id: 'FBM-08', brandName: 'First Class', mappedClasses: 'F,A', channel: 'All' },
+    { id: 'FBM-09', brandName: 'Corporate Fares', mappedClasses: 'Y,B,J,C', channel: 'TMC' },
+    { id: 'FBM-10', brandName: 'Web Promo', mappedClasses: 'G,O', channel: 'Website' },
 ];
 
 export function FareBrandMapping() {

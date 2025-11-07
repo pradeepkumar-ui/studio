@@ -34,41 +34,16 @@ const kpiData = [
 ];
 
 const connectors = [
-  {
-    id: 'erp_sync',
-    name: 'ERP Journal Sync (SAP)',
-    status: 'OPERATIONAL',
-    latency: '820ms',
-    errorRate: '0.1%',
-  },
-  {
-    id: 'pg_recon',
-    name: 'Payment Gateway Reconciliation (Stripe)',
-    status: 'OPERATIONAL',
-    latency: '450ms',
-    errorRate: '0.05%',
-  },
-  {
-    id: 'tax_api',
-    name: 'Tax & Regulatory API',
-    status: 'DEGRADED',
-    latency: '1.6s',
-    errorRate: '3.4%',
-  },
-   {
-    id: 'bsp_file_exchange',
-    name: 'BSP/ARC File Exchange (SFTP)',
-    status: 'OPERATIONAL',
-    latency: 'N/A',
-    errorRate: '0.0%',
-  },
-  {
-    id: 'bi_export',
-    name: 'BI Data Warehouse Sync',
-    status: 'DOWN',
-    latency: 'N/A',
-    errorRate: '100%',
-  },
+  { id: 'erp_sync', name: 'ERP Journal Sync (SAP)', status: 'OPERATIONAL', latency: '820ms', errorRate: '0.1%' },
+  { id: 'pg_recon', name: 'Payment Gateway Reconciliation (Stripe)', status: 'OPERATIONAL', latency: '450ms', errorRate: '0.05%' },
+  { id: 'tax_api', name: 'Tax & Regulatory API', status: 'DEGRADED', latency: '1.6s', errorRate: '3.4%' },
+  { id: 'bsp_file_exchange', name: 'BSP/ARC File Exchange (SFTP)', status: 'OPERATIONAL', latency: 'N/A', errorRate: '0.0%' },
+  { id: 'bi_export', name: 'BI Data Warehouse Sync', status: 'DOWN', latency: 'N/A', errorRate: '100%' },
+  { id: 'loyalty_engine', name: 'Loyalty Engine Sync', status: 'OPERATIONAL', latency: '320ms', errorRate: '0.2%' },
+  { id: 'gds_push', name: 'GDS PNR Push (Sabre)', status: 'OPERATIONAL', latency: '980ms', errorRate: '0.5%' },
+  { id: 'dcs_sync', name: 'DCS Check-in Sync', status: 'DEGRADED', latency: '2.1s', errorRate: '4.1%' },
+  { id: 'corp_portal', name: 'Corporate Portal API', status: 'OPERATIONAL', latency: '150ms', errorRate: '0.01%' },
+  { id: 'ota_feed', name: 'OTA Availability Feed', status: 'OPERATIONAL', latency: 'N/A', errorRate: '0.0%' },
 ];
 
 const recentJobs = [
@@ -77,6 +52,11 @@ const recentJobs = [
     { id: 'JOB-003', name: 'BI Data Warehouse Sync', status: 'Failed', timestamp: '12 mins ago' },
     { id: 'JOB-004', name: 'BSP File Upload', status: 'Success', timestamp: '25 mins ago' },
     { id: 'JOB-005', name: 'ERP Journal Sync', status: 'Success', timestamp: '1 hour ago' },
+    { id: 'JOB-006', name: 'GDS PNR Push', status: 'Success', timestamp: '1 hour ago' },
+    { id: 'JOB-007', name: 'DCS Check-in Sync', status: 'Failed', timestamp: '2 hours ago' },
+    { id: 'JOB-008', name: 'Loyalty Engine Sync', status: 'Success', timestamp: '2 hours ago' },
+    { id: 'JOB-009', name: 'Tax & Regulatory API', status: 'Success', timestamp: '3 hours ago' },
+    { id: 'JOB-010', name: 'BI Data Warehouse Sync', status: 'Success', timestamp: '4 hours ago' },
 ];
 
 

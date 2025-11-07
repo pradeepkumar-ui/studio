@@ -65,6 +65,11 @@ const mockCommunications = [
     { id: 'MSG-003', orderId: 'ORD_7622', eventType: 'Order.Shipped', channel: 'API', recipient: 'https://supplier.com/webhook', status: 'Delivered' as Status, timestamp: '5 mins ago' },
     { id: 'MSG-004', orderId: 'ORD_7623', eventType: 'Payment.Failed', channel: 'Email', recipient: 'user@example.net', status: 'Failed' as Status, timestamp: '10 mins ago' },
     { id: 'MSG-005', orderId: 'ORD_7624', eventType: 'Order.Created', channel: 'Email', recipient: 'another@example.com', status: 'Opened' as Status, timestamp: '15 mins ago' },
+    { id: 'MSG-006', orderId: 'ORD_7625', eventType: 'Order.Modified', channel: 'Email', recipient: 'test@example.dev', status: 'Delivered' as Status, timestamp: '20 mins ago' },
+    { id: 'MSG-007', orderId: 'ORD_7626', eventType: 'Order.Cancelled', channel: 'SMS', recipient: '+44-77-1234-5678', status: 'Delivered' as Status, timestamp: '22 mins ago' },
+    { id: 'MSG-008', orderId: 'ORD_7627', eventType: 'Order.Created', channel: 'API', recipient: 'https://partner.com/hook', status: 'Pending' as Status, timestamp: '25 mins ago' },
+    { id: 'MSG-009', orderId: 'ORD_7628', eventType: 'Payment.Success', channel: 'Email', recipient: 'finance@example.com', status: 'Failed' as Status, timestamp: '30 mins ago' },
+    { id: 'MSG-010', orderId: 'ORD_7629', eventType: 'Fulfilment.Success', channel: 'Email', recipient: 'success@example.com', status: 'Opened' as Status, timestamp: '45 mins ago' },
 ];
 
 const getStatusBadgeVariant = (status: Status) => {

@@ -38,7 +38,7 @@ type User = {
   id: string;
   name: string;
   email: string;
-  role: 'Finance Admin' | 'Revenue Accountant' | 'Billing Officer' | 'Auditor' | 'System Admin';
+  role: 'Finance Admin' | 'Revenue Accountant' | 'Billing Officer' | 'Auditor' | 'System Admin' | 'Agent';
   status: 'Active' | 'Suspended';
   lastLogin: string;
 };
@@ -49,6 +49,11 @@ const mockUsers: User[] = [
   { id: 'USR_103', name: 'Charlie Brown', email: 'charlie.b@example.com', role: 'Billing Officer', status: 'Active', lastLogin: '25 mins ago' },
   { id: 'USR_104', name: 'Diana Miller', email: 'diana.m@example.com', role: 'Auditor', status: 'Active', lastLogin: '5 hours ago' },
   { id: 'USR_105', name: 'Ethan Davis', email: 'ethan.d@example.com', role: 'System Admin', status: 'Suspended', lastLogin: '3 days ago' },
+  { id: 'USR_106', name: 'Fiona Green', email: 'fiona.g@example.com', role: 'Agent', status: 'Active', lastLogin: '15 mins ago' },
+  { id: 'USR_107', name: 'George Harris', email: 'george.h@example.com', role: 'Revenue Accountant', status: 'Active', lastLogin: '8 hours ago' },
+  { id: 'USR_108', name: 'Hannah Ives', email: 'hannah.i@example.com', role: 'Billing Officer', status: 'Suspended', lastLogin: '1 week ago' },
+  { id: 'USR_109', name: 'Ian Jenkins', email: 'ian.j@example.com', role: 'Auditor', status: 'Active', lastLogin: '2 days ago' },
+  { id: 'USR_110', name: 'Jessica King', email: 'jessica.k@example.com', role: 'Finance Admin', status: 'Active', lastLogin: '5 mins ago' },
 ];
 
 const getStatusBadgeVariant = (status: User['status']) => {

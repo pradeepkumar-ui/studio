@@ -42,6 +42,11 @@ const mockCheckIns = [
   { id: 'CI-003', orderId: 'ORD-98576', passenger: 'Alice Johnson', channel: 'Kiosk', status: 'Failed' as CheckInStatus, timestamp: '10 mins ago' },
   { id: 'CI-004', orderId: 'ORD-98577', passenger: 'Bob Williams', channel: 'Web', status: 'Completed' as CheckInStatus, timestamp: '15 mins ago' },
   { id: 'CI-005', orderId: 'ORD-98578', passenger: 'Charlie Brown', channel: 'Mobile App', status: 'Pending' as CheckInStatus, timestamp: '20 mins ago' },
+  { id: 'CI-006', orderId: 'ORD-98579', passenger: 'David Clark', channel: 'Web', status: 'Completed' as CheckInStatus, timestamp: '25 mins ago' },
+  { id: 'CI-007', orderId: 'ORD-98580', passenger: 'Eve Davis', channel: 'Mobile App', status: 'Completed' as CheckInStatus, timestamp: '30 mins ago' },
+  { id: 'CI-008', orderId: 'ORD-98581', passenger: 'Frank Evans', channel: 'Kiosk', status: 'Failed' as CheckInStatus, timestamp: '35 mins ago' },
+  { id: 'CI-009', orderId: 'ORD-98582', passenger: 'Grace Garcia', channel: 'Web', status: 'Completed' as CheckInStatus, timestamp: '40 mins ago' },
+  { id: 'CI-010', orderId: 'ORD-98583', passenger: 'Henry Hill', channel: 'Mobile App', status: 'Pending' as CheckInStatus, timestamp: '45 mins ago' },
 ];
 
 const getStatusBadgeVariant = (status: CheckInStatus) => {

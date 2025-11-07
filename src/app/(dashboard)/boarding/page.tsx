@@ -22,16 +22,18 @@ import { ScanLine, UserPlus, FileText, CheckCircle, AlertTriangle, Clock } from 
 import { Separator } from '@/components/ui/separator';
 
 const kpiData = [
-  { title: 'Flights Boarding', value: '3' },
-  { title: 'Total Pax Boarded', value: '412' },
-  { title: 'Exceptions', value: '5' },
-  { title: 'Avg. Boarding Time', value: '18 min' },
+  { title: 'Flights Boarding', value: '5' },
+  { title: 'Total Pax Boarded', value: '875' },
+  { title: 'Exceptions', value: '12' },
+  { title: 'Avg. Boarding Time', value: '19 min' },
 ];
 
 const boardingFlights = [
     { flightId: 'AI 101', destination: 'JFK', boarded: 142, total: 150, status: 'Boarding', currentGroup: 'C' },
     { flightId: 'EK 216', destination: 'DXB', boarded: 280, total: 320, status: 'Boarding', currentGroup: 'B' },
-    { flightId: 'SQ 529', destination: 'SIN', boarded: 88, total: 250, status: 'Final Call', currentGroup: 'All' },
+    { flightId: 'SQ 529', destination: 'SIN', boarded: 245, total: 250, status: 'Final Call', currentGroup: 'All' },
+    { flightId: 'LH 990', destination: 'FRA', boarded: 188, total: 220, status: 'Boarding', currentGroup: 'A' },
+    { flightId: 'QF 12', destination: 'SYD', boarded: 20, total: 350, status: 'Pre-Boarding', currentGroup: 'Families' },
 ];
 
 const liveFeed = [
@@ -39,12 +41,19 @@ const liveFeed = [
     { type: 'success', message: 'Passenger Jane Doe (ORD-98321) boarded.', time: '25s ago' },
     { type: 'exception', message: 'Seat mismatch for passenger A. Williams (ORD-77431).', time: '45s ago' },
     { type: 'success', message: 'Passenger Mike Johnson (ORD-12543) boarded.', time: '1 min ago' },
+    { type: 'info', message: 'Group C boarding now.', time: '2 mins ago' },
+    { type: 'success', message: 'Passenger S. Chen (ORD-55412) boarded.', time: '2 mins ago' },
+    { type: 'exception', message: 'Baggage mismatch for passenger F. Miller (ORD-88231).', time: '3 mins ago' },
+    { type: 'success', message: 'Passenger P. Rodriguez (ORD-31221) boarded.', time: '4 mins ago' },
+    { type: 'info', message: 'Final call for flight SQ 529 to Singapore.', time: '5 mins ago' },
+    { type: 'success', message: 'Passenger L. Taylor (ORD-11298) boarded.', time: '5 mins ago' },
 ];
 
 const getStatusBadgeVariant = (status: string) => {
     switch (status) {
         case 'Boarding': return 'default';
         case 'Final Call': return 'destructive';
+        case 'Pre-Boarding': return 'secondary';
         default: return 'outline';
     }
 }

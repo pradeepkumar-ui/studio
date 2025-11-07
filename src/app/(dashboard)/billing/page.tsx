@@ -50,6 +50,11 @@ const mockInvoices: Invoice[] = [
   { invoiceId: 'INV_55125', orderId: 'ORD_88216', customer: 'Hooli Ltd.', amount: 450.00, currency: 'USD', status: 'Draft', issueDate: '2025-10-31' },
   { invoiceId: 'INV_55126', orderId: 'ORD_88217', customer: 'Stark Industries', amount: 3200.00, currency: 'USD', status: 'Failed', issueDate: '2025-10-30' },
   { invoiceId: 'INV_55127', orderId: 'ORD_88218', customer: 'Wayne Enterprises', amount: 7500.00, currency: 'USD', status: 'Sent', issueDate: '2025-10-30' },
+  { invoiceId: 'INV_55128', orderId: 'ORD_88219', customer: 'Cyberdyne Systems', amount: 1200.00, currency: 'EUR', status: 'Sent', issueDate: '2025-10-29' },
+  { invoiceId: 'INV_55129', orderId: 'ORD_88220', customer: 'Ollivanders', amount: 320.50, currency: 'GBP', status: 'Approved', issueDate: '2025-10-29' },
+  { invoiceId: 'INV_55130', orderId: 'ORD_88221', customer: 'Acme Corp', amount: 550.00, currency: 'USD', status: 'Draft', issueDate: '2025-10-29' },
+  { invoiceId: 'INV_55131', orderId: 'ORD_88222', customer: 'Soylent Corp', amount: 980.00, currency: 'USD', status: 'Failed', issueDate: '2025-10-28' },
+  { invoiceId: 'INV_55132', orderId: 'ORD_88223', customer: 'Gekko & Co', amount: 25000.00, currency: 'USD', status: 'Sent', issueDate: '2025-10-28' },
 ];
 
 const getStatusBadgeVariant = (status: Invoice['status']) => {

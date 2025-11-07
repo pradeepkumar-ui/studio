@@ -52,46 +52,16 @@ import {
 } from '@/components/ui/card';
 
 const mockRecentOrders: Order[] = [
-    {
-      id: 'ORD-073',
-      customer: 'Voyage Travel Co.',
-      email: 'contact@voyagetravel.com',
-      status: 'Fulfilled',
-      date: '2024-07-15',
-      amount: 12500,
-    },
-    {
-      id: 'ORD-072',
-      customer: 'Globex Corporation',
-      email: 'accounts@globex.corp',
-      status: 'Fulfilled',
-      date: '2024-07-15',
-      amount: 8400,
-    },
-    {
-      id: 'ORD-071',
-      customer: 'Jane Smith',
-      email: 'jane.smith@example.com',
-      status: 'Pending',
-      date: '2024-07-14',
-      amount: 450,
-    },
-    {
-      id: 'ORD-070',
-      customer: 'InnoTech Solutions',
-      email: 'procurement@innotech.com',
-      status: 'Fulfilled',
-      date: '2024-07-13',
-      amount: 22000,
-    },
-    {
-      id: 'ORD-069',
-      customer: 'Adventure Seekers',
-      email: 'bookings@adventureseekers.io',
-      status: 'Canceled',
-      date: '2024-07-12',
-      amount: 1800,
-    },
+    { id: 'ORD-073', customer: 'Voyage Travel Co.', email: 'contact@voyagetravel.com', status: 'Fulfilled', date: '2024-07-15', amount: 12500, },
+    { id: 'ORD-072', customer: 'Globex Corporation', email: 'accounts@globex.corp', status: 'Fulfilled', date: '2024-07-15', amount: 8400, },
+    { id: 'ORD-071', customer: 'Jane Smith', email: 'jane.smith@example.com', status: 'Pending', date: '2024-07-14', amount: 450, },
+    { id: 'ORD-070', customer: 'InnoTech Solutions', email: 'procurement@innotech.com', status: 'Fulfilled', date: '2024-07-13', amount: 22000, },
+    { id: 'ORD-069', customer: 'Adventure Seekers', email: 'bookings@adventureseekers.io', status: 'Canceled', date: '2024-07-12', amount: 1800, },
+    { id: 'ORD-068', customer: 'Stark Industries', email: 'tony@stark.com', status: 'Fulfilled', date: '2024-07-12', amount: 45000, },
+    { id: 'ORD-067', customer: 'Wayne Enterprises', email: 'bruce@wayne.com', status: 'Pending', date: '2024-07-11', amount: 1100, },
+    { id: 'ORD-066', customer: 'Cyberdyne Systems', email: 'miles@cyberdyne.com', status: 'Fulfilled', date: '2024-07-11', amount: 950, },
+    { id: 'ORD-065', customer: 'Hooli', email: 'gavin@hooli.com', status: 'Canceled', date: '2024-07-10', amount: 250, },
+    { id: 'ORD-064', customer: 'Acme Corporation', email: 'wile@acme.com', status: 'Fulfilled', date: '2024-07-10', amount: 600, },
   ];
 
 export type Order = {

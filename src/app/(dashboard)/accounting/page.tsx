@@ -50,6 +50,11 @@ const mockJournals: JournalEntry[] = [
   { journalId: 'JRN_900147', orderId: 'ORD_52192', eventType: 'OrderPaid', amount: 450.00, currency: 'USD', status: 'Pending', reconStatus: 'Pending', timestamp: '12 mins ago' },
   { journalId: 'JRN_900148', orderId: 'ORD_52193', eventType: 'OrderRefunded', amount: -210.00, currency: 'GBP', status: 'Reversed', reconStatus: 'Reconciled', timestamp: '25 mins ago' },
   { journalId: 'JRN_900149', orderId: 'ORD_52194', eventType: 'OrderPaid', amount: 3200.00, currency: 'USD', status: 'Posted', reconStatus: 'Mismatch', timestamp: '45 mins ago' },
+  { journalId: 'JRN_900150', orderId: 'ORD_52195', eventType: 'OrderPaid', amount: 750.00, currency: 'USD', status: 'Posted', reconStatus: 'Reconciled', timestamp: '1 hour ago' },
+  { journalId: 'JRN_900151', orderId: 'ORD_52196', eventType: 'OrderFulfilled', amount: 120.00, currency: 'EUR', status: 'Posted', reconStatus: 'Reconciled', timestamp: '1 hour ago' },
+  { journalId: 'JRN_900152', orderId: 'ORD_52197', eventType: 'OrderPaid', amount: 990.00, currency: 'USD', status: 'Pending', reconStatus: 'Pending', timestamp: '2 hours ago' },
+  { journalId: 'JRN_900153', orderId: 'ORD_52198', eventType: 'OrderPaid', amount: 1800.00, currency: 'GBP', status: 'Posted', reconStatus: 'Reconciled', timestamp: '2 hours ago' },
+  { journalId: 'JRN_900154', orderId: 'ORD_52199', eventType: 'OrderRefunded', amount: -500.00, currency: 'USD', status: 'Reversed', reconStatus: 'Mismatch', timestamp: '3 hours ago' },
 ];
 
 const getStatusBadgeVariant = (status: JournalEntry['status']) => {

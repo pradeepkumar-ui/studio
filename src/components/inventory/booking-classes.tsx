@@ -39,13 +39,17 @@ import { BookingClassForm, type BookingClass } from '@/components/forms/booking-
 
 const initialBookingClasses: BookingClass[] = [
   { code: 'F', cabin: 'First', description: 'Full Fare First', status: 'Active' },
+  { code: 'A', cabin: 'First', description: 'Discounted First', status: 'Active' },
   { code: 'J', cabin: 'Business', description: 'Full Fare Business', status: 'Active' },
   { code: 'C', cabin: 'Business', description: 'Discounted Business', status: 'Active' },
+  { code: 'D', cabin: 'Business', description: 'Deep Discount Business', status: 'Inactive' },
   { code: 'W', cabin: 'Premium Economy', description: 'Full Fare Premium Economy', status: 'Active' },
+  { code: 'S', cabin: 'Premium Economy', description: 'Discounted Premium Economy', status: 'Active' },
   { code: 'Y', cabin: 'Economy', description: 'Full Fare Economy', status: 'Active' },
   { code: 'B', cabin: 'Economy', description: 'Standard Economy', status: 'Active' },
   { code: 'M', cabin: 'Economy', description: 'Standard Economy', status: 'Active' },
-  { code: 'Q', cabin: 'Economy', description: 'Discounted Economy', status: 'Inactive' },
+  { code: 'H', cabin: 'Economy', description: 'Discounted Economy', status: 'Active' },
+  { code: 'Q', cabin: 'Economy', description: 'Deep Discount Economy', status: 'Inactive' },
 ];
 
 export function BookingClasses() {
@@ -73,7 +77,7 @@ export function BookingClasses() {
           toast({ variant: 'destructive', title: 'Error', description: `Booking class with code "${data.code}" already exists.` });
           return;
       }
-      setBookingClasses([...bookingClasses, data]);
+      setBookingClasses([...bookingClasses, data].sort((a, b) => a.code.localeCompare(b.code)));
       toast({ title: "Booking Class Created", description: `Class ${data.code} has been successfully created.` });
     }
     handleDialogClose();

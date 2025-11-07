@@ -45,6 +45,11 @@ const initialStockItems: StockItem[] = [
   { sku: 'VOUCH_WIFI_24H', category: 'Vouchers', supplier: 'Internal', available: 980, reserved: 15, threshold: 200, status: 'In Stock' },
   { sku: 'LOUNGE_LHR_01', category: 'Lounge Access', supplier: 'Global Lounges', available: 18, reserved: 2, threshold: 20, status: 'Low Stock' },
   { sku: 'MERCH_MUG_01', category: 'Merchandise', supplier: 'AirShop', available: 0, reserved: 0, threshold: 10, status: 'Out of Stock' },
+  { sku: 'BAG_23KG_01', category: 'Baggage', supplier: 'Internal', available: 9999, reserved: 250, threshold: 0, status: 'In Stock' },
+  { sku: 'SEAT_XL_01', category: 'Seats', supplier: 'Internal', available: 80, reserved: 12, threshold: 10, status: 'In Stock' },
+  { sku: 'MEAL_KSML_01', category: 'Meals', supplier: 'KosherCaterers', available: 3, reserved: 1, threshold: 5, status: 'Low Stock' },
+  { sku: 'VOUCH_DRINK_01', category: 'Vouchers', supplier: 'Internal', available: 500, reserved: 30, threshold: 100, status: 'In Stock' },
+  { sku: 'MERCH_MODEL_A380', category: 'Merchandise', supplier: 'AirShop', available: 25, reserved: 2, threshold: 10, status: 'In Stock' },
 ];
 
 const kpiData = [

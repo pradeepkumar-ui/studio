@@ -52,6 +52,11 @@ const mockLoyaltyOrders: LoyaltyOrder[] = [
     { id: 'ORD_88450', memberId: 'FFP_12345', type: 'Ancillary', pointsUsed: 5000, cashPortion: 0.00, status: 'Pending', date: '2025-10-29' },
     { id: 'ORD_88449', memberId: 'FFP_67890', type: 'Award', pointsUsed: 120000, cashPortion: 150.00, status: 'Reversed', date: '2025-10-28' },
     { id: 'ORD_88448', memberId: 'FFP_54321', type: 'Upgrade', pointsUsed: 15000, cashPortion: 0.00, status: 'Confirmed', date: '2025-10-28' },
+    { id: 'ORD_88453', memberId: 'FFP_11223', type: 'Award', pointsUsed: 80000, cashPortion: 120.00, status: 'Confirmed', date: '2025-10-27' },
+    { id: 'ORD_88454', memberId: 'FFP_44556', type: 'Ancillary', pointsUsed: 7500, cashPortion: 10.00, status: 'Confirmed', date: '2025-10-27' },
+    { id: 'ORD_88455', memberId: 'FFP_77889', type: 'Upgrade', pointsUsed: 30000, cashPortion: 100.00, status: 'Pending', date: '2025-10-26' },
+    { id: 'ORD_88456', memberId: 'FFP_99001', type: 'Award', pointsUsed: 95000, cashPortion: 85.00, status: 'Reversed', date: '2025-10-26' },
+    { id: 'ORD_88457', memberId: 'FFP_22334', type: 'Ancillary', pointsUsed: 12000, cashPortion: 0.00, status: 'Confirmed', date: '2025-10-25' },
 ];
 
 
