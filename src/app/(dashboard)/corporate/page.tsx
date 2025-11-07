@@ -39,10 +39,24 @@ import { CorporateContractForm, type CorporateContract } from '@/components/form
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
+const mockContracts: CorporateContract[] = [
+    { id: 'CTR-001', companyName: 'Globex Corporation', contractId: 'GLX-2024', status: 'Active', activeFares: 15, administrator: 'Alice Johnson' },
+    { id: 'CTR-002', companyName: 'Stark Industries', contractId: 'STRK-2025', status: 'Active', activeFares: 25, administrator: 'Bob Williams' },
+    { id: 'CTR-003', companyName: 'Wayne Enterprises', contractId: 'WYN-2023', status: 'Expired', activeFares: 10, administrator: 'Alice Johnson' },
+    { id: 'CTR-004', companyName: 'Cyberdyne Systems', contractId: 'CYB-2024', status: 'Active', activeFares: 8, administrator: 'Charlie Brown' },
+    { id: 'CTR-005', companyName: 'Hooli', contractId: 'HLI-2025', status: 'Negotiation', activeFares: 0, administrator: 'Diana Miller' },
+    { id: 'CTR-006', companyName: 'Soylent Corp', contractId: 'SYL-2024', status: 'Active', activeFares: 5, administrator: 'Bob Williams' },
+    { id: 'CTR-007', companyName: 'Initech', contractId: 'INT-2023', status: 'Expired', activeFares: 12, administrator: 'Ethan Davis' },
+    { id: 'CTR-008', companyName: 'Vehement Capital', contractId: 'VCP-2025', status: 'Active', activeFares: 30, administrator: 'Fiona Green' },
+    { id: 'CTR-009', companyName: 'Ollivanders', contractId: 'OLV-2024', status: 'Negotiation', activeFares: 2, administrator: 'Diana Miller' },
+    { id: 'CTR-010', companyName: 'Gekko & Co', contractId: 'GKO-2025', status: 'Active', activeFares: 50, administrator: 'George Harris' },
+];
 
 export default function CorporatePage() {
   const firestore = useFirestore();
-  const { data: contracts, loading, error } = useCollection(firestore ? collection(firestore, 'corporateContracts') : undefined);
+  const { data, loading, error } = useCollection(firestore ? collection(firestore, 'corporateContracts') : undefined);
+
+  const contracts = loading === false && data?.length === 0 ? mockContracts : data || [];
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<CorporateContract | null>(null);

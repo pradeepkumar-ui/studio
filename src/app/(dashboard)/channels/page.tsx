@@ -38,9 +38,24 @@ import { ChannelForm, type Channel } from '@/components/forms/channel-form';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 
+const mockChannels: Channel[] = [
+    { id: 'CH-001', name: 'Airline Website', status: 'Active', fareBrand: 'Public Fares', campaigns: 5 },
+    { id: 'CH-002', name: 'TMC Portal', status: 'Active', fareBrand: 'Negotiated Fares', campaigns: 2 },
+    { id: 'CH-003', name: 'GDS - Sabre', status: 'Active', fareBrand: 'All Brands', campaigns: 0 },
+    { id: 'CH-004', name: 'GDS - Amadeus', status: 'Active', fareBrand: 'All Brands', campaigns: 0 },
+    { id: 'CH-005', name: 'Mobile App', status: 'Active', fareBrand: 'Public Fares', campaigns: 3 },
+    { id: 'CH-006', name: 'NDC API', status: 'Active', fareBrand: 'All Brands', campaigns: 10 },
+    { id: 'CH-007', name: 'OTA - Expedia', status: 'Inactive', fareBrand: 'Public Fares', campaigns: 0 },
+    { id: 'CH-008', name: 'Corporate Booker', status: 'Active', fareBrand: 'Corporate Fares', campaigns: 8 },
+    { id: 'CH-009', name: 'Call Center', status: 'Active', fareBrand: 'All Brands', campaigns: 1 },
+    { id: 'CH-010', name: 'Affiliate Network', status: 'Inactive', fareBrand: 'Public Fares', campaigns: 0 },
+];
+
 export default function ChannelsPage() {
   const firestore = useFirestore();
-  const { data: channels, loading, error } = useCollection(firestore ? collection(firestore, 'channels') : undefined);
+  const { data, loading, error } = useCollection(firestore ? collection(firestore, 'channels') : undefined);
+  
+  const channels = loading === false && data?.length === 0 ? mockChannels : data || [];
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingChannel, setEditingChannel] = useState<Channel | null>(null);

@@ -45,10 +45,25 @@ import { Input } from '@/components/ui/input';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
+const mockAgreements: NegotiatedSpaceAgreement[] = [
+    { id: 'NSA-001', code: 'NSA-TA-2025', partnerId: 'TOUR-ALPHA', scope: 'SZX-BOM / 2025-Q1', pricing: 'Fixed', status: 'Published', capacity: 30, rbd: 'Q,N,V', brand: 'Value,Flex', deadlines: 'D-30', finance: '10% deposit' },
+    { id: 'NSA-002', code: 'NSA-CORP-B-25', partnerId: 'CORP-BRAVO', scope: 'LHR-JFK / 2025', pricing: 'Discount', status: 'Published', capacity: 10, rbd: 'J,C', brand: 'Business', deadlines: 'D-7', finance: 'Net 30' },
+    { id: 'NSA-003', code: 'NSA-TOUR-C-24', partnerId: 'TOUR-CHARLIE', scope: 'US-DOM / 2024-H2', pricing: 'Commission', status: 'Expired', capacity: 50, rbd: 'Y,B,M', brand: 'Economy', deadlines: 'D-45', finance: '5% deposit' },
+    { id: 'NSA-004', code: 'NSA-TA-2026', partnerId: 'TOUR-ALPHA', scope: 'DXB-LHR / 2026-Q2', pricing: 'Fixed', status: 'Draft', capacity: 25, rbd: 'Q,N', brand: 'Value', deadlines: 'D-30', finance: '15% deposit' },
+    { id: 'NSA-005', code: 'NSA-CORP-D-25', partnerId: 'CORP-DELTA', scope: 'SIN-HKG / 2025', pricing: 'Discount', status: 'Published', capacity: 5, rbd: 'J', brand: 'Business Flex', deadlines: 'D-14', finance: 'Net 60' },
+    { id: 'NSA-006', code: 'NSA-MICE-E-25', partnerId: 'MICE-ECHO', scope: 'FRA-MUC / 2025-09', pricing: 'Commission', status: 'Approved', capacity: 100, rbd: 'Y,B', brand: 'Economy', deadlines: 'D-60', finance: '20% deposit' },
+    { id: 'NSA-007', code: 'NSA-CONS-F-25', partnerId: 'CONS-FOXTROT', scope: 'SYD-LAX / 2025', pricing: 'Fixed', status: 'Published', capacity: 20, rbd: 'W,S', brand: 'Premium', deadlines: 'D-21', finance: '10% deposit' },
+    { id: 'NSA-008', code: 'NSA-GOV-G-25', partnerId: 'GOV-GOLF', scope: 'IAD-WORLD / 2025', pricing: 'Discount', status: 'Published', capacity: 15, rbd: 'Y', brand: 'Flex', deadlines: 'D-5', finance: 'Net 30' },
+    { id: 'NSA-009', code: 'NSA-TA-2025-EU', partnerId: 'TOUR-ALPHA', scope: 'EU / 2025-SUMMER', pricing: 'Commission', status: 'Amended', capacity: 40, rbd: 'M,H,Q', brand: 'Economy', deadlines: 'D-45', finance: '10% deposit' },
+    { id: 'NSA-010', code: 'NSA-CORP-B-26', partnerId: 'CORP-BRAVO', scope: 'LHR-JFK / 2026', pricing: 'Discount', status: 'Draft', capacity: 12, rbd: 'J,C', brand: 'Business', deadlines: 'D-7', finance: 'Net 30' },
+];
+
 export default function NsaPage() {
   const firestore = useFirestore();
-  const { data: agreements, loading, error } = useCollection(firestore ? collection(firestore, 'negotiatedSpaceAgreements') : undefined);
+  const { data, loading, error } = useCollection(firestore ? collection(firestore, 'negotiatedSpaceAgreements') : undefined);
   
+  const agreements = loading === false && data?.length === 0 ? mockAgreements : data || [];
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingNsa, setEditingNsa] = useState<NegotiatedSpaceAgreement | null>(null);
   const [filters, setFilters] = useState({ code: '', partnerId: '' });
