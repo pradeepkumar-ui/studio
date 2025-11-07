@@ -45,11 +45,11 @@ const kpiData = [
 ];
 
 const mockGroupOrders: LargePartyOrder[] = [
-    { id: 'GRP_92345', groupName: 'Corporate Training Batch 2025', leadPassenger: 'John Carter', totalPassengers: 26, paymentTerms: 'Deposit + Balance', fareType: 'Negotiated', status: 'Active' },
-    { id: 'GRP_92346', groupName: 'Summer Student Exchange', leadPassenger: 'Alice Johnson', totalPassengers: 45, paymentTerms: 'Full Payment', fareType: 'Published', status: 'Active' },
-    { id: 'GRP_92347', groupName: 'Leisure Tour - Italy', leadPassenger: 'Michael Smith', totalPassengers: 15, paymentTerms: 'Deposit + Balance', fareType: 'Published', status: 'Pending Approval' },
-    { id: 'GRP_92348', groupName: 'Annual Sales Conference', leadPassenger: 'Sarah Chen', totalPassengers: 120, paymentTerms: 'Deposit + Balance', fareType: 'Negotiated', status: 'Active' },
-    { id: 'GRP_92349', groupName: 'Wedding Party - Hawaii', leadPassenger: 'David Miller', totalPassengers: 35, paymentTerms: 'Full Payment', fareType: 'Published', status: 'Fulfilled' },
+    { id: 'GRP_92345', groupName: 'Corporate Training Batch 2025', leadPassenger: 'John Carter', totalPassengers: 26, paymentTerms: 'Deposit + Balance', fareType: 'Negotiated', status: 'Active', channel: 'B2B' },
+    { id: 'GRP_92346', groupName: 'Summer Student Exchange', leadPassenger: 'Alice Johnson', totalPassengers: 45, paymentTerms: 'Full Payment', fareType: 'Published', status: 'Active', channel: 'Web' },
+    { id: 'GRP_92347', groupName: 'Leisure Tour - Italy', leadPassenger: 'Michael Smith', totalPassengers: 15, paymentTerms: 'Deposit + Balance', fareType: 'Published', status: 'Pending Approval', channel: 'B2B' },
+    { id: 'GRP_92348', groupName: 'Annual Sales Conference', leadPassenger: 'Sarah Chen', totalPassengers: 120, paymentTerms: 'Deposit + Balance', fareType: 'Negotiated', status: 'Active', channel: 'API' },
+    { id: 'GRP_92349', groupName: 'Wedding Party - Hawaii', leadPassenger: 'David Miller', totalPassengers: 35, paymentTerms: 'Full Payment', fareType: 'Published', status: 'Fulfilled', channel: 'Web' },
 ];
 
 export default function LargePartyOrdersPage() {
