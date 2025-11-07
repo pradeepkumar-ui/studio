@@ -90,7 +90,6 @@ const menuItems: MenuItem[] = [
       { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
       { href: '/compliance', label: 'Offer Compliance', icon: Shield },
       { href: '/disruption-waivers', label: 'Disruption Waivers', icon: Waves },
-      { href: '/offer-data', label: 'Data Management', icon: Database },
     ],
   },
   {
@@ -124,6 +123,7 @@ const menuItems: MenuItem[] = [
       { href: '/channels', label: 'Channels', icon: RadioTower },
     ]
   },
+  { href: '/offer-data', label: 'Data Management', icon: Database },
   { href: '/payments', label: 'Payments', icon: CreditCard },
   { href: '/accounting', label: 'Accounting', icon: ReceiptText },
   { href: '/communication', label: 'Communication', icon: MessageSquare },

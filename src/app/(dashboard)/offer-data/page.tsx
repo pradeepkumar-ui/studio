@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -19,10 +18,10 @@ export default function OfferDataManagementPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">
-          Offer Data Management
+          Offer &amp; Order Data Management
         </h1>
         <p className="text-muted-foreground">
-          Manage, validate, and audit the lifecycle of Offer data.
+          Manage, validate, and audit the lifecycle of Offer and Order data.
         </p>
       </div>
 
