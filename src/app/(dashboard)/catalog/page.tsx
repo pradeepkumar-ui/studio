@@ -24,7 +24,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -35,48 +35,16 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { FareProductForm, type FareProduct } from '@/components/forms/fare-product-form';
+import { useFirestore } from '@/firebase';
+import { collection, addDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { useCollection } from 'react-firebase-hooks/firestore';
 
-
-const initialFareProducts: FareProduct[] = [
-  {
-    id: 'FP-001',
-    name: 'Economy Light',
-    description: 'Basic economy fare, no checked bag.',
-    status: 'Active',
-    version: 2,
-  },
-  {
-    id: 'FP-002',
-    name: 'Economy Standard',
-    description: 'Includes one checked bag and seat selection.',
-    status: 'Active',
-    version: 4,
-  },
-  {
-    id: 'FP-003',
-    name: 'Economy Flex',
-    description: 'Refundable, includes two checked bags.',
-    status: 'Active',
-    version: 3,
-  },
-  {
-    id: 'FP-004',
-    name: 'Business Basic',
-    description: 'Non-refundable business class fare.',
-    status: 'Draft',
-    version: 1,
-  },
-  {
-    id: 'FP-005',
-    name: 'Business Flex',
-    description: 'Fully flexible and refundable business class.',
-    status: 'Active',
-    version: 5,
-  },
-];
 
 export default function CatalogPage() {
-  const [fareProducts, setFareProducts] = useState<FareProduct[]>(initialFareProducts);
+  const firestore = useFirestore();
+  const [fareProductsCollection, loading, error] = useCollection(firestore ? collection(firestore, 'fareProducts') : undefined);
+  const fareProducts = fareProductsCollection?.docs.map(doc => ({ id: doc.id, ...doc.data() } as FareProduct)) || [];
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<FareProduct | null>(null);
   const { toast } = useToast();
@@ -91,30 +59,51 @@ export default function CatalogPage() {
     setEditingProduct(null);
   };
   
-  const handleFormSubmit = (data: FareProduct) => {
-    if (editingProduct) {
-      setFareProducts(fareProducts.map((p) => (p.id === editingProduct.id ? { ...p, ...data, version: p.version + 1 } : p)));
-      toast({ title: "Product Updated", description: `Product ${data.name} has been successfully updated.` });
-    } else {
-      const newProduct = { ...data, id: `FP-${String(fareProducts.length + 1).padStart(3, '0')}`, version: 1 };
-      setFareProducts([...fareProducts, newProduct]);
-       toast({ title: "Product Created", description: `Product ${newProduct.name} has been successfully created.` });
+  const handleFormSubmit = async (data: FareProduct) => {
+    if (!firestore) return;
+    try {
+        if (editingProduct?.id) {
+          const productRef = doc(firestore, 'fareProducts', editingProduct.id);
+          await setDoc(productRef, { ...data, version: editingProduct.version || 1 }, { merge: true });
+          toast({ title: "Product Updated", description: `Product ${data.name} has been successfully updated.` });
+        } else {
+          const newProduct = { ...data, version: 1, createdAt: serverTimestamp() };
+          await addDoc(collection(firestore, 'fareProducts'), newProduct);
+           toast({ title: "Product Created", description: `Product ${newProduct.name} has been successfully created.` });
+        }
+    } catch(e: any) {
+        console.error(e);
+        toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: e.message || "There was a problem with your request.",
+        });
     }
     handleDialogClose();
   };
   
-  const handleCreateNewVersion = (product: FareProduct) => {
+  const handleCreateNewVersion = async (product: FareProduct) => {
+    if(!firestore) return;
     const newVersion = {
         ...product,
-        id: `${product.id}-v${product.version + 1}`,
-        version: product.version + 1,
+        id: undefined,
+        version: (product.version || 1) + 1,
         status: 'Draft' as const,
     };
-    setFareProducts(prev => [newVersion, ...prev]);
-    toast({
-        title: 'New Draft Version Created',
-        description: `A new draft (v${newVersion.version}) of "${product.name}" has been created.`
-    })
+    try {
+        await addDoc(collection(firestore, 'fareProducts'), { ...newVersion, createdAt: serverTimestamp() });
+        toast({
+            title: 'New Draft Version Created',
+            description: `A new draft (v${newVersion.version}) of "${product.name}" has been created.`
+        })
+    } catch(e: any) {
+        console.error(e);
+        toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: e.message || "Could not create new version.",
+        });
+    }
   };
 
 
@@ -141,63 +130,71 @@ export default function CatalogPage() {
           </Button>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Version</TableHead>
-                <TableHead className="w-[40%]">Description</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {fareProducts.sort((a, b) => (a.name > b.name) ? 1 : (a.name === b.name) ? (a.version > b.version ? -1 : 1) : -1).map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell className="font-medium">
-                    {product.name}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        product.status === 'Active'
-                          ? 'default'
-                          : 'secondary'
-                      }
-                    >
-                      {product.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>v{product.version}</TableCell>
-                  <TableCell>{product.description}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          aria-haspopup="true"
-                          size="icon"
-                          variant="ghost"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleOpenDialog(product)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleCreateNewVersion(product)}>
-                          Create New Version
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>View History</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          {loading && (
+             <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+             </div>
+           )}
+           {!loading && !error && (
+            <Table>
+                <TableHeader>
+                <TableRow>
+                    <TableHead>Product Name</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Version</TableHead>
+                    <TableHead className="w-[40%]">Description</TableHead>
+                    <TableHead>
+                    <span className="sr-only">Actions</span>
+                    </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                {fareProducts.sort((a, b) => (a.name! > b.name!) ? 1 : (a.name === b.name) ? ((a.version || 0) > (b.version || 0) ? -1 : 1) : -1).map((product) => (
+                    <TableRow key={product.id}>
+                    <TableCell className="font-medium">
+                        {product.name}
+                    </TableCell>
+                    <TableCell>
+                        <Badge
+                        variant={
+                            product.status === 'Active'
+                            ? 'default'
+                            : 'secondary'
+                        }
+                        >
+                        {product.status}
+                        </Badge>
+                    </TableCell>
+                    <TableCell>v{product.version}</TableCell>
+                    <TableCell>{product.description}</TableCell>
+                    <TableCell>
+                        <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                            aria-haspopup="true"
+                            size="icon"
+                            variant="ghost"
+                            >
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleOpenDialog(product)}>Edit</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleCreateNewVersion(product)}>
+                            Create New Version
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>View History</DropdownMenuItem>
+                        </DropdownMenuContent>
+                        </DropdownMenu>
+                    </TableCell>
+                    </TableRow>
+                ))}
+                </TableBody>
+            </Table>
+           )}
+           {error && <p className="text-destructive">Error loading fare products: {error.message}</p>}
         </CardContent>
       </Card>
       

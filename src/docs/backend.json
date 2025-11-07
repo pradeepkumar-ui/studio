@@ -78,6 +78,18 @@
         "status": { "type": "string", "enum": ["Active", "Draft", "Expired"] }
       },
       "required": ["name", "description", "prefix", "poolSize", "usageType", "expiryDate", "status"]
+    },
+    "fareProduct": {
+      "title": "Fare Product",
+      "description": "Represents a fare product or brand.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Draft"] },
+        "version": { "type": "number" }
+      },
+      "required": ["name", "description", "status", "version"]
     }
   },
   "auth": {
@@ -101,6 +113,12 @@
         "$ref": "#/entities/promotion"
       },
       "description": "Stores promotional code pools and their configurations."
+    },
+    "/fareProducts/{productId}": {
+      "schema": {
+        "$ref": "#/entities/fareProduct"
+      },
+      "description": "Stores fare product (brand) documents."
     }
   }
 }

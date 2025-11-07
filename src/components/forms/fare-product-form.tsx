@@ -24,10 +24,10 @@ import {
 
 const fareProductSchema = z.object({
   id: z.string().optional(),
-  version: z.number().optional(),
   name: z.string().min(3, 'Product name must be at least 3 characters.'),
   description: z.string().min(10, 'Description must be at least 10 characters.'),
   status: z.enum(['Active', 'Draft']),
+  version: z.number().optional(),
 });
 
 export type FareProduct = z.infer<typeof fareProductSchema>;
