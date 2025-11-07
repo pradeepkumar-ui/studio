@@ -48,6 +48,7 @@ import {
   Wrench,
   PlusSquare,
   BadgeCheck,
+  Building,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -93,6 +94,7 @@ const menuItems: MenuItem[] = [
         { href: '/orders', label: 'Order Dashboard', icon: LayoutDashboard },
         { href: '/orders/creation', label: 'Creation', icon: PlusSquare },
         { href: '/orders/finalisation', label: 'Finalisation', icon: BadgeCheck },
+        { href: '/orders/supplier-orders', label: 'Supplier Orders', icon: Building },
         { href: '/orders/service-config', label: 'Service Config', icon: Wrench },
         { href: '/consumption', label: 'Service Consumption', icon: ClipboardCheck },
     ]
