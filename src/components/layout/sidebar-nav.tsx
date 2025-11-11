@@ -114,9 +114,9 @@ const menuItems: MenuItem[] = [
         { href: '/orders/creation', label: 'Creation', icon: PlusSquare },
         { href: '/orders/delivery', label: 'Delivery', icon: Send },
         { href: '/orders/finalisation', label: 'Finalisation & Closure', icon: BadgeCheck },
+        { href: '/orders/servicing', label: 'Servicing', icon: Wrench },
         { href: '/orders/supplier-orders', label: 'Supplier Orders', icon: Building },
         { href: '/orders/large-party', label: 'Large Party Orders', icon: Users },
-        { href: '/orders/servicing', label: 'Servicing', icon: GitBranch },
         { href: '/loyalty', label: 'Loyalty Orders', icon: Award },
     ]
   },
