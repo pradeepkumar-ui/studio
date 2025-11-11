@@ -165,7 +165,11 @@ export default function BundlesPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {Object.entries(bundle.scope || {}).map(([key, value]) => value ? `${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}` : '').filter(Boolean).join('; ')}
+                      <div className="flex flex-wrap gap-1">
+                        {bundle.scope?.brand && <Badge variant="outline">Brand: {bundle.scope.brand}</Badge>}
+                        {bundle.scope?.channel && <Badge variant="outline">Channel: {bundle.scope.channel}</Badge>}
+                        {bundle.scope?.route && <Badge variant="outline">Route: {bundle.scope.route}</Badge>}
+                      </div>
                     </TableCell>
                     <TableCell>{bundle.itemCount}</TableCell>
                     <TableCell>

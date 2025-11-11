@@ -59,13 +59,15 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
       description: '',
       status: 'Draft',
       scope: {
-        brand: 'Flex, Premium',
-        channel: 'Direct',
+        brand: '',
+        channel: '',
+        route: '',
       },
       components: {
-        seat: 'Front',
-        baggage: '15kg',
-        meal: 'Veg'
+        seat: '',
+        baggage: '',
+        meal: '',
+        other: ''
       },
       pricingStrategy: 'Percent Discount',
       discount: 10,
@@ -107,13 +109,14 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
         <Separator className="my-6" />
 
         <h4 className="text-md font-semibold">Scope & Rules</h4>
+        <p className="text-sm text-muted-foreground -mt-2">Define the conditions under which this bundle is available. Use comma-separated values for multiple entries.</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             <FormField
             control={form.control}
             name="scope.brand"
             render={({ field }) => (
                 <FormItem>
-                <FormLabel>Brand</FormLabel>
+                <FormLabel>Fare Brands</FormLabel>
                 <FormControl>
                     <Input placeholder="e.g., Flex, Premium" {...field} />
                 </FormControl>
@@ -126,9 +129,9 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
             name="scope.channel"
             render={({ field }) => (
                 <FormItem>
-                <FormLabel>Channel</FormLabel>
+                <FormLabel>Channels</FormLabel>
                 <FormControl>
-                    <Input placeholder="e.g., Direct" {...field} />
+                    <Input placeholder="e.g., Direct, TMC" {...field} />
                 </FormControl>
                 <FormMessage />
                 </FormItem>
@@ -139,9 +142,9 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
             name="scope.route"
             render={({ field }) => (
                 <FormItem>
-                <FormLabel>Route</FormLabel>
+                <FormLabel>Routes</FormLabel>
                 <FormControl>
-                    <Input placeholder="e.g., JFK-MIA" {...field} />
+                    <Input placeholder="e.g., JFK-MIA, LHR-*" {...field} />
                 </FormControl>
                 <FormMessage />
                 </FormItem>
@@ -158,7 +161,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                 <FormItem>
                 <FormLabel>Seat</FormLabel>
                 <FormControl>
-                    <Input placeholder="e.g., Front" {...field} />
+                    <Input placeholder="e.g., Front, Legroom" {...field} />
                 </FormControl>
                 <FormMessage />
                 </FormItem>
@@ -171,7 +174,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                 <FormItem>
                 <FormLabel>Baggage</FormLabel>
                 <FormControl>
-                    <Input placeholder="e.g., 15kg, 2" {...field} />
+                    <Input placeholder="e.g., 15kg, 23kg" {...field} />
                 </FormControl>
                 <FormMessage />
                 </FormItem>
