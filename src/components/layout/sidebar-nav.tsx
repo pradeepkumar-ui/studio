@@ -101,6 +101,7 @@ const menuItems: MenuItem[] = [
       { href: '/promotions', label: 'Promotions & Products', icon: Gift },
       { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
       { href: '/disruption-waivers', label: 'Disruption Waivers', icon: Waves },
+      { href: '/loyalty-program', label: 'Loyalty Program', icon: Award },
     ],
   },
   {
