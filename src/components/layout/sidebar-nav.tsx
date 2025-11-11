@@ -90,6 +90,7 @@ const menuItems: MenuItem[] = [
       { href: '/optimisation', label: 'Offer Optimisation', icon: Wand2 },
       { href: '/bundles', label: 'Bundles Studio', icon: Package },
       { href: '/fares', label: 'Fare Management', icon: DollarSign },
+      { href: '/pricing/filing', label: 'Fare Filing', icon: FileJson },
       {
         href: '/pricing/ancillary',
         label: 'Ancillary Pricing',
