@@ -70,3 +70,5 @@ export function SeatMap({ selectedSeat, onSeatSelect }: SeatMapProps) {
     </div>
   );
 }
+
+    
