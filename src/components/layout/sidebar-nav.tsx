@@ -258,7 +258,7 @@ export default function SidebarNav() {
                            <Link href={subItem.href}>
                             <SidebarMenuSubButton
                               isActive={
-                                pathname === subItem.href
+                                pathname === subItem.href || (subItem.href !== '/' && pathname.startsWith(subItem.href))
                               }
                             >
                               <subItem.icon className={cn(
