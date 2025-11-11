@@ -110,7 +110,11 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
             </div>
         </div>
         <div className="flex items-center gap-2">
-            <Button variant="outline"><FilePenLine className="mr-2 h-4 w-4"/> Modify Order</Button>
+            <Button variant="outline" asChild>
+              <Link href={`/orders/servicing?orderId=${order.id}`}>
+                <FilePenLine className="mr-2 h-4 w-4"/> Modify Order
+              </Link>
+            </Button>
             <Button variant="destructive"><XCircle className="mr-2 h-4 w-4"/> Cancel Order</Button>
         </div>
       </div>

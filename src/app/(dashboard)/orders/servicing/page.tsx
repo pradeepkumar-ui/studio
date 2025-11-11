@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -42,14 +43,15 @@ const mockOrder: OrderDetails = {
     ]
 };
 
-export default function OrderServicingPage() {
+function OrderServicingComponent() {
+  const searchParams = useSearchParams();
   const [identifier, setIdentifier] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const { toast } = useToast();
 
-  const handleSearch = () => {
-    if (!identifier) {
+  const handleSearch = (searchId: string) => {
+    if (!searchId) {
       toast({ variant: 'destructive', title: 'Error', description: 'Please enter an Order ID or Passenger Name.' });
       return;
     }
@@ -57,14 +59,22 @@ export default function OrderServicingPage() {
     setOrderDetails(null);
     setTimeout(() => {
       // Mock search logic
-      if (identifier.toUpperCase().includes('ORD-073') || identifier.toLowerCase().includes('voyage')) {
+      if (searchId.toUpperCase().includes('ORD-073') || searchId.toLowerCase().includes('voyage')) {
         setOrderDetails(mockOrder);
+        setIdentifier(searchId);
       } else {
-        toast({ title: 'Not Found', description: `No order found for "${identifier}".`});
+        toast({ title: 'Not Found', description: `No order found for "${searchId}".`});
       }
       setIsLoading(false);
     }, 1500);
   };
+  
+  useEffect(() => {
+    const orderIdFromQuery = searchParams.get('orderId');
+    if (orderIdFromQuery) {
+        handleSearch(orderIdFromQuery);
+    }
+  }, [searchParams]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -91,9 +101,9 @@ export default function OrderServicingPage() {
               placeholder="Enter Order ID or Passenger Name (e.g., ORD-073)"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch(identifier)}
             />
-            <Button type="submit" onClick={handleSearch} disabled={isLoading}>
+            <Button type="submit" onClick={() => handleSearch(identifier)} disabled={isLoading}>
               {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
               Find Order
             </Button>
@@ -111,4 +121,12 @@ export default function OrderServicingPage() {
       {orderDetails && <OrderDetailsView order={orderDetails} />}
     </div>
   );
+}
+
+export default function OrderServicingPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <OrderServicingComponent />
+        </Suspense>
+    )
 }
