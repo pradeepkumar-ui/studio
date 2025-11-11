@@ -116,6 +116,7 @@ const menuItems: MenuItem[] = [
         { href: '/orders/supplier-orders', label: 'Supplier Orders', icon: Building },
         { href: '/orders/large-party', label: 'Large Party Orders', icon: Users },
         { href: '/orders/servicing', label: 'Servicing', icon: GitBranch },
+        { href: '/loyalty', label: 'Loyalty Orders', icon: Award },
     ]
   },
   {
@@ -164,7 +165,6 @@ const menuItems: MenuItem[] = [
   },
   { href: '/compliance', label: 'Compliance', icon: Shield },
   { href: '/offer-data', label: 'Data Management', icon: Database },
-  { href: '/loyalty', label: 'Loyalty', icon: Award },
   {
     href: '/inventory',
     label: 'Stock Keeping',
