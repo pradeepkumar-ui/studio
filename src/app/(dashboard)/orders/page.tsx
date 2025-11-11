@@ -182,11 +182,20 @@ export const columns: ColumnDef<Order>[] = [
 ];
 
 export default function OrdersPage() {
-  const [data] = React.useState<Order[]>(mockRecentOrders);
+  const [data, setData] = React.useState<Order[]>(mockRecentOrders);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
+
+  React.useEffect(() => {
+    const newOrderString = sessionStorage.getItem('newly_created_order');
+    if (newOrderString) {
+      const newOrder = JSON.parse(newOrderString);
+      setData(prevData => [newOrder, ...prevData]);
+      sessionStorage.removeItem('newly_created_order');
+    }
+  }, []);
 
   const table = useReactTable({
     data,

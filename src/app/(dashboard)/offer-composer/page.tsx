@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -116,6 +117,7 @@ export default function OfferComposerPage() {
   const [selectedAncillaries, setSelectedAncillaries] = useState<Ancillary[]>([]);
   const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
   const { toast } = useToast();
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof offerSearchSchema>>({
     resolver: zodResolver(offerSearchSchema),
@@ -215,6 +217,30 @@ export default function OfferComposerPage() {
     },
     passengers: [{ id: "P1", type: "ADT" }],
     pricing: { currency: "USD", total: totalOrderPrice },
+  };
+
+  const handleSendToOrderModule = () => {
+    if (!selectedOffer) return;
+    
+    const newOrder = {
+      id: `ORD-${Math.floor(Math.random() * 1000)}`,
+      customer: 'Composed Order Customer',
+      email: 'customer@example.com',
+      status: 'Pending' as const,
+      date: format(new Date(), 'yyyy-MM-dd'),
+      amount: totalOrderPrice,
+    };
+    
+    // In a real app, this would be a proper state management solution like Redux or Zustand
+    // For this simulation, we use sessionStorage
+    sessionStorage.setItem('newly_created_order', JSON.stringify(newOrder));
+    
+    toast({
+      title: "Order Created",
+      description: `Order ${newOrder.id} has been created and is pending processing.`,
+    });
+    
+    router.push('/orders');
   };
 
   return (
@@ -509,7 +535,7 @@ export default function OfferComposerPage() {
                                 <FileJson className="mr-2 h-4 w-4" />
                                 Copy JSON
                             </Button>
-                             <Button className="w-full mt-2" variant="default">
+                             <Button className="w-full mt-2" variant="default" onClick={handleSendToOrderModule}>
                                 Send to Order Module
                             </Button>
                         </div>
