@@ -92,5 +92,3 @@ export function FlightResultCard({ offer, onSelect, isSelected }: FlightResultCa
     </Card>
   );
 }
-
-    
