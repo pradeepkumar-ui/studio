@@ -263,7 +263,15 @@
         "cohortId": { "type": "string" },
         "description": { "type": "string" },
         "status": { "type": "string", "enum": ["Active", "Inactive"] },
-        "definition": { "type": "string", "description": "The logic or rules that define the cohort membership." },
+        "definition": {
+          "type": "object",
+          "properties": {
+            "device": { "type": "string", "enum": ["All", "Mobile", "Desktop"] },
+            "pos": { "type": "string" },
+            "purchaseCount": { "type": "number" },
+            "totalSpend": { "type": "number" }
+          }
+        },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
@@ -326,7 +334,7 @@
         "schema": { "$ref": "#/entities/changeRequest" },
         "description": "Stores change request documents."
     },
-    "/waiverPolicies/{policyId}": {
+     "/waiverPolicies/{policyId}": {
       "schema": { "$ref": "#/entities/waiverPolicy" },
       "description": "Stores waiver policy documents."
     },

@@ -40,11 +40,21 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
 const mockCohorts: Cohort[] = [
-    { id: 'COH-001', name: 'Frequent Mobile Users UAE', cohortId: 'FrequentMobile_UAE', status: 'Active', description: 'Users in UAE with > 10 purchases via mobile app.' },
-    { id: 'COH-002', name: 'Business Travelers India', cohortId: 'BusinessLoyal_IN', status: 'Active', description: 'Users with a corporate email from India who booked business class.' },
-    { id: 'COH-003', name: 'Leisure Summer Bookers EU', cohortId: 'LeisureSummer_EU', status: 'Inactive', description: 'Users from EU countries booking for travel in July/August.' },
-    { id: 'COH-004', name: 'New Users', cohortId: 'NewUsers', status: 'Active', description: 'Users who have made their first booking in the last 30 days.' },
+    { id: 'COH-001', name: 'Frequent Mobile Users UAE', cohortId: 'FrequentMobile_UAE', status: 'Active', description: 'Users in UAE with > 10 purchases via mobile app.', definition: { device: 'Mobile', pos: 'AE', purchaseCount: 10, totalSpend: 0 } },
+    { id: 'COH-002', name: 'Business Travelers India', cohortId: 'BusinessLoyal_IN', status: 'Active', description: 'Users with a corporate email from India who booked business class.', definition: { device: 'All', pos: 'IN', purchaseCount: 1, totalSpend: 1000 } },
+    { id: 'COH-003', name: 'Leisure Summer Bookers EU', cohortId: 'LeisureSummer_EU', status: 'Inactive', description: 'Users from EU countries booking for travel in July/August.', definition: { device: 'All', pos: 'EU', purchaseCount: 0, totalSpend: 0 } },
+    { id: 'COH-004', name: 'New Users', cohortId: 'NewUsers', status: 'Active', description: 'Users who have made their first booking in the last 30 days.', definition: { device: 'All', pos: '', purchaseCount: 1, totalSpend: 0 } },
 ];
+
+const getDefinitionString = (definition: Cohort['definition']) => {
+    if (!definition) return '';
+    const parts: string[] = [];
+    if (definition.pos) parts.push(`POS: ${definition.pos}`);
+    if (definition.device && definition.device !== 'All') parts.push(`Device: ${definition.device}`);
+    if (definition.purchaseCount > 0) parts.push(`Purchases > ${definition.purchaseCount}`);
+    if (definition.totalSpend > 0) parts.push(`Spend > $${definition.totalSpend}`);
+    return parts.join(', ');
+}
 
 export default function CohortsPage() {
   const firestore = useFirestore();
@@ -148,6 +158,7 @@ export default function CohortsPage() {
                   <TableRow>
                     <TableHead>Cohort Name</TableHead>
                     <TableHead>Cohort ID</TableHead>
+                    <TableHead>Definition</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>
                       <span className="sr-only">Actions</span>
@@ -162,6 +173,7 @@ export default function CohortsPage() {
                         <div className="text-xs text-muted-foreground">{cohort.description}</div>
                       </TableCell>
                       <TableCell className="font-mono">{cohort.cohortId}</TableCell>
+                      <TableCell className="text-xs">{getDefinitionString(cohort.definition)}</TableCell>
                       <TableCell>
                         <Badge variant={getStatusBadgeVariant(cohort.status)}>
                           {cohort.status}

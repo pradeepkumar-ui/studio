@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Separator } from '../ui/separator';
 
 const cohortSchema = z.object({
   id: z.string().optional(),
@@ -28,7 +29,12 @@ const cohortSchema = z.object({
   cohortId: z.string().min(3, 'Cohort ID must be at least 3 characters.').regex(/^[A-Z0-9_]+$/, 'Cohort ID can only contain uppercase letters, numbers, and underscores.'),
   description: z.string().min(10, 'A clear description is required.'),
   status: z.enum(['Active', 'Inactive']),
-  definition: z.string().min(10, 'Cohort definition rules are required.'),
+  definition: z.object({
+    device: z.enum(['All', 'Mobile', 'Desktop']).default('All'),
+    pos: z.string().optional(),
+    purchaseCount: z.coerce.number().min(0).default(0),
+    totalSpend: z.coerce.number().min(0).default(0),
+  }),
 });
 
 export type Cohort = z.infer<typeof cohortSchema>;
@@ -47,13 +53,18 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
       cohortId: '',
       description: '',
       status: 'Active',
-      definition: '',
+      definition: {
+        device: 'All',
+        pos: '',
+        purchaseCount: 0,
+        totalSpend: 0,
+      },
     },
   });
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-h-[70vh] overflow-y-auto pr-4">
         <FormField
           control={form.control}
           name="name"
@@ -93,23 +104,76 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="definition"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Definition Rules</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Define the rules for this cohort, e.g., (device = 'mobile') AND (pos = 'AE') AND (purchase_count > 10)"
-                  className="font-mono text-xs"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        
+        <Separator />
+        <h4 className="text-md font-semibold">Definition Rules</h4>
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+              control={form.control}
+              name="definition.device"
+              render={({ field }) => (
+              <FormItem>
+                  <FormLabel>Device Type</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                      <SelectTrigger>
+                      <SelectValue placeholder="Select a device type" />
+                      </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                      <SelectItem value="All">All Devices</SelectItem>
+                      <SelectItem value="Mobile">Mobile</SelectItem>
+                      <SelectItem value="Desktop">Desktop</SelectItem>
+                  </SelectContent>
+                  </Select>
+                  <FormMessage />
+              </FormItem>
+              )}
+          />
+           <FormField
+              control={form.control}
+              name="definition.pos"
+              render={({ field }) => (
+              <FormItem>
+                  <FormLabel>Point of Sale (e.g., AE, IN)</FormLabel>
+                  <FormControl>
+                  <Input placeholder="Leave blank for all" {...field} />
+                  </FormControl>
+                  <FormMessage />
+              </FormItem>
+              )}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+            <FormField
+                control={form.control}
+                name="definition.purchaseCount"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Min. Purchase Count</FormLabel>
+                    <FormControl>
+                    <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="definition.totalSpend"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Min. Total Spend (USD)</FormLabel>
+                    <FormControl>
+                    <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+        </div>
+        <Separator />
+
         <FormField
           control={form.control}
           name="status"
