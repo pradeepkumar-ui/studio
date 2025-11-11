@@ -213,30 +213,6 @@
       },
       "required": ["code", "partnerId", "scope", "capacity", "rbd", "brand", "pricing", "deadlines", "finance", "status"]
     },
-     "series": {
-      "title": "Entitlement Series",
-      "description": "Represents a series of seat entitlements.",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string", "description": "The user-friendly name of the series." },
-        "description": { "type": "string", "description": "A short description of the series." }
-      },
-      "required": ["name", "description"]
-    },
-    "allotment": {
-      "title": "Allotment",
-      "description": "Represents a single seat allotment within a series.",
-      "type": "object",
-      "properties": {
-        "date": { "type": "string", "format": "date" },
-        "capacity": { "type": "number" },
-        "booked": { "type": "number" },
-        "releaseDays": { "type": "number" },
-        "recallDays": { "type": "number" },
-        "nameTtlDays": { "type": "number" }
-      },
-      "required": ["date", "capacity", "booked", "releaseDays", "recallDays", "nameTtlDays"]
-    },
     "changeRequest": {
         "title": "Change Request",
         "description": "Represents a change request for a service configuration.",
@@ -329,14 +305,6 @@
         "$ref": "#/entities/negotiatedSpaceAgreement"
       },
       "description": "Stores negotiated space agreement documents."
-    },
-     "/series/{seriesId}": {
-      "schema": { "$ref": "#/entities/series" },
-      "description": "Stores entitlement series documents."
-    },
-    "/series/{seriesId}/allotments/{allotmentId}": {
-      "schema": { "$ref": "#/entities/allotment" },
-      "description": "Stores individual allotment details for a given series."
     },
     "/changeRequests/{changeRequestId}": {
         "schema": { "$ref": "#/entities/changeRequest" },

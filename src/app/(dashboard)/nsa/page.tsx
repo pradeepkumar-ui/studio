@@ -55,8 +55,8 @@ export default function NsaPage() {
   const firestore = useFirestore();
   const { data: agreementsCollection, loading, error } = useCollection(firestore ? collection(firestore, 'negotiatedSpaceAgreements') : undefined);
   
-  const [agreements, setAgreements] = useState<NegotiatedSpaceAgreement[]>(mockAgreements);
-  const displayAgreements = loading ? mockAgreements : (agreementsCollection as NegotiatedSpaceAgreement[] || agreements);
+  const agreements = agreementsCollection ? agreementsCollection as NegotiatedSpaceAgreement[] : [];
+  const displayAgreements = agreements.length > 0 ? agreements : mockAgreements;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingNsa, setEditingNsa] = useState<NegotiatedSpaceAgreement | null>(null);
