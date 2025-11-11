@@ -24,7 +24,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle, Loader2 } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2, History, GitCommitHorizontal, CheckCircle, Archive, FilePenLine } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -46,6 +46,12 @@ const mockFareProducts: FareProduct[] = [
     { id: 'FP-005', name: 'First Class', description: 'Premium first-class experience.', status: 'Active', version: 1, refundability: 'Allowed', exchangeability: 'Allowed', transferability: 'Allowed' },
 ];
 
+const mockHistory = [
+    { version: 2, actor: 'rm@airline.com', event: 'Price updated', timestamp: '2025-10-26T14:00:00Z', icon: FilePenLine },
+    { version: 1, actor: 'system', event: 'Product activated', timestamp: '2025-10-25T11:06:15Z', icon: CheckCircle },
+    { version: 1, actor: 'pm@airline.com', event: 'Product created', timestamp: '2025-10-25T09:30:00Z', icon: GitCommitHorizontal },
+]
+
 export default function CatalogPage() {
   const firestore = useFirestore();
   const { data: fareProductsCollection, loading, error } = useCollection(firestore ? collection(firestore, 'fareProducts') : undefined);
@@ -54,7 +60,9 @@ export default function CatalogPage() {
   const displayFareProducts = fareProducts.length > 0 ? fareProducts : mockFareProducts;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<FareProduct | null>(null);
+  const [selectedProductForHistory, setSelectedProductForHistory] = useState<FareProduct | null>(null);
   const { toast } = useToast();
   
   const handleOpenDialog = (product: FareProduct | null = null) => {
@@ -112,6 +120,11 @@ export default function CatalogPage() {
             description: e.message || "Could not create new version.",
         });
     }
+  };
+
+  const handleViewHistory = (product: FareProduct) => {
+    setSelectedProductForHistory(product);
+    setIsHistoryDialogOpen(true);
   };
 
 
@@ -194,7 +207,7 @@ export default function CatalogPage() {
                             <DropdownMenuItem onClick={() => handleCreateNewVersion(product)}>
                             Create New Version
                             </DropdownMenuItem>
-                            <DropdownMenuItem>View History</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleViewHistory(product)}>View History</DropdownMenuItem>
                         </DropdownMenuContent>
                         </DropdownMenu>
                     </TableCell>
@@ -220,6 +233,33 @@ export default function CatalogPage() {
             onSubmit={handleFormSubmit}
             onCancel={handleDialogClose}
           />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change History for "{selectedProductForHistory?.name}"</DialogTitle>
+            <DialogDescription>
+                A log of all changes made to this fare product.
+            </DialogDescription>
+          </DialogHeader>
+           <div className="relative pl-6 space-y-6 border-l-2 border-border mt-4">
+                {mockHistory.map((event, index) => (
+                    <div key={index} className="relative">
+                        <div className="absolute -left-[2.0rem] top-0 flex items-center justify-center w-14 h-14 bg-background rounded-full">
+                            <div className="flex items-center justify-center w-10 h-10 rounded-full border-2 bg-secondary">
+                            <event.icon className="h-5 w-5 text-secondary-foreground" />
+                            </div>
+                        </div>
+                        <div className="pl-6">
+                            <p className="font-semibold text-md">{event.event}</p>
+                            <p className="text-sm text-muted-foreground">by {event.actor} (v{event.version})</p>
+                            <p className="text-xs text-muted-foreground mt-1">{new Date(event.timestamp).toUTCString()}</p>
+                        </div>
+                    </div>
+                ))}
+            </div>
         </DialogContent>
       </Dialog>
     </div>
