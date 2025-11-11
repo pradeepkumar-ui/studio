@@ -9,7 +9,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
-  ArrowLeft,
   User,
   CreditCard,
   Plane,
@@ -23,6 +22,8 @@ import {
   FilePenLine,
   XCircle,
   Ticket,
+  Trash2,
+  FileEdit,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -99,8 +100,7 @@ export function OrderDetailsView({ order }: { order: OrderDetails }) {
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Services ({order.services.length})</CardTitle>
                     <div className="flex gap-2">
-                        <Button variant="outline" size="sm">Add Service</Button>
-                        <Button variant="outline" size="sm">Modify Service</Button>
+                        <Button variant="outline" size="sm"><Plus className="mr-2 h-4 w-4"/>Add Service</Button>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -110,6 +110,7 @@ export function OrderDetailsView({ order }: { order: OrderDetails }) {
                                 <TableHead>Service</TableHead>
                                 <TableHead>Details</TableHead>
                                 <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -121,6 +122,14 @@ export function OrderDetailsView({ order }: { order: OrderDetails }) {
                                     </TableCell>
                                     <TableCell>{service.description}</TableCell>
                                     <TableCell><Badge variant="secondary">{service.status}</Badge></TableCell>
+                                    <TableCell className="text-right">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                                            <FileEdit className="h-4 w-4"/>
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                                            <Trash2 className="h-4 w-4"/>
+                                        </Button>
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -201,7 +210,7 @@ export function OrderDetailsView({ order }: { order: OrderDetails }) {
                     <CardTitle>Order Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-2">
-                    <Button variant="outline"><FilePenLine className="mr-2 h-4 w-4"/> Full Order Modification</Button>
+                    <Button variant="outline"><FilePenLine className="mr-2 h-4 w-4"/> Reshop & Re-price</Button>
                     <Button variant="destructive"><XCircle className="mr-2 h-4 w-4"/> Cancel Full Order</Button>
                 </CardContent>
             </Card>
