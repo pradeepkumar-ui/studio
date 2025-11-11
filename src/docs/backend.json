@@ -97,7 +97,8 @@
         "version": { "type": "number" },
         "refundability": { "type": "string", "enum": ["Allowed", "Allowed with Penalty", "Not Allowed"] },
         "exchangeability": { "type": "string", "enum": ["Allowed", "Allowed with Penalty", "Not Allowed"] },
-        "transferability": { "type": "string", "enum": ["Allowed", "Not Allowed"] }
+        "transferability": { "type": "string", "enum": ["Allowed", "Not Allowed"] },
+        "includedAncillaries": { "type": "array", "items": { "type": "string" } }
       },
       "required": ["name", "description", "status", "version", "refundability", "exchangeability", "transferability"]
     },

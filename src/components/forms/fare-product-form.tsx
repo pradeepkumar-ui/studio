@@ -22,6 +22,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '../ui/separator';
+import { Checkbox } from '../ui/checkbox';
+
+const ancillaryOptions = [
+    { id: 'seat_selection', label: 'Seat Selection' },
+    { id: 'checked_bag', label: 'Checked Bag (1st)' },
+    { id: 'priority_boarding', label: 'Priority Boarding' },
+    { id: 'meal_service', label: 'Meal Service' },
+    { id: 'lounge_access', label: 'Lounge Access' },
+    { id: 'flexibility', label: 'Flexibility (Change/Cancel)' },
+] as const;
 
 const fareProductSchema = z.object({
   id: z.string().optional(),
@@ -32,6 +42,7 @@ const fareProductSchema = z.object({
   refundability: z.enum(['Allowed', 'Allowed with Penalty', 'Not Allowed']),
   exchangeability: z.enum(['Allowed', 'Allowed with Penalty', 'Not Allowed']),
   transferability: z.enum(['Allowed', 'Not Allowed']),
+  includedAncillaries: z.array(z.string()).optional(),
 });
 
 export type FareProduct = z.infer<typeof fareProductSchema>;
@@ -52,12 +63,13 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
       refundability: 'Allowed with Penalty',
       exchangeability: 'Allowed with Penalty',
       transferability: 'Not Allowed',
+      includedAncillaries: [],
     },
   });
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-h-[70vh] overflow-y-auto pr-4">
         <FormField
           control={form.control}
           name="name"
@@ -153,6 +165,56 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
                 )}
             />
         </div>
+        
+        <Separator />
+        <FormField
+            control={form.control}
+            name="includedAncillaries"
+            render={() => (
+                <FormItem>
+                    <div>
+                        <FormLabel className="text-base font-semibold">Included Ancillaries</FormLabel>
+                    </div>
+                     <div className="grid grid-cols-2 gap-4 pt-2">
+                        {ancillaryOptions.map((item) => (
+                        <FormField
+                            key={item.id}
+                            control={form.control}
+                            name="includedAncillaries"
+                            render={({ field }) => {
+                            return (
+                                <FormItem
+                                key={item.id}
+                                className="flex flex-row items-start space-x-3 space-y-0"
+                                >
+                                <FormControl>
+                                    <Checkbox
+                                    checked={field.value?.includes(item.id)}
+                                    onCheckedChange={(checked) => {
+                                        return checked
+                                        ? field.onChange([...(field.value || []), item.id])
+                                        : field.onChange(
+                                            field.value?.filter(
+                                                (value) => value !== item.id
+                                            )
+                                            )
+                                    }}
+                                    />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                    {item.label}
+                                </FormLabel>
+                                </FormItem>
+                            )
+                            }}
+                        />
+                        ))}
+                    </div>
+                    <FormMessage />
+                </FormItem>
+            )}
+        />
+
 
         <Separator />
 
