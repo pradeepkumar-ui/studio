@@ -39,11 +39,11 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 const mockFareProducts: FareProduct[] = [
-    { id: 'FP-001', name: 'Economy Light', description: 'Basic economy fare with no checked baggage.', status: 'Active', version: 1 },
-    { id: 'FP-002', name: 'Economy Flex', description: 'Flexible economy fare with seat selection and one checked bag.', status: 'Active', version: 2 },
-    { id: 'FP-003', name: 'Business Saver', description: 'Promotional business class fare with some restrictions.', status: 'Active', version: 1 },
-    { id: 'FP-004', name: 'Business Flex', description: 'Fully flexible business class fare with all benefits.', status: 'Draft', version: 1 },
-    { id: 'FP-005', name: 'First Class', description: 'Premium first-class experience.', status: 'Active', version: 1 },
+    { id: 'FP-001', name: 'Economy Light', description: 'Basic economy fare with no checked baggage.', status: 'Active', version: 1, refundability: 'Not Allowed', exchangeability: 'Allowed with Penalty', transferability: 'Not Allowed' },
+    { id: 'FP-002', name: 'Economy Flex', description: 'Flexible economy fare with seat selection and one checked bag.', status: 'Active', version: 2, refundability: 'Allowed', exchangeability: 'Allowed', transferability: 'Not Allowed' },
+    { id: 'FP-003', name: 'Business Saver', description: 'Promotional business class fare with some restrictions.', status: 'Active', version: 1, refundability: 'Allowed with Penalty', exchangeability: 'Allowed with Penalty', transferability: 'Not Allowed' },
+    { id: 'FP-004', name: 'Business Flex', description: 'Fully flexible business class fare with all benefits.', status: 'Draft', version: 1, refundability: 'Allowed', exchangeability: 'Allowed', transferability: 'Allowed' },
+    { id: 'FP-005', name: 'First Class', description: 'Premium first-class experience.', status: 'Active', version: 1, refundability: 'Allowed', exchangeability: 'Allowed', transferability: 'Allowed' },
 ];
 
 export default function CatalogPage() {
@@ -149,8 +149,8 @@ export default function CatalogPage() {
                 <TableRow>
                     <TableHead>Product Name</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Version</TableHead>
-                    <TableHead className="w-[40%]">Description</TableHead>
+                    <TableHead>Refunds</TableHead>
+                    <TableHead>Exchanges</TableHead>
                     <TableHead>
                     <span className="sr-only">Actions</span>
                     </TableHead>
@@ -160,7 +160,8 @@ export default function CatalogPage() {
                 {displayFareProducts.sort((a, b) => (a.name! > b.name!) ? 1 : (a.name === b.name) ? ((a.version || 0) > (b.version || 0) ? -1 : 1) : -1).map((product) => (
                     <TableRow key={product.id}>
                     <TableCell className="font-medium">
-                        {product.name}
+                        <div>{product.name}</div>
+                        <div className="text-xs text-muted-foreground">v{product.version}</div>
                     </TableCell>
                     <TableCell>
                         <Badge
@@ -173,8 +174,8 @@ export default function CatalogPage() {
                         {product.status}
                         </Badge>
                     </TableCell>
-                    <TableCell>v{product.version}</TableCell>
-                    <TableCell>{product.description}</TableCell>
+                    <TableCell>{product.refundability}</TableCell>
+                    <TableCell>{product.exchangeability}</TableCell>
                     <TableCell>
                         <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -207,7 +208,7 @@ export default function CatalogPage() {
       </Card>
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editingProduct ? 'Edit Fare Product' : 'Create New Fare Product'}</DialogTitle>
             <DialogDescription>

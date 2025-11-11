@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Separator } from '../ui/separator';
 
 const fareProductSchema = z.object({
   id: z.string().optional(),
@@ -28,6 +29,9 @@ const fareProductSchema = z.object({
   description: z.string().min(10, 'Description must be at least 10 characters.'),
   status: z.enum(['Active', 'Draft']),
   version: z.number().optional(),
+  refundability: z.enum(['Allowed', 'Allowed with Penalty', 'Not Allowed']),
+  exchangeability: z.enum(['Allowed', 'Allowed with Penalty', 'Not Allowed']),
+  transferability: z.enum(['Allowed', 'Not Allowed']),
 });
 
 export type FareProduct = z.infer<typeof fareProductSchema>;
@@ -45,6 +49,9 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
       name: '',
       description: '',
       status: 'Draft',
+      refundability: 'Allowed with Penalty',
+      exchangeability: 'Allowed with Penalty',
+      transferability: 'Not Allowed',
     },
   });
 
@@ -77,6 +84,78 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
             </FormItem>
           )}
         />
+        <Separator />
+        <h4 className="text-md font-semibold">Service Terms</h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <FormField
+                control={form.control}
+                name="refundability"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Refundability</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a rule" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                        <SelectItem value="Allowed">Allowed</SelectItem>
+                        <SelectItem value="Allowed with Penalty">Allowed with Penalty</SelectItem>
+                        <SelectItem value="Not Allowed">Not Allowed</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="exchangeability"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Exchangeability</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a rule" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                        <SelectItem value="Allowed">Allowed</SelectItem>
+                        <SelectItem value="Allowed with Penalty">Allowed with Penalty</SelectItem>
+                        <SelectItem value="Not Allowed">Not Allowed</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
+             <FormField
+                control={form.control}
+                name="transferability"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Transferability</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a rule" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                        <SelectItem value="Allowed">Allowed</SelectItem>
+                        <SelectItem value="Not Allowed">Not Allowed</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
+        </div>
+
+        <Separator />
+
         <FormField
           control={form.control}
           name="status"
