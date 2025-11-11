@@ -95,7 +95,6 @@ const menuItems: MenuItem[] = [
         label: 'Ancillary Pricing',
         icon: Container,
       },
-       { href: '/pricing/seat', label: 'Seat Pricing', icon: Armchair },
        { href: '/pricing/rules', label: 'Dynamic Pricing', icon: Target },
       { href: '/promotions', label: 'Promotions & Products', icon: Gift },
       { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
