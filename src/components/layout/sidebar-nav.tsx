@@ -161,7 +161,6 @@ const menuItems: MenuItem[] = [
   },
   { href: '/compliance', label: 'Compliance', icon: Shield },
   { href: '/offer-data', label: 'Data Management', icon: Database },
-  { href: '/content', label: 'Content Management', icon: Palette },
   { href: '/loyalty', label: 'Loyalty', icon: Award },
   {
     href: '/inventory',
