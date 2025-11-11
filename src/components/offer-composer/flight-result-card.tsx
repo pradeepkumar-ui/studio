@@ -4,6 +4,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { PlaneTakeoff, PlaneLanding, Dot, Briefcase, ChevronRight } from 'lucide-react';
+import { Badge } from '../ui/badge';
+import { cn } from '@/lib/utils';
 
 export type FlightOffer = {
   id: string;
@@ -18,15 +20,21 @@ export type FlightOffer = {
   currency: string;
   cabinClass: string;
   includedBaggage: string;
+  brand: string;
 };
 
 interface FlightResultCardProps {
   offer: FlightOffer;
+  onSelect: (offer: FlightOffer) => void;
+  isSelected: boolean;
 }
 
-export function FlightResultCard({ offer }: FlightResultCardProps) {
+export function FlightResultCard({ offer, onSelect, isSelected }: FlightResultCardProps) {
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className={cn(
+      "hover:shadow-md transition-shadow",
+      isSelected && "ring-2 ring-primary"
+    )}>
       <CardContent className="p-4">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
           {/* Flight Details */}
@@ -58,6 +66,8 @@ export function FlightResultCard({ offer }: FlightResultCardProps) {
                 <span>{offer.airline}</span>
                 <Dot />
                 <span>{offer.cabinClass}</span>
+                <Dot />
+                <Badge variant="outline">{offer.brand}</Badge>
             </div>
           </div>
 
@@ -72,8 +82,8 @@ export function FlightResultCard({ offer }: FlightResultCardProps) {
                 <span>{offer.includedBaggage}</span>
               </div>
             </div>
-            <Button size="lg" className="w-full md:w-auto">
-              Select Offer
+            <Button size="lg" className="w-full md:w-auto" onClick={() => onSelect(offer)} disabled={isSelected}>
+              {isSelected ? 'Selected' : 'Select'}
               <ChevronRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
