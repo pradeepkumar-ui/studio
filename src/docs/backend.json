@@ -253,6 +253,21 @@
         "channel": { "type": "string" }
       },
       "required": ["brandName", "mappedClasses", "channel"]
+    },
+    "cohort": {
+      "title": "Customer Cohort",
+      "description": "Represents a defined customer segment for personalization.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "cohortId": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Inactive"] },
+        "definition": { "type": "string", "description": "The logic or rules that define the cohort membership." },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "cohortId", "description", "status", "definition"]
     }
   },
   "auth": {
@@ -318,6 +333,10 @@
     "/fareBrandMappings/{mappingId}": {
       "schema": { "$ref": "#/entities/fareBrandMap" },
       "description": "Stores fare brand to booking class mappings."
+    },
+    "/cohorts/{cohortId}": {
+      "schema": { "$ref": "#/entities/cohort" },
+      "description": "Stores customer cohort definitions."
     }
   }
 }
