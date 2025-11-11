@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -8,9 +9,14 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Briefcase, Users, Plane, Clock } from 'lucide-react';
+import { Briefcase, Users, Plane, Clock, PlusCircle } from 'lucide-react';
+import { Button } from '../ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
+import { TriggerWaiverForm, type ActiveWaiver } from '../forms/trigger-waiver-form';
+import { useToast } from '@/hooks/use-toast';
+import { type WaiverPolicy } from '../forms/waiver-policy-form';
 
-const activeWaivers = [
+const initialWaivers: ActiveWaiver[] = [
     {
         id: 'WX-2025-DEL',
         name: 'Storm DEL',
@@ -43,6 +49,12 @@ const activeWaivers = [
     },
 ];
 
+const mockPolicies: WaiverPolicy[] = [
+    { id: 'WXP-GEN-WEATHER', name: 'General Weather Waiver', eventType: 'Weather', rulesWaived: 'change_fee, no_show_penalty', fareDifferencePolicy: 'Match or Lower', status: 'Published', routes: 'All' },
+    { id: 'WXP-SC-MAJOR', name: 'Major Schedule Change (>4h)', eventType: 'Schedule Change', rulesWaived: 'change_fee, refund_penalty', fareDifferencePolicy: 'None', status: 'Published', routes: 'All' },
+    { id: 'WXP-CX-DOM', name: 'Domestic Cancellation', eventType: 'Cancellation', rulesWaived: 'change_fee', fareDifferencePolicy: 'Cap at 100 USD', status: 'Published', routes: 'Domestic' },
+];
+
 
 const getStatusBadgeVariant = (status: string) => {
     switch(status) {
@@ -53,13 +65,39 @@ const getStatusBadgeVariant = (status: string) => {
 }
 
 export function ActiveWaiversDashboard() {
+  const [activeWaivers, setActiveWaivers] = useState<ActiveWaiver[]>(initialWaivers);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { toast } = useToast();
+
+  const handleFormSubmit = (data: Omit<ActiveWaiver, 'id' | 'repriced' | 'eligiblePax'>) => {
+    const newWaiver: ActiveWaiver = {
+        ...data,
+        id: `EVT-${Math.floor(Math.random() * 1000)}`,
+        eligiblePax: 0,
+        repriced: 0,
+    };
+    setActiveWaivers([newWaiver, ...activeWaivers]);
+    toast({
+        title: 'Waiver Activated',
+        description: `The waiver "${data.name}" is now active.`
+    });
+    setIsDialogOpen(false);
+  }
+
   return (
+    <>
     <Card>
-        <CardHeader>
-            <CardTitle>Active Disruption Waivers</CardTitle>
-            <CardDescription>
-                Live summary of all currently triggered waivers and their impact.
-            </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+                <CardTitle>Active Disruption Waivers</CardTitle>
+                <CardDescription>
+                    Live summary of all currently triggered waivers and their impact.
+                </CardDescription>
+            </div>
+             <Button onClick={() => setIsDialogOpen(true)}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Trigger Waiver
+            </Button>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {activeWaivers.map((waiver) => (
@@ -99,5 +137,22 @@ export function ActiveWaiversDashboard() {
             ))}
         </CardContent>
     </Card>
+
+     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Trigger New Disruption Waiver</DialogTitle>
+            <DialogDescription>
+                Activate a waiver policy for a new disruption event.
+            </DialogDescription>
+          </DialogHeader>
+          <TriggerWaiverForm
+            policies={mockPolicies}
+            onSubmit={handleFormSubmit}
+            onCancel={() => setIsDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
