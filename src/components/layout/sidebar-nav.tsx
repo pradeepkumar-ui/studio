@@ -122,14 +122,14 @@ const menuItems: MenuItem[] = [
   },
   { href: '/campaigns', label: 'Campaign Management', icon: Megaphone },
   {
-    href: '/check-in',
-    label: 'Order Delivery',
+    href: '/delivery-fulfilment',
+    label: 'Delivery & Fulfilment',
     icon: Truck,
     subItems: [
         { href: '/check-in', label: 'Check-in', icon: UserCheck },
         { href: '/boarding', label: 'Boarding Gate', icon: PlaneTakeoff },
         { href: '/orders/ground-handling', label: 'Ground Handling', icon: Truck },
-        { href: '/consumption', label: 'Service Consumption', icon: ClipboardCheck },
+        { href: '/service-consumption', label: 'Service Consumption', icon: ClipboardCheck },
         { href: '/communication', label: 'Communication', icon: MessageSquare },
         { href: '/documentation', label: 'Documentation', icon: FileText },
     ]
@@ -214,8 +214,8 @@ export default function SidebarNav() {
       return pathname.startsWith('/settings') || pathname.startsWith('/broker') || pathname.startsWith('/offer-construction-settings');
   }
   
-  const isOrderDeliveryActive = () => {
-    return pathname.startsWith('/check-in') || pathname.startsWith('/boarding') || pathname.startsWith('/consumption') || pathname.startsWith('/documentation') || pathname.startsWith('/communication') || pathname.startsWith('/orders/ground-handling');
+  const isDeliveryFulfilmentActive = () => {
+    return pathname.startsWith('/check-in') || pathname.startsWith('/boarding') || pathname.startsWith('/service-consumption') || pathname.startsWith('/documentation') || pathname.startsWith('/communication') || pathname.startsWith('/orders/ground-handling');
   }
   
   const isOrchestrationActive = () => {
@@ -240,12 +240,12 @@ export default function SidebarNav() {
             item.subItems ? (
               <SidebarMenuItem key={item.label} asChild>
                 <SidebarMenuCollapsible
-                  defaultOpen={isSubItemActive(item.subItems) || (item.href === '/catalog' && isSubItemActive(item.subItems)) || (item.href === '/inventory' && isSubItemActive(item.subItems)) || (item.label === 'Analytics & AI' && isAnalyticsActive()) || (item.label === 'Accounting' && isAccountingActive()) || (item.label === 'Order Delivery' && isOrderDeliveryActive()) || (item.label === 'Orchestration' && isOrchestrationActive())}
+                  defaultOpen={isSubItemActive(item.subItems) || (item.href === '/catalog' && isSubItemActive(item.subItems)) || (item.href === '/inventory' && isSubItemActive(item.subItems)) || (item.label === 'Analytics & AI' && isAnalyticsActive()) || (item.label === 'Accounting' && isAccountingActive()) || (item.label === 'Delivery & Fulfilment' && isDeliveryFulfilmentActive()) || (item.label === 'Orchestration' && isOrchestrationActive())}
                 >
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton
                       className="group/c-trigger"
-                      isActive={isSubItemActive(item.subItems) || (item.label === 'Analytics & AI' && isAnalyticsActive()) || (item.label === 'Accounting' && isAccountingActive()) || (item.label === 'Order Delivery' && isOrderDeliveryActive()) || (item.label === 'Orchestration' && isOrchestrationActive())}
+                      isActive={isSubItemActive(item.subItems) || (item.label === 'Analytics & AI' && isAnalyticsActive()) || (item.label === 'Accounting' && isAccountingActive()) || (item.label === 'Delivery & Fulfilment' && isDeliveryFulfilmentActive()) || (item.label === 'Orchestration' && isOrchestrationActive())}
                       tooltip={{ children: item.label, side: 'right' }}
                     >
                       <item.icon />
