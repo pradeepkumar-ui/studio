@@ -40,16 +40,16 @@ import { StockItemForm, type StockItem } from '@/components/forms/stock-item-for
 
 
 const initialStockItems: StockItem[] = [
-  { sku: 'MEAL_VG_01', category: 'Meals', supplier: 'SkyCaterers', available: 125, reserved: 20, threshold: 50 },
-  { sku: 'SEAT_KIT_01', category: 'Amenity Kits', supplier: 'AirComfort', available: 45, reserved: 5, threshold: 50 },
-  { sku: 'VOUCH_WIFI_24H', category: 'Vouchers', supplier: 'Internal', available: 980, reserved: 15, threshold: 200 },
-  { sku: 'LOUNGE_LHR_01', category: 'Lounge Access', supplier: 'Global Lounges', available: 18, reserved: 2, threshold: 20 },
-  { sku: 'MERCH_MUG_01', category: 'Merchandise', supplier: 'AirShop', available: 0, reserved: 0, threshold: 10 },
-  { sku: 'BAG_23KG_01', category: 'Baggage', supplier: 'Internal', available: 9999, reserved: 250, threshold: 0 },
-  { sku: 'SEAT_XL_01', category: 'Seats', supplier: 'Internal', available: 80, reserved: 12, threshold: 10 },
-  { sku: 'MEAL_KSML_01', category: 'Meals', supplier: 'KosherCaterers', available: 3, reserved: 1, threshold: 5 },
-  { sku: 'VOUCH_DRINK_01', category: 'Vouchers', supplier: 'Internal', available: 500, reserved: 30, threshold: 100 },
-  { sku: 'MERCH_MODEL_A380', category: 'Merchandise', supplier: 'AirShop', available: 25, reserved: 2, threshold: 10 },
+  { sku: 'MEAL_VG_01', category: 'Meals', supplier: 'SkyCaterers', available: 125, reserved: 20, threshold: 50, status: 'In Stock' },
+  { sku: 'SEAT_KIT_01', category: 'Amenity Kits', supplier: 'AirComfort', available: 45, reserved: 5, threshold: 50, status: 'Low Stock' },
+  { sku: 'VOUCH_WIFI_24H', category: 'Vouchers', supplier: 'Internal', available: 980, reserved: 15, threshold: 200, status: 'In Stock' },
+  { sku: 'LOUNGE_LHR_01', category: 'Lounge Access', supplier: 'Global Lounges', available: 18, reserved: 2, threshold: 20, status: 'Low Stock' },
+  { sku: 'MERCH_MUG_01', category: 'Merchandise', supplier: 'AirShop', available: 0, reserved: 0, threshold: 10, status: 'Out of Stock' },
+  { sku: 'BAG_23KG_01', category: 'Baggage', supplier: 'Internal', available: 9999, reserved: 250, threshold: 0, status: 'In Stock' },
+  { sku: 'SEAT_XL_01', category: 'Seats', supplier: 'Internal', available: 80, reserved: 12, threshold: 10, status: 'In Stock' },
+  { sku: 'MEAL_KSML_01', category: 'Meals', supplier: 'KosherCaterers', available: 3, reserved: 1, threshold: 5, status: 'Low Stock' },
+  { sku: 'VOUCH_DRINK_01', category: 'Vouchers', supplier: 'Internal', available: 500, reserved: 30, threshold: 100, status: 'In Stock' },
+  { sku: 'MERCH_MODEL_A380', category: 'Merchandise', supplier: 'AirShop', available: 25, reserved: 2, threshold: 10, status: 'In Stock' },
 ];
 
 const kpiData = [
@@ -76,7 +76,7 @@ const getStatusBadgeVariant = (status: StockItem['status']) => {
 
 
 export default function StockKeeperPage() {
-  const [stockItems, setStockItems] = useState<Omit<StockItem, 'status'>[]>(initialStockItems);
+  const [stockItems, setStockItems] = useState<StockItem[]>(initialStockItems);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<StockItem | null>(null);
   const { toast } = useToast();
