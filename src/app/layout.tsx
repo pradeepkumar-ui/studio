@@ -3,7 +3,6 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
 import AppLayout from '@/components/layout/app-layout';
-import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
   title: 'Offers & Orders System Design (OOSD)',
@@ -31,9 +30,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
-          <AppLayout>
-            {children}
-          </AppLayout>
+          <AppLayout>{children}</AppLayout>
           <Toaster />
         </FirebaseClientProvider>
       </body>
