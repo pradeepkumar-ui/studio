@@ -38,10 +38,10 @@ import { useToast } from '@/hooks/use-toast';
 import { PricingRuleForm, type PricingRule } from '@/components/forms/pricing-rule-form';
 
 const initialRules: PricingRule[] = [
-  { id: 'dp-001', name: 'Weekend Surge - LHR-JFK', conditions: 'Route: LHR-JFK, Day: Fri-Sun, Load Factor > 80%', action: '+10% on Business', status: 'Active' },
+  { id: 'dp-001', name: 'Weekend Surge - LHR-JFK', conditions: 'Route: LHR-JFK, Load Factor > 80%', action: '+10% on Business', status: 'Active' },
   { id: 'dp-002', name: 'Last Minute - Domestic', conditions: 'Departure < 48h, Market: US-DOM', action: '+25% on Economy', status: 'Active' },
-  { id: 'dp-003', name: 'Competitor Match - SIN-HKG', conditions: 'Competitor Price < Own, Route: SIN-HKG', action: 'Match Competitor -5%', status: 'Test' },
-  { id: 'dp-004', name: 'Low Demand - Off-peak EU', conditions: 'Load Factor < 50%, Market: EU, Day: Tue-Wed', action: '-15% on all classes', status: 'Active' },
+  { id: 'dp-003', name: 'Competitor Match - SIN-HKG', conditions: 'Route: SIN-HKG', action: '-5% on All', status: 'Test' },
+  { id: 'dp-004', name: 'Low Demand - Off-peak EU', conditions: 'Load Factor < 50%, Market: EU', action: '-15% on All', status: 'Active' },
   { id: 'dp-005', name: 'Holiday Blackout', conditions: 'Date range: 20-Dec to 05-Jan', action: 'Disable all discounts', status: 'Inactive' },
 ];
 
