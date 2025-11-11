@@ -66,6 +66,7 @@ import {
   Truck,
   GitBranch,
   Target,
+  Megaphone,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -119,6 +120,7 @@ const menuItems: MenuItem[] = [
         { href: '/loyalty', label: 'Loyalty Orders', icon: Award },
     ]
   },
+  { href: '/campaigns', label: 'Campaign Management', icon: Megaphone },
   {
     href: '/check-in',
     label: 'Order Delivery',
