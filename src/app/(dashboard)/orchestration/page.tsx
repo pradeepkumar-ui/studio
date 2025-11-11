@@ -25,22 +25,28 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle, UploadCloud, GitBranch } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, UploadCloud, GitBranch, Loader2 } from 'lucide-react';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection, Timestamp } from 'firebase/firestore';
+import Link from 'next/link';
 
-const kpiData = [
-  { title: 'Pending Approvals', value: '4' },
-  { title: 'Published Today', value: '2' },
-  { title: 'Rollbacks Executed', value: '1' },
-  { title: 'Sync Health', value: '100%' },
-];
+type ChangeRequest = {
+  id: string;
+  module: string;
+  description: string;
+  requestedBy: string;
+  status: 'Draft' | 'Under Review' | 'Approved' | 'Published' | 'Rolled Back';
+  createdAt: Timestamp;
+};
 
-const recentChanges = [
+const mockChanges: ChangeRequest[] = [
   {
     id: 'CR-1029',
     module: 'Seat Services',
     description: 'Updated pricing for exit-row seats',
     requestedBy: 'rm@airline.com',
     status: 'Approved',
+    createdAt: new Timestamp(Math.floor(Date.now() / 1000) - 3600, 0)
   },
   {
     id: 'CR-1028',
@@ -48,6 +54,7 @@ const recentChanges = [
     description: 'Added "Priority Boarding" bundle',
     requestedBy: 'pm@airline.com',
     status: 'Published',
+     createdAt: new Timestamp(Math.floor(Date.now() / 1000) - 7200, 0)
   },
   {
     id: 'CR-1027',
@@ -55,6 +62,7 @@ const recentChanges = [
     description: 'Rolled back Q4 point valuation table',
     requestedBy: 'system',
     status: 'Rolled Back',
+     createdAt: new Timestamp(Math.floor(Date.now() / 1000) - 10800, 0)
   },
   {
     id: 'CR-1026',
@@ -62,15 +70,10 @@ const recentChanges = [
     description: 'New rule for LHR-JFK weekend surge',
     requestedBy: 'rm@airline.com',
     status: 'Under Review',
-  },
-  {
-    id: 'CR-1025',
-    module: 'Fare Products',
-    description: 'New "Economy Light" brand for domestic routes',
-    requestedBy: 'pm@airline.com',
-    status: 'Draft',
+     createdAt: new Timestamp(Math.floor(Date.now() / 1000) - 14400, 0)
   },
 ];
+
 
 const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -83,7 +86,19 @@ const getStatusBadgeVariant = (status: string) => {
     }
 }
 
-export default function OrchestrationPage() {
+export default function OrchestrationDashboardPage() {
+  const firestore = useFirestore();
+  const { data: changeRequestsCollection, loading, error } = useCollection(firestore ? collection(firestore, 'changeRequests') : undefined);
+
+  const changeRequests = changeRequestsCollection ? (changeRequestsCollection as ChangeRequest[]).sort((a,b) => b.createdAt.seconds - a.createdAt.seconds) : mockChanges;
+  
+  const kpiData = [
+    { title: 'Pending Approvals', value: changeRequests.filter(cr => cr.status === 'Under Review').length },
+    { title: 'Published Today', value: '2' },
+    { title: 'Rollbacks Executed', value: '1' },
+    { title: 'Sync Health', value: '100%' },
+  ];
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -100,9 +115,11 @@ export default function OrchestrationPage() {
             <GitBranch className="mr-2" />
             View Dependencies
           </Button>
-          <Button>
-            <PlusCircle className="mr-2" />
-            Create Change Request
+          <Button asChild>
+            <Link href="/orchestration/create">
+                <PlusCircle className="mr-2" />
+                Create Change Request
+            </Link>
           </Button>
         </div>
       </div>
@@ -134,57 +151,63 @@ export default function OrchestrationPage() {
             </Button>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Change ID</TableHead>
-                <TableHead>Module</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Requested By</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recentChanges.map((cr) => (
-                <TableRow key={cr.id}>
-                  <TableCell className="font-medium font-mono">{cr.id}</TableCell>
-                  <TableCell>{cr.module}</TableCell>
-                  <TableCell>{cr.description}</TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusBadgeVariant(cr.status)}>{cr.status}</Badge>
-                  </TableCell>
-                  <TableCell>{cr.requestedBy}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          aria-haspopup="true"
-                          size="icon"
-                          variant="ghost"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>View Details</DropdownMenuItem>
-                        <DropdownMenuItem>Approve</DropdownMenuItem>
-                         <DropdownMenuItem>View Impact</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">
-                          Reject
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          {loading ? (
+             <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+             </div>
+           ) : error ? (
+              <p className="text-destructive text-center">Error loading change requests.</p>
+           ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Module</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Requested By</TableHead>
+                  <TableHead>
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {changeRequests.map((cr) => (
+                  <TableRow key={cr.id}>
+                    <TableCell className="font-medium">{cr.module}</TableCell>
+                    <TableCell>{cr.description}</TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeVariant(cr.status)}>{cr.status}</Badge>
+                    </TableCell>
+                    <TableCell>{cr.requestedBy}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            aria-haspopup="true"
+                            size="icon"
+                            variant="ghost"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem>View Details</DropdownMenuItem>
+                          <DropdownMenuItem>Approve</DropdownMenuItem>
+                          <DropdownMenuItem>View Impact</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-destructive">
+                            Reject
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+           )}
         </CardContent>
       </Card>
     </div>

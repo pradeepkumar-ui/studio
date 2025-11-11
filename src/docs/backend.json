@@ -233,6 +233,21 @@
         "nameTtlDays": { "type": "number" }
       },
       "required": ["date", "capacity", "booked", "releaseDays", "recallDays", "nameTtlDays"]
+    },
+    "changeRequest": {
+        "title": "Change Request",
+        "description": "Represents a change request for a service configuration.",
+        "type": "object",
+        "properties": {
+            "module": { "type": "string" },
+            "description": { "type": "string" },
+            "requestedBy": { "type": "string" },
+            "status": { "type": "string", "enum": ["Draft", "Under Review", "Approved", "Published", "Rolled Back"] },
+            "notes": { "type": "string" },
+            "createdAt": { "type": "string", "format": "date-time" },
+            "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["module", "description", "requestedBy", "status"]
     }
   },
   "auth": {
@@ -294,6 +309,10 @@
     "/series/{seriesId}/allotments/{allotmentId}": {
       "schema": { "$ref": "#/entities/allotment" },
       "description": "Stores individual allotment details for a given series."
+    },
+    "/changeRequests/{changeRequestId}": {
+        "schema": { "$ref": "#/entities/changeRequest" },
+        "description": "Stores change request documents."
     }
   }
 }
