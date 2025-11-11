@@ -65,6 +65,7 @@ import {
   PlaneTakeoff,
   Truck,
   GitBranch,
+  Target,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -95,6 +96,7 @@ const menuItems: MenuItem[] = [
         icon: Container,
       },
        { href: '/pricing/seat', label: 'Seat Pricing', icon: Armchair },
+       { href: '/pricing/rules', label: 'Dynamic Pricing', icon: Target },
       { href: '/promotions', label: 'Promotions & Products', icon: Gift },
       { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
       { href: '/disruption-waivers', label: 'Disruption Waivers', icon: Waves },

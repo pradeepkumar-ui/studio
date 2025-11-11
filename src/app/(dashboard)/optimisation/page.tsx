@@ -11,6 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OptimisationDashboard } from '@/components/optimisation/dashboard';
 import { RecommendationsQueue } from '@/components/optimisation/recommendations-queue';
 import { ABTestCentre } from '@/components/optimisation/ab-test-centre';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function OptimisationPage() {
   return (
@@ -49,13 +51,14 @@ export default function OptimisationPage() {
             <CardHeader>
               <CardTitle>Rules & Guardrails</CardTitle>
               <CardDescription>
-                Configure deterministic policies and global caps.
+                Configure deterministic policies and global caps that govern the optimisation engine. This includes dynamic pricing rules.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <p>Rule and guardrail configuration will be managed here.</p>
-              </div>
+            <CardContent className="text-center py-12">
+              <p className="text-muted-foreground mb-4">Manage all dynamic pricing rules from the central console.</p>
+              <Button asChild>
+                <Link href="/pricing/rules">Go to Dynamic Pricing Rules</Link>
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
