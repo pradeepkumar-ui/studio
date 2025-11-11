@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   ChevronsUpDown,
   MoreHorizontal,
@@ -96,6 +97,7 @@ const mockOffers: Offer[] = [
 
 
 export default function OffersPage() {
+  const router = useRouter();
   const firestore = useFirestore();
   const { data: firestoreData, loading, error } = useCollection(firestore ? collection(firestore, 'offers') : undefined);
 
@@ -114,19 +116,6 @@ export default function OffersPage() {
       }
     }
   }, [firestoreData, loading]);
-
-  const handleSimulate = () => {
-    toast({
-      title: 'Simulation Engine Initialized',
-      description: 'Running multi-scenario offer simulations...',
-    });
-    setTimeout(() => {
-      toast({
-        title: 'Simulation Complete',
-        description: 'Optimal offer strategies have been identified.',
-      });
-    }, 3000);
-  };
   
   const handleOpenDialog = (offer: Offer | null = null) => {
     setEditingOffer(offer);
@@ -225,7 +214,7 @@ export default function OffersPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleSimulate}>
+          <Button variant="outline" onClick={() => router.push('/offers/simulation')}>
             <BarChartHorizontal className="mr-2" />
             Run Simulation
           </Button>
