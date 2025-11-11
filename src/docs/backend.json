@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "fare": {
@@ -110,9 +109,9 @@
         "scope": {
           "type": "object",
           "properties": {
-            "brand": { "type": "string" },
-            "channel": { "type": "string" },
-            "route": { "type": "string" }
+            "brand": { "type": "array", "items": { "type": "string" } },
+            "channel": { "type": "array", "items": { "type": "string" } },
+            "route": { "type": "array", "items": { "type": "string" } }
           }
         },
         "components": {
@@ -182,8 +181,8 @@
           }
         },
         "capacity": { "type": "number" },
-        "rbd": { "type": "string" },
-        "brand": { "type": "string" },
+        "rbd": { "type": "array", "items": { "type": "string" } },
+        "brand": { "type": "array", "items": { "type": "string" } },
         "pricing": {
           "type": "object",
           "properties": {
@@ -249,6 +248,31 @@
             "updatedAt": { "type": "string", "format": "date-time" }
         },
         "required": ["module", "description", "requestedBy", "status"]
+    },
+     "waiverPolicy": {
+      "title": "Waiver Policy",
+      "description": "A template for disruption waivers.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "eventType": { "type": "string" },
+        "routes": { "type": "string" },
+        "rulesWaived": { "type": "array", "items": { "type": "string" } },
+        "fareDifferencePolicy": { "type": "string" },
+        "status": { "type": "string", "enum": ["Draft", "Approved", "Published", "Archived"] }
+      },
+      "required": ["name", "eventType", "routes", "rulesWaived", "fareDifferencePolicy", "status"]
+    },
+    "fareBrandMap": {
+      "title": "Fare Brand Mapping",
+      "description": "Maps a fare brand to a set of booking classes.",
+      "type": "object",
+      "properties": {
+        "brandName": { "type": "string" },
+        "mappedClasses": { "type": "array", "items": { "type": "string" } },
+        "channel": { "type": "string" }
+      },
+      "required": ["brandName", "mappedClasses", "channel"]
     }
   },
   "auth": {
@@ -314,6 +338,14 @@
     "/changeRequests/{changeRequestId}": {
         "schema": { "$ref": "#/entities/changeRequest" },
         "description": "Stores change request documents."
+    },
+    "/waiverPolicies/{policyId}": {
+      "schema": { "$ref": "#/entities/waiverPolicy" },
+      "description": "Stores waiver policy documents."
+    },
+    "/fareBrandMappings/{mappingId}": {
+      "schema": { "$ref": "#/entities/fareBrandMap" },
+      "description": "Stores fare brand to booking class mappings."
     }
   }
 }

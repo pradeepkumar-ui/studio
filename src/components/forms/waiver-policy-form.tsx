@@ -20,17 +20,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '../ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const eventTypes = ['Cancellation', 'Delay', 'Weather', 'Schedule Change', 'Overbooking'] as const;
 const fareDiffPolicies = ['None', 'Match or Lower', 'Cap at 100 USD', 'Cap at 500 USD'] as const;
+
+const rulesToWaive = [
+    { id: 'change_fee', label: 'Change Fee' },
+    { id: 'refund_penalty', label: 'Refund Penalty' },
+    { id: 'no_show_penalty', label: 'No-Show Penalty' },
+    { id: 'min_stay', label: 'Minimum Stay' },
+] as const;
+
 
 const waiverPolicySchema = z.object({
   id: z.string().optional(),
   name: z.string().min(5, 'Policy name is required.'),
   eventType: z.enum(eventTypes),
   routes: z.string().min(3, 'Route is required.'),
-  rulesWaived: z.string().min(3, 'At least one rule must be specified.'),
+  rulesWaived: z.array(z.string()).min(1, 'At least one rule must be selected.'),
   fareDifferencePolicy: z.enum(fareDiffPolicies),
   status: z.enum(['Draft', 'Approved', 'Published', 'Archived']),
 });
@@ -50,7 +58,7 @@ export function WaiverPolicyForm({ policy, onSubmit, onCancel }: WaiverPolicyFor
       name: '',
       eventType: 'Weather',
       routes: '',
-      rulesWaived: 'change_fee, no_show_penalty',
+      rulesWaived: ['change_fee'],
       fareDifferencePolicy: 'Match or Lower',
       status: 'Draft',
     },
@@ -100,7 +108,7 @@ export function WaiverPolicyForm({ policy, onSubmit, onCancel }: WaiverPolicyFor
                 <FormItem>
                 <FormLabel>Affected Routes</FormLabel>
                 <FormControl>
-                    <Input placeholder="e.g., LHR-FRA, LHR-CDG" {...field} />
+                    <Input placeholder="e.g., LHR-FRA, LHR-CDG, or 'ALL'" {...field} />
                 </FormControl>
                 <FormMessage />
                 </FormItem>
@@ -108,17 +116,51 @@ export function WaiverPolicyForm({ policy, onSubmit, onCancel }: WaiverPolicyFor
             />
         </div>
         <FormField
-          control={form.control}
-          name="rulesWaived"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Rules to be Waived (comma-separated)</FormLabel>
-              <FormControl>
-                <Textarea placeholder="e.g., change_fee, refund_penalty, min_stay" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+            control={form.control}
+            name="rulesWaived"
+            render={() => (
+                <FormItem>
+                    <div className="mb-4">
+                        <FormLabel>Rules to be Waived</FormLabel>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                    {rulesToWaive.map((item) => (
+                        <FormField
+                        key={item.id}
+                        control={form.control}
+                        name="rulesWaived"
+                        render={({ field }) => {
+                            return (
+                            <FormItem
+                                key={item.id}
+                                className="flex flex-row items-start space-x-3 space-y-0"
+                            >
+                                <FormControl>
+                                <Checkbox
+                                    checked={field.value?.includes(item.id)}
+                                    onCheckedChange={(checked) => {
+                                    return checked
+                                        ? field.onChange([...field.value, item.id])
+                                        : field.onChange(
+                                            field.value?.filter(
+                                            (value) => value !== item.id
+                                            )
+                                        )
+                                    }}
+                                />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                {item.label}
+                                </FormLabel>
+                            </FormItem>
+                            )
+                        }}
+                        />
+                    ))}
+                    </div>
+                    <FormMessage />
+                </FormItem>
+            )}
         />
         <FormField
           control={form.control}

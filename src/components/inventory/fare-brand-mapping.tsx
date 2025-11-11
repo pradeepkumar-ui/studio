@@ -38,16 +38,16 @@ import { FareBrandMappingForm, type FareBrandMap } from '@/components/forms/fare
 
 
 const initialFareBrandMaps: FareBrandMap[] = [
-    { id: 'FBM-01', brandName: 'Business Flex', mappedClasses: 'J,C,D', channel: 'All' },
-    { id: 'FBM-02', brandName: 'Business Saver', mappedClasses: 'I,Z', channel: 'All' },
-    { id: 'FBM-03', brandName: 'Premium Flex', mappedClasses: 'W,S', channel: 'All' },
-    { id: 'FBM-04', brandName: 'Premium Saver', mappedClasses: 'E,N', channel: 'All' },
-    { id: 'FBM-05', brandName: 'Economy Flex', mappedClasses: 'Y,B,M', channel: 'All' },
-    { id: 'FBM-06', brandName: 'Economy Saver', mappedClasses: 'H,K,L', channel: 'Website' },
-    { id: 'FBM-07', brandName: 'Economy Basic', mappedClasses: 'Q,T,V', channel: 'Website' },
-    { id: 'FBM-08', brandName: 'First Class', mappedClasses: 'F,A', channel: 'All' },
-    { id: 'FBM-09', brandName: 'Corporate Fares', mappedClasses: 'Y,B,J,C', channel: 'TMC' },
-    { id: 'FBM-10', brandName: 'Web Promo', mappedClasses: 'G,O', channel: 'Website' },
+    { id: 'FBM-01', brandName: 'Business Flex', mappedClasses: ['J', 'C', 'D'], channel: 'All' },
+    { id: 'FBM-02', brandName: 'Business Saver', mappedClasses: ['I', 'Z'], channel: 'All' },
+    { id: 'FBM-03', brandName: 'Premium Flex', mappedClasses: ['W', 'S'], channel: 'All' },
+    { id: 'FBM-04', brandName: 'Premium Saver', mappedClasses: ['E', 'N'], channel: 'All' },
+    { id: 'FBM-05', brandName: 'Economy Flex', mappedClasses: ['Y', 'B', 'M'], channel: 'All' },
+    { id: 'FBM-06', brandName: 'Economy Saver', mappedClasses: ['H', 'K', 'L'], channel: 'Website' },
+    { id: 'FBM-07', brandName: 'Economy Basic', mappedClasses: ['Q', 'T', 'V'], channel: 'Website' },
+    { id: 'FBM-08', brandName: 'First Class', mappedClasses: ['F', 'A'], channel: 'All' },
+    { id: 'FBM-09', brandName: 'Corporate Fares', mappedClasses: ['Y', 'B', 'J', 'C'], channel: 'TMC' },
+    { id: 'FBM-10', brandName: 'Web Promo', mappedClasses: ['G', 'O'], channel: 'Website' },
 ];
 
 export function FareBrandMapping() {
@@ -67,11 +67,17 @@ export function FareBrandMapping() {
   };
   
   const handleFormSubmit = (data: FareBrandMap) => {
+    // In a real app, you'd also handle the object to array conversion for mappedClasses
+    const submissionData = {
+        ...data,
+        mappedClasses: data.mappedClasses.map(c => c.value)
+    }
+
     if (editingMapping) {
-      setFareBrandMaps(fareBrandMaps.map((m) => (m.id === editingMapping.id ? { ...m, ...data } : m)));
+      setFareBrandMaps(fareBrandMaps.map((m) => (m.id === editingMapping.id ? { ...m, ...submissionData } : m)));
       toast({ title: "Mapping Updated", description: `Mapping for "${data.brandName}" has been updated.` });
     } else {
-      const newMapping = { ...data, id: `FBM-${String(fareBrandMaps.length + 1).padStart(2, '0')}` };
+      const newMapping = { ...submissionData, id: `FBM-${String(fareBrandMaps.length + 1).padStart(2, '0')}` };
       setFareBrandMaps([...fareBrandMaps, newMapping]);
       toast({ title: "Mapping Created", description: `Mapping for "${newMapping.brandName}" has been created.` });
     }
@@ -110,8 +116,8 @@ export function FareBrandMapping() {
                           <TableCell className="font-medium">{fbm.brandName}</TableCell>
                           <TableCell>
                               <div className="flex flex-wrap gap-1">
-                                  {fbm.mappedClasses.split(',').map(code => (
-                                      <Badge key={code} variant="secondary" className="font-mono">{code}</Badge>
+                                  {Array.isArray(fbm.mappedClasses) && fbm.mappedClasses.map(code => (
+                                      <Badge key={code.value || code} variant="secondary" className="font-mono">{code.value || code}</Badge>
                                   ))}
                               </div>
                           </TableCell>

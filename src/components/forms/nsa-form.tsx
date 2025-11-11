@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { PlusCircle, Trash2 } from 'lucide-react';
 
 const nsaSchema = z.object({
   id: z.string().optional(),
@@ -32,8 +33,8 @@ const nsaSchema = z.object({
     dow: z.string().min(3, 'DOW is required.'),
   }),
   capacity: z.coerce.number().min(1, 'Per-flight seats must be at least 1.'),
-  rbd: z.string().min(1, 'At least one RBD is required.'),
-  brand: z.string().min(3, 'Brand mapping is required.'),
+  rbd: z.array(z.object({ value: z.string().min(1, "RBD cannot be empty.") })).min(1, "At least one RBD is required."),
+  brand: z.array(z.object({ value: z.string().min(3, "Brand cannot be empty.") })).min(1, "At least one Brand is required."),
   pricing: z.object({
     currency: z.string().length(3, 'Currency code is required.'),
     baseFareRange: z.string().min(3, 'Base fare range is required.'),
@@ -59,10 +60,20 @@ interface NsaFormProps {
   onCancel: () => void;
 }
 
+const parseStringToArray = (value: string | string[] | undefined) => {
+    if (Array.isArray(value)) return value.map(v => ({ value: v }));
+    if (typeof value === 'string' && value.length > 0) return value.split(',').map(v => ({ value: v.trim() }));
+    return [{ value: '' }];
+}
+
 export function NsaForm({ nsa, onSubmit, onCancel }: NsaFormProps) {
   const form = useForm<NegotiatedSpaceAgreement>({
     resolver: zodResolver(nsaSchema),
-    defaultValues: nsa || {
+    defaultValues: nsa ? {
+        ...nsa,
+        rbd: parseStringToArray(nsa.rbd),
+        brand: parseStringToArray(nsa.brand),
+    } : {
       code: '',
       partnerId: '',
       scope: {
@@ -71,8 +82,8 @@ export function NsaForm({ nsa, onSubmit, onCancel }: NsaFormProps) {
         dow: 'Sat out, Wed in',
       },
       capacity: 30,
-      rbd: 'Q, N, V',
-      brand: 'Value, Flex',
+      rbd: [{ value: 'Q' }, { value: 'N' }, { value: 'V' }],
+      brand: [{ value: 'Value' }, { value: 'Flex' }],
       pricing: {
         currency: 'INR',
         baseFareRange: '8999-9499',
@@ -91,9 +102,28 @@ export function NsaForm({ nsa, onSubmit, onCancel }: NsaFormProps) {
     },
   });
 
+  const { fields: rbdFields, append: appendRbd, remove: removeRbd } = useFieldArray({
+    control: form.control,
+    name: "rbd"
+  });
+
+  const { fields: brandFields, append: appendBrand, remove: removeBrand } = useFieldArray({
+    control: form.control,
+    name: "brand"
+  });
+
+  const handleFinalSubmit = (data: NegotiatedSpaceAgreement) => {
+    const finalData = {
+        ...data,
+        rbd: data.rbd.map(r => r.value),
+        brand: data.brand.map(b => b.value)
+    };
+    onSubmit(finalData as any);
+  }
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto pr-4">
+      <form onSubmit={form.handleSubmit(handleFinalSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto pr-4">
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -184,32 +214,44 @@ export function NsaForm({ nsa, onSubmit, onCancel }: NsaFormProps) {
                     </FormItem>
                 )}
                 />
-            <FormField
-                control={form.control}
-                name="rbd"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>RBD Mapping</FormLabel>
-                    <FormControl>
-                    <Input placeholder="e.g., Q,N,V" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="brand"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Brand Mapping</FormLabel>
-                    <FormControl>
-                    <Input placeholder="e.g., Value, Flex" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
+            
+            <div className="space-y-2">
+              <FormLabel>RBD Mapping</FormLabel>
+              {rbdFields.map((field, index) => (
+                <div key={field.id} className="flex items-center gap-2">
+                  <FormField
+                    control={form.control}
+                    name={`rbd.${index}.value`}
+                    render={({ field }) => (
+                      <Input {...field} placeholder="e.g., Q" />
+                    )}
+                  />
+                  <Button type="button" variant="ghost" size="icon" onClick={() => removeRbd(index)} disabled={rbdFields.length <= 1}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button type="button" variant="outline" size="sm" onClick={() => appendRbd({ value: '' })}><PlusCircle className="mr-2 h-4 w-4" /> Add RBD</Button>
+            </div>
+            
+            <div className="space-y-2">
+              <FormLabel>Brand Mapping</FormLabel>
+              {brandFields.map((field, index) => (
+                <div key={field.id} className="flex items-center gap-2">
+                  <FormField
+                    control={form.control}
+                    name={`brand.${index}.value`}
+                    render={({ field }) => (
+                      <Input {...field} placeholder="e.g., Value" />
+                    )}
+                  />
+                  <Button type="button" variant="ghost" size="icon" onClick={() => removeBrand(index)} disabled={brandFields.length <= 1}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button type="button" variant="outline" size="sm" onClick={() => appendBrand({ value: '' })}><PlusCircle className="mr-2 h-4 w-4" /> Add Brand</Button>
+            </div>
         </div>
 
          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
