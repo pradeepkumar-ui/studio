@@ -149,6 +149,14 @@ const menuItems: MenuItem[] = [
     ]
   },
   {
+    href: '/partners',
+    label: 'Partnerships',
+    icon: Building,
+    subItems: [
+      { href: '/partners', label: 'Partner Management', icon: Handshake },
+    ]
+  },
+  {
     href: '/accounting',
     label: 'Accounting',
     icon: BookOpen,
@@ -218,6 +226,10 @@ export default function SidebarNav() {
   const isOrchestrationActive = () => {
     return pathname.startsWith('/orchestration');
   }
+  
+  const isPartnershipsActive = () => {
+      return pathname.startsWith('/partners');
+  }
 
   return (
     <>
@@ -237,12 +249,12 @@ export default function SidebarNav() {
             item.subItems ? (
               <SidebarMenuItem key={item.label} asChild>
                 <SidebarMenuCollapsible
-                  defaultOpen={isSubItemActive(item.subItems) || (item.href === '/catalog' && isSubItemActive(item.subItems)) || (item.href === '/inventory' && isSubItemActive(item.subItems)) || (item.label === 'Analytics & AI' && isAnalyticsActive()) || (item.label === 'Accounting' && isAccountingActive()) || (item.label === 'Order Delivery' && isOrderDeliveryActive()) || (item.label === 'Orchestration' && isOrchestrationActive())}
+                  defaultOpen={isSubItemActive(item.subItems) || (item.href === '/catalog' && isSubItemActive(item.subItems)) || (item.href === '/inventory' && isSubItemActive(item.subItems)) || (item.label === 'Analytics & AI' && isAnalyticsActive()) || (item.label === 'Accounting' && isAccountingActive()) || (item.label === 'Order Delivery' && isOrderDeliveryActive()) || (item.label === 'Orchestration' && isOrchestrationActive()) || (item.label === 'Partnerships' && isPartnershipsActive())}
                 >
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton
                       className="group/c-trigger"
-                      isActive={isSubItemActive(item.subItems) || (item.label === 'Analytics & AI' && isAnalyticsActive()) || (item.label === 'Accounting' && isAccountingActive()) || (item.label === 'Order Delivery' && isOrderDeliveryActive()) || (item.label === 'Orchestration' && isOrchestrationActive())}
+                      isActive={isSubItemActive(item.subItems) || (item.label === 'Analytics & AI' && isAnalyticsActive()) || (item.label === 'Accounting' && isAccountingActive()) || (item.label === 'Order Delivery' && isOrderDeliveryActive()) || (item.label === 'Orchestration' && isOrchestrationActive()) || (item.label === 'Partnerships' && isPartnershipsActive())}
                       tooltip={{ children: item.label, side: 'right' }}
                     >
                       <item.icon />
