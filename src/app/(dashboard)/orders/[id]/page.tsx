@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import React from 'react';
 import {
   Card,
   CardContent,
@@ -80,7 +81,7 @@ const getServiceIcon = (type: string) => {
 
 
 export default function OrderDetailsPage({ params }: { params: { id: string } }) {
-  const orderId = params.id;
+  const { id: orderId } = React.use(params);
   const order = mockOrder; // In a real app, you'd fetch this based on the ID
 
   return (
