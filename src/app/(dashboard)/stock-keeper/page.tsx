@@ -32,7 +32,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, History } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
@@ -51,6 +51,14 @@ const initialStockItems: StockItem[] = [
   { sku: 'VOUCH_DRINK_01', category: 'Vouchers', supplier: 'Internal', available: 500, reserved: 30, threshold: 100, status: 'In Stock' },
   { sku: 'MERCH_MODEL_A380', category: 'Merchandise', supplier: 'AirShop', available: 25, reserved: 2, threshold: 10, status: 'In Stock' },
 ];
+
+const mockHistory = [
+    { type: 'Credit', change: '+100', reason: 'Manual Restock', user: 'inv_mgr@airline.com', timestamp: '2025-10-28 10:00 UTC' },
+    { type: 'Debit', change: '-1', reason: 'Order ORD-7D91A', user: 'System', timestamp: '2025-10-28 09:15 UTC' },
+    { type: 'Debit', change: '-1', reason: 'Order ORD-7D91B', user: 'System', timestamp: '2025-10-28 08:30 UTC' },
+    { type: 'Initial', change: '500', reason: 'Initial Stocking', user: 'System', timestamp: '2025-10-25 12:00 UTC' },
+];
+
 
 const kpiData = [
     { title: 'Active SKUs', value: '420' },
@@ -78,7 +86,9 @@ const getStatusBadgeVariant = (status: StockItem['status']) => {
 export default function StockKeeperPage() {
   const [stockItems, setStockItems] = useState<StockItem[]>(initialStockItems);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<StockItem | null>(null);
+  const [selectedItemForHistory, setSelectedItemForHistory] = useState<StockItem | null>(null);
   const { toast } = useToast();
 
   const handleOpenDialog = (item: StockItem | null = null) => {
@@ -105,6 +115,11 @@ export default function StockKeeperPage() {
     }
     handleDialogClose();
   }
+
+  const handleViewHistory = (item: StockItem) => {
+    setSelectedItemForHistory(item);
+    setIsHistoryDialogOpen(true);
+  };
 
 
   return (
@@ -193,7 +208,7 @@ export default function StockKeeperPage() {
                             <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                 <DropdownMenuItem onClick={() => handleOpenDialog({...item, status})}>Edit</DropdownMenuItem>
-                                <DropdownMenuItem>View History</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleViewHistory(item)}>View History</DropdownMenuItem>
                                 <DropdownMenuItem>Adjust Stock</DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem className="text-destructive">
@@ -223,6 +238,39 @@ export default function StockKeeperPage() {
             onSubmit={handleFormSubmit}
             onCancel={handleDialogClose}
           />
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Stock History for "{selectedItemForHistory?.sku}"</DialogTitle>
+            <DialogDescription>
+                A log of all stock changes for this item.
+            </DialogDescription>
+          </DialogHeader>
+           <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Change</TableHead>
+                        <TableHead>Reason</TableHead>
+                        <TableHead>Timestamp</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {mockHistory.map((entry, index) => (
+                        <TableRow key={index}>
+                            <TableCell>
+                                <Badge variant={entry.type === 'Credit' ? 'default' : 'secondary'}>{entry.type}</Badge>
+                            </TableCell>
+                            <TableCell className="font-mono">{entry.change}</TableCell>
+                            <TableCell>{entry.reason}</TableCell>
+                            <TableCell>{entry.timestamp}</TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
         </DialogContent>
       </Dialog>
 
