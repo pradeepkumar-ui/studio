@@ -32,6 +32,9 @@ import {
   History,
   FilePenLine,
   XCircle,
+  Ticket,
+  Trash2,
+  FileEdit,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -81,10 +84,18 @@ const getServiceIcon = (type: string) => {
     switch (type) {
         case 'Flight': return <Plane className="h-4 w-4 text-muted-foreground" />;
         case 'Baggage': return <Luggage className="h-4 w-4 text-muted-foreground" />;
-        case 'Seat': return <Utensils className="h-4 w-4 text-muted-foreground" />;
+        case 'Seat': return <Ticket className="h-4 w-4 text-muted-foreground" />;
         case 'Meal': return <Utensils className="h-4 w-4 text-muted-foreground" />;
         default: return <Plus className="h-4 w-4 text-muted-foreground" />;
     }
+}
+
+const getAuditIcon = (event: string) => {
+    if (event.includes('Created')) return <GitCommitHorizontal className="h-5 w-5 text-secondary-foreground" />;
+    if (event.includes('Added')) return <Plus className="h-5 w-5 text-secondary-foreground" />;
+    if (event.includes('Confirmed')) return <CheckCircle className="h-5 w-5 text-secondary-foreground" />;
+    if (event.includes('fulfilled')) return <Archive className="h-5 w-5 text-secondary-foreground" />;
+    return <History className="h-5 w-5 text-secondary-foreground" />;
 }
 
 
@@ -122,9 +133,9 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 flex flex-col gap-6">
             <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Services ({order.services.length})</CardTitle>
-                    <CardDescription>All services attached to this order.</CardDescription>
+                    <Button variant="outline" size="sm"><Plus className="mr-2 h-4 w-4"/>Add Service</Button>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -133,6 +144,7 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
                                 <TableHead>Service</TableHead>
                                 <TableHead>Details</TableHead>
                                 <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -144,6 +156,14 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
                                     </TableCell>
                                     <TableCell>{service.description}</TableCell>
                                     <TableCell><Badge variant="secondary">{service.status}</Badge></TableCell>
+                                    <TableCell className="text-right">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                                            <FileEdit className="h-4 w-4"/>
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                                            <Trash2 className="h-4 w-4"/>
+                                        </Button>
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -165,7 +185,7 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
                             <div key={index} className="relative">
                                 <div className="absolute -left-[2.0rem] top-0 flex items-center justify-center w-14 h-14 bg-background rounded-full">
                                     <div className="flex items-center justify-center w-10 h-10 rounded-full border-2 bg-secondary">
-                                    <event.icon className="h-5 w-5 text-secondary-foreground" />
+                                    {getAuditIcon(event.event)}
                                     </div>
                                 </div>
                                 <div className="pl-6">
@@ -214,6 +234,18 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
                         <span className="text-muted-foreground">Status</span>
                         <Badge variant={order.payment.status === 'Paid' ? 'default' : 'secondary'}>{order.payment.status}</Badge>
                      </div>
+                      <div className="pt-2">
+                         <Button variant="outline" size="sm" className="w-full">Manage Payment / Refund</Button>
+                      </div>
+                </CardContent>
+            </Card>
+             <Card>
+                <CardHeader>
+                    <CardTitle>Order Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-2">
+                    <Button variant="outline"><FilePenLine className="mr-2 h-4 w-4"/> Reshop & Re-price</Button>
+                    <Button variant="destructive"><XCircle className="mr-2 h-4 w-4"/> Cancel Full Order</Button>
                 </CardContent>
             </Card>
         </div>
