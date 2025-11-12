@@ -159,7 +159,6 @@ const menuItems: MenuItem[] = [
     icon: BookOpen,
     subItems: [
       { href: '/accounting', label: 'Reconciliation', icon: GitCompare },
-      { href: '/invoicing', label: 'Invoicing', icon: ReceiptText },
       { href: '/payments', label: 'Payments', icon: CreditCard },
       { href: '/airline-revenue', label: 'Airline Revenue', icon: Landmark },
       { href: '/reporting', label: 'Reporting', icon: BarChartHorizontal },
@@ -207,7 +206,7 @@ export default function SidebarNav() {
   }
   
   const isAccountingActive = () => {
-    return pathname.startsWith('/accounting') || pathname.startsWith('/invoicing') || pathname.startsWith('/payments') || pathname.startsWith('/airline-revenue') || pathname.startsWith('/reporting');
+    return pathname.startsWith('/accounting') || pathname.startsWith('/payments') || pathname.startsWith('/airline-revenue') || pathname.startsWith('/reporting');
   }
 
   const isSettingsActive = () => {
