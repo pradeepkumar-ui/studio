@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket } from 'lucide-react';
+import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket, BadgeCheck, XCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -40,6 +40,10 @@ import { FlightResultCard, type FlightOffer } from '@/components/offer-composer/
 import { AncillarySelection, Ancillary } from '@/components/offer-composer/ancillary-selection';
 import { SeatMap } from '@/components/offer-composer/seat-map';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
+type OfferStatus = 'OfferRequested' | 'OfferProcessing' | 'OfferCreated' | 'OfferSelected' | 'OfferValidated' | 'OfferStockChecked' | 'OfferConvertedToOrder' | 'OfferExpired';
+
 
 const offerSearchSchema = z.object({
   origin: z.string().length(3, 'Origin must be a 3-letter IATA code.').toUpperCase(),
@@ -116,6 +120,7 @@ export default function OfferComposerPage() {
   const [selectedOffer, setSelectedOffer] = useState<FlightOffer | null>(null);
   const [selectedAncillaries, setSelectedAncillaries] = useState<Ancillary[]>([]);
   const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
+  const [offerStatus, setOfferStatus] = useState<OfferStatus | null>(null);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -144,6 +149,7 @@ export default function OfferComposerPage() {
       title: 'AI is thinking...',
       description: 'Parsing your flight search request.',
     });
+    setOfferStatus('OfferProcessing');
     try {
       const result = await searchFlightsNLP({ query: data.query });
       form.setValue('origin', result.origin);
@@ -156,6 +162,7 @@ export default function OfferComposerPage() {
         title: 'Form populated!',
         description: 'The search form has been filled based on your request.',
       });
+      setOfferStatus(null);
     } catch (error) {
       console.error(error);
       toast({
@@ -163,6 +170,7 @@ export default function OfferComposerPage() {
         title: 'AI Error',
         description: 'Could not understand the request. Please try rephrasing.',
       });
+       setOfferStatus(null);
     } finally {
       setIsAiLoading(false);
     }
@@ -174,6 +182,7 @@ export default function OfferComposerPage() {
     setSelectedOffer(null);
     setSelectedAncillaries([]);
     setSelectedSeat(null);
+    setOfferStatus('OfferRequested');
     toast({
       title: 'Searching for offers...',
       description: 'Composing and pricing solutions based on your request.',
@@ -185,6 +194,7 @@ export default function OfferComposerPage() {
         );
         setSearchResults(results);
         setIsLoading(false);
+        setOfferStatus('OfferCreated');
         toast({
             title: 'Search complete!',
             description: `${results.length} offers found for the selected criteria.`,
@@ -196,23 +206,44 @@ export default function OfferComposerPage() {
     setSelectedOffer(offer);
     setSelectedAncillaries([]);
     setSelectedSeat(null);
+    setOfferStatus('OfferSelected');
     toast({
-      title: 'Offer Priced & Locked',
+      title: 'Offer Added to Cart',
       description: `Offer ${offer.id} has been selected. You can now add ancillaries.`,
     });
   }
+  
+  function handleValidateOffer() {
+    if(!selectedOffer) return;
+    setOfferStatus('OfferValidated');
+    toast({
+      title: 'Offer Validated',
+      description: 'Offer price and availability confirmed.',
+    })
+  }
+
+  function handleStockCheck() {
+    if(offerStatus !== 'OfferValidated') return;
+    setOfferStatus('OfferStockChecked');
+     toast({
+      title: 'Stock Checked',
+      description: 'Seat and ancillary inventory confirmed.',
+    })
+  }
 
   const totalAncillaryPrice = selectedAncillaries.reduce((acc, anc) => acc + anc.price, 0);
-  const totalOrderPrice = (selectedOffer?.price || 0) + totalAncillaryPrice + (selectedSeat ? 45 : 0);
+  const totalSeatPrice = selectedSeat ? 45 : 0;
+  const totalOrderPrice = (selectedOffer?.price || 0) + totalAncillaryPrice + totalSeatPrice;
 
   const orderCreatePayload = {
     context: { version: '21.3', timestamp: new Date().toISOString(), pos: 'US', channel: 'Web', currency: 'USD' },
     offer_ref: {
-      offer_id: selectedOffer?.id,
+      parent_offer_id: selectedOffer?.id,
+      status: offerStatus,
       items: [
-        { offer_item_id: `flight-${selectedOffer?.id}`, passenger_refs: ['P1'] },
-        ...selectedAncillaries.map(anc => ({ offer_item_id: anc.id, passenger_refs: ['P1'] })),
-        ...(selectedSeat ? [{ offer_item_id: `seat-${selectedSeat}`, passenger_refs: ['P1'] }] : [])
+        { offer_item_id: `flight-${selectedOffer?.id}`, passenger_refs: ['P1'], type: 'Flight' },
+        ...selectedAncillaries.map(anc => ({ offer_item_id: anc.id, passenger_refs: ['P1'], type: 'Ancillary' })),
+        ...(selectedSeat ? [{ offer_item_id: `seat-${selectedSeat}`, passenger_refs: ['P1'], type: 'Seat' }] : [])
       ]
     },
     passengers: [{ id: "P1", type: "ADT" }],
@@ -220,7 +251,15 @@ export default function OfferComposerPage() {
   };
 
   const handleSendToOrderModule = () => {
-    if (!selectedOffer) return;
+    if (!selectedOffer || offerStatus !== 'OfferStockChecked') {
+      toast({
+        variant: 'destructive',
+        title: 'Action Required',
+        description: 'Please validate the offer and check stock availability before creating an order.',
+      });
+      return;
+    }
+    setOfferStatus('OfferConvertedToOrder');
     
     const newOrder = {
       id: `ORD-${Math.floor(Math.random() * 1000)}`,
@@ -231,8 +270,6 @@ export default function OfferComposerPage() {
       amount: totalOrderPrice,
     };
     
-    // In a real app, this would be a proper state management solution like Redux or Zustand
-    // For this simulation, we use sessionStorage
     sessionStorage.setItem('newly_created_order', JSON.stringify(newOrder));
     
     toast({
@@ -423,7 +460,7 @@ export default function OfferComposerPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>2. Select Flight</CardTitle>
-                    <CardDescription>Choose a flight solution to price and lock the offer.</CardDescription>
+                    <CardDescription>Choose a flight solution to add it to your cart.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {isLoading && (
@@ -496,7 +533,7 @@ export default function OfferComposerPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center gap-2">
                         <ShoppingBasket className="h-5 w-5" />
-                        <CardTitle>4. Offer Summary</CardTitle>
+                        <CardTitle>4. Shopping Cart</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2 text-sm">
@@ -513,7 +550,7 @@ export default function OfferComposerPage() {
                             {selectedSeat && (
                                  <div className="flex justify-between">
                                     <span className="text-muted-foreground">Seat {selectedSeat}</span>
-                                    <span>$45.00</span>
+                                    <span>${totalSeatPrice.toFixed(2)}</span>
                                 </div>
                             )}
                         </div>
@@ -523,12 +560,39 @@ export default function OfferComposerPage() {
                             <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: selectedOffer.currency }).format(totalOrderPrice)}</span>
                         </div>
                         <Separator />
+                        
+                        <div className="space-y-2 pt-2">
+                           <Button className="w-full" onClick={handleValidateOffer} disabled={offerStatus === 'OfferValidated' || offerStatus === 'OfferStockChecked'}>
+                            {offerStatus === 'OfferValidated' || offerStatus === 'OfferStockChecked' ? <BadgeCheck className="mr-2 h-4 w-4" /> : null}
+                                Validate Offer
+                           </Button>
+                           <Button className="w-full" variant="outline" onClick={handleStockCheck} disabled={offerStatus !== 'OfferValidated'}>
+                            {offerStatus === 'OfferStockChecked' ? <BadgeCheck className="mr-2 h-4 w-4" /> : null}
+                                Check Stock Availability
+                           </Button>
+                        </div>
+                        
+                        {(offerStatus === 'OfferValidated' || offerStatus === 'OfferStockChecked') && (
+                            <Alert variant={offerStatus === 'OfferStockChecked' ? 'default' : 'destructive'}>
+                                {offerStatus === 'OfferStockChecked' ? <BadgeCheck className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                                <AlertTitle>
+                                    {offerStatus === 'OfferStockChecked' ? 'Ready for Order Creation' : 'Validation Error'}
+                                </AlertTitle>
+                                <AlertDescription>
+                                    {offerStatus === 'OfferStockChecked' 
+                                        ? 'All items are validated and stock is confirmed. You can now create the order.' 
+                                        : 'Offer must be validated and stock checked before creating an order.'
+                                    }
+                                </AlertDescription>
+                            </Alert>
+                        )}
+                        
                         <div className="pt-2">
                             <h4 className="font-semibold mb-2">OrderCreate Payload</h4>
                             <pre className="p-2 bg-secondary rounded-md text-xs text-secondary-foreground overflow-x-auto max-h-64">
                                 {JSON.stringify(orderCreatePayload, null, 2)}
                             </pre>
-                            <Button className="w-full mt-4" onClick={() => {
+                            <Button className="w-full mt-4" variant="secondary" onClick={() => {
                                 navigator.clipboard.writeText(JSON.stringify(orderCreatePayload, null, 2));
                                 toast({ title: "Payload Copied", description: "OrderCreate JSON has been copied to clipboard." });
                             }}>
