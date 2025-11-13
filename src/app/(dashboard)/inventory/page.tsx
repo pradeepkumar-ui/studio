@@ -2,6 +2,7 @@
 
 import { BookingClasses } from '@/components/inventory/booking-classes';
 import { FareBrandMapping } from '@/components/inventory/fare-brand-mapping';
+import { FlightAvailability } from '@/components/inventory/flight-availability';
 
 export default function InventoryPage() {
   return (
@@ -12,10 +13,12 @@ export default function InventoryPage() {
             Flight & Inventory
           </h1>
           <p className="text-muted-foreground">
-            Manage booking classes and map fare brands to booking classes/fare bases.
+            Manage booking classes and view live flight availability.
           </p>
         </div>
       </div>
+      
+      <FlightAvailability />
       
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 items-start">
         <BookingClasses />
