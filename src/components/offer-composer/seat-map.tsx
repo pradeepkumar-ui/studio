@@ -18,6 +18,7 @@ const seatRows = [
 ];
 
 const occupiedSeats = ['2B', '3D', '5A'];
+const extraLegroomSeats = ['1A', '1B', '1C', '1D'];
 
 export function SeatMap({ selectedSeat, onSeatSelect }: SeatMapProps) {
   const handleSeatClick = (seat: string) => {
@@ -29,9 +30,16 @@ export function SeatMap({ selectedSeat, onSeatSelect }: SeatMapProps) {
     }
   };
 
+  const getSeatPrice = (seat: string) => {
+    if (extraLegroomSeats.includes(seat)) {
+      return 75; // Matches 'Extra Legroom' in pricing/seat/page.tsx
+    }
+    return 40; // Matches 'Forward Zone' in pricing/seat/page.tsx
+  }
+
   return (
     <div className="space-y-4">
-        <h4 className="font-semibold">Seat Selection (+$45)</h4>
+        <h4 className="font-semibold">Seat Selection</h4>
         <div className="p-4 rounded-lg bg-secondary flex flex-col items-center gap-2">
             <div className="w-full text-center text-sm text-muted-foreground pb-2">Business Class</div>
             {seatRows.map((row, rowIndex) => (
@@ -41,18 +49,20 @@ export function SeatMap({ selectedSeat, onSeatSelect }: SeatMapProps) {
 
                     const isOccupied = occupiedSeats.includes(seat);
                     const isSelected = selectedSeat === seat;
+                    const isExtraLegroom = extraLegroomSeats.includes(seat);
 
                     return (
                     <div
                         key={seat}
                         onClick={() => handleSeatClick(seat)}
                         className={cn(
-                        'w-8 h-8 rounded-md flex items-center justify-center cursor-pointer transition-colors',
+                        'w-8 h-8 rounded-md flex items-center justify-center cursor-pointer transition-colors relative',
                         isOccupied && 'cursor-not-allowed text-muted-foreground',
                         !isOccupied && !isSelected && 'hover:bg-primary/20',
                         isSelected && 'bg-primary text-primary-foreground',
-                        !isOccupied && !isSelected && 'bg-background'
+                        !isOccupied && !isSelected && (isExtraLegroom ? 'bg-blue-200' : 'bg-background')
                         )}
+                        title={isExtraLegroom ? 'Extra Legroom' : 'Forward Zone'}
                     >
                         {isOccupied ? (
                              <X className="w-4 h-4" />
@@ -66,7 +76,12 @@ export function SeatMap({ selectedSeat, onSeatSelect }: SeatMapProps) {
                 </div>
             ))}
         </div>
-        <div className="text-xs text-muted-foreground text-center">Selected Seat: {selectedSeat || 'None'}</div>
+        <div className="text-xs text-muted-foreground text-center">Selected Seat: {selectedSeat ? `${selectedSeat} (+$${getSeatPrice(selectedSeat)})` : 'None'}</div>
+         <div className="flex justify-around text-xs text-muted-foreground">
+            <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-sm bg-blue-200"></div>Extra Legroom</div>
+            <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-sm bg-background border"></div>Forward Zone</div>
+            <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-sm bg-muted-foreground/20 flex items-center justify-center"><X className="w-2 h-2"/></div>Occupied</div>
+        </div>
     </div>
   );
 }

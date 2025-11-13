@@ -78,37 +78,37 @@ const mockFlightOffers: FlightOffer[] = [
       currency: 'USD',
       cabinClass: 'Economy',
       includedBaggage: '1 Carry-on',
-      brand: 'Value'
+      brand: 'Economy Light'
     },
     {
       id: 'OFF-FL-002',
       departureTime: '09:00',
-      departureCode: 'JFK',
+      departureCode: 'LHR',
       arrivalTime: '13:30',
-      arrivalCode: 'LAX',
+      arrivalCode: 'DXB',
       duration: '7h 30m',
-      stops: 1,
+      stops: 0,
       airline: 'Airline B',
-      price: 295,
-      currency: 'USD',
-      cabinClass: 'Economy',
-      includedBaggage: '1 Carry-on',
-      brand: 'Value'
+      price: 2500,
+      currency: 'GBP',
+      cabinClass: 'Business',
+      includedBaggage: '1 Carry-on, 1 Checked',
+      brand: 'Business Saver'
     },
      {
       id: 'OFF-FL-003',
       departureTime: '14:00',
       departureCode: 'JFK',
       arrivalTime: '17:15',
-      arrivalCode: 'LAX',
+      arrivalCode: 'LHR',
       duration: '6h 15m',
       stops: 0,
       airline: 'Airline A',
-      price: 1250,
+      price: 5500,
       currency: 'USD',
-      cabinClass: 'Business',
+      cabinClass: 'First',
       includedBaggage: '1 Carry-on, 2 Checked',
-      brand: 'Flex'
+      brand: 'First Class'
     },
 ];
 
@@ -232,7 +232,7 @@ export default function OfferComposerPage() {
   }
 
   const totalAncillaryPrice = selectedAncillaries.reduce((acc, anc) => acc + anc.price, 0);
-  const totalSeatPrice = selectedSeat ? 45 : 0;
+  const totalSeatPrice = selectedSeat ? 75 : 0; // Updated to match seat catalogue price
   const totalOrderPrice = (selectedOffer?.price || 0) + totalAncillaryPrice + totalSeatPrice;
 
   const orderCreatePayload = {
