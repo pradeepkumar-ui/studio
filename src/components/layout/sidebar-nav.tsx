@@ -107,9 +107,17 @@ const menuItems: MenuItem[] = [
 
 const catalogSubItems: MenuItem[] = [
   { href: '/catalog', label: 'Fare Products', icon: Package },
-  { href: '/fares', label: 'Fares', icon: DollarSign },
-  { href: '/pricing/ancillary', label: 'Ancillaries', icon: Container },
-  { href: '/pricing/seat', label: 'Seats', icon: Armchair },
+  { 
+    href: '/pricing', 
+    label: 'Pricing', 
+    icon: DollarSign, 
+    subItems: [
+        { href: '/fares', label: 'Fares', icon: DollarSign },
+        { href: '/pricing/filing', label: 'Fare Filing', icon: FileJson },
+        { href: '/pricing/ancillary', label: 'Ancillaries', icon: Container },
+        { href: '/pricing/seat', label: 'Seats', icon: Armchair },
+    ]
+  },
   { href: '/promotions', label: 'Promotions', icon: Gift },
   { href: '/loyalty-program', label: 'Loyalty Program', icon: Award },
   { href: '/corporate', label: 'Corporate Contracts', icon: Briefcase },
@@ -169,6 +177,7 @@ const analyticsSubItems: MenuItem[] = [
 
 const subItemMapping: Record<string, MenuItem[]> = {
   '/catalog': catalogSubItems,
+  '/pricing': catalogSubItems.find(i => i.href === '/pricing')?.subItems || [],
   '/offers': offerSubItems,
   '/inventory': stockSubItems,
   '/orders': orderSubItems,
@@ -223,6 +232,52 @@ export default function SidebarNav() {
     return pathname.startsWith(item.href);
   };
 
+  const renderNav = (items: MenuItem[]) => {
+     return items.map((item) => {
+      const subItems = getSubItems(item.href);
+      const hasSubItems = subItems.length > 0;
+      
+      if (hasSubItems) {
+        return (
+          <SidebarMenuSubItem key={item.href} asChild>
+              <SidebarMenuCollapsible defaultOpen={isSubItemActive(subItems)}>
+                 <CollapsibleTrigger asChild>
+                    <Link href={item.href} className="group/c-trigger flex items-center">
+                      <SidebarMenuSubButton
+                        isActive={isSubItemActive(subItems)}
+                      >
+                        <item.icon className={cn('transition-transform ease-in-out', isSubItemActive(subItems) && 'text-primary')} />
+                        <span>{item.label}</span>
+                        <ChevronRight className="ml-auto size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/c-trigger:rotate-90" />
+                      </SidebarMenuSubButton>
+                    </Link>
+                 </CollapsibleTrigger>
+                 <SidebarMenuCollapsibleContent>
+                    <SidebarMenuSub>
+                      {renderNav(subItems)}
+                    </SidebarMenuSub>
+                 </SidebarMenuCollapsibleContent>
+              </SidebarMenuCollapsible>
+            </SidebarMenuSubItem>
+        )
+      }
+
+      return (
+        <SidebarMenuSubItem key={item.href} asChild>
+          <Link href={item.href}>
+            <SidebarMenuSubButton
+              size="sm"
+              isActive={pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))}
+            >
+              <item.icon className={cn('transition-transform ease-in-out', (pathname.startsWith(item.href)) && 'text-primary')} />
+              <span>{item.label}</span>
+            </SidebarMenuSubButton>
+          </Link>
+        </SidebarMenuSubItem>
+      )
+    })
+  }
+
   return (
     <>
       <SidebarHeader>
@@ -275,19 +330,7 @@ export default function SidebarNav() {
                                </CollapsibleTrigger>
                                <SidebarMenuCollapsibleContent>
                                   <SidebarMenuSub>
-                                    {getSubItems(subItem.href).map((child) => (
-                                      <SidebarMenuSubItem key={child.href} asChild>
-                                        <Link href={child.href}>
-                                          <SidebarMenuSubButton
-                                            size="sm"
-                                            isActive={pathname === child.href || (child.href !== '/' && pathname.startsWith(child.href))}
-                                          >
-                                            <child.icon className={cn('transition-transform ease-in-out', (pathname.startsWith(child.href)) && 'text-primary')} />
-                                            <span>{child.label}</span>
-                                          </SidebarMenuSubButton>
-                                        </Link>
-                                      </SidebarMenuSubItem>
-                                    ))}
+                                    {renderNav(getSubItems(subItem.href))}
                                   </SidebarMenuSub>
                                </SidebarMenuCollapsibleContent>
                             </SidebarMenuCollapsible>
