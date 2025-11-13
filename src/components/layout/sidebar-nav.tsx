@@ -82,97 +82,100 @@ type MenuItem = {
 const menuItems: MenuItem[] = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   {
-    href: '/offers',
-    label: 'Offer Management',
+    href: '#',
+    label: 'Offers',
     icon: Ticket,
     subItems: [
-      { href: '/offers', label: 'Offers Config', icon: Layers },
-      { href: '/offers/cohorts', label: 'Cohorts', icon: Users },
-      { href: '/offer-composer', label: 'Composer', icon: Layers },
-      { href: '/optimisation', label: 'Offer Optimisation', icon: Wand2 },
-      { href: '/bundles', label: 'Bundles Studio', icon: Package },
-      { href: '/pricing/rules', label: 'Dynamic Pricing', icon: Target },
-      { href: '/disruption-waivers', label: 'Disruption Waivers', icon: Waves },
+      { href: '/catalog', label: 'Catalogue', icon: BookOpen },
+      { href: '/offers', label: 'Offer Management', icon: Ticket },
+      { href: '/inventory', label: 'Stock Keeping', icon: Plane },
     ],
   },
   {
-    href: '/orders',
-    label: 'Order Management',
+    href: '#',
+    label: 'Orders',
     icon: ShoppingCart,
     subItems: [
-        { href: '/orders', label: 'Order Dashboard', icon: LayoutDashboard },
-        { href: '/orders/creation', label: 'Creation', icon: PlusSquare },
-        { href: '/orders/delivery', label: 'Delivery', icon: Send },
-        { href: '/orders/finalisation', label: 'Finalisation & Closure', icon: BadgeCheck },
-        { href: '/orders/servicing', label: 'Servicing', icon: Wrench },
-        { href: '/orders/supplier-orders', label: 'Supplier Orders', icon: Building },
-        { href: '/orders/large-party', label: 'Large Party Orders', icon: Users },
-        { href: '/loyalty', label: 'Loyalty Orders', icon: Award },
-    ]
-  },
-  { href: '/campaigns', label: 'Campaign Management', icon: Megaphone },
-  {
-    href: '/delivery-fulfilment',
-    label: 'Delivery & Fulfilment',
-    icon: Truck,
-    subItems: [
-        { href: '/check-in', label: 'Check-in', icon: UserCheck },
-        { href: '/boarding', label: 'Boarding Gate', icon: PlaneTakeoff },
-        { href: '/orders/ground-handling', label: 'Ground Handling', icon: Truck },
-        { href: '/service-consumption', label: 'Service Consumption', icon: ClipboardCheck },
-        { href: '/communication', label: 'Communication', icon: MessageSquare },
-        { href: '/documentation', label: 'Documentation', icon: FileText },
-    ]
-  },
-  {
-    href: '/catalog',
-    label: 'Catalogue',
-    icon: BookOpen,
-    subItems: [
-      { href: '/catalog', label: 'Fare Products', icon: Package },
-      { href: '/fares', label: 'Fares', icon: DollarSign },
-      { href: '/pricing/ancillary', label: 'Ancillaries', icon: Container },
-      { href: '/pricing/seat', label: 'Seats', icon: Armchair },
-      { href: '/promotions', label: 'Promotions', icon: Gift },
-      { href: '/loyalty-program', label: 'Loyalty Program', icon: Award },
-      { href: '/corporate', label: 'Corporate Contracts', icon: Briefcase },
-      { href: '/channels', label: 'Channels', icon: RadioTower },
-      { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
-    ]
-  },
-  {
-    href: '/accounting',
-    label: 'Accounting',
-    icon: BookOpen,
-    subItems: [
-      { href: '/accounting', label: 'Reconciliation', icon: GitCompare },
-      { href: '/payments', label: 'Payments', icon: CreditCard },
-      { href: '/airline-revenue', label: 'Airline Revenue', icon: Landmark },
-      { href: '/reporting', label: 'Reporting', icon: BarChartHorizontal },
+      { href: '/orders', label: 'Order Management', icon: ShoppingCart },
+      { href: '/delivery-fulfilment', label: 'Delivery & Fulfilment', icon: Truck },
+      { href: '/accounting', label: 'Accounting', icon: BookOpen },
     ],
   },
-  {
-    href: '/inventory',
-    label: 'Stock Keeping',
-    icon: Plane,
-     subItems: [
-      { href: '/inventory', label: 'Flight & Inventory', icon: Plane },
-      { href: '/atpco', label: 'ATPCO', icon: Database },
-      { href: '/capacity', label: 'Capacity', icon: Signal },
-      { href: '/stock-keeper', label: 'Stock Keeper', icon: Package },
-    ]
-  },
-  {
-    href: '/analytics',
-    label: 'Analytics & AI',
-    icon: BarChart3,
-    subItems: [
-        { href: '/analytics', label: 'Offer Performance', icon: BarChart3 },
-        { href: '/fare-change-forecast', label: 'Fare Change Forecast', icon: BrainCircuit },
-        { href: '/pricing/rules', label: 'Dynamic Pricing', icon: FileJson },
-    ]
-  },
+  { href: '/analytics', label: 'Analytics & AI', icon: BarChart3 },
+  { href: '/campaigns', label: 'Campaign Management', icon: Megaphone },
 ];
+
+const catalogSubItems: MenuItem[] = [
+  { href: '/catalog', label: 'Fare Products', icon: Package },
+  { href: '/fares', label: 'Fares', icon: DollarSign },
+  { href: '/pricing/ancillary', label: 'Ancillaries', icon: Container },
+  { href: '/pricing/seat', label: 'Seats', icon: Armchair },
+  { href: '/promotions', label: 'Promotions', icon: Gift },
+  { href: '/loyalty-program', label: 'Loyalty Program', icon: Award },
+  { href: '/corporate', label: 'Corporate Contracts', icon: Briefcase },
+  { href: '/channels', label: 'Channels', icon: RadioTower },
+  { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
+];
+
+const offerSubItems: MenuItem[] = [
+  { href: '/offers', label: 'Offers Config', icon: Layers },
+  { href: '/offers/cohorts', label: 'Cohorts', icon: Users },
+  { href: '/offer-composer', label: 'Composer', icon: Layers },
+  { href: '/optimisation', label: 'Offer Optimisation', icon: Wand2 },
+  { href: '/bundles', label: 'Bundles Studio', icon: Package },
+  { href: '/pricing/rules', label: 'Dynamic Pricing', icon: Target },
+  { href: '/disruption-waivers', label: 'Disruption Waivers', icon: Waves },
+];
+
+const stockSubItems: MenuItem[] = [
+  { href: '/inventory', label: 'Flight & Inventory', icon: Plane },
+  { href: 'atpco', label: 'ATPCO', icon: Database },
+  { href: '/capacity', label: 'Capacity', icon: Signal },
+  { href: '/stock-keeper', label: 'Stock Keeper', icon: Package },
+];
+
+const orderSubItems: MenuItem[] = [
+  { href: '/orders', label: 'Order Dashboard', icon: LayoutDashboard },
+  { href: '/orders/creation', label: 'Creation', icon: PlusSquare },
+  { href: '/orders/delivery', label: 'Delivery', icon: Send },
+  { href: '/orders/finalisation', label: 'Finalisation & Closure', icon: BadgeCheck },
+  { href: '/orders/servicing', label: 'Servicing', icon: Wrench },
+  { href: '/orders/supplier-orders', label: 'Supplier Orders', icon: Building },
+  { href: '/orders/large-party', label: 'Large Party Orders', icon: Users },
+  { href: '/loyalty', label: 'Loyalty Orders', icon: Award },
+];
+
+const deliverySubItems: MenuItem[] = [
+  { href: '/check-in', label: 'Check-in', icon: UserCheck },
+  { href: '/boarding', label: 'Boarding Gate', icon: PlaneTakeoff },
+  { href: '/orders/ground-handling', label: 'Ground Handling', icon: Truck },
+  { href: '/service-consumption', label: 'Service Consumption', icon: ClipboardCheck },
+  { href: '/communication', label: 'Communication', icon: MessageSquare },
+  { href: '/documentation', label: 'Documentation', icon: FileText },
+];
+
+const accountingSubItems: MenuItem[] = [
+  { href: '/accounting', label: 'Reconciliation', icon: GitCompare },
+  { href: '/payments', label: 'Payments', icon: CreditCard },
+  { href: '/airline-revenue', label: 'Airline Revenue', icon: Landmark },
+  { href: '/reporting', label: 'Reporting', icon: BarChartHorizontal },
+];
+
+const analyticsSubItems: MenuItem[] = [
+  { href: '/analytics', label: 'Offer Performance', icon: BarChart3 },
+  { href: '/fare-change-forecast', label: 'Fare Change Forecast', icon: BrainCircuit },
+];
+
+
+const subItemMapping: Record<string, MenuItem[]> = {
+  '/catalog': catalogSubItems,
+  '/offers': offerSubItems,
+  '/inventory': stockSubItems,
+  '/orders': orderSubItems,
+  '/delivery-fulfilment': deliverySubItems,
+  '/accounting': accountingSubItems,
+  '/analytics': analyticsSubItems,
+};
 
 
 export default function SidebarNav() {
@@ -183,29 +186,42 @@ export default function SidebarNav() {
     return subItems.some(item => pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href)));
   };
   
-  const isPricingActive = () => {
-    return pathname.startsWith('/pricing');
-  }
-  
-  const isAnalyticsActive = () => {
-    return pathname.startsWith('/analytics') || pathname.startsWith('/fare-change-forecast') || pathname.startsWith('/offer-rules');
-  }
-  
-  const isAccountingActive = () => {
-    return pathname.startsWith('/accounting') || pathname.startsWith('/payments') || pathname.startsWith('/airline-revenue') || pathname.startsWith('/reporting');
-  }
-
   const isSettingsActive = () => {
       return pathname.startsWith('/settings') || pathname.startsWith('/broker') || pathname.startsWith('/offer-construction-settings');
   }
-  
-  const isDeliveryFulfilmentActive = () => {
-    return pathname.startsWith('/check-in') || pathname.startsWith('/boarding') || pathname.startsWith('/service-consumption') || pathname.startsWith('/documentation') || pathname.startsWith('/communication') || pathname.startsWith('/orders/ground-handling');
+
+  const getSubItems = (parentHref: string) => {
+    if (parentHref === '#') return [];
+    if(subItemMapping[parentHref]) return subItemMapping[parentHref];
+    
+    const parentPath = parentHref.split('/')[1];
+    const match = Object.keys(subItemMapping).find(key => key.includes(parentPath));
+    if(match) return subItemMapping[match];
+    
+    return [];
   }
   
-  const isOrchestrationActive = () => {
-    return pathname.startsWith('/orchestration');
-  }
+  const isParentActive = (item: MenuItem) => {
+    if (item.href === '#') {
+      return item.subItems?.some(sub => {
+        const subSubItems = getSubItems(sub.href);
+        if (subSubItems.length > 0) {
+          return isSubItemActive(subSubItems);
+        }
+        return pathname.startsWith(sub.href);
+      });
+    }
+    
+    if (item.href === '/analytics') {
+      return pathname.startsWith('/analytics') || pathname.startsWith('/fare-change-forecast');
+    }
+
+    if (item.subItems) {
+      return isSubItemActive(item.subItems);
+    }
+    
+    return pathname.startsWith(item.href);
+  };
 
   return (
     <>
@@ -225,12 +241,12 @@ export default function SidebarNav() {
             item.subItems ? (
               <SidebarMenuItem key={item.label} asChild>
                 <SidebarMenuCollapsible
-                  defaultOpen={isSubItemActive(item.subItems) || (item.href === '/catalog' && isSubItemActive(item.subItems)) || (item.href === '/inventory' && isSubItemActive(item.subItems)) || (item.label === 'Analytics & AI' && isAnalyticsActive()) || (item.label === 'Accounting' && isAccountingActive()) || (item.label === 'Delivery & Fulfilment' && isDeliveryFulfilmentActive()) || (item.label === 'Orchestration' && isOrchestrationActive())}
+                  defaultOpen={isParentActive(item)}
                 >
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton
                       className="group/c-trigger"
-                      isActive={isSubItemActive(item.subItems) || (item.label === 'Analytics & AI' && isAnalyticsActive()) || (item.label === 'Accounting' && isAccountingActive()) || (item.label === 'Delivery & Fulfilment' && isDeliveryFulfilmentActive()) || (item.label === 'Orchestration' && isOrchestrationActive())}
+                      isActive={isParentActive(item)}
                       tooltip={{ children: item.label, side: 'right' }}
                     >
                       <item.icon />
@@ -241,21 +257,41 @@ export default function SidebarNav() {
                   <SidebarMenuCollapsibleContent>
                     <SidebarMenuSub>
                       {item.subItems.map((subItem) => (
-                        <SidebarMenuSubItem key={subItem.href} asChild>
-                           <Link href={subItem.href}>
-                            <SidebarMenuSubButton
-                              isActive={
-                                pathname === subItem.href || (subItem.href !== '/' && pathname.startsWith(subItem.href))
-                              }
-                            >
-                              <subItem.icon className={cn(
-                                'transition-transform ease-in-out',
-                                (pathname.startsWith(subItem.href)) && 'text-primary'
-                              )} />
-                              <span>{subItem.label}</span>
-                            </SidebarMenuSubButton>
-                          </Link>
-                        </SidebarMenuSubItem>
+                         <SidebarMenuSubItem key={subItem.href} asChild>
+                            <SidebarMenuCollapsible defaultOpen={isSubItemActive(getSubItems(subItem.href))}>
+                               <CollapsibleTrigger asChild>
+                                  <Link href={subItem.href} className="group/c-trigger flex items-center">
+                                    <SidebarMenuSubButton
+                                      isActive={pathname === subItem.href || (subItem.href !== '/' && pathname.startsWith(subItem.href))}
+                                    >
+                                      <subItem.icon className={cn(
+                                        'transition-transform ease-in-out',
+                                        (pathname.startsWith(subItem.href)) && 'text-primary'
+                                      )} />
+                                      <span>{subItem.label}</span>
+                                       {getSubItems(subItem.href).length > 0 && <ChevronRight className="ml-auto size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/c-trigger:rotate-90" />}
+                                    </SidebarMenuSubButton>
+                                  </Link>
+                               </CollapsibleTrigger>
+                               <SidebarMenuCollapsibleContent>
+                                  <SidebarMenuSub>
+                                    {getSubItems(subItem.href).map((child) => (
+                                      <SidebarMenuSubItem key={child.href} asChild>
+                                        <Link href={child.href}>
+                                          <SidebarMenuSubButton
+                                            size="sm"
+                                            isActive={pathname === child.href || (child.href !== '/' && pathname.startsWith(child.href))}
+                                          >
+                                            <child.icon className={cn('transition-transform ease-in-out', (pathname.startsWith(child.href)) && 'text-primary')} />
+                                            <span>{child.label}</span>
+                                          </SidebarMenuSubButton>
+                                        </Link>
+                                      </SidebarMenuSubItem>
+                                    ))}
+                                  </SidebarMenuSub>
+                               </SidebarMenuCollapsibleContent>
+                            </SidebarMenuCollapsible>
+                          </SidebarMenuSubItem>
                       ))}
                     </SidebarMenuSub>
                   </SidebarMenuCollapsibleContent>
@@ -307,16 +343,6 @@ export default function SidebarNav() {
                             >
                               <RadioTower className={cn('transition-transform ease-in-out', pathname.startsWith('/broker') && 'text-primary')} />
                               <span>Broker</span>
-                            </SidebarMenuSubButton>
-                          </Link>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem asChild>
-                           <Link href="/offer-construction-settings">
-                            <SidebarMenuSubButton
-                              isActive={pathname.startsWith('/offer-construction-settings')}
-                            >
-                              <FileJson className={cn('transition-transform ease-in-out', pathname.startsWith('/offer-construction-settings') && 'text-primary')} />
-                              <span>Construction Settings</span>
                             </SidebarMenuSubButton>
                           </Link>
                         </SidebarMenuSubItem>
