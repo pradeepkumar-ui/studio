@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -201,13 +200,7 @@ export default function SidebarNav() {
 
   const getSubItems = (parentHref: string) => {
     if (parentHref === '#') return [];
-    if(subItemMapping[parentHref]) return subItemMapping[parentHref];
-    
-    const parentPath = parentHref.split('/')[1];
-    const match = Object.keys(subItemMapping).find(key => key.includes(parentPath));
-    if(match) return subItemMapping[match];
-    
-    return [];
+    return subItemMapping[parentHref] || [];
   }
   
   const isParentActive = (item: MenuItem) => {
