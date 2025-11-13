@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -82,6 +81,7 @@ const menuItems: MenuItem[] = [
     label: 'Offers',
     icon: Ticket,
     subItems: [
+      { href: '/offers/dashboard', label: 'Offers Dashboard', icon: LayoutDashboard },
       {
         href: '/catalog',
         label: 'Catalogue',
