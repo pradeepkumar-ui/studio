@@ -30,9 +30,12 @@ const cohortSchema = z.object({
   status: z.enum(['Active', 'Inactive']),
   definition: z.object({
     device: z.enum(['All', 'Mobile', 'Desktop']).default('All'),
+    channel: z.string().optional(),
     pos: z.string().optional(),
     purchaseCount: z.coerce.number().min(0).default(0),
     totalSpend: z.coerce.number().min(0).default(0),
+    loyaltyTier: z.enum(['All', 'Bronze', 'Silver', 'Gold']).default('All'),
+    corporateDomain: z.string().optional(),
   }),
 });
 
@@ -54,9 +57,12 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
       status: 'Active',
       definition: {
         device: 'All',
+        channel: '',
         pos: '',
         purchaseCount: 0,
         totalSpend: 0,
+        loyaltyTier: 'All',
+        corporateDomain: '',
       },
     },
   });
@@ -131,12 +137,40 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
           />
            <FormField
               control={form.control}
+              name="definition.channel"
+              render={({ field }) => (
+              <FormItem>
+                  <FormLabel>Channel</FormLabel>
+                  <FormControl>
+                  <Input placeholder="e.g., TMC, Web (optional)" {...field} />
+                  </FormControl>
+                  <FormMessage />
+              </FormItem>
+              )}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+             <FormField
+              control={form.control}
               name="definition.pos"
               render={({ field }) => (
               <FormItem>
                   <FormLabel>Point of Sale (e.g., AE, IN)</FormLabel>
                   <FormControl>
                   <Input placeholder="Leave blank for all" {...field} />
+                  </FormControl>
+                  <FormMessage />
+              </FormItem>
+              )}
+          />
+           <FormField
+              control={form.control}
+              name="definition.corporateDomain"
+              render={({ field }) => (
+              <FormItem>
+                  <FormLabel>Corporate Email Domain</FormLabel>
+                  <FormControl>
+                  <Input placeholder="e.g., stark.com (optional)" {...field} />
                   </FormControl>
                   <FormMessage />
               </FormItem>
@@ -171,6 +205,30 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
                 )}
             />
         </div>
+         <FormField
+              control={form.control}
+              name="definition.loyaltyTier"
+              render={({ field }) => (
+              <FormItem>
+                  <FormLabel>Loyalty Tier</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                      <SelectTrigger>
+                      <SelectValue placeholder="Select a loyalty tier" />
+                      </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                      <SelectItem value="All">All Tiers</SelectItem>
+                      <SelectItem value="Bronze">Bronze</SelectItem>
+                      <SelectItem value="Silver">Silver</SelectItem>
+                      <SelectItem value="Gold">Gold</SelectItem>
+                  </SelectContent>
+                  </Select>
+                  <FormMessage />
+              </FormItem>
+              )}
+          />
+
         <Separator />
 
         <FormField
