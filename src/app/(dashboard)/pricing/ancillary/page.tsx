@@ -168,7 +168,7 @@ export default function AncillaryPricingPage() {
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold tracking-tight">
-            Ancillary Pricing
+            Ancillaries
           </h1>
           <p className="text-muted-foreground">
             Manage pricing and bundling of ancillaries, with per-segment

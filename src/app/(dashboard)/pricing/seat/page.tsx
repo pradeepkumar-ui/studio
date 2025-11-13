@@ -89,7 +89,7 @@ export default function SeatPricingPage() {
     <>
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Seat Pricing & Configuration</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Seats</h1>
         <p className="text-muted-foreground">
           Manage seat types, attributes, pricing, and seat map configurations.
         </p>

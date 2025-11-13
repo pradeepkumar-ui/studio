@@ -91,18 +91,8 @@ const menuItems: MenuItem[] = [
       { href: '/offer-composer', label: 'Composer', icon: Layers },
       { href: '/optimisation', label: 'Offer Optimisation', icon: Wand2 },
       { href: '/bundles', label: 'Bundles Studio', icon: Package },
-      { href: '/fares', label: 'Fare Management', icon: DollarSign },
-      { href: '/pricing/filing', label: 'Fare Filing', icon: FileJson },
-      {
-        href: '/pricing/ancillary',
-        label: 'Ancillary Pricing',
-        icon: Container,
-      },
-       { href: '/pricing/rules', label: 'Dynamic Pricing', icon: Target },
-      { href: '/promotions', label: 'Promotions & Products', icon: Gift },
-      { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
+      { href: '/pricing/rules', label: 'Dynamic Pricing', icon: Target },
       { href: '/disruption-waivers', label: 'Disruption Waivers', icon: Waves },
-      { href: '/loyalty-program', label: 'Loyalty Program', icon: Award },
     ],
   },
   {
@@ -149,8 +139,14 @@ const menuItems: MenuItem[] = [
     icon: BookOpen,
     subItems: [
       { href: '/catalog', label: 'Fare Products', icon: Package },
+      { href: '/fares', label: 'Fares', icon: DollarSign },
+      { href: '/pricing/ancillary', label: 'Ancillaries', icon: Container },
+      { href: '/pricing/seat', label: 'Seats', icon: Armchair },
+      { href: '/promotions', label: 'Promotions', icon: Gift },
+      { href: '/loyalty-program', label: 'Loyalty Program', icon: Award },
       { href: '/corporate', label: 'Corporate Contracts', icon: Briefcase },
       { href: '/channels', label: 'Channels', icon: RadioTower },
+      { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
     ]
   },
   {
