@@ -124,15 +124,6 @@ const menuItems: MenuItem[] = [
         { href: '/documentation', label: 'Documentation', icon: FileText },
     ]
   },
-   {
-    href: '/orchestration',
-    label: 'Orchestration',
-    icon: Workflow,
-    subItems: [
-        { href: '/orchestration', label: 'Dashboard', icon: LayoutDashboard },
-        { href: '/orchestration/create', label: 'Create Request', icon: PlusSquare },
-    ]
-  },
   {
     href: '/catalog',
     label: 'Catalogue',
@@ -160,14 +151,13 @@ const menuItems: MenuItem[] = [
       { href: '/reporting', label: 'Reporting', icon: BarChartHorizontal },
     ],
   },
-  { href: '/compliance', label: 'Compliance', icon: Shield },
-  { href: '/offer-data', label: 'Data Management', icon: Database },
   {
     href: '/inventory',
     label: 'Stock Keeping',
     icon: Plane,
      subItems: [
       { href: '/inventory', label: 'Flight & Inventory', icon: Plane },
+      { href: '/atpco', label: 'ATPCO', icon: Database },
       { href: '/capacity', label: 'Capacity', icon: Signal },
       { href: '/stock-keeper', label: 'Stock Keeper', icon: Package },
     ]
