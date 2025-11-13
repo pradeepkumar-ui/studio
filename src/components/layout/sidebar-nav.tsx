@@ -140,6 +140,7 @@ const menuItems: MenuItem[] = [
           { href: '/fare-change-forecast', label: 'Fare Change Forecast', icon: BrainCircuit },
         ],
       },
+      { href: '/campaigns', label: 'Campaign Management', icon: Megaphone },
     ],
   },
   {
@@ -188,7 +189,6 @@ const menuItems: MenuItem[] = [
       },
     ],
   },
-  { href: '/campaigns', label: 'Campaign Management', icon: Megaphone },
 ];
 
 const settingsItems: MenuItem[] = [
