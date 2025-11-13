@@ -131,6 +131,15 @@ const menuItems: MenuItem[] = [
           { href: '/stock-keeper', label: 'Stock Keeper', icon: Package },
         ],
       },
+       {
+        href: '/analytics',
+        label: 'Analytics & AI',
+        icon: BarChart3,
+        subItems: [
+          { href: '/analytics', label: 'Offer Performance', icon: BarChart3 },
+          { href: '/fare-change-forecast', label: 'Fare Change Forecast', icon: BrainCircuit },
+        ],
+      },
     ],
   },
   {
@@ -177,15 +186,6 @@ const menuItems: MenuItem[] = [
           { href: '/reporting', label: 'Reporting', icon: BarChartHorizontal },
         ],
       },
-    ],
-  },
-  {
-    href: '/analytics',
-    label: 'Analytics & AI',
-    icon: BarChart3,
-    subItems: [
-      { href: '/analytics', label: 'Offer Performance', icon: BarChart3 },
-      { href: '/fare-change-forecast', label: 'Fare Change Forecast', icon: BrainCircuit },
     ],
   },
   { href: '/campaigns', label: 'Campaign Management', icon: Megaphone },
