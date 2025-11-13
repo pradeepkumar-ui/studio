@@ -14,7 +14,6 @@ export type Ancillary = {
 // This data now matches the catalogue from `pricing/ancillary/page.tsx`
 const availableAncillaries: Ancillary[] = [
   { id: 'ANC-001', name: '1st Checked Bag (23kg)', price: 35, currency: 'USD' },
-  { id: 'ANC-002', name: 'Extra Legroom Seat', price: 50, currency: 'USD' },
   { id: 'ANC-003', name: 'In-flight Wi-Fi', price: 8, currency: 'USD' },
   { id: 'ANC-005', name: 'Flight Change Fee', price: 75, currency: 'USD' },
   { id: 'ANC-006', name: 'Lounge Access', price: 45, currency: 'USD' },
