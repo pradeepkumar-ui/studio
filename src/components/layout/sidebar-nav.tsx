@@ -225,7 +225,7 @@ export default function SidebarNav() {
             <Shield className="text-primary-foreground size-5" />
           </div>
           <span className="font-semibold text-lg text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-            OOSD
+            Offersense
           </span>
         </div>
       </SidebarHeader>
