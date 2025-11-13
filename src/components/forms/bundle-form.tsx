@@ -32,6 +32,7 @@ const bundleSchema = z.object({
     brand: z.array(z.object({ value: z.string() })).optional(),
     channel: z.array(z.object({ value: z.string() })).optional(),
     route: z.array(z.object({ value: z.string() })).optional(),
+    cohorts: z.array(z.object({ value: z.string() })).optional(),
   }),
   components: z.object({
     seat: z.string().optional(),
@@ -67,6 +68,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
             brand: parseStringToArray(bundle.scope.brand),
             channel: parseStringToArray(bundle.scope.channel),
             route: parseStringToArray(bundle.scope.route),
+            cohorts: parseStringToArray(bundle.scope.cohorts),
         }
     } : {
       name: '',
@@ -76,6 +78,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
         brand: [],
         channel: [],
         route: [],
+        cohorts: [],
       },
       components: {
         seat: '',
@@ -91,6 +94,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
   const { fields: brandFields, append: appendBrand, remove: removeBrand } = useFieldArray({ control: form.control, name: "scope.brand" });
   const { fields: channelFields, append: appendChannel, remove: removeChannel } = useFieldArray({ control: form.control, name: "scope.channel" });
   const { fields: routeFields, append: appendRoute, remove: removeRoute } = useFieldArray({ control: form.control, name: "scope.route" });
+  const { fields: cohortFields, append: appendCohort, remove: removeCohort } = useFieldArray({ control: form.control, name: "scope.cohorts" });
 
   const handleFinalSubmit = (data: Bundle) => {
     const finalData = {
@@ -99,6 +103,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
             brand: data.scope.brand?.map(item => item.value).filter(Boolean),
             channel: data.scope.channel?.map(item => item.value).filter(Boolean),
             route: data.scope.route?.map(item => item.value).filter(Boolean),
+            cohorts: data.scope.cohorts?.map(item => item.value).filter(Boolean),
         }
     };
     onSubmit(finalData as any);
@@ -140,7 +145,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
 
         <h4 className="text-md font-semibold">Scope & Rules</h4>
         <p className="text-sm text-muted-foreground -mt-2">Define the conditions under which this bundle is available.</p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
                 <FormLabel>Fare Brands</FormLabel>
                 {brandFields.map((field, index) => (
@@ -170,6 +175,16 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                     </div>
                 ))}
                 <Button type="button" variant="outline" size="sm" onClick={() => appendRoute({ value: '' })}><PlusCircle className="mr-2 h-4 w-4" /> Add Route</Button>
+            </div>
+            <div className="space-y-2">
+                <FormLabel>Target Cohorts</FormLabel>
+                {cohortFields.map((field, index) => (
+                    <div key={field.id} className="flex items-center gap-2">
+                        <FormField control={form.control} name={`scope.cohorts.${index}.value`} render={({field}) => <Input {...field} placeholder="e.g., BusinessLoyal_IN" />} />
+                        <Button type="button" variant="ghost" size="icon" onClick={() => removeCohort(index)}><Trash2 className="h-4 w-4" /></Button>
+                    </div>
+                ))}
+                <Button type="button" variant="outline" size="sm" onClick={() => appendCohort({ value: '' })}><PlusCircle className="mr-2 h-4 w-4" /> Add Cohort</Button>
             </div>
         </div>
         

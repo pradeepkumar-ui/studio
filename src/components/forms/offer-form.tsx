@@ -1,10 +1,10 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -36,6 +36,7 @@ const offerSchema = z.object({
   currency: z.string().length(3, 'Must be a 3-letter currency code.'),
   rounding: z.enum(['None', 'Round Half-Up', 'Round Down']),
   criteria: z.string(),
+  cohorts: z.array(z.object({ value: z.string() })).optional(),
   effectiveDate: z.union([z.instanceof(Date), z.instanceof(Timestamp)]),
   expiryDate: z.union([z.instanceof(Date), z.instanceof(Timestamp)]),
   notes: z.string().optional(),
@@ -58,6 +59,13 @@ const toDate = (date: Date | Timestamp | undefined): Date => {
     return date;
 }
 
+const parseStringToArray = (value: string | string[] | undefined) => {
+    if (Array.isArray(value)) return value.map(v => ({ value: v }));
+    if (typeof value === 'string' && value.length > 0) return value.split(',').map(v => ({ value: v.trim() }));
+    return [];
+}
+
+
 export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
   const form = useForm<Offer>({
     resolver: zodResolver(offerSchema),
@@ -65,6 +73,7 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
       ...offer,
       effectiveDate: toDate(offer.effectiveDate),
       expiryDate: toDate(offer.expiryDate),
+      cohorts: parseStringToArray(offer.cohorts as any),
     } : {
       name: '',
       scope: 'Market',
@@ -72,6 +81,7 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
       currency: 'USD',
       rounding: 'Round Half-Up',
       criteria: 'Market: US, EU',
+      cohorts: [],
       effectiveDate: new Date(),
       expiryDate: new Date(new Date().setDate(new Date().getDate() + 30)),
       notes: '',
@@ -79,9 +89,19 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
     },
   });
 
+  const { fields: cohortFields, append: appendCohort, remove: removeCohort } = useFieldArray({ control: form.control, name: "cohorts" });
+
+  const handleFinalSubmit = (data: Offer) => {
+    const finalData = {
+      ...data,
+      cohorts: data.cohorts?.map(c => c.value).filter(Boolean) as string[],
+    };
+    onSubmit(finalData);
+  }
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleFinalSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto pr-4">
         <FormField
           control={form.control}
           name="name"
@@ -192,6 +212,18 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
             </FormItem>
           )}
         />
+
+        <div className="space-y-2">
+            <FormLabel>Target Cohorts (Optional)</FormLabel>
+            {cohortFields.map((field, index) => (
+                <div key={field.id} className="flex items-center gap-2">
+                    <FormField control={form.control} name={`cohorts.${index}.value`} render={({field}) => <Input {...field} placeholder="e.g., BusinessLoyal_IN" />} />
+                    <Button type="button" variant="ghost" size="icon" onClick={() => removeCohort(index)}><Trash2 className="h-4 w-4" /></Button>
+                </div>
+            ))}
+            <Button type="button" variant="outline" size="sm" onClick={() => appendCohort({ value: '' })}><PlusCircle className="mr-2 h-4 w-4" /> Add Cohort</Button>
+        </div>
+
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}

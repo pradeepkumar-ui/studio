@@ -139,6 +139,10 @@ const formatRuleForSubmit = (data: PricingRuleFormData): PricingRule => {
      if (data.conditions.cohorts && data.conditions.cohorts.length > 0) {
         conditionsParts.push(`Cohorts: ${data.conditions.cohorts.length}`);
     }
+    if (data.conditions.includedAncillaries && data.conditions.includedAncillaries.length > 0) {
+        conditionsParts.push(`Ancillaries: ${data.conditions.includedAncillaries.length}`);
+    }
+
 
     const actionSign = data.action.adjustment >= 0 ? '+' : '';
     const actionValue = data.action.type === 'PERCENTAGE' ? `${data.action.adjustment}%` : `$${data.action.adjustment}`;

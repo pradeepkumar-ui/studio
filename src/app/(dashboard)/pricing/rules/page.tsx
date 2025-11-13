@@ -163,7 +163,7 @@ export default function DynamicPricingRulesPage() {
       </div>
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>{editingRule ? 'Edit Pricing Rule' : 'Create New Pricing Rule'}</DialogTitle>
             <DialogDescription>
