@@ -75,7 +75,6 @@ type MenuItem = {
 };
 
 const menuItems: MenuItem[] = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   {
     href: '/offers',
     label: 'Offers',
