@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -29,22 +29,24 @@ const mockOrder: OrderDetails = {
         status: 'Paid'
     },
     services: [
-        { id: 'FL-001', type: 'Flight', description: 'Business Class, JFK-LHR', status: 'Fulfilled' },
-        { id: 'BG-001', type: 'Baggage', description: '2x Checked Bags (23kg)', status: 'Fulfilled' },
-        { id: 'ST-001', type: 'Seat', description: 'Seat 1A (Window)', status: 'Fulfilled' },
-        { id: 'ML-001', type: 'Meal', description: 'Vegetarian Special Meal', status: 'Fulfilled' },
+        { id: 'FL-001', type: 'Flight', description: 'Business Class, JFK-LHR', status: 'Fulfilled', price: 11800 },
+        { id: 'BG-001', type: 'Baggage', description: '2x Checked Bags (23kg)', status: 'Fulfilled', price: 150 },
+        { id: 'ST-001', type: 'Seat', description: 'Seat 1A (Window)', status: 'Fulfilled', price: 75 },
+        { id: 'ML-001', type: 'Meal', description: 'Vegetarian Special Meal', status: 'Fulfilled', price: 25 },
+        { id: 'SUPP-001', type: 'Supplier Service', description: 'Chauffeur Service (LHR)', status: 'Confirmed', price: 450 }
     ],
     auditTrail: [
         { version: 1, actor: 'System (Offer Conversion)', event: 'Order Created', timestamp: '2024-07-15T10:30:00Z' },
-        { version: 2, actor: 'OpsAgent01', event: 'Service Added: Baggage', timestamp: '2024-07-15T11:05:00Z' },
+        { version: 2, actor: 'Agent01 (Servicing)', event: 'Service Added: Chauffeur', timestamp: '2024-07-15T11:05:00Z' },
         { version: 3, actor: 'System (Payment Gateway)', event: 'Payment Confirmed', timestamp: '2024-07-15T11:06:15Z' },
-        { version: 4, actor: 'OpsAgent01', event: 'Service Added: Meal', timestamp: '2024-07-15T14:20:00Z' },
+        { version: 4, actor: 'Agent01 (Servicing)', event: 'Seat Upgraded to 1A (Loyalty)', timestamp: '2024-07-15T14:20:00Z' },
         { version: 5, actor: 'System (Fulfilment)', event: 'All services fulfilled', timestamp: '2024-07-16T08:00:00Z' },
     ]
 };
 
 function OrderServicingComponent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [identifier, setIdentifier] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
@@ -57,11 +59,11 @@ function OrderServicingComponent() {
     }
     setIsLoading(true);
     setOrderDetails(null);
+    router.push(`/orders/servicing?orderId=${searchId}`);
     setTimeout(() => {
       // Mock search logic
       if (searchId.toUpperCase().includes('ORD-073') || searchId.toLowerCase().includes('voyage')) {
         setOrderDetails(mockOrder);
-        setIdentifier(searchId);
       } else {
         toast({ title: 'Not Found', description: `No order found for "${searchId}".`});
       }
@@ -72,8 +74,10 @@ function OrderServicingComponent() {
   useEffect(() => {
     const orderIdFromQuery = searchParams.get('orderId');
     if (orderIdFromQuery) {
+        setIdentifier(orderIdFromQuery);
         handleSearch(orderIdFromQuery);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   return (

@@ -19,11 +19,10 @@ import {
   CheckCircle,
   Archive,
   History,
-  FilePenLine,
-  XCircle,
-  Ticket,
-  Trash2,
   FileEdit,
+  Trash2,
+  Ticket,
+  Building,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +36,17 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '../ui/alert-dialog';
 
 export type OrderDetails = {
     id: string;
@@ -56,6 +66,7 @@ export type OrderDetails = {
         type: string;
         description: string;
         status: string;
+        price: number;
     }>;
     auditTrail: Array<{
         version: number;
@@ -81,6 +92,7 @@ const getServiceIcon = (type: string) => {
         case 'Baggage': return <Luggage className="h-4 w-4 text-muted-foreground" />;
         case 'Seat': return <Ticket className="h-4 w-4 text-muted-foreground" />;
         case 'Meal': return <Utensils className="h-4 w-4 text-muted-foreground" />;
+        case 'Supplier Service': return <Building className="h-4 w-4 text-muted-foreground" />;
         default: return <Plus className="h-4 w-4 text-muted-foreground" />;
     }
 }
@@ -90,18 +102,26 @@ const getAuditIcon = (event: string) => {
     if (event.includes('Added')) return <Plus className="h-5 w-5 text-secondary-foreground" />;
     if (event.includes('Confirmed')) return <CheckCircle className="h-5 w-5 text-secondary-foreground" />;
     if (event.includes('fulfilled')) return <Archive className="h-5 w-5 text-secondary-foreground" />;
+    if (event.includes('Upgraded')) return <CheckCircle className="h-5 w-5 text-secondary-foreground" />;
     return <History className="h-5 w-5 text-secondary-foreground" />;
 }
 
 export function OrderDetailsView({ order }: { order: OrderDetails }) {
     const { toast } = useToast();
 
-    const handleAction = (action: string) => {
+    const handleAction = (action: string, serviceId?: string) => {
         toast({
             title: 'Action Triggered',
-            description: `${action} functionality is not yet implemented.`,
+            description: `${action} on service ${serviceId} is not yet implemented.`,
         });
     };
+    
+    const handleAddService = () => {
+         toast({
+            title: 'Navigating to Offer Composer',
+            description: `A real implementation would link to the Offer Composer to add new services to order ${order.id}.`,
+        });
+    }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start mt-6">
@@ -110,7 +130,7 @@ export function OrderDetailsView({ order }: { order: OrderDetails }) {
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Services ({order.services.length})</CardTitle>
                     <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => handleAction('Add Service')}><Plus className="mr-2 h-4 w-4"/>Add Service</Button>
+                        <Button variant="outline" size="sm" onClick={handleAddService}><Plus className="mr-2 h-4 w-4"/>Add Service</Button>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -133,12 +153,29 @@ export function OrderDetailsView({ order }: { order: OrderDetails }) {
                                     <TableCell>{service.description}</TableCell>
                                     <TableCell><Badge variant="secondary">{service.status}</Badge></TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleAction('Edit Service')}>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleAction('Edit', service.id)}>
                                             <FileEdit className="h-4 w-4"/>
                                         </Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleAction('Delete Service')}>
-                                            <Trash2 className="h-4 w-4"/>
-                                        </Button>
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                                                    <Trash2 className="h-4 w-4"/>
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This action cannot be undone. This will permanently remove the service
+                                                    from the order and may require a refund.
+                                                </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleAction('Delete', service.id)}>Continue</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -213,15 +250,6 @@ export function OrderDetailsView({ order }: { order: OrderDetails }) {
                       <div className="pt-2">
                          <Button variant="outline" size="sm" className="w-full" onClick={() => handleAction('Manage Payment')}>Manage Payment / Refund</Button>
                       </div>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Order Actions</CardTitle>
-                </CardHeader>
-                <CardContent className="flex flex-col gap-2">
-                    <Button variant="outline" onClick={() => handleAction('Reshop & Re-price')}><FilePenLine className="mr-2 h-4 w-4"/> Reshop & Re-price</Button>
-                    <Button variant="destructive" onClick={() => handleAction('Cancel Full Order')}><XCircle className="mr-2 h-4 w-4"/> Cancel Full Order</Button>
                 </CardContent>
             </Card>
         </div>
