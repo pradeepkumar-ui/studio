@@ -36,6 +36,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useToast } from '@/hooks/use-toast';
 
 export type OrderDetails = {
     id: string;
@@ -93,6 +94,15 @@ const getAuditIcon = (event: string) => {
 }
 
 export function OrderDetailsView({ order }: { order: OrderDetails }) {
+    const { toast } = useToast();
+
+    const handleAction = (action: string) => {
+        toast({
+            title: 'Action Triggered',
+            description: `${action} functionality is not yet implemented.`,
+        });
+    };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start mt-6">
         <div className="lg:col-span-2 flex flex-col gap-6">
@@ -100,7 +110,7 @@ export function OrderDetailsView({ order }: { order: OrderDetails }) {
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Services ({order.services.length})</CardTitle>
                     <div className="flex gap-2">
-                        <Button variant="outline" size="sm"><Plus className="mr-2 h-4 w-4"/>Add Service</Button>
+                        <Button variant="outline" size="sm" onClick={() => handleAction('Add Service')}><Plus className="mr-2 h-4 w-4"/>Add Service</Button>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -123,10 +133,10 @@ export function OrderDetailsView({ order }: { order: OrderDetails }) {
                                     <TableCell>{service.description}</TableCell>
                                     <TableCell><Badge variant="secondary">{service.status}</Badge></TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleAction('Edit Service')}>
                                             <FileEdit className="h-4 w-4"/>
                                         </Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleAction('Delete Service')}>
                                             <Trash2 className="h-4 w-4"/>
                                         </Button>
                                     </TableCell>
@@ -201,7 +211,7 @@ export function OrderDetailsView({ order }: { order: OrderDetails }) {
                         <Badge variant={order.payment.status === 'Paid' ? 'default' : 'secondary'}>{order.payment.status}</Badge>
                      </div>
                       <div className="pt-2">
-                         <Button variant="outline" size="sm" className="w-full">Manage Payment / Refund</Button>
+                         <Button variant="outline" size="sm" className="w-full" onClick={() => handleAction('Manage Payment')}>Manage Payment / Refund</Button>
                       </div>
                 </CardContent>
             </Card>
@@ -210,8 +220,8 @@ export function OrderDetailsView({ order }: { order: OrderDetails }) {
                     <CardTitle>Order Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-2">
-                    <Button variant="outline"><FilePenLine className="mr-2 h-4 w-4"/> Reshop & Re-price</Button>
-                    <Button variant="destructive"><XCircle className="mr-2 h-4 w-4"/> Cancel Full Order</Button>
+                    <Button variant="outline" onClick={() => handleAction('Reshop & Re-price')}><FilePenLine className="mr-2 h-4 w-4"/> Reshop & Re-price</Button>
+                    <Button variant="destructive" onClick={() => handleAction('Cancel Full Order')}><XCircle className="mr-2 h-4 w-4"/> Cancel Full Order</Button>
                 </CardContent>
             </Card>
         </div>
