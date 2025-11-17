@@ -155,8 +155,6 @@ const menuItems: MenuItem[] = [
         subItems: [
           { href: '/orders', label: 'Order Dashboard', icon: LayoutDashboard },
           { href: '/orders/creation', label: 'Creation', icon: PlusSquare },
-          { href: '/orders/delivery', label: 'Delivery', icon: Send },
-          { href: '/orders/finalisation', label: 'Finalisation & Closure', icon: BadgeCheck },
           { href: '/orders/servicing', label: 'Servicing', icon: Wrench },
           { href: '/orders/supplier-orders', label: 'Supplier Orders', icon: Building },
           { href: '/orders/large-party', label: 'Large Party Orders', icon: Users },
@@ -168,6 +166,7 @@ const menuItems: MenuItem[] = [
         label: 'Delivery & Fulfilment',
         icon: Truck,
         subItems: [
+          { href: '/orders/delivery', label: 'Delivery Queue', icon: Send },
           { href: '/check-in', label: 'Check-in', icon: UserCheck },
           { href: '/boarding', label: 'Boarding Gate', icon: PlaneTakeoff },
           { href: '/orders/ground-handling', label: 'Ground Handling', icon: Truck },
@@ -181,8 +180,9 @@ const menuItems: MenuItem[] = [
         label: 'Accounting',
         icon: BookOpen,
         subItems: [
-          { href: '/accounting', label: 'Reconciliation', icon: GitCompare },
+          { href: '/orders/finalisation', label: 'Finalisation & Closure', icon: BadgeCheck },
           { href: '/payments', label: 'Payments', icon: CreditCard },
+          { href: '/accounting', label: 'Reconciliation', icon: GitCompare },
           { href: '/airline-revenue', label: 'Airline Revenue', icon: Landmark },
           { href: '/reporting', label: 'Reporting', icon: BarChartHorizontal },
         ],
