@@ -100,7 +100,7 @@ const getAuditIcon = (event: string) => {
 
 
 export default function OrderDetailsPage({ params }: { params: { id: string } }) {
-  const { id: orderId } = React.use(params);
+  const { id: orderId } = params;
   const order = mockOrder; // In a real app, you'd fetch this based on the ID
 
   return (
