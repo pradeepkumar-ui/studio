@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/card';
 import { ArrowLeft, GitCommitHorizontal, CheckCircle, Store, ShoppingCart, Archive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Suspense } from 'react';
 
 type LineageEvent = {
   status: string;
@@ -65,8 +66,7 @@ const mockLineage: LineageEvent[] = [
 ];
 
 
-export default function OfferLineagePage({ params }: { params: { id: string } }) {
-  const offerId = params.id;
+function OfferLineagePageComponent({ offerId }: { offerId: string }) {
 
   return (
     <div className="flex flex-col gap-6">
@@ -115,4 +115,13 @@ export default function OfferLineagePage({ params }: { params: { id: string } })
       </Card>
     </div>
   );
+}
+
+export default function OfferLineagePage({ params }: { params: { id: string } }) {
+    const { id } = params;
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <OfferLineagePageComponent offerId={id} />
+        </Suspense>
+    )
 }

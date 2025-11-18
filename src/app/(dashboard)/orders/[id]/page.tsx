@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { OrderDetailsView, type OrderDetails } from '@/components/orders/order-details-view';
+import { OrderDetailsView as OrderDetailsClientView, type OrderDetails } from '@/components/orders/order-details-view';
 import { Suspense } from 'react';
 
 const mockOrder: OrderDetails = {
@@ -52,10 +52,9 @@ const mockOrder: OrderDetails = {
 };
 
 
-function OrderDetailsPageComponent({ params }: { params: { id: string } }) {
+function OrderDetailsPageComponent({ orderId }: { orderId: string }) {
   const router = useRouter();
   const { toast } = useToast();
-  const orderId = params.id;
   const order = mockOrder; // In a real app, you'd fetch this based on the ID
 
   const handleReshop = () => {
@@ -93,15 +92,16 @@ function OrderDetailsPageComponent({ params }: { params: { id: string } }) {
         </div>
       </div>
       
-      <OrderDetailsView order={{...order, id: orderId}} />
+      <OrderDetailsClientView order={{...order, id: orderId}} />
     </div>
   );
 }
 
 export default function OrderDetailsPage({ params }: { params: { id: string } }) {
+    const { id } = params;
     return (
         <Suspense fallback={<div>Loading...</div>}>
-            <OrderDetailsPageComponent params={params} />
+            <OrderDetailsPageComponent orderId={id} />
         </Suspense>
     )
 }
