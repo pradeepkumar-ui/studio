@@ -1,15 +1,16 @@
+
 'use client';
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Briefcase, CheckCircle } from "lucide-react";
+import { Briefcase, CheckCircle, Check } from "lucide-react";
 
 export type BrandedFare = {
   id: string;
   brand: string;
   cabinClass: string;
   price: number;
-  includedBaggage: string;
+  includedServices: string[];
 };
 
 interface BrandedFareCardProps {
@@ -24,7 +25,14 @@ export function BrandedFareCard({ fare, onSelect, isSelected }: BrandedFareCardP
       <div className="flex-grow space-y-3">
         <h4 className="font-semibold text-lg">{fare.brand}</h4>
         <Badge variant="outline">{fare.cabinClass}</Badge>
-        <p className="text-xs text-muted-foreground h-10">{fare.includedBaggage}</p>
+        <ul className="text-xs text-muted-foreground space-y-1.5 h-24">
+            {fare.includedServices.map(service => (
+                <li key={service} className="flex items-center gap-2">
+                    <Check className="h-3 w-3 text-green-500"/>
+                    <span>{service}</span>
+                </li>
+            ))}
+        </ul>
         <p className="text-3xl font-bold">
           ${fare.price.toFixed(2)}
         </p>
@@ -35,3 +43,5 @@ export function BrandedFareCard({ fare, onSelect, isSelected }: BrandedFareCardP
     </div>
   );
 }
+
+    

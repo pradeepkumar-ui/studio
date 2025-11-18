@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -13,7 +14,7 @@ export type BrandedFare = {
   brand: string;
   cabinClass: string;
   price: number;
-  includedBaggage: string;
+  includedServices: string[];
 };
 
 export type FlightJourney = {
@@ -77,3 +78,5 @@ export function JourneyResultCard({ journey, onSelectFare, selectedFareId }: Jou
     </Card>
   );
 }
+
+    

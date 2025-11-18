@@ -46,7 +46,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type OfferStatus = 'OfferRequested' | 'OfferProcessing' | 'OfferCreated' | 'OfferSelected' | 'OfferValidated' | 'OfferStockChecked' | 'OfferConvertedToOrder' | 'OfferExpired';
 
-
 const offerSearchSchema = z.object({
   origin: z.string().length(3, 'Origin must be a 3-letter IATA code.').toUpperCase(),
   destination: z.string().length(3, 'Destination must be a 3-letter IATA code.').toUpperCase(),
@@ -74,9 +73,9 @@ const mockFlightJourneys: FlightJourney[] = [
     arrivalTime: '09:45', arrivalCode: 'LAX',
     duration: '6h 15m', airline: 'Airline A', stops: 0,
     fares: [
-      { id: 'F-001A', brand: 'Economy Light', cabinClass: 'ECONOMY', price: 280, includedBaggage: '1 Carry-on' },
-      { id: 'F-001B', brand: 'Economy Flex', cabinClass: 'ECONOMY', price: 350, includedBaggage: '1 Carry-on, 1 Checked' },
-      { id: 'F-001C', brand: 'Business Saver', cabinClass: 'BUSINESS', price: 1100, includedBaggage: '1 Carry-on, 1 Checked' },
+      { id: 'F-001A', brand: 'Economy Light', cabinClass: 'ECONOMY', price: 280, includedServices: ['1 Carry-on', 'Standard Seat Selection'] },
+      { id: 'F-001B', brand: 'Economy Flex', cabinClass: 'ECONOMY', price: 350, includedServices: ['1 Carry-on', '1 Checked Bag (23kg)', 'Standard Seat Selection', 'Flexibility'] },
+      { id: 'F-001C', brand: 'Business Saver', cabinClass: 'BUSINESS', price: 1100, includedServices: ['1 Carry-on', '2 Checked Bags (32kg)', 'Lounge Access', 'Priority Boarding'] },
     ]
   },
   {
@@ -85,8 +84,8 @@ const mockFlightJourneys: FlightJourney[] = [
     arrivalTime: '12:15', arrivalCode: 'LAX',
     duration: '6h 15m', airline: 'Airline B', stops: 0,
     fares: [
-      { id: 'F-002A', brand: 'Economy Saver', cabinClass: 'ECONOMY', price: 310, includedBaggage: '1 Carry-on, 1 Checked' },
-      { id: 'F-002B', brand: 'Business Flex', cabinClass: 'BUSINESS', price: 1250, includedBaggage: '1 Carry-on, 2 Checked, Lounge' },
+      { id: 'F-002A', brand: 'Economy Saver', cabinClass: 'ECONOMY', price: 310, includedServices: ['1 Carry-on', '1 Checked Bag (23kg)', 'Standard Seat Selection'] },
+      { id: 'F-002B', brand: 'Business Flex', cabinClass: 'BUSINESS', price: 1250, includedServices: ['1 Carry-on', '2 Checked Bags (32kg)', 'Lounge Access', 'Priority Boarding', 'Flexibility', 'Free Wi-Fi'] },
     ]
   },
   {
@@ -95,9 +94,9 @@ const mockFlightJourneys: FlightJourney[] = [
     arrivalTime: '18:30', arrivalCode: 'DXB',
     duration: '7h 30m', airline: 'Airline C', stops: 0,
     fares: [
-        { id: 'F-003A', brand: 'Economy', cabinClass: 'ECONOMY', price: 450, includedBaggage: '1 Carry-on, 1 Checked' },
-        { id: 'F-003B', brand: 'Business', cabinClass: 'BUSINESS', price: 2500, includedBaggage: '1 Carry-on, 2 Checked, Lounge' },
-        { id: 'F-003C', brand: 'First', cabinClass: 'FIRST', price: 4800, includedBaggage: '1 Carry-on, 3 Checked, Lounge, Priority' },
+        { id: 'F-003A', brand: 'Economy', cabinClass: 'ECONOMY', price: 450, includedServices: ['1 Carry-on', '1 Checked Bag (23kg)', 'Standard Seat Selection'] },
+        { id: 'F-003B', brand: 'Business', cabinClass: 'BUSINESS', price: 2500, includedServices: ['1 Carry-on', '2 Checked Bags (32kg)', 'Lounge Access', 'Priority Boarding', 'Flexibility'] },
+        { id: 'F-003C', brand: 'First', cabinClass: 'FIRST', price: 4800, includedServices: ['1 Carry-on', '3 Checked Bags (32kg)', 'Lounge Access', 'Priority Boarding', 'Flexibility', 'First Class Suite', 'Premium Dining'] },
     ]
   }
 ];
@@ -108,6 +107,7 @@ export default function OfferComposerPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState<BrandedFare | null>(null);
+  const [appliedRules, setAppliedRules] = useState<string[]>([]);
   const [selectedAncillaries, setSelectedAncillaries] = useState<Ancillary[]>([]);
   const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
   const [offerStatus, setOfferStatus] = useState<OfferStatus | null>(null);
@@ -172,6 +172,7 @@ export default function OfferComposerPage() {
     setIsLoading(true);
     setSearchResults(null);
     setSelectedOffer(null);
+    setAppliedRules([]);
     setSelectedAncillaries([]);
     setSelectedSeat(null);
     setOfferStatus('OfferRequested');
@@ -185,17 +186,19 @@ export default function OfferComposerPage() {
             ...journey,
             fares: journey.fares.filter(fare => fare.cabinClass.toUpperCase() === data.cabinClass)
         })).filter(journey => journey.fares.length > 0);
+        
+        const activeRules: string[] = [];
 
         // ** SIMULATED ENGINE LOGIC **
         if (data.corporateId && data.cabinClass === 'BUSINESS') {
-            toast({ title: "Corporate rule applied", description: "-5% discount & bundle applied" });
+            activeRules.push("Corporate rule applied: -5% discount & bundle applied");
             results = results.map(j => ({
                 ...j,
                 fares: j.fares.map(f => {
                     if (f.cabinClass === 'BUSINESS') {
                         const newPrice = f.price * 0.95;
-                        const newIncluded = `${f.includedBaggage}, Lounge, Priority, Wi-Fi`;
-                        return { ...f, price: newPrice, includedBaggage: newIncluded };
+                        const newIncluded = [...f.includedServices, 'Lounge Access', 'Priority Boarding', 'Wi-Fi'];
+                        return { ...f, price: newPrice, includedServices: Array.from(new Set(newIncluded)) };
                     }
                     return f;
                 })
@@ -203,20 +206,21 @@ export default function OfferComposerPage() {
         }
         
         if ((data.passengers.adt + data.passengers.chd) >= 3 && data.passengers.chd > 0) {
-            toast({ title: "Family rule applied", description: "10% discount for family cohort." });
+            activeRules.push("Family rule applied: 10% discount for family cohort.");
             results = results.map(j => ({...j, fares: j.fares.map(f => ({...f, price: f.price * 0.9})) }));
         }
 
         if (differenceInHours(data.departureDate, new Date()) < 48) {
-            toast({ title: "Last-minute rule applied", description: "+15% surge pricing." });
+            activeRules.push("Last-minute rule applied: +15% surge pricing.");
             results = results.map(j => ({...j, fares: j.fares.map(f => ({...f, price: f.price * 1.15})) }));
         }
         
         if (data.channel === 'OTA') {
-             toast({ title: "OTA rule applied", description: "+2% markup for OTA channel." });
+             activeRules.push("OTA rule applied: +2% markup for OTA channel.");
              results = results.map(j => ({...j, fares: j.fares.map(f => ({...f, price: f.price * 1.02})) }));
         }
-
+        
+        setAppliedRules(activeRules);
         setSearchResults(results);
         setIsLoading(false);
         setOfferStatus('OfferCreated');
@@ -234,7 +238,7 @@ export default function OfferComposerPage() {
     setOfferStatus('OfferSelected');
     toast({
       title: 'Offer Added to Cart',
-      description: `Fare "${offer.brand}" has been selected. You can now add ancillaries.`,
+      description: `Fare "${offer.brand}" has been selected. Review applied rules before adding ancillaries.`,
     });
   }
   
@@ -533,18 +537,34 @@ export default function OfferComposerPage() {
                 </CardContent>
             </Card>
           )}
-
+          
           {selectedOffer && (
-             <Card>
-                <CardHeader>
-                    <CardTitle>3. Add Ancillaries & Seats</CardTitle>
-                    <CardDescription>Select optional services for the chosen flight.</CardDescription>
-                </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <AncillarySelection selectedAncillaries={selectedAncillaries} onAncillaryChange={setSelectedAncillaries} />
-                    <SeatMap selectedSeat={selectedSeat} onSeatSelect={setSelectedSeat} />
-                </CardContent>
-            </Card>
+            <>
+              {appliedRules.length > 0 && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>3. Applied Rules & Offers</CardTitle>
+                        <CardDescription>The Offersense engine has dynamically applied the following rules to your selection.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                            {appliedRules.map((rule, index) => <li key={index}>{rule}</li>)}
+                        </ul>
+                    </CardContent>
+                </Card>
+              )}
+              
+              <Card>
+                  <CardHeader>
+                      <CardTitle>{appliedRules.length > 0 ? '4.' : '3.'} Add Ancillaries & Seats</CardTitle>
+                      <CardDescription>Select optional services for the chosen flight.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <AncillarySelection selectedAncillaries={selectedAncillaries} onAncillaryChange={setSelectedAncillaries} />
+                      <SeatMap selectedSeat={selectedSeat} onSeatSelect={setSelectedSeat} />
+                  </CardContent>
+              </Card>
+            </>
           )}
 
         </div>
@@ -583,7 +603,7 @@ export default function OfferComposerPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center gap-2">
                         <ShoppingBasket className="h-5 w-5" />
-                        <CardTitle>4. Shopping Cart</CardTitle>
+                        <CardTitle>{appliedRules.length > 0 ? '5.' : '4.'} Shopping Cart</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2 text-sm">
