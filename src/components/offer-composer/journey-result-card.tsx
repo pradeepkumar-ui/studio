@@ -14,6 +14,7 @@ export type BrandedFare = {
   brand: string;
   cabinClass: string;
   price: number;
+  basePrice: number;
   includedServices: string[];
 };
 

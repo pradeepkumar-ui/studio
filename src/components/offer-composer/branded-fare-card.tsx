@@ -10,6 +10,7 @@ export type BrandedFare = {
   brand: string;
   cabinClass: string;
   price: number;
+  basePrice: number;
   includedServices: string[];
 };
 
@@ -20,6 +21,9 @@ interface BrandedFareCardProps {
 }
 
 export function BrandedFareCard({ fare, onSelect, isSelected }: BrandedFareCardProps) {
+  const hasDiscount = fare.price < fare.basePrice;
+  const hasMarkup = fare.price > fare.basePrice;
+
   return (
     <div className="flex flex-col p-4">
       <div className="flex-grow space-y-3">
@@ -33,9 +37,14 @@ export function BrandedFareCard({ fare, onSelect, isSelected }: BrandedFareCardP
                 </li>
             ))}
         </ul>
-        <p className="text-3xl font-bold">
-          ${fare.price.toFixed(2)}
-        </p>
+        <div className="flex items-baseline gap-2">
+            <p className="text-3xl font-bold">
+            ${fare.price.toFixed(2)}
+            </p>
+            {(hasDiscount || hasMarkup) && (
+                <p className="text-sm text-muted-foreground line-through">${fare.basePrice.toFixed(2)}</p>
+            )}
+        </div>
       </div>
       <Button className="w-full mt-4" onClick={onSelect} disabled={isSelected}>
         {isSelected ? <><CheckCircle className="mr-2" />Selected</> : 'Select'}

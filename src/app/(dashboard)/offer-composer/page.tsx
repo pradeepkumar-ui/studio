@@ -55,6 +55,11 @@ type Promotion = {
     value: number;
 };
 
+type AppliedRule = {
+    name: string;
+    adjustment: number;
+};
+
 const offerSearchSchema = z.object({
   origin: z.string().length(3, 'Origin must be a 3-letter IATA code.').toUpperCase(),
   destination: z.string().length(3, 'Destination must be a 3-letter IATA code.').toUpperCase(),
@@ -82,9 +87,9 @@ const mockFlightJourneys: FlightJourney[] = [
     arrivalTime: '09:45', arrivalCode: 'LAX',
     duration: '6h 15m', airline: 'Airline A', stops: 0,
     fares: [
-      { id: 'F-001A', brand: 'Economy Light', cabinClass: 'ECONOMY', price: 280, includedServices: ['1 Carry-on', 'Standard Seat Selection'] },
-      { id: 'F-001B', brand: 'Economy Flex', cabinClass: 'ECONOMY', price: 350, includedServices: ['1 Carry-on', '1 Checked Bag (23kg)', 'Standard Seat Selection', 'Flexibility'] },
-      { id: 'F-001C', brand: 'Business Saver', cabinClass: 'BUSINESS', price: 1100, includedServices: ['1 Carry-on', '2 Checked Bags (32kg)', 'Lounge Access', 'Priority Boarding'] },
+      { id: 'F-001A', brand: 'Economy Light', cabinClass: 'ECONOMY', price: 280, basePrice: 280, includedServices: ['1 Carry-on', 'Standard Seat Selection'] },
+      { id: 'F-001B', brand: 'Economy Flex', cabinClass: 'ECONOMY', price: 350, basePrice: 350, includedServices: ['1 Carry-on', '1 Checked Bag (23kg)', 'Standard Seat Selection', 'Flexibility'] },
+      { id: 'F-001C', brand: 'Business Saver', cabinClass: 'BUSINESS', price: 1100, basePrice: 1100, includedServices: ['1 Carry-on', '2 Checked Bags (32kg)', 'Lounge Access', 'Priority Boarding'] },
     ]
   },
   {
@@ -93,8 +98,8 @@ const mockFlightJourneys: FlightJourney[] = [
     arrivalTime: '12:15', arrivalCode: 'LAX',
     duration: '6h 15m', airline: 'Airline B', stops: 0,
     fares: [
-      { id: 'F-002A', brand: 'Economy Saver', cabinClass: 'ECONOMY', price: 310, includedServices: ['1 Carry-on', '1 Checked Bag (23kg)', 'Standard Seat Selection'] },
-      { id: 'F-002B', brand: 'Business Flex', cabinClass: 'BUSINESS', price: 1250, includedServices: ['1 Carry-on', '2 Checked Bags (32kg)', 'Lounge Access', 'Priority Boarding', 'Flexibility', 'Free Wi-Fi'] },
+      { id: 'F-002A', brand: 'Economy Saver', cabinClass: 'ECONOMY', price: 310, basePrice: 310, includedServices: ['1 Carry-on', '1 Checked Bag (23kg)', 'Standard Seat Selection'] },
+      { id: 'F-002B', brand: 'Business Flex', cabinClass: 'BUSINESS', price: 1250, basePrice: 1250, includedServices: ['1 Carry-on', '2 Checked Bags (32kg)', 'Lounge Access', 'Priority Boarding', 'Flexibility', 'Free Wi-Fi'] },
     ]
   },
   {
@@ -103,9 +108,9 @@ const mockFlightJourneys: FlightJourney[] = [
     arrivalTime: '18:30', arrivalCode: 'DXB',
     duration: '7h 30m', airline: 'Airline C', stops: 0,
     fares: [
-        { id: 'F-003A', brand: 'Economy', cabinClass: 'ECONOMY', price: 450, includedServices: ['1 Carry-on', '1 Checked Bag (23kg)', 'Standard Seat Selection'] },
-        { id: 'F-003B', brand: 'Business', cabinClass: 'BUSINESS', price: 2500, includedServices: ['1 Carry-on', '2 Checked Bags (32kg)', 'Lounge Access', 'Priority Boarding', 'Flexibility'] },
-        { id: 'F-003C', brand: 'First', cabinClass: 'FIRST', price: 4800, includedServices: ['1 Carry-on', '3 Checked Bags (32kg)', 'Lounge Access', 'Priority Boarding', 'Flexibility', 'First Class Suite', 'Premium Dining'] },
+        { id: 'F-003A', brand: 'Economy', cabinClass: 'ECONOMY', price: 450, basePrice: 450, includedServices: ['1 Carry-on', '1 Checked Bag (23kg)', 'Standard Seat Selection'] },
+        { id: 'F-003B', brand: 'Business', cabinClass: 'BUSINESS', price: 2500, basePrice: 2500, includedServices: ['1 Carry-on', '2 Checked Bags (32kg)', 'Lounge Access', 'Priority Boarding', 'Flexibility'] },
+        { id: 'F-003C', brand: 'First', cabinClass: 'FIRST', price: 4800, basePrice: 4800, includedServices: ['1 Carry-on', '3 Checked Bags (32kg)', 'Lounge Access', 'Priority Boarding', 'Flexibility', 'First Class Suite', 'Premium Dining'] },
     ]
   }
 ];
@@ -124,7 +129,7 @@ export default function OfferComposerPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState<BrandedFare | null>(null);
-  const [appliedRules, setAppliedRules] = useState<string[]>([]);
+  const [appliedRules, setAppliedRules] = useState<AppliedRule[]>([]);
   const [activeCohort, setActiveCohort] = useState<string | null>(null);
   const [selectedAncillaries, setSelectedAncillaries] = useState<Ancillary[]>([]);
   const [selectedPromotion, setSelectedPromotion] = useState<Promotion | null>(null);
@@ -208,18 +213,19 @@ export default function OfferComposerPage() {
             fares: journey.fares.filter(fare => fare.cabinClass.toUpperCase() === data.cabinClass)
         })).filter(journey => journey.fares.length > 0);
         
-        const activeRules: string[] = [];
+        const activeRules: AppliedRule[] = [];
         let cohortName: string | null = null;
 
         // ** SIMULATED ENGINE LOGIC **
         if (data.corporateId && data.cabinClass === 'BUSINESS') {
             cohortName = "Corporate Traveller";
-            activeRules.push("Corporate rule applied: -5% discount & bundle applied");
             results = results.map(j => ({
                 ...j,
                 fares: j.fares.map(f => {
                     if (f.cabinClass === 'BUSINESS') {
-                        const newPrice = f.price * 0.95;
+                        const discount = f.basePrice * 0.05;
+                        const newPrice = f.basePrice - discount;
+                        activeRules.push({ name: 'Corporate Discount', adjustment: -discount });
                         const newIncluded = [...f.includedServices, 'Lounge Access', 'Priority Boarding', 'Wi-Fi'];
                         return { ...f, price: newPrice, includedServices: Array.from(new Set(newIncluded)) };
                     }
@@ -228,20 +234,29 @@ export default function OfferComposerPage() {
             }));
         } else if ((data.passengers.adt + data.passengers.chd) >= 3 && data.passengers.chd > 0) {
             cohortName = "Family Leisure Cohort";
-            activeRules.push("Family rule applied: 10% discount for family cohort.");
-            results = results.map(j => ({...j, fares: j.fares.map(f => ({...f, price: f.price * 0.9})) }));
+             results = results.map(j => ({...j, fares: j.fares.map(f => {
+                const discount = f.basePrice * 0.10;
+                activeRules.push({ name: 'Family Offer', adjustment: -discount });
+                return {...f, price: f.basePrice - discount };
+             }) }));
         }
         
         if (data.departureDate && differenceInHours(data.departureDate, new Date()) < 48) {
             cohortName = cohortName ? `${cohortName}, Last-Minute` : 'Last-Minute Traveller';
-            activeRules.push("Last-minute rule applied: +15% surge pricing.");
-            results = results.map(j => ({...j, fares: j.fares.map(f => ({...f, price: f.price * 1.15})) }));
+            results = results.map(j => ({...j, fares: j.fares.map(f => {
+                const surge = f.basePrice * 0.15;
+                activeRules.push({ name: 'Last-Minute Surge', adjustment: surge });
+                return {...f, price: f.price + surge };
+            })}));
         }
         
         if (data.channel === 'OTA') {
              cohortName = cohortName ? `${cohortName}, OTA` : 'OTA Shopper';
-             activeRules.push("OTA rule applied: +2% markup for OTA channel.");
-             results = results.map(j => ({...j, fares: j.fares.map(f => ({...f, price: f.price * 1.02})) }));
+             results = results.map(j => ({...j, fares: j.fares.map(f => {
+                const markup = f.price * 0.02;
+                activeRules.push({ name: 'OTA Channel Markup', adjustment: markup });
+                return {...f, price: f.price + markup };
+            }) }));
         }
         
         setActiveCohort(cohortName);
@@ -600,9 +615,14 @@ export default function OfferComposerPage() {
                     <div>
                         <h4 className="font-semibold text-md mb-2">Automatically Applied Rules</h4>
                         {appliedRules.length > 0 ? (
-                            <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                                {appliedRules.map((rule, index) => <li key={index}>{rule}</li>)}
-                            </ul>
+                             <div className="space-y-1 text-sm text-muted-foreground">
+                                {appliedRules.map((rule, index) => (
+                                    <div key={index} className="flex justify-between items-center">
+                                        <span>{rule.name}</span>
+                                        <span className={cn('font-medium', rule.adjustment > 0 ? 'text-destructive' : 'text-green-600')}>{rule.adjustment > 0 ? '+' : ''}{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(rule.adjustment)}</span>
+                                    </div>
+                                ))}
+                            </div>
                         ) : (
                             <p className="text-sm text-muted-foreground">No automatic rules were applied for this search.</p>
                         )}
