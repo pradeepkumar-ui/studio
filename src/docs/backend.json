@@ -1,5 +1,84 @@
 {
   "entities": {
+    "order": {
+      "title": "Order",
+      "description": "Represents a customer order containing flights, ancillaries, and payment details.",
+      "type": "object",
+      "properties": {
+        "customer": {
+          "type": "string",
+          "description": "Name of the customer or corporate entity."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Contact email for the order."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Pending", "Fulfilled", "Canceled", "Partially Fulfilled"],
+          "description": "The current lifecycle status of the order."
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "The creation date of the order."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The total amount of the order."
+        },
+        "currency": {
+          "type": "string",
+          "description": "The currency of the order amount."
+        },
+        "payment": {
+          "type": "object",
+          "properties": {
+            "method": { "type": "string" },
+            "last4": { "type": "string" },
+            "status": { "type": "string" }
+          },
+          "required": ["method", "status"]
+        },
+        "services": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "type": { "type": "string" },
+              "description": { "type": "string" },
+              "status": { "type": "string" },
+              "price": { "type": "number" }
+            },
+            "required": ["id", "type", "description", "status", "price"]
+          }
+        },
+        "auditTrail": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "version": { "type": "number" },
+              "actor": { "type": "string" },
+              "event": { "type": "string" },
+              "timestamp": { "type": "string", "format": "date-time" }
+            },
+            "required": ["version", "actor", "event", "timestamp"]
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["customer", "email", "status", "date", "amount", "currency", "payment", "services", "auditTrail"]
+    },
     "fare": {
       "title": "Fare",
       "description": "Represents a fare for a specific route and class.",
@@ -282,6 +361,12 @@
     "providers": []
   },
   "firestore": {
+    "/orders/{orderId}": {
+      "schema": {
+        "$ref": "#/entities/order"
+      },
+      "description": "Stores individual order documents."
+    },
     "/fares/{fareId}": {
       "schema": {
         "$ref": "#/entities/fare"
