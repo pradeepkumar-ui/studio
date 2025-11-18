@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { format, differenceInHours } from 'date-fns';
+import { format, differenceInHours, addDays } from 'date-fns';
 import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket, BadgeCheck, XCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -60,6 +60,7 @@ const offerSearchSchema = z.object({
   brand: z.string().optional(),
   corporateId: z.string().optional(),
   channel: z.string().optional(),
+  validTill: z.date().optional(),
 });
 
 const aiSearchSchema = z.object({
@@ -122,7 +123,8 @@ export default function OfferComposerPage() {
       cabinClass: 'ECONOMY',
       brand: 'All',
       corporateId: '',
-      channel: 'Direct'
+      channel: 'Direct',
+      validTill: addDays(new Date(), 7),
     },
   });
   
@@ -468,11 +470,12 @@ export default function OfferComposerPage() {
                             )}
                          />
                     </div>
+                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 pt-4">
                      <FormField
                         control={form.control}
                         name="channel"
                         render={({ field }) => (
-                            <FormItem className="pt-4">
+                            <FormItem>
                             <FormLabel>Channel</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                                     <FormControl>
@@ -490,6 +493,46 @@ export default function OfferComposerPage() {
                             </FormItem>
                         )}
                         />
+                         <FormField
+                            control={form.control}
+                            name="validTill"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-col">
+                                <FormLabel>Valid Till</FormLabel>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                    <FormControl>
+                                        <Button
+                                        variant={'outline'}
+                                        className={cn(
+                                            'w-full pl-3 text-left font-normal',
+                                            !field.value && 'text-muted-foreground'
+                                        )}
+                                        >
+                                        {field.value ? (
+                                            format(field.value, 'PPP')
+                                        ) : (
+                                            <span>Pick an expiry date</span>
+                                        )}
+                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                        </Button>
+                                    </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                        mode="single"
+                                        selected={field.value}
+                                        onSelect={field.onChange}
+                                        disabled={(date) => date < new Date()}
+                                        initialFocus
+                                    />
+                                    </PopoverContent>
+                                </Popover>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
                     <div className="flex justify-end pt-6">
                         <Button type="submit" className="w-full md:w-auto" disabled={isLoading}>
                             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
@@ -656,4 +699,3 @@ export default function OfferComposerPage() {
     </div>
   );
 }
-
