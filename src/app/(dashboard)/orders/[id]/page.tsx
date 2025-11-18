@@ -97,7 +97,7 @@ function OrderDetailsPageComponent({ orderId }: { orderId: string }) {
   );
 }
 
-export default async function OrderDetailsPage({ params }: { params: { id: string } }) {
+export default function OrderDetailsPage({ params }: { params: { id: string } }) {
     const { id } = params;
     return (
         <Suspense fallback={<div>Loading...</div>}>
