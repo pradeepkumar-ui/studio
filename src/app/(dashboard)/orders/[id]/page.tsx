@@ -52,10 +52,9 @@ const mockOrder: OrderDetails = {
 };
 
 
-function OrderDetailsPageComponent({ params }: { params: { id: string } }) {
+function OrderDetailsPageComponent({ orderId }: { orderId: string }) {
   const router = useRouter();
   const { toast } = useToast();
-  const orderId = params.id;
   const order = mockOrder; // In a real app, you'd fetch this based on the ID
 
   const handleReshop = () => {
@@ -82,7 +81,7 @@ function OrderDetailsPageComponent({ params }: { params: { id: string } }) {
             </Button>
             <div className="flex flex-col gap-1">
                 <h1 className="text-2xl font-bold tracking-tight">Order Details</h1>
-                <p className="text-muted-foreground font-mono text-sm">{order.id}</p>
+                <p className="text-muted-foreground font-mono text-sm">{orderId}</p>
             </div>
         </div>
         <div className="flex items-center gap-2">
@@ -93,7 +92,7 @@ function OrderDetailsPageComponent({ params }: { params: { id: string } }) {
         </div>
       </div>
       
-      <OrderDetailsView order={order} />
+      <OrderDetailsView order={{...order, id: orderId}} />
     </div>
   );
 }
@@ -101,7 +100,7 @@ function OrderDetailsPageComponent({ params }: { params: { id: string } }) {
 export default function OrderDetailsPage({ params }: { params: { id: string } }) {
     return (
         <Suspense fallback={<div>Loading...</div>}>
-            <OrderDetailsPageComponent params={params} />
+            <OrderDetailsPageComponent orderId={params.id} />
         </Suspense>
     )
 }
