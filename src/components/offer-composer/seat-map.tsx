@@ -41,7 +41,7 @@ export function SeatMap({ selectedSeat, onSeatSelect }: SeatMapProps) {
     <div className="space-y-4">
         <h4 className="font-semibold">Seat Selection</h4>
         <div className="p-4 rounded-lg bg-secondary flex flex-col items-center gap-2">
-            <div className="w-full text-center text-sm text-muted-foreground pb-2">Business Class</div>
+            <div className="w-full text-center text-sm text-muted-foreground pb-2">Forward Zone</div>
             {seatRows.map((row, rowIndex) => (
                 <div key={rowIndex} className="flex items-center gap-2">
                 {row.map((seat, seatIndex) => {

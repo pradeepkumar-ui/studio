@@ -29,10 +29,10 @@ const bundleSchema = z.object({
   description: z.string().min(5, 'Description is required.'),
   status: z.enum(['Draft', 'Published', 'Archived']),
   scope: z.object({
-    brand: z.array(z.object({ value: z.string() })).optional(),
-    channel: z.array(z.object({ value: z.string() })).optional(),
-    route: z.array(z.object({ value: z.string() })).optional(),
-    cohorts: z.array(z.object({ value: z.string() })).optional(),
+    brand: z.string().optional(),
+    channel: z.string().optional(),
+    route: z.string().optional(),
+    cohorts: z.string().optional(),
   }),
   components: z.object({
     seat: z.string().optional(),
@@ -53,32 +53,18 @@ interface BundleFormProps {
   onCancel: () => void;
 }
 
-const parseStringToArray = (value: string | string[] | undefined) => {
-    if (Array.isArray(value)) return value.map(v => ({ value: v }));
-    if (typeof value === 'string' && value.length > 0) return value.split(',').map(v => ({ value: v.trim() }));
-    return [];
-}
-
 export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
   const form = useForm<Bundle>({
     resolver: zodResolver(bundleSchema),
-    defaultValues: bundle ? {
-        ...bundle,
-        scope: {
-            brand: parseStringToArray(bundle.scope.brand),
-            channel: parseStringToArray(bundle.scope.channel),
-            route: parseStringToArray(bundle.scope.route),
-            cohorts: parseStringToArray(bundle.scope.cohorts),
-        }
-    } : {
+    defaultValues: bundle || {
       name: '',
       description: '',
       status: 'Draft',
       scope: {
-        brand: [],
-        channel: [],
-        route: [],
-        cohorts: [],
+        brand: '',
+        channel: '',
+        route: '',
+        cohorts: '',
       },
       components: {
         seat: '',
@@ -91,22 +77,8 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
     },
   });
 
-  const { fields: brandFields, append: appendBrand, remove: removeBrand } = useFieldArray({ control: form.control, name: "scope.brand" });
-  const { fields: channelFields, append: appendChannel, remove: removeChannel } = useFieldArray({ control: form.control, name: "scope.channel" });
-  const { fields: routeFields, append: appendRoute, remove: removeRoute } = useFieldArray({ control: form.control, name: "scope.route" });
-  const { fields: cohortFields, append: appendCohort, remove: removeCohort } = useFieldArray({ control: form.control, name: "scope.cohorts" });
-
   const handleFinalSubmit = (data: Bundle) => {
-    const finalData = {
-        ...data,
-        scope: {
-            brand: data.scope.brand?.map(item => item.value).filter(Boolean),
-            channel: data.scope.channel?.map(item => item.value).filter(Boolean),
-            route: data.scope.route?.map(item => item.value).filter(Boolean),
-            cohorts: data.scope.cohorts?.map(item => item.value).filter(Boolean),
-        }
-    };
-    onSubmit(finalData as any);
+    onSubmit(data);
   }
 
   return (
@@ -144,48 +116,12 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
         <Separator className="my-6" />
 
         <h4 className="text-md font-semibold">Scope & Rules</h4>
-        <p className="text-sm text-muted-foreground -mt-2">Define the conditions under which this bundle is available.</p>
+        <p className="text-sm text-muted-foreground -mt-2">Define the conditions under which this bundle is available. Use comma-separated values.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-                <FormLabel>Fare Brands</FormLabel>
-                {brandFields.map((field, index) => (
-                    <div key={field.id} className="flex items-center gap-2">
-                        <FormField control={form.control} name={`scope.brand.${index}.value`} render={({field}) => <Input {...field} placeholder="e.g., Flex" />} />
-                        <Button type="button" variant="ghost" size="icon" onClick={() => removeBrand(index)}><Trash2 className="h-4 w-4" /></Button>
-                    </div>
-                ))}
-                <Button type="button" variant="outline" size="sm" onClick={() => appendBrand({ value: '' })}><PlusCircle className="mr-2 h-4 w-4" /> Add Brand</Button>
-            </div>
-            <div className="space-y-2">
-                <FormLabel>Channels</FormLabel>
-                {channelFields.map((field, index) => (
-                    <div key={field.id} className="flex items-center gap-2">
-                        <FormField control={form.control} name={`scope.channel.${index}.value`} render={({field}) => <Input {...field} placeholder="e.g., Direct" />} />
-                        <Button type="button" variant="ghost" size="icon" onClick={() => removeChannel(index)}><Trash2 className="h-4 w-4" /></Button>
-                    </div>
-                ))}
-                <Button type="button" variant="outline" size="sm" onClick={() => appendChannel({ value: '' })}><PlusCircle className="mr-2 h-4 w-4" /> Add Channel</Button>
-            </div>
-            <div className="space-y-2">
-                <FormLabel>Routes</FormLabel>
-                {routeFields.map((field, index) => (
-                    <div key={field.id} className="flex items-center gap-2">
-                        <FormField control={form.control} name={`scope.route.${index}.value`} render={({field}) => <Input {...field} placeholder="e.g., JFK-MIA" />} />
-                        <Button type="button" variant="ghost" size="icon" onClick={() => removeRoute(index)}><Trash2 className="h-4 w-4" /></Button>
-                    </div>
-                ))}
-                <Button type="button" variant="outline" size="sm" onClick={() => appendRoute({ value: '' })}><PlusCircle className="mr-2 h-4 w-4" /> Add Route</Button>
-            </div>
-            <div className="space-y-2">
-                <FormLabel>Target Cohorts</FormLabel>
-                {cohortFields.map((field, index) => (
-                    <div key={field.id} className="flex items-center gap-2">
-                        <FormField control={form.control} name={`scope.cohorts.${index}.value`} render={({field}) => <Input {...field} placeholder="e.g., BusinessLoyal_IN" />} />
-                        <Button type="button" variant="ghost" size="icon" onClick={() => removeCohort(index)}><Trash2 className="h-4 w-4" /></Button>
-                    </div>
-                ))}
-                <Button type="button" variant="outline" size="sm" onClick={() => appendCohort({ value: '' })}><PlusCircle className="mr-2 h-4 w-4" /> Add Cohort</Button>
-            </div>
+             <FormField control={form.control} name="scope.brand" render={({field}) => <FormItem><FormLabel>Fare Brands</FormLabel><FormControl><Input {...field} placeholder="e.g., Flex, Premium" /></FormControl><FormMessage/></FormItem>} />
+            <FormField control={form.control} name="scope.channel" render={({field}) => <FormItem><FormLabel>Channels</FormLabel><FormControl><Input {...field} placeholder="e.g., Direct, TMC" /></FormControl><FormMessage/></FormItem>} />
+            <FormField control={form.control} name="scope.route" render={({field}) => <FormItem><FormLabel>Routes</FormLabel><FormControl><Input {...field} placeholder="e.g., JFK-MIA, LHR-*" /></FormControl><FormMessage/></FormItem>} />
+            <FormField control={form.control} name="scope.cohorts" render={({field}) => <FormItem><FormLabel>Target Cohorts</FormLabel><FormControl><Input {...field} placeholder="e.g., BusinessLoyal_IN" /></FormControl><FormMessage/></FormItem>} />
         </div>
         
         <h4 className="text-md font-semibold pt-4">Components</h4>
