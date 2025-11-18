@@ -98,9 +98,10 @@ function OrderDetailsPageComponent({ orderId }: { orderId: string }) {
 }
 
 export default function OrderDetailsPage({ params }: { params: { id: string } }) {
+    const { id } = params;
     return (
         <Suspense fallback={<div>Loading...</div>}>
-            <OrderDetailsPageComponent orderId={params.id} />
+            <OrderDetailsPageComponent orderId={id} />
         </Suspense>
     )
 }
