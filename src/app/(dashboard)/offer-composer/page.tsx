@@ -76,7 +76,7 @@ const mockFlightOffers: FlightOffer[] = [
       airline: 'Airline A',
       price: 350,
       currency: 'USD',
-      cabinClass: 'Economy',
+      cabinClass: 'ECONOMY',
       includedBaggage: '1 Carry-on',
       brand: 'Economy Light'
     },
@@ -91,7 +91,7 @@ const mockFlightOffers: FlightOffer[] = [
       airline: 'Airline B',
       price: 2500,
       currency: 'GBP',
-      cabinClass: 'Business',
+      cabinClass: 'BUSINESS',
       includedBaggage: '1 Carry-on, 1 Checked',
       brand: 'Business Saver'
     },
@@ -104,11 +104,11 @@ const mockFlightOffers: FlightOffer[] = [
       duration: '6h 15m',
       stops: 0,
       airline: 'Airline A',
-      price: 5500,
+      price: 1200,
       currency: 'USD',
-      cabinClass: 'First',
+      cabinClass: 'BUSINESS',
       includedBaggage: '1 Carry-on, 2 Checked',
-      brand: 'First Class'
+      brand: 'Business Flex'
     },
 ];
 
@@ -189,9 +189,36 @@ export default function OfferComposerPage() {
     });
     
     setTimeout(() => {
-        const results = mockFlightOffers.filter(
+        let results = mockFlightOffers.filter(
             (offer) => offer.cabinClass.toUpperCase().replace(' ', '_') === data.cabinClass
         );
+
+        // ** SIMULATED ENGINE LOGIC **
+        if (data.corporateId && data.cabinClass === 'BUSINESS' && data.destination.toUpperCase() === 'LHR') {
+            toast({ title: "Corporate rule applied", description: "-5% discount for Corporate Traveller Cohort" });
+            results = results.map(r => {
+                if (r.brand === 'Business Flex') {
+                    // Apply dynamic pricing
+                    const discountedPrice = r.price * 0.95;
+
+                    // Automatically add bundle and free Wi-Fi
+                    const bundleAncillaries: Ancillary[] = [
+                        { id: 'ANC-006', name: 'Lounge Access', price: 0, currency: 'USD' },
+                        { id: 'ANC-004', name: 'Priority Boarding', price: 0, currency: 'USD' },
+                        { id: 'ANC-003', name: 'In-flight Wi-Fi', price: 0, currency: 'USD' }
+                    ];
+                    
+                    if(selectedOffer?.id === r.id) {
+                      setSelectedAncillaries(prev => [...prev, ...bundleAncillaries]);
+                    }
+
+                    return { ...r, price: discountedPrice, includedBaggage: `${r.includedBaggage}, Lounge, Priority` };
+                }
+                return r;
+            });
+        }
+        // ** END SIMULATED ENGINE LOGIC **
+
         setSearchResults(results);
         setIsLoading(false);
         setOfferStatus('OfferCreated');
