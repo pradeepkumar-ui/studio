@@ -125,6 +125,7 @@ export default function OfferComposerPage() {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState<BrandedFare | null>(null);
   const [appliedRules, setAppliedRules] = useState<string[]>([]);
+  const [activeCohort, setActiveCohort] = useState<string | null>(null);
   const [selectedAncillaries, setSelectedAncillaries] = useState<Ancillary[]>([]);
   const [selectedPromotion, setSelectedPromotion] = useState<Promotion | null>(null);
   const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
@@ -191,6 +192,7 @@ export default function OfferComposerPage() {
     setSearchResults(null);
     setSelectedOffer(null);
     setAppliedRules([]);
+    setActiveCohort(null);
     setSelectedAncillaries([]);
     setSelectedSeat(null);
     setSelectedPromotion(null);
@@ -207,9 +209,11 @@ export default function OfferComposerPage() {
         })).filter(journey => journey.fares.length > 0);
         
         const activeRules: string[] = [];
+        let cohortName: string | null = null;
 
         // ** SIMULATED ENGINE LOGIC **
         if (data.corporateId && data.cabinClass === 'BUSINESS') {
+            cohortName = "Corporate Traveller";
             activeRules.push("Corporate rule applied: -5% discount & bundle applied");
             results = results.map(j => ({
                 ...j,
@@ -222,23 +226,25 @@ export default function OfferComposerPage() {
                     return f;
                 })
             }));
-        }
-        
-        if ((data.passengers.adt + data.passengers.chd) >= 3 && data.passengers.chd > 0) {
+        } else if ((data.passengers.adt + data.passengers.chd) >= 3 && data.passengers.chd > 0) {
+            cohortName = "Family Leisure Cohort";
             activeRules.push("Family rule applied: 10% discount for family cohort.");
             results = results.map(j => ({...j, fares: j.fares.map(f => ({...f, price: f.price * 0.9})) }));
         }
-
+        
         if (differenceInHours(data.departureDate, new Date()) < 48) {
+            cohortName = cohortName ? `${cohortName}, Last-Minute` : 'Last-Minute Traveller';
             activeRules.push("Last-minute rule applied: +15% surge pricing.");
             results = results.map(j => ({...j, fares: j.fares.map(f => ({...f, price: f.price * 1.15})) }));
         }
         
         if (data.channel === 'OTA') {
+             cohortName = cohortName ? `${cohortName}, OTA` : 'OTA Shopper';
              activeRules.push("OTA rule applied: +2% markup for OTA channel.");
              results = results.map(j => ({...j, fares: j.fares.map(f => ({...f, price: f.price * 1.02})) }));
         }
         
+        setActiveCohort(cohortName);
         setAppliedRules(activeRules);
         setSearchResults(results);
         setIsLoading(false);
@@ -584,6 +590,11 @@ export default function OfferComposerPage() {
                     <CardDescription>Review auto-applied rules and select any additional promotions for your offer.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                    {activeCohort && (
+                        <div>
+                            <h4 className="font-semibold text-md mb-2">Identified Cohort: <span className="text-primary">{activeCohort}</span></h4>
+                        </div>
+                    )}
                     <div>
                         <h4 className="font-semibold text-md mb-2">Automatically Applied Rules</h4>
                         {appliedRules.length > 0 ? (
