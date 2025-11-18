@@ -80,5 +80,3 @@ export function AncillarySelection({ selectedAncillaries, onAncillaryChange }: A
     </div>
   );
 }
-
-    

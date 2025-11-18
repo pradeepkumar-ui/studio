@@ -43,5 +43,3 @@ export function BrandedFareCard({ fare, onSelect, isSelected }: BrandedFareCardP
     </div>
   );
 }
-
-    

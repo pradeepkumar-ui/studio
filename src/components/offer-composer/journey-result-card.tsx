@@ -78,5 +78,3 @@ export function JourneyResultCard({ journey, onSelectFare, selectedFareId }: Jou
     </Card>
   );
 }
-
-    
