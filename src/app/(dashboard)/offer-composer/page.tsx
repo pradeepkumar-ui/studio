@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { format, differenceInHours, addDays } from 'date-fns';
-import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket, BadgeCheck, XCircle } from 'lucide-react';
+import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket, BadgeCheck, XCircle, Tag, CheckSquare, Square } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -45,6 +45,13 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type OfferStatus = 'OfferRequested' | 'OfferProcessing' | 'OfferCreated' | 'OfferSelected' | 'OfferValidated' | 'OfferStockChecked' | 'OfferConvertedToOrder' | 'OfferExpired';
+
+type Promotion = {
+    id: string;
+    title: string;
+    description: string;
+    discount: number;
+};
 
 const offerSearchSchema = z.object({
   origin: z.string().length(3, 'Origin must be a 3-letter IATA code.').toUpperCase(),
@@ -101,6 +108,12 @@ const mockFlightJourneys: FlightJourney[] = [
   }
 ];
 
+const mockPromotions: Promotion[] = [
+    { id: 'PROMO-01', title: 'Winter Sale', description: '10% off base fare for winter travel.', discount: 0.1 },
+    { id: 'PROMO-02', title: 'Lounge Pass', description: 'Add lounge access for a discounted price.', discount: 30 },
+    { id: 'PROMO-03', title: 'Carbon Offset', description: 'Offset the carbon footprint of your flight.', discount: 15 },
+]
+
 
 export default function OfferComposerPage() {
   const [searchResults, setSearchResults] = useState<FlightJourney[] | null>(null);
@@ -109,6 +122,7 @@ export default function OfferComposerPage() {
   const [selectedOffer, setSelectedOffer] = useState<BrandedFare | null>(null);
   const [appliedRules, setAppliedRules] = useState<string[]>([]);
   const [selectedAncillaries, setSelectedAncillaries] = useState<Ancillary[]>([]);
+  const [selectedPromotions, setSelectedPromotions] = useState<Promotion[]>([]);
   const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
   const [offerStatus, setOfferStatus] = useState<OfferStatus | null>(null);
   const [validTill, setValidTill] = useState<Date | undefined>(addDays(new Date(), 7));
@@ -235,11 +249,20 @@ export default function OfferComposerPage() {
     setSelectedOffer(offer);
     setSelectedAncillaries([]);
     setSelectedSeat(null);
+    setSelectedPromotions([]);
     setOfferStatus('OfferSelected');
     toast({
       title: 'Offer Added to Cart',
       description: `Fare "${offer.brand}" has been selected. Review applied rules before adding ancillaries.`,
     });
+  }
+
+  function handleTogglePromotion(promotion: Promotion) {
+    setSelectedPromotions(prev => 
+        prev.find(p => p.id === promotion.id) 
+        ? prev.filter(p => p.id !== promotion.id)
+        : [...prev, promotion]
+    );
   }
   
   function handleValidateOffer() {
@@ -262,7 +285,22 @@ export default function OfferComposerPage() {
 
   const totalAncillaryPrice = selectedAncillaries.reduce((acc, anc) => acc + anc.price, 0);
   const totalSeatPrice = selectedSeat ? 75 : 0; 
-  const totalOrderPrice = (selectedOffer?.price || 0) + totalAncillaryPrice + totalSeatPrice;
+
+  const baseOfferPrice = selectedOffer?.price || 0;
+  const promotionDiscount = selectedPromotions.reduce((acc, promo) => {
+    if (promo.id === 'PROMO-01') { // 10% discount
+        return acc + baseOfferPrice * promo.discount;
+    }
+    return acc;
+  }, 0);
+  const promotionAddition = selectedPromotions.reduce((acc, promo) => {
+    if(promo.id !== 'PROMO-01') { // Fixed price additions
+        return acc + promo.discount;
+    }
+    return acc;
+  }, 0)
+
+  const totalOrderPrice = (baseOfferPrice - promotionDiscount) + promotionAddition + totalAncillaryPrice + totalSeatPrice;
 
   const orderCreatePayload = {
     context: { version: '21.3', timestamp: new Date().toISOString(), pos: 'US', channel: 'Web', currency: 'USD' },
@@ -273,6 +311,7 @@ export default function OfferComposerPage() {
       items: [
         { offer_item_id: `flight-${selectedOffer?.id}`, passenger_refs: ['P1'], type: 'Flight' },
         ...selectedAncillaries.map(anc => ({ offer_item_id: anc.id, passenger_refs: ['P1'], type: 'Ancillary' })),
+        ...selectedPromotions.map(promo => ({ offer_item_id: promo.id, passenger_refs: ['P1'], type: 'Promotion' })),
         ...(selectedSeat ? [{ offer_item_id: `seat-${selectedSeat}`, passenger_refs: ['P1'], type: 'Seat' }] : [])
       ]
     },
@@ -540,23 +579,51 @@ export default function OfferComposerPage() {
           
           {selectedOffer && (
             <>
-              {appliedRules.length > 0 && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>3. Applied Rules & Offers</CardTitle>
-                        <CardDescription>The Offersense engine has dynamically applied the following rules to your selection.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                            {appliedRules.map((rule, index) => <li key={index}>{rule}</li>)}
-                        </ul>
-                    </CardContent>
-                </Card>
-              )}
+              <Card>
+                <CardHeader>
+                    <CardTitle>3. Dynamic Offers & Promotions</CardTitle>
+                    <CardDescription>Review auto-applied rules and select any additional promotions for your offer.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div>
+                        <h4 className="font-semibold text-md mb-2">Automatically Applied Rules</h4>
+                        {appliedRules.length > 0 ? (
+                            <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                                {appliedRules.map((rule, index) => <li key={index}>{rule}</li>)}
+                            </ul>
+                        ) : (
+                            <p className="text-sm text-muted-foreground">No automatic rules were applied for this search.</p>
+                        )}
+                    </div>
+                    <div>
+                        <h4 className="font-semibold text-md mb-3">Available Promotions</h4>
+                        <div className="space-y-2">
+                            {mockPromotions.map(promo => (
+                                <div key={promo.id} 
+                                    className={cn("p-3 border rounded-md flex items-center justify-between transition-colors cursor-pointer",
+                                    selectedPromotions.find(p => p.id === promo.id) && "bg-accent/50 border-primary"
+                                    )}
+                                    onClick={() => handleTogglePromotion(promo)}>
+                                    <div className="flex items-center gap-3">
+                                        {selectedPromotions.find(p => p.id === promo.id) ? <CheckSquare className="h-5 w-5 text-primary" /> : <Square className="h-5 w-5 text-muted-foreground" />}
+                                        <div>
+                                            <p className="font-medium">{promo.title}</p>
+                                            <p className="text-sm text-muted-foreground">{promo.description}</p>
+                                        </div>
+                                    </div>
+                                    <div className="font-semibold text-sm">
+                                        {promo.id === 'PROMO-01' ? `${promo.discount * 100}% off` : `+$${promo.discount}`}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </CardContent>
+              </Card>
               
               <Card>
                   <CardHeader>
-                      <CardTitle>{appliedRules.length > 0 ? '4.' : '3.'} Add Ancillaries & Seats</CardTitle>
+                      <CardTitle>4. Add Ancillaries & Seats</CardTitle>
                       <CardDescription>Select optional services for the chosen flight.</CardDescription>
                   </CardHeader>
                   <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -603,7 +670,7 @@ export default function OfferComposerPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center gap-2">
                         <ShoppingBasket className="h-5 w-5" />
-                        <CardTitle>{appliedRules.length > 0 ? '5.' : '4.'} Shopping Cart</CardTitle>
+                        <CardTitle>5. Shopping Cart</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2 text-sm">
@@ -611,6 +678,14 @@ export default function OfferComposerPage() {
                                 <span className="text-muted-foreground font-mono">{selectedOffer.id}</span>
                                 <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(selectedOffer.price)}</span>
                             </div>
+                             {selectedPromotions.map(promo => (
+                                <div key={promo.id} className="flex justify-between text-green-600">
+                                    <span className="text-muted-foreground font-mono">{promo.id}</span>
+                                    <span>
+                                        {promo.id === 'PROMO-01' ? `-(${promo.discount*100}%)` : `+$${promo.discount.toFixed(2)}`}
+                                    </span>
+                                </div>
+                            ))}
                             {selectedAncillaries.map(anc => (
                                 <div key={anc.id} className="flex justify-between">
                                 <span className="text-muted-foreground font-mono">{anc.id}</span>
@@ -707,5 +782,7 @@ export default function OfferComposerPage() {
     </div>
   );
 }
+
+    
 
     
