@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -52,56 +52,55 @@ const mockOrder: OrderDetails = {
 };
 
 
-function OrderDetailsPageComponent({ orderId }: { orderId: string }) {
-  const router = useRouter();
-  const { toast } = useToast();
-  const order = mockOrder; // In a real app, you'd fetch this based on the ID
+export default function OrderDetailsPage() {
+    const router = useRouter();
+    const params = useParams();
+    const { toast } = useToast();
+    const orderId = params.id as string;
+    const order = mockOrder; // In a real app, you'd fetch this based on the ID
 
-  const handleReshop = () => {
-    sessionStorage.setItem('reshop_order_context', JSON.stringify(order));
-    router.push('/offer-composer');
-  }
+    const handleReshop = () => {
+        sessionStorage.setItem('reshop_order_context', JSON.stringify(order));
+        router.push('/offer-composer');
+    }
 
-  const handleCancel = () => {
-    toast({
-      title: 'Order Cancellation Initiated',
-      description: `Cancellation process started for order ${order.id}.`,
-      variant: 'destructive'
-    });
-  }
+    const handleCancel = () => {
+        toast({
+        title: 'Order Cancellation Initiated',
+        description: `Cancellation process started for order ${order.id}.`,
+        variant: 'destructive'
+        });
+    }
 
-  return (
-    <div className="flex flex-col gap-6">
-       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-            <Button variant="outline" size="icon" asChild>
-                <Link href="/orders">
-                <ArrowLeft />
-                </Link>
-            </Button>
-            <div className="flex flex-col gap-1">
-                <h1 className="text-2xl font-bold tracking-tight">Order Details</h1>
-                <p className="text-muted-foreground font-mono text-sm">{orderId}</p>
-            </div>
-        </div>
-        <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={handleReshop}>
-                <FilePenLine className="mr-2 h-4 w-4"/> Reshop / Modify
-            </Button>
-            <Button variant="destructive" onClick={handleCancel}><XCircle className="mr-2 h-4 w-4"/> Cancel Order</Button>
-        </div>
-      </div>
-      
-      <OrderDetailsClientView order={{...order, id: orderId}} />
-    </div>
-  );
-}
+    if (!orderId) {
+        return <div>Loading...</div>;
+    }
 
-export default function OrderDetailsPage({ params }: { params: { id: string } }) {
-    const { id } = params;
     return (
         <Suspense fallback={<div>Loading...</div>}>
-            <OrderDetailsPageComponent orderId={id} />
+            <div className="flex flex-col gap-6">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <Button variant="outline" size="icon" asChild>
+                            <Link href="/orders">
+                            <ArrowLeft />
+                            </Link>
+                        </Button>
+                        <div className="flex flex-col gap-1">
+                            <h1 className="text-2xl font-bold tracking-tight">Order Details</h1>
+                            <p className="text-muted-foreground font-mono text-sm">{orderId}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" onClick={handleReshop}>
+                            <FilePenLine className="mr-2 h-4 w-4"/> Reshop / Modify
+                        </Button>
+                        <Button variant="destructive" onClick={handleCancel}><XCircle className="mr-2 h-4 w-4"/> Cancel Order</Button>
+                    </div>
+                </div>
+                
+                <OrderDetailsClientView order={{...order, id: orderId}} />
+            </div>
         </Suspense>
-    )
+    );
 }
