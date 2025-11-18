@@ -557,7 +557,7 @@ export default function OfferComposerPage() {
           {(isLoading || searchResults) && (
             <Card>
                 <CardHeader>
-                    <CardTitle>2. Select Flight & Fare</CardTitle>
+                    <CardTitle>2. Select Flight &amp; Fare</CardTitle>
                     <CardDescription>Choose a flight and a branded fare to add it to your cart.</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -586,15 +586,17 @@ export default function OfferComposerPage() {
             <>
               <Card>
                 <CardHeader>
-                    <CardTitle>3. Dynamic Offers & Promotions</CardTitle>
-                    <CardDescription>Review auto-applied rules and select any additional promotions for your offer.</CardDescription>
+                    <CardTitle>3. Dynamic Offers &amp; Promotions</CardTitle>
+                    <CardDescription>
+                        Review auto-applied rules and select any additional promotions for your offer.
+                        {activeCohort && (
+                            <span className="block mt-1 text-primary font-semibold">
+                                Identified Cohort: {activeCohort}
+                            </span>
+                        )}
+                    </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    {activeCohort && (
-                        <div>
-                            <h4 className="font-semibold text-md mb-2">Identified Cohort: <span className="text-primary">{activeCohort}</span></h4>
-                        </div>
-                    )}
                     <div>
                         <h4 className="font-semibold text-md mb-2">Automatically Applied Rules</h4>
                         {appliedRules.length > 0 ? (
@@ -631,7 +633,7 @@ export default function OfferComposerPage() {
               
               <Card>
                   <CardHeader>
-                      <CardTitle>4. Add Ancillaries & Seats</CardTitle>
+                      <CardTitle>4. Add Ancillaries &amp; Seats</CardTitle>
                       <CardDescription>Select optional services for the chosen flight.</CardDescription>
                   </CardHeader>
                   <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
