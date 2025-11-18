@@ -55,7 +55,7 @@ const mockOrder: OrderDetails = {
 function OrderDetailsPageComponent({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { toast } = useToast();
-  const { id: orderId } = params;
+  const orderId = params.id;
   const order = mockOrder; // In a real app, you'd fetch this based on the ID
 
   const handleReshop = () => {
