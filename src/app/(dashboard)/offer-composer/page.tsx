@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { format, differenceInHours, addDays } from 'date-fns';
-import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket, BadgeCheck, XCircle, Tag, CheckSquare, Square } from 'lucide-react';
+import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket, BadgeCheck, XCircle, Tag, CheckSquare, Square, Gift } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -43,6 +43,7 @@ import { AncillarySelection, Ancillary } from '@/components/offer-composer/ancil
 import { SeatMap } from '@/components/offer-composer/seat-map';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 type OfferStatus = 'OfferRequested' | 'OfferProcessing' | 'OfferCreated' | 'OfferSelected' | 'OfferValidated' | 'OfferStockChecked' | 'OfferConvertedToOrder' | 'OfferExpired';
 
@@ -50,7 +51,8 @@ type Promotion = {
     id: string;
     title: string;
     description: string;
-    discount: number;
+    type: 'PERCENTAGE' | 'FIXED';
+    value: number;
 };
 
 const offerSearchSchema = z.object({
@@ -109,9 +111,11 @@ const mockFlightJourneys: FlightJourney[] = [
 ];
 
 const mockPromotions: Promotion[] = [
-    { id: 'PROMO-01', title: 'Winter Sale', description: '10% off base fare for winter travel.', discount: 0.1 },
-    { id: 'PROMO-02', title: 'Lounge Pass', description: 'Add lounge access for a discounted price.', discount: 30 },
-    { id: 'PROMO-03', title: 'Carbon Offset', description: 'Offset the carbon footprint of your flight.', discount: 15 },
+    { id: 'PROMO-01', title: 'Winter Sale', description: '10% off base fare for winter travel.', type: 'PERCENTAGE', value: 10 },
+    { id: 'PROMO-02', title: 'Lounge Pass', description: 'Complimentary lounge access on your next flight.', type: 'FIXED', value: 45 },
+    { id: 'PROMO-03', title: 'Loyalty Bonus', description: 'Earn double loyalty points on this booking.', type: 'FIXED', value: 0 },
+    { id: 'PROMO-04', title: 'Weekend Getaway', description: '$25 off your booking for weekend travel.', type: 'FIXED', value: 25 },
+    { id: 'PROMO-05', title: 'First-time Booker', description: '15% off your first booking with us.', type: 'PERCENTAGE', value: 15 },
 ]
 
 
@@ -122,7 +126,7 @@ export default function OfferComposerPage() {
   const [selectedOffer, setSelectedOffer] = useState<BrandedFare | null>(null);
   const [appliedRules, setAppliedRules] = useState<string[]>([]);
   const [selectedAncillaries, setSelectedAncillaries] = useState<Ancillary[]>([]);
-  const [selectedPromotions, setSelectedPromotions] = useState<Promotion[]>([]);
+  const [selectedPromotion, setSelectedPromotion] = useState<Promotion | null>(null);
   const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
   const [offerStatus, setOfferStatus] = useState<OfferStatus | null>(null);
   const [validTill, setValidTill] = useState<Date | undefined>(addDays(new Date(), 7));
@@ -189,6 +193,7 @@ export default function OfferComposerPage() {
     setAppliedRules([]);
     setSelectedAncillaries([]);
     setSelectedSeat(null);
+    setSelectedPromotion(null);
     setOfferStatus('OfferRequested');
     toast({
       title: 'Searching for offers...',
@@ -249,7 +254,7 @@ export default function OfferComposerPage() {
     setSelectedOffer(offer);
     setSelectedAncillaries([]);
     setSelectedSeat(null);
-    setSelectedPromotions([]);
+    setSelectedPromotion(null);
     setOfferStatus('OfferSelected');
     toast({
       title: 'Offer Added to Cart',
@@ -257,12 +262,9 @@ export default function OfferComposerPage() {
     });
   }
 
-  function handleTogglePromotion(promotion: Promotion) {
-    setSelectedPromotions(prev => 
-        prev.find(p => p.id === promotion.id) 
-        ? prev.filter(p => p.id !== promotion.id)
-        : [...prev, promotion]
-    );
+  function handleSelectPromotion(promoId: string) {
+    const promotion = mockPromotions.find(p => p.id === promoId);
+    setSelectedPromotion(promotion || null);
   }
   
   function handleValidateOffer() {
@@ -287,20 +289,17 @@ export default function OfferComposerPage() {
   const totalSeatPrice = selectedSeat ? 75 : 0; 
 
   const baseOfferPrice = selectedOffer?.price || 0;
-  const promotionDiscount = selectedPromotions.reduce((acc, promo) => {
-    if (promo.id === 'PROMO-01') { // 10% discount
-        return acc + baseOfferPrice * promo.discount;
+  let promotionDiscount = 0;
+  if (selectedPromotion) {
+    if (selectedPromotion.type === 'PERCENTAGE') {
+        promotionDiscount = baseOfferPrice * (selectedPromotion.value / 100);
+    } else { // FIXED
+        promotionDiscount = selectedPromotion.value;
     }
-    return acc;
-  }, 0);
-  const promotionAddition = selectedPromotions.reduce((acc, promo) => {
-    if(promo.id !== 'PROMO-01') { // Fixed price additions
-        return acc + promo.discount;
-    }
-    return acc;
-  }, 0)
+  }
 
-  const totalOrderPrice = (baseOfferPrice - promotionDiscount) + promotionAddition + totalAncillaryPrice + totalSeatPrice;
+  const totalOrderPrice = (baseOfferPrice - promotionDiscount) + totalAncillaryPrice + totalSeatPrice;
+  const finalPromotionId = selectedPromotion ? [{ offer_item_id: selectedPromotion.id, passenger_refs: ['P1'], type: 'Promotion' }] : [];
 
   const orderCreatePayload = {
     context: { version: '21.3', timestamp: new Date().toISOString(), pos: 'US', channel: 'Web', currency: 'USD' },
@@ -311,7 +310,7 @@ export default function OfferComposerPage() {
       items: [
         { offer_item_id: `flight-${selectedOffer?.id}`, passenger_refs: ['P1'], type: 'Flight' },
         ...selectedAncillaries.map(anc => ({ offer_item_id: anc.id, passenger_refs: ['P1'], type: 'Ancillary' })),
-        ...selectedPromotions.map(promo => ({ offer_item_id: promo.id, passenger_refs: ['P1'], type: 'Promotion' })),
+        ...finalPromotionId,
         ...(selectedSeat ? [{ offer_item_id: `seat-${selectedSeat}`, passenger_refs: ['P1'], type: 'Seat' }] : [])
       ]
     },
@@ -597,26 +596,24 @@ export default function OfferComposerPage() {
                     </div>
                     <div>
                         <h4 className="font-semibold text-md mb-3">Available Promotions</h4>
-                        <div className="space-y-2">
-                            {mockPromotions.map(promo => (
-                                <div key={promo.id} 
-                                    className={cn("p-3 border rounded-md flex items-center justify-between transition-colors cursor-pointer",
-                                    selectedPromotions.find(p => p.id === promo.id) && "bg-accent/50 border-primary"
-                                    )}
-                                    onClick={() => handleTogglePromotion(promo)}>
-                                    <div className="flex items-center gap-3">
-                                        {selectedPromotions.find(p => p.id === promo.id) ? <CheckSquare className="h-5 w-5 text-primary" /> : <Square className="h-5 w-5 text-muted-foreground" />}
-                                        <div>
-                                            <p className="font-medium">{promo.title}</p>
-                                            <p className="text-sm text-muted-foreground">{promo.description}</p>
+                        <RadioGroup onValueChange={handleSelectPromotion} value={selectedPromotion?.id}>
+                            <div className="space-y-2">
+                                {mockPromotions.map(promo => (
+                                    <Label key={promo.id} htmlFor={promo.id} className={cn("p-3 border rounded-md flex items-start justify-between transition-colors cursor-pointer", selectedPromotion?.id === promo.id && "bg-accent/50 border-primary")}>
+                                        <div className="flex items-center gap-3">
+                                            <RadioGroupItem value={promo.id} id={promo.id} />
+                                            <div>
+                                                <p className="font-medium">{promo.title}</p>
+                                                <p className="text-sm text-muted-foreground font-normal">{promo.description}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="font-semibold text-sm">
-                                        {promo.id === 'PROMO-01' ? `${promo.discount * 100}% off` : `+$${promo.discount}`}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                                        <div className="font-semibold text-sm">
+                                            {promo.type === 'PERCENTAGE' ? `${promo.value}% OFF` : `-$${promo.value}`}
+                                        </div>
+                                    </Label>
+                                ))}
+                            </div>
+                        </RadioGroup>
                     </div>
                 </CardContent>
               </Card>
@@ -678,14 +675,14 @@ export default function OfferComposerPage() {
                                 <span className="text-muted-foreground font-mono">{selectedOffer.id}</span>
                                 <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(selectedOffer.price)}</span>
                             </div>
-                             {selectedPromotions.map(promo => (
-                                <div key={promo.id} className="flex justify-between text-green-600">
-                                    <span className="text-muted-foreground font-mono">{promo.id}</span>
+                             {selectedPromotion && (
+                                <div className="flex justify-between text-green-600">
+                                    <span className="text-muted-foreground font-mono">{selectedPromotion.id}</span>
                                     <span>
-                                        {promo.id === 'PROMO-01' ? `-(${promo.discount*100}%)` : `+$${promo.discount.toFixed(2)}`}
+                                        {selectedPromotion.type === 'PERCENTAGE' ? `-(${selectedPromotion.value}%)` : `-$${selectedPromotion.value.toFixed(2)}`}
                                     </span>
                                 </div>
-                            ))}
+                            )}
                             {selectedAncillaries.map(anc => (
                                 <div key={anc.id} className="flex justify-between">
                                 <span className="text-muted-foreground font-mono">{anc.id}</span>
