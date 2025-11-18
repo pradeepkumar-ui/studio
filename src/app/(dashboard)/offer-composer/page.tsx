@@ -60,7 +60,6 @@ const offerSearchSchema = z.object({
   brand: z.string().optional(),
   corporateId: z.string().optional(),
   channel: z.string().optional(),
-  validTill: z.date().optional(),
 });
 
 const aiSearchSchema = z.object({
@@ -111,6 +110,7 @@ export default function OfferComposerPage() {
   const [selectedAncillaries, setSelectedAncillaries] = useState<Ancillary[]>([]);
   const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
   const [offerStatus, setOfferStatus] = useState<OfferStatus | null>(null);
+  const [validTill, setValidTill] = useState<Date | undefined>(addDays(new Date(), 7));
   const { toast } = useToast();
   const router = useRouter();
 
@@ -124,7 +124,6 @@ export default function OfferComposerPage() {
       brand: 'All',
       corporateId: '',
       channel: 'Direct',
-      validTill: addDays(new Date(), 7),
     },
   });
   
@@ -265,6 +264,7 @@ export default function OfferComposerPage() {
     offer_ref: {
       parent_offer_id: selectedOffer?.id,
       status: offerStatus,
+      valid_till: validTill?.toISOString(),
       items: [
         { offer_item_id: `flight-${selectedOffer?.id}`, passenger_refs: ['P1'], type: 'Flight' },
         ...selectedAncillaries.map(anc => ({ offer_item_id: anc.id, passenger_refs: ['P1'], type: 'Ancillary' })),
@@ -493,45 +493,6 @@ export default function OfferComposerPage() {
                             </FormItem>
                         )}
                         />
-                         <FormField
-                            control={form.control}
-                            name="validTill"
-                            render={({ field }) => (
-                                <FormItem className="flex flex-col">
-                                <FormLabel>Valid Till</FormLabel>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                    <FormControl>
-                                        <Button
-                                        variant={'outline'}
-                                        className={cn(
-                                            'w-full pl-3 text-left font-normal',
-                                            !field.value && 'text-muted-foreground'
-                                        )}
-                                        >
-                                        {field.value ? (
-                                            format(field.value, 'PPP')
-                                        ) : (
-                                            <span>Pick an expiry date</span>
-                                        )}
-                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                        </Button>
-                                    </FormControl>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                        mode="single"
-                                        selected={field.value}
-                                        onSelect={field.onChange}
-                                        disabled={(date) => date < new Date()}
-                                        initialFocus
-                                    />
-                                    </PopoverContent>
-                                </Popover>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
                     </div>
                     <div className="flex justify-end pt-6">
                         <Button type="submit" className="w-full md:w-auto" disabled={isLoading}>
@@ -647,9 +608,35 @@ export default function OfferComposerPage() {
                             <span>Total</span>
                             <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalOrderPrice)}</span>
                         </div>
-                        <Separator />
                         
                         <div className="space-y-2 pt-2">
+                            <div className="flex flex-col space-y-2">
+                                <Label htmlFor="validTill">Valid Till</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            id="validTill"
+                                            variant={'outline'}
+                                            className={cn(
+                                                'w-full justify-start text-left font-normal',
+                                                !validTill && 'text-muted-foreground'
+                                            )}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {validTill ? format(validTill, 'PPP') : <span>Pick an expiry date</span>}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <Calendar
+                                            mode="single"
+                                            selected={validTill}
+                                            onSelect={setValidTill}
+                                            disabled={(date) => date < new Date()}
+                                            initialFocus
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
                            <Button className="w-full" onClick={handleValidateOffer} disabled={offerStatus === 'OfferValidated' || offerStatus === 'OfferStockChecked'}>
                             {offerStatus === 'OfferValidated' || offerStatus === 'OfferStockChecked' ? <BadgeCheck className="mr-2 h-4 w-4" /> : null}
                                 Validate Offer
