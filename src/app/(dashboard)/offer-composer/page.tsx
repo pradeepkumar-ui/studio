@@ -232,7 +232,7 @@ export default function OfferComposerPage() {
             results = results.map(j => ({...j, fares: j.fares.map(f => ({...f, price: f.price * 0.9})) }));
         }
         
-        if (differenceInHours(data.departureDate, new Date()) < 48) {
+        if (data.departureDate && differenceInHours(data.departureDate, new Date()) < 48) {
             cohortName = cohortName ? `${cohortName}, Last-Minute` : 'Last-Minute Traveller';
             activeRules.push("Last-minute rule applied: +15% surge pricing.");
             results = results.map(j => ({...j, fares: j.fares.map(f => ({...f, price: f.price * 1.15})) }));
@@ -790,3 +790,5 @@ export default function OfferComposerPage() {
     </div>
   );
 }
+
+    
