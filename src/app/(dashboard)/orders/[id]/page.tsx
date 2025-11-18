@@ -52,9 +52,10 @@ const mockOrder: OrderDetails = {
 };
 
 
-function OrderDetailsPageComponent({ orderId }: { orderId: string }) {
+function OrderDetailsPageComponent({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { toast } = useToast();
+  const orderId = params.id;
   const order = mockOrder; // In a real app, you'd fetch this based on the ID
 
   const handleReshop = () => {
@@ -98,10 +99,9 @@ function OrderDetailsPageComponent({ orderId }: { orderId: string }) {
 }
 
 export default function OrderDetailsPage({ params }: { params: { id: string } }) {
-    const { id } = params;
     return (
         <Suspense fallback={<div>Loading...</div>}>
-            <OrderDetailsPageComponent orderId={id} />
+            <OrderDetailsPageComponent params={params} />
         </Suspense>
     )
 }
