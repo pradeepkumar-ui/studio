@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { format, differenceInHours, addDays } from 'date-fns';
+import { format, differenceInHours, addDays, isBefore } from 'date-fns';
 import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket, BadgeCheck, XCircle, Tag, CheckSquare, Square, Gift } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -45,7 +45,7 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
-type OfferStatus = 'OfferRequested' | 'OfferProcessing' | 'OfferCreated' | 'OfferSelected' | 'OfferValidated' | 'OfferStockChecked' | 'OfferConvertedToOrder' | 'OfferExpired';
+type OfferStatus = 'OfferRequested' | 'OfferProcessing' | 'OfferCreated' | 'OfferSelected' | 'OfferPriceValidated' | 'OfferStockChecked' | 'OfferConvertedToOrder' | 'OfferExpired';
 
 type Promotion = {
     id: string;
@@ -135,7 +135,7 @@ export default function OfferComposerPage() {
   const [selectedPromotion, setSelectedPromotion] = useState<Promotion | null>(null);
   const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
   const [offerStatus, setOfferStatus] = useState<OfferStatus | null>(null);
-  const [validTill, setValidTill] = useState<Date | undefined>(addDays(new Date(), 7));
+  const [validTill, setValidTill] = useState<Date | undefined>(addDays(new Date(), 1));
   const { toast } = useToast();
   const router = useRouter();
 
@@ -286,30 +286,51 @@ export default function OfferComposerPage() {
   function handleSelectPromotion(promoId: string) {
     const promotion = mockPromotions.find(p => p.id === promoId);
     setSelectedPromotion(promotion || null);
+    // Reset validation status on change
+    if (offerStatus === 'OfferPriceValidated' || offerStatus === 'OfferStockChecked') {
+        setOfferStatus('OfferSelected');
+    }
+  }
+
+  function handleAncillaryChange(ancillaries: Ancillary[]) {
+    setSelectedAncillaries(ancillaries);
+    // Reset validation status on change
+    if (offerStatus === 'OfferPriceValidated' || offerStatus === 'OfferStockChecked') {
+        setOfferStatus('OfferSelected');
+    }
+  }
+
+  function handleSeatSelect(seat: string | null) {
+      setSelectedSeat(seat);
+       // Reset validation status on change
+    if (offerStatus === 'OfferPriceValidated' || offerStatus === 'OfferStockChecked') {
+        setOfferStatus('OfferSelected');
+    }
   }
   
   function handleValidateOffer() {
     if(!selectedOffer) return;
-    setOfferStatus('OfferValidated');
+    setOfferStatus('OfferPriceValidated');
     toast({
-      title: 'Offer Validated',
-      description: 'Offer price and availability confirmed.',
+      title: 'Offer Price Validated',
+      description: 'Offer price and rules have been re-validated successfully.',
     })
   }
 
   function handleStockCheck() {
-    if(offerStatus !== 'OfferValidated') return;
+    if(offerStatus !== 'OfferPriceValidated') return;
     setOfferStatus('OfferStockChecked');
      toast({
       title: 'Stock Checked',
-      description: 'Seat and ancillary inventory confirmed.',
+      description: 'Seat and ancillary inventory confirmed and held.',
     })
   }
 
   const totalAncillaryPrice = selectedAncillaries.reduce((acc, anc) => acc + anc.price, 0);
   const totalSeatPrice = selectedSeat ? 75 : 0; 
+  const passengerCount = (form.getValues().passengers.adt || 1) + (form.getValues().passengers.chd || 0);
 
-  const baseOfferPrice = selectedOffer?.price || 0;
+  const baseOfferPrice = (selectedOffer?.price || 0) * passengerCount;
   let promotionDiscount = 0;
   if (selectedPromotion) {
     if (selectedPromotion.type === 'PERCENTAGE') {
@@ -319,40 +340,70 @@ export default function OfferComposerPage() {
     }
   }
 
-  const totalOrderPrice = (baseOfferPrice - promotionDiscount) + totalAncillaryPrice + totalSeatPrice;
-  const finalPromotionId = selectedPromotion ? [{ offer_item_id: selectedPromotion.id, passenger_refs: ['P1'], type: 'Promotion' }] : [];
+  const totalOrderPrice = (baseOfferPrice - promotionDiscount) + (totalAncillaryPrice * passengerCount) + (totalSeatPrice * passengerCount);
+  
+  const passengerRefs = Array.from({ length: passengerCount }, (_, i) => `P${i + 1}`);
 
   const orderCreatePayload = {
-    context: { version: '21.3', timestamp: new Date().toISOString(), pos: 'US', channel: 'Web', currency: 'USD' },
+    context: { version: '21.3', timestamp: new Date().toISOString(), pos: 'US', channel: 'Direct', currency: 'USD' },
     offer_ref: {
       parent_offer_id: selectedOffer?.id,
       status: offerStatus,
       valid_till: validTill?.toISOString(),
       items: [
-        { offer_item_id: `flight-${selectedOffer?.id}`, passenger_refs: ['P1'], type: 'Flight' },
-        ...selectedAncillaries.map(anc => ({ offer_item_id: anc.id, passenger_refs: ['P1'], type: 'Ancillary' })),
-        ...finalPromotionId,
-        ...(selectedSeat ? [{ offer_item_id: `seat-${selectedSeat}`, passenger_refs: ['P1'], type: 'Seat' }] : [])
+        { offer_item_id: `flight-${selectedOffer?.id}`, passenger_refs: passengerRefs, type: 'Flight' },
+        ...selectedAncillaries.map(anc => ({ offer_item_id: anc.id, passenger_refs: passengerRefs, type: 'Ancillary' })),
+        ...(selectedPromotion ? [{ offer_item_id: selectedPromotion.id, passenger_refs: passengerRefs, type: 'Promotion' }] : []),
+        ...(selectedSeat ? [{ offer_item_id: `seat-${selectedSeat}`, passenger_refs: passengerRefs, type: 'Seat' }] : [])
       ]
     },
-    passengers: [{ id: "P1", type: "ADT" }],
+    passengers: [
+        ...Array.from({length: form.getValues().passengers.adt}, () => ({ type: "ADT" })),
+        ...Array.from({length: form.getValues().passengers.chd}, () => ({ type: "CHD" })),
+    ].map((p, i) => ({...p, id: `P${i+1}`})),
     pricing: { currency: "USD", total: totalOrderPrice },
   };
 
   const handleSendToOrderModule = () => {
-    if (!selectedOffer || offerStatus !== 'OfferStockChecked') {
+    // 1. Expiry Check
+    if (validTill && isBefore(validTill, new Date())) {
+        toast({
+            variant: 'destructive',
+            title: 'Offer Expired',
+            description: 'This offer has expired. Please start a new search.',
+        });
+        setOfferStatus('OfferExpired');
+        return;
+    }
+
+    // 2. Status Check
+    if (offerStatus !== 'OfferStockChecked') {
       toast({
         variant: 'destructive',
         title: 'Action Required',
-        description: 'Please validate the offer and check stock availability before creating an order.',
+        description: 'Please validate the offer price and check stock availability before creating an order.',
       });
       return;
     }
+
+    // 3. (Simulated) Price Integrity Check
+    const calculatedPrice = (baseOfferPrice - promotionDiscount) + (totalAncillaryPrice * passengerCount) + (totalSeatPrice * passengerCount);
+    if (Math.abs(calculatedPrice - totalOrderPrice) > 0.01) {
+         toast({
+            variant: 'destructive',
+            title: 'Price Mismatch Error',
+            description: 'The final price has changed. Please re-validate the offer.',
+        });
+        setOfferStatus('OfferSelected');
+        return;
+    }
+    
+    // All checks passed, proceed to create order
     setOfferStatus('OfferConvertedToOrder');
     
     const newOrder = {
       id: `ORD-${Math.floor(Math.random() * 1000)}`,
-      customer: 'Composed Order Customer',
+      customer: `Composed Order (${passengerCount} Pax)`,
       email: 'customer@example.com',
       status: 'Pending' as const,
       date: format(new Date(), 'yyyy-MM-dd'),
@@ -362,11 +413,11 @@ export default function OfferComposerPage() {
     sessionStorage.setItem('newly_created_order', JSON.stringify(newOrder));
     
     toast({
-      title: "Order Created",
-      description: `Order ${newOrder.id} has been created and is pending processing.`,
+      title: "Order Creation Initiated",
+      description: `Order ${newOrder.id} is now being processed. You will be redirected to the Orders page.`,
     });
     
-    router.push('/orders');
+    setTimeout(() => router.push('/orders'), 1000);
   };
 
   return (
@@ -657,8 +708,8 @@ export default function OfferComposerPage() {
                       <CardDescription>Select optional services for the chosen flight.</CardDescription>
                   </CardHeader>
                   <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <AncillarySelection selectedAncillaries={selectedAncillaries} onAncillaryChange={setSelectedAncillaries} />
-                      <SeatMap selectedSeat={selectedSeat} onSeatSelect={setSelectedSeat} />
+                      <AncillarySelection selectedAncillaries={selectedAncillaries} onAncillaryChange={handleAncillaryChange} />
+                      <SeatMap selectedSeat={selectedSeat} onSeatSelect={handleSeatSelect} />
                   </CardContent>
               </Card>
             </>
@@ -705,27 +756,27 @@ export default function OfferComposerPage() {
                     <CardContent className="space-y-4">
                         <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground font-mono">{selectedOffer.id}</span>
-                                <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(selectedOffer.price)}</span>
+                                <span className="text-muted-foreground font-mono">{selectedOffer.id} (x{passengerCount})</span>
+                                <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(baseOfferPrice)}</span>
                             </div>
                              {selectedPromotion && (
                                 <div className="flex justify-between text-green-600">
                                     <span className="text-muted-foreground font-mono">{selectedPromotion.id}</span>
                                     <span>
-                                        {selectedPromotion.type === 'PERCENTAGE' ? `-(${selectedPromotion.value}%)` : `-$${selectedPromotion.value.toFixed(2)}`}
+                                        {selectedPromotion.type === 'PERCENTAGE' ? `-${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(promotionDiscount)}` : `-$${selectedPromotion.value.toFixed(2)}`}
                                     </span>
                                 </div>
                             )}
                             {selectedAncillaries.map(anc => (
                                 <div key={anc.id} className="flex justify-between">
-                                <span className="text-muted-foreground font-mono">{anc.id}</span>
-                                <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(anc.price)}</span>
+                                <span className="text-muted-foreground font-mono">{anc.id} (x{passengerCount})</span>
+                                <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(anc.price * passengerCount)}</span>
                             </div>
                             ))}
                             {selectedSeat && (
                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground font-mono">SEAT-{selectedSeat}</span>
-                                    <span>${totalSeatPrice.toFixed(2)}</span>
+                                    <span className="text-muted-foreground font-mono">SEAT-{selectedSeat} (x{passengerCount})</span>
+                                    <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalSeatPrice * passengerCount)}</span>
                                 </div>
                             )}
                         </div>
@@ -763,17 +814,17 @@ export default function OfferComposerPage() {
                                     </PopoverContent>
                                 </Popover>
                             </div>
-                           <Button className="w-full" onClick={handleValidateOffer} disabled={offerStatus === 'OfferValidated' || offerStatus === 'OfferStockChecked'}>
-                            {offerStatus === 'OfferValidated' || offerStatus === 'OfferStockChecked' ? <BadgeCheck className="mr-2 h-4 w-4" /> : null}
-                                Validate Offer
+                           <Button className="w-full" onClick={handleValidateOffer} disabled={offerStatus === 'OfferPriceValidated' || offerStatus === 'OfferStockChecked'}>
+                            {offerStatus === 'OfferPriceValidated' || offerStatus === 'OfferStockChecked' ? <BadgeCheck className="mr-2 h-4 w-4" /> : null}
+                                Validate Price
                            </Button>
-                           <Button className="w-full" variant="outline" onClick={handleStockCheck} disabled={offerStatus !== 'OfferValidated'}>
+                           <Button className="w-full" variant="outline" onClick={handleStockCheck} disabled={offerStatus !== 'OfferPriceValidated'}>
                             {offerStatus === 'OfferStockChecked' ? <BadgeCheck className="mr-2 h-4 w-4" /> : null}
                                 Check Stock Availability
                            </Button>
                         </div>
                         
-                        {(offerStatus === 'OfferValidated' || offerStatus === 'OfferStockChecked') && (
+                        {(offerStatus === 'OfferPriceValidated' || offerStatus === 'OfferStockChecked') && (
                             <Alert variant={offerStatus === 'OfferStockChecked' ? 'default' : 'destructive'}>
                                 {offerStatus === 'OfferStockChecked' ? <BadgeCheck className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
                                 <AlertTitle>
@@ -782,7 +833,7 @@ export default function OfferComposerPage() {
                                 <AlertDescription>
                                     {offerStatus === 'OfferStockChecked' 
                                         ? 'All items are validated and stock is confirmed. You can now create the order.' 
-                                        : 'Offer must be validated and stock checked before creating an order.'
+                                        : 'Offer must be price validated and stock checked before creating an order.'
                                     }
                                 </AlertDescription>
                             </Alert>
