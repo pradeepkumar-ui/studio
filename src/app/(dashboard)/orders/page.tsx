@@ -50,18 +50,25 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const mockRecentOrders: Order[] = [
-    { id: 'ORD-073', customer: 'Voyage Travel Co.', email: 'contact@voyagetravel.com', status: 'Fulfilled', date: '2024-07-15', amount: 12500, },
-    { id: 'ORD-072', customer: 'Globex Corporation', email: 'accounts@globex.corp', status: 'Fulfilled', date: '2024-07-15', amount: 8400, },
-    { id: 'ORD-071', customer: 'Jane Smith', email: 'jane.smith@example.com', status: 'Pending', date: '2024-07-14', amount: 450, },
-    { id: 'ORD-070', customer: 'InnoTech Solutions', email: 'procurement@innotech.com', status: 'Fulfilled', date: '2024-07-13', amount: 22000, },
-    { id: 'ORD-069', customer: 'Adventure Seekers', email: 'bookings@adventureseekers.io', status: 'Canceled', date: '2024-07-12', amount: 1800, },
-    { id: 'ORD-068', customer: 'Stark Industries', email: 'tony@stark.com', status: 'Fulfilled', date: '2024-07-12', amount: 45000, },
-    { id: 'ORD-067', customer: 'Wayne Enterprises', email: 'bruce@wayne.com', status: 'Pending', date: '2024-07-11', amount: 1100, },
-    { id: 'ORD-066', customer: 'Cyberdyne Systems', email: 'miles@cyberdyne.com', status: 'Fulfilled', date: '2024-07-11', amount: 950, },
-    { id: 'ORD-065', customer: 'Hooli', email: 'gavin@hooli.com', status: 'Canceled', date: '2024-07-10', amount: 250, },
-    { id: 'ORD-064', customer: 'Acme Corporation', email: 'wile@acme.com', status: 'Fulfilled', date: '2024-07-10', amount: 600, },
+    { id: 'ORD-073', customer: 'Voyage Travel Co.', email: 'contact@voyagetravel.com', status: 'Fulfilled', date: '2024-07-15', amount: 12500, originDestination: 'JFK-LHR', channel: 'TMC' },
+    { id: 'ORD-072', customer: 'Globex Corporation', email: 'accounts@globex.corp', status: 'Fulfilled', date: '2024-07-15', amount: 8400, originDestination: 'SFO-HND', channel: 'Corporate' },
+    { id: 'ORD-071', customer: 'Jane Smith', email: 'jane.smith@example.com', status: 'Pending', date: '2024-07-14', amount: 450, originDestination: 'MIA-CUN', channel: 'Web' },
+    { id: 'ORD-070', customer: 'InnoTech Solutions', email: 'procurement@innotech.com', status: 'Fulfilled', date: '2024-07-13', amount: 22000, originDestination: 'SIN-DXB', channel: 'API' },
+    { id: 'ORD-069', customer: 'Adventure Seekers', email: 'bookings@adventureseekers.io', status: 'Canceled', date: '2024-07-12', amount: 1800, originDestination: 'LAX-SYD', channel: 'OTA' },
+    { id: 'ORD-068', customer: 'Stark Industries', email: 'tony@stark.com', status: 'Fulfilled', date: '2024-07-12', amount: 45000, originDestination: 'JFK-ZRH', channel: 'Corporate' },
+    { id: 'ORD-067', customer: 'Wayne Enterprises', email: 'bruce@wayne.com', status: 'Pending', date: '2024-07-11', amount: 1100, originDestination: 'ORD-LGA', channel: 'Web' },
+    { id: 'ORD-066', customer: 'Cyberdyne Systems', email: 'miles@cyberdyne.com', status: 'Fulfilled', date: '2024-07-11', amount: 950, originDestination: 'LAX-DFW', channel: 'API' },
+    { id: 'ORD-065', customer: 'Hooli', email: 'gavin@hooli.com', status: 'Canceled', date: '2024-07-10', amount: 250, originDestination: 'SJC-SEA', channel: 'Web' },
+    { id: 'ORD-064', customer: 'Acme Corporation', email: 'wile@acme.com', status: 'Fulfilled', date: '2024-07-10', amount: 600, originDestination: 'PHX-DEN', channel: 'TMC' },
   ];
 
 export type Order = {
@@ -71,6 +78,8 @@ export type Order = {
   status: 'Pending' | 'Fulfilled' | 'Canceled';
   date: string;
   amount: number;
+  originDestination: string;
+  channel: string;
 };
 
 const getStatusBadgeVariant = (status: Order['status']) => {
@@ -119,6 +128,16 @@ export const columns: ColumnDef<Order>[] = [
     cell: ({ row }) => <div>{row.getValue('customer')}</div>,
   },
   {
+    accessorKey: 'originDestination',
+    header: 'Route',
+    cell: ({ row }) => <div>{row.getValue('originDestination')}</div>,
+  },
+  {
+    accessorKey: 'channel',
+    header: 'Channel',
+    cell: ({ row }) => <Badge variant="outline">{row.getValue('channel')}</Badge>,
+  },
+  {
     accessorKey: 'status',
     header: 'Status',
     cell: ({ row }) => (
@@ -126,13 +145,6 @@ export const columns: ColumnDef<Order>[] = [
         {row.getValue('status')}
       </Badge>
     ),
-  },
-  {
-    accessorKey: 'date',
-    header: () => <div className="text-right">Date</div>,
-    cell: ({ row }) => {
-      return <div className="text-right font-medium">{row.getValue('date')}</div>
-    },
   },
   {
     accessorKey: 'amount',
@@ -191,8 +203,13 @@ export default function OrdersPage() {
   React.useEffect(() => {
     const newOrderString = sessionStorage.getItem('newly_created_order');
     if (newOrderString) {
-      const newOrder = JSON.parse(newOrderString);
-      setData(prevData => [newOrder, ...prevData]);
+      const newOrder: Omit<Order, 'originDestination' | 'channel'> = JSON.parse(newOrderString);
+      const completeNewOrder: Order = {
+        ...newOrder,
+        originDestination: 'JFK-LAX', // Mock data for new order
+        channel: 'Web', // Mock data for new order
+      };
+      setData(prevData => [completeNewOrder, ...prevData]);
       sessionStorage.removeItem('newly_created_order');
     }
   }, []);
@@ -211,12 +228,6 @@ export default function OrdersPage() {
       columnFilters,
     },
   });
-  
-  const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    table.getColumn('id')?.setFilterValue(value);
-    table.getColumn('customer')?.setFilterValue(value);
-  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -253,16 +264,51 @@ export default function OrdersPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="flex items-center justify-between py-4">
-            <div className="relative">
+          <div className="flex items-center gap-4 py-4">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by Order ID, Customer Name..."
-                onChange={handleFilterChange}
+                placeholder="Search by ID, Customer, Email..."
+                value={(table.getColumn('customer')?.getFilterValue() as string) ?? ''}
+                onChange={(event) => {
+                    const value = event.target.value;
+                    table.getColumn('customer')?.setFilterValue(value);
+                    table.getColumn('id')?.setFilterValue(value);
+                    table.getColumn('email')?.setFilterValue(value);
+                }}
                 className="max-w-sm pl-9"
               />
             </div>
-            
+             <Select
+              value={(table.getColumn('status')?.getFilterValue() as string) ?? 'all'}
+              onValueChange={(value) => table.getColumn('status')?.setFilterValue(value === 'all' ? null : value)}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="Fulfilled">Fulfilled</SelectItem>
+                <SelectItem value="Pending">Pending</SelectItem>
+                <SelectItem value="Canceled">Canceled</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={(table.getColumn('channel')?.getFilterValue() as string) ?? 'all'}
+              onValueChange={(value) => table.getColumn('channel')?.setFilterValue(value === 'all' ? null : value)}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by Channel" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Channels</SelectItem>
+                <SelectItem value="Web">Web</SelectItem>
+                <SelectItem value="TMC">TMC</SelectItem>
+                <SelectItem value="OTA">OTA</SelectItem>
+                <SelectItem value="Corporate">Corporate</SelectItem>
+                <SelectItem value="API">API</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="rounded-md border">
             <Table>
