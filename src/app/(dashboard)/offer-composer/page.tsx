@@ -1,13 +1,13 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { format, differenceInHours, addDays, isBefore } from 'date-fns';
-import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket, BadgeCheck, XCircle, Tag, CheckSquare, Square, Gift } from 'lucide-react';
+import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket, BadgeCheck, XCircle, Tag, CheckSquare, Square, Gift, AlertCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -44,6 +44,8 @@ import { SeatMap } from '@/components/offer-composer/seat-map';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import type { OrderDetails } from '@/components/orders/order-details-view';
+
 
 type OfferStatus = 'OfferRequested' | 'OfferProcessing' | 'OfferCreated' | 'OfferSelected' | 'OfferPriceValidated' | 'OfferStockChecked' | 'OfferConvertedToOrder' | 'OfferExpired';
 
@@ -136,6 +138,7 @@ export default function OfferComposerPage() {
   const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
   const [offerStatus, setOfferStatus] = useState<OfferStatus | null>(null);
   const [validTill, setValidTill] = useState<Date | undefined>(addDays(new Date(), 1));
+  const [reshopContext, setReshopContext] = useState<OrderDetails | null>(null);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -158,6 +161,42 @@ export default function OfferComposerPage() {
       query: '',
     },
   });
+  
+  useEffect(() => {
+    const reshopOrderString = sessionStorage.getItem('reshop_order_context');
+    if (reshopOrderString) {
+        try {
+            const order: OrderDetails = JSON.parse(reshopOrderString);
+            setReshopContext(order);
+            
+            // For now, we'll make a best-effort to parse the route from the first flight service
+            const flightService = order.services.find(s => s.type === 'Flight');
+            if (flightService) {
+                const parts = flightService.description.split(', ')[1]?.split('-');
+                if (parts && parts.length === 2) {
+                    form.setValue('origin', parts[0]);
+                    form.setValue('destination', parts[1]);
+                }
+            }
+            form.setValue('departureDate', new Date(order.date));
+            // This is a simplification; a real app would need to parse passenger types
+            const passengerCount = order.auditTrail[0]?.actor.includes('Pax') ? parseInt(order.auditTrail[0].actor.split(' ')[0]) : 1;
+            form.setValue('passengers.adt', passengerCount);
+
+            toast({
+              title: 'Reshop Mode Activated',
+              description: `Loaded context for Order ${order.id}.`,
+            });
+
+        } catch (e) {
+            console.error("Failed to parse reshop context:", e);
+            toast({ variant: "destructive", title: "Error", description: "Could not load reshop context." });
+        } finally {
+            sessionStorage.removeItem('reshop_order_context');
+        }
+    }
+  }, [form, toast]);
+
 
   async function onAiSubmit(data: z.infer<typeof aiSearchSchema>) {
     setIsAiLoading(true);
@@ -428,6 +467,16 @@ export default function OfferComposerPage() {
           Compose NDC-compatible offers by discovering and pricing solutions and ancillaries.
         </p>
       </div>
+
+       {reshopContext && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Reshop Mode</AlertTitle>
+          <AlertDescription>
+            You are modifying Order <span className="font-mono">{reshopContext.id}</span>. Any new selections will be added to this existing order.
+          </AlertDescription>
+        </Alert>
+      )}
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
