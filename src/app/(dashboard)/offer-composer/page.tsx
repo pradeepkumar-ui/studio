@@ -36,7 +36,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { searchFlightsNLP } from '@/ai/flows/search-flights-nlp';
-import { FlightResultCard, type FlightOffer } from '@/components/offer-composer/flight-result-card';
+import { JourneyResultCard, type FlightJourney, type BrandedFare } from '@/components/offer-composer/journey-result-card';
 import { AncillarySelection, Ancillary } from '@/components/offer-composer/ancillary-selection';
 import { SeatMap } from '@/components/offer-composer/seat-map';
 import { Separator } from '@/components/ui/separator';
@@ -65,60 +65,47 @@ const aiSearchSchema = z.object({
   query: z.string().min(10, 'Please describe your search in at least 10 characters.'),
 });
 
-const mockFlightOffers: FlightOffer[] = [
-    {
-      id: 'OFF-FL-001',
-      departureTime: '06:30',
-      departureCode: 'JFK',
-      arrivalTime: '09:45',
-      arrivalCode: 'LAX',
-      duration: '6h 15m',
-      stops: 0,
-      airline: 'Airline A',
-      price: 350,
-      currency: 'USD',
-      cabinClass: 'ECONOMY',
-      includedBaggage: '1 Carry-on',
-      brand: 'Economy Light'
-    },
-    {
-      id: 'OFF-FL-002',
-      departureTime: '09:00',
-      departureCode: 'LHR',
-      arrivalTime: '13:30',
-      arrivalCode: 'DXB',
-      duration: '7h 30m',
-      stops: 0,
-      airline: 'Airline B',
-      price: 2500,
-      currency: 'GBP',
-      cabinClass: 'BUSINESS',
-      includedBaggage: '1 Carry-on, 1 Checked',
-      brand: 'Business Saver'
-    },
-     {
-      id: 'OFF-FL-003',
-      departureTime: '14:00',
-      departureCode: 'JFK',
-      arrivalTime: '17:15',
-      arrivalCode: 'LHR',
-      duration: '6h 15m',
-      stops: 0,
-      airline: 'Airline A',
-      price: 1200,
-      currency: 'USD',
-      cabinClass: 'BUSINESS',
-      includedBaggage: '1 Carry-on, 2 Checked',
-      brand: 'Business Flex'
-    },
+const mockFlightJourneys: FlightJourney[] = [
+  {
+    id: 'J-001',
+    departureTime: '06:30', departureCode: 'JFK',
+    arrivalTime: '09:45', arrivalCode: 'LAX',
+    duration: '6h 15m', airline: 'Airline A', stops: 0,
+    fares: [
+      { id: 'F-001A', brand: 'Economy Light', cabinClass: 'ECONOMY', price: 280, includedBaggage: '1 Carry-on' },
+      { id: 'F-001B', brand: 'Economy Flex', cabinClass: 'ECONOMY', price: 350, includedBaggage: '1 Carry-on, 1 Checked' },
+      { id: 'F-001C', brand: 'Business Saver', cabinClass: 'BUSINESS', price: 1100, includedBaggage: '1 Carry-on, 1 Checked' },
+    ]
+  },
+  {
+    id: 'J-002',
+    departureTime: '09:00', departureCode: 'JFK',
+    arrivalTime: '12:15', arrivalCode: 'LAX',
+    duration: '6h 15m', airline: 'Airline B', stops: 0,
+    fares: [
+      { id: 'F-002A', brand: 'Economy Saver', cabinClass: 'ECONOMY', price: 310, includedBaggage: '1 Carry-on, 1 Checked' },
+      { id: 'F-002B', brand: 'Business Flex', cabinClass: 'BUSINESS', price: 1250, includedBaggage: '1 Carry-on, 2 Checked, Lounge' },
+    ]
+  },
+  {
+    id: 'J-003',
+    departureTime: '14:00', departureCode: 'LHR',
+    arrivalTime: '18:30', arrivalCode: 'DXB',
+    duration: '7h 30m', airline: 'Airline C', stops: 0,
+    fares: [
+        { id: 'F-003A', brand: 'Economy', cabinClass: 'ECONOMY', price: 450, includedBaggage: '1 Carry-on, 1 Checked' },
+        { id: 'F-003B', brand: 'Business', cabinClass: 'BUSINESS', price: 2500, includedBaggage: '1 Carry-on, 2 Checked, Lounge' },
+        { id: 'F-003C', brand: 'First', cabinClass: 'FIRST', price: 4800, includedBaggage: '1 Carry-on, 3 Checked, Lounge, Priority' },
+    ]
+  }
 ];
 
 
 export default function OfferComposerPage() {
-  const [searchResults, setSearchResults] = useState<FlightOffer[] | null>(null);
+  const [searchResults, setSearchResults] = useState<FlightJourney[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
-  const [selectedOffer, setSelectedOffer] = useState<FlightOffer | null>(null);
+  const [selectedOffer, setSelectedOffer] = useState<BrandedFare | null>(null);
   const [selectedAncillaries, setSelectedAncillaries] = useState<Ancillary[]>([]);
   const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
   const [offerStatus, setOfferStatus] = useState<OfferStatus | null>(null);
@@ -191,67 +178,60 @@ export default function OfferComposerPage() {
     });
     
     setTimeout(() => {
-        let results = mockFlightOffers.filter(
-            (offer) => offer.cabinClass.toUpperCase().replace(' ', '_') === data.cabinClass
-        );
+        let results = mockFlightJourneys.map(journey => ({
+            ...journey,
+            fares: journey.fares.filter(fare => fare.cabinClass.toUpperCase() === data.cabinClass)
+        })).filter(journey => journey.fares.length > 0);
 
         // ** SIMULATED ENGINE LOGIC **
-
-        // Scenario 1: Corporate Traveller
-        if (data.corporateId && data.cabinClass === 'BUSINESS' && data.destination.toUpperCase() === 'LHR') {
-            toast({ title: "Corporate rule applied", description: "-5% discount for Corporate Traveller Cohort" });
-            results = results.map(r => {
-                if (r.brand === 'Business Flex') {
-                    const discountedPrice = r.price * 0.95;
-                    const bundleAncillaries: Ancillary[] = [
-                        { id: 'ANC-006', name: 'Lounge Access', price: 0, currency: 'USD' },
-                        { id: 'ANC-004', name: 'Priority Boarding', price: 0, currency: 'USD' },
-                        { id: 'ANC-003', name: 'In-flight Wi-Fi', price: 0, currency: 'USD' }
-                    ];
-                    return { ...r, price: discountedPrice, includedBaggage: `${r.includedBaggage}, Lounge, Priority, Wi-Fi` };
-                }
-                return r;
-            });
+        if (data.corporateId && data.cabinClass === 'BUSINESS') {
+            toast({ title: "Corporate rule applied", description: "-5% discount & bundle applied" });
+            results = results.map(j => ({
+                ...j,
+                fares: j.fares.map(f => {
+                    if (f.cabinClass === 'BUSINESS') {
+                        const newPrice = f.price * 0.95;
+                        const newIncluded = `${f.includedBaggage}, Lounge, Priority, Wi-Fi`;
+                        return { ...f, price: newPrice, includedBaggage: newIncluded };
+                    }
+                    return f;
+                })
+            }));
         }
         
-        // Scenario 2: Family Traveller
         if ((data.passengers.adt + data.passengers.chd) >= 3 && data.passengers.chd > 0) {
             toast({ title: "Family rule applied", description: "10% discount for family cohort." });
-            results = results.map(r => ({...r, price: r.price * 0.9}));
+            results = results.map(j => ({...j, fares: j.fares.map(f => ({...f, price: f.price * 0.9})) }));
         }
 
-        // Scenario 8: Last-minute traveller
         if (differenceInHours(data.departureDate, new Date()) < 48) {
             toast({ title: "Last-minute rule applied", description: "+15% surge pricing." });
-            results = results.map(r => ({...r, price: r.price * 1.15}));
+            results = results.map(j => ({...j, fares: j.fares.map(f => ({...f, price: f.price * 1.15})) }));
         }
         
-        // Scenario 4: OTA User
         if (data.channel === 'OTA') {
              toast({ title: "OTA rule applied", description: "+2% markup for OTA channel." });
-             results = results.map(r => ({...r, price: r.price * 1.02}));
+             results = results.map(j => ({...j, fares: j.fares.map(f => ({...f, price: f.price * 1.02})) }));
         }
-
-        // ** END SIMULATED ENGINE LOGIC **
 
         setSearchResults(results);
         setIsLoading(false);
         setOfferStatus('OfferCreated');
         toast({
             title: 'Search complete!',
-            description: `${results.length} offers found for the selected criteria.`,
+            description: `${results.reduce((acc, j) => acc + j.fares.length, 0)} offers found.`,
           });
     }, 1500);
   }
 
-  function handleSelectOffer(offer: FlightOffer) {
+  function handleSelectOffer(offer: BrandedFare) {
     setSelectedOffer(offer);
     setSelectedAncillaries([]);
     setSelectedSeat(null);
     setOfferStatus('OfferSelected');
     toast({
       title: 'Offer Added to Cart',
-      description: `Offer ${offer.id} has been selected. You can now add ancillaries.`,
+      description: `Fare "${offer.brand}" has been selected. You can now add ancillaries.`,
     });
   }
   
@@ -274,7 +254,7 @@ export default function OfferComposerPage() {
   }
 
   const totalAncillaryPrice = selectedAncillaries.reduce((acc, anc) => acc + anc.price, 0);
-  const totalSeatPrice = selectedSeat ? 75 : 0; // Updated to match seat catalogue price
+  const totalSeatPrice = selectedSeat ? 75 : 0; 
   const totalOrderPrice = (selectedOffer?.price || 0) + totalAncillaryPrice + totalSeatPrice;
 
   const orderCreatePayload = {
@@ -523,8 +503,8 @@ export default function OfferComposerPage() {
           {(isLoading || searchResults) && (
             <Card>
                 <CardHeader>
-                    <CardTitle>2. Select Flight</CardTitle>
-                    <CardDescription>Choose a flight solution to add it to your cart.</CardDescription>
+                    <CardTitle>2. Select Flight & Fare</CardTitle>
+                    <CardDescription>Choose a flight and a branded fare to add it to your cart.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {isLoading && (
@@ -540,7 +520,7 @@ export default function OfferComposerPage() {
                         </div>
                         ) : (
                         <div className="space-y-4">
-                            {searchResults.map(offer => <FlightResultCard key={offer.id} offer={offer} onSelect={handleSelectOffer} isSelected={selectedOffer?.id === offer.id} />)}
+                            {searchResults.map(journey => <JourneyResultCard key={journey.id} journey={journey} onSelectFare={handleSelectOffer} selectedFareId={selectedOffer?.id} />)}
                         </div>
                         )
                     )}
@@ -602,8 +582,8 @@ export default function OfferComposerPage() {
                     <CardContent className="space-y-4">
                         <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Flight ({selectedOffer.departureCode}-{selectedOffer.arrivalCode})</span>
-                                <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: selectedOffer.currency }).format(selectedOffer.price)}</span>
+                                <span className="text-muted-foreground">Flight Fare ({selectedOffer.brand})</span>
+                                <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(selectedOffer.price)}</span>
                             </div>
                             {selectedAncillaries.map(anc => (
                                 <div key={anc.id} className="flex justify-between">
@@ -621,7 +601,7 @@ export default function OfferComposerPage() {
                         <Separator />
                         <div className="flex justify-between font-bold text-lg">
                             <span>Total</span>
-                            <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: selectedOffer.currency }).format(totalOrderPrice)}</span>
+                            <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalOrderPrice)}</span>
                         </div>
                         <Separator />
                         
