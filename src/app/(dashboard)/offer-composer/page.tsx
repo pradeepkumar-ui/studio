@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { format } from 'date-fns';
+import { format, differenceInHours } from 'date-fns';
 import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket, BadgeCheck, XCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -58,6 +58,7 @@ const offerSearchSchema = z.object({
   cabinClass: z.enum(['ECONOMY', 'PREMIUM_ECONOMY', 'BUSINESS', 'FIRST']),
   brand: z.string().optional(),
   corporateId: z.string().optional(),
+  channel: z.string().optional(),
 });
 
 const aiSearchSchema = z.object({
@@ -132,7 +133,8 @@ export default function OfferComposerPage() {
       passengers: { adt: 1, chd: 0},
       cabinClass: 'ECONOMY',
       brand: 'All',
-      corporateId: ''
+      corporateId: '',
+      channel: 'Direct'
     },
   });
   
@@ -194,29 +196,42 @@ export default function OfferComposerPage() {
         );
 
         // ** SIMULATED ENGINE LOGIC **
+
+        // Scenario 1: Corporate Traveller
         if (data.corporateId && data.cabinClass === 'BUSINESS' && data.destination.toUpperCase() === 'LHR') {
             toast({ title: "Corporate rule applied", description: "-5% discount for Corporate Traveller Cohort" });
             results = results.map(r => {
                 if (r.brand === 'Business Flex') {
-                    // Apply dynamic pricing
                     const discountedPrice = r.price * 0.95;
-
-                    // Automatically add bundle and free Wi-Fi
                     const bundleAncillaries: Ancillary[] = [
                         { id: 'ANC-006', name: 'Lounge Access', price: 0, currency: 'USD' },
                         { id: 'ANC-004', name: 'Priority Boarding', price: 0, currency: 'USD' },
                         { id: 'ANC-003', name: 'In-flight Wi-Fi', price: 0, currency: 'USD' }
                     ];
-                    
-                    if(selectedOffer?.id === r.id) {
-                      setSelectedAncillaries(prev => [...prev, ...bundleAncillaries]);
-                    }
-
-                    return { ...r, price: discountedPrice, includedBaggage: `${r.includedBaggage}, Lounge, Priority` };
+                    return { ...r, price: discountedPrice, includedBaggage: `${r.includedBaggage}, Lounge, Priority, Wi-Fi` };
                 }
                 return r;
             });
         }
+        
+        // Scenario 2: Family Traveller
+        if ((data.passengers.adt + data.passengers.chd) >= 3 && data.passengers.chd > 0) {
+            toast({ title: "Family rule applied", description: "10% discount for family cohort." });
+            results = results.map(r => ({...r, price: r.price * 0.9}));
+        }
+
+        // Scenario 8: Last-minute traveller
+        if (differenceInHours(data.departureDate, new Date()) < 48) {
+            toast({ title: "Last-minute rule applied", description: "+15% surge pricing." });
+            results = results.map(r => ({...r, price: r.price * 1.15}));
+        }
+        
+        // Scenario 4: OTA User
+        if (data.channel === 'OTA') {
+             toast({ title: "OTA rule applied", description: "+2% markup for OTA channel." });
+             results = results.map(r => ({...r, price: r.price * 1.02}));
+        }
+
         // ** END SIMULATED ENGINE LOGIC **
 
         setSearchResults(results);
@@ -472,6 +487,28 @@ export default function OfferComposerPage() {
                             )}
                          />
                     </div>
+                     <FormField
+                        control={form.control}
+                        name="channel"
+                        render={({ field }) => (
+                            <FormItem className="pt-4">
+                            <FormLabel>Channel</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                        <SelectValue placeholder="Select channel" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="Direct">Direct</SelectItem>
+                                        <SelectItem value="TMC">TMC</SelectItem>
+                                        <SelectItem value="OTA">OTA</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
                     <div className="flex justify-end pt-6">
                         <Button type="submit" className="w-full md:w-auto" disabled={isLoading}>
                             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
