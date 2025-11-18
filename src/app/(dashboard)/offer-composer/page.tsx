@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -582,18 +583,18 @@ export default function OfferComposerPage() {
                     <CardContent className="space-y-4">
                         <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Flight Fare ({selectedOffer.brand})</span>
+                                <span className="text-muted-foreground font-mono">{selectedOffer.id}</span>
                                 <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(selectedOffer.price)}</span>
                             </div>
                             {selectedAncillaries.map(anc => (
                                 <div key={anc.id} className="flex justify-between">
-                                <span className="text-muted-foreground">{anc.name}</span>
+                                <span className="text-muted-foreground font-mono">{anc.id}</span>
                                 <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(anc.price)}</span>
                             </div>
                             ))}
                             {selectedSeat && (
                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Seat {selectedSeat}</span>
+                                    <span className="text-muted-foreground font-mono">SEAT-{selectedSeat}</span>
                                     <span>${totalSeatPrice.toFixed(2)}</span>
                                 </div>
                             )}
@@ -655,3 +656,4 @@ export default function OfferComposerPage() {
     </div>
   );
 }
+
