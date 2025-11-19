@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -43,7 +44,7 @@ const kpiData = [
   { title: 'Active Refunds', value: '42' },
 ];
 
-const mockPayments: Payment[] = [
+const initialMockPayments: Payment[] = [
     { id: 'PAY_77491', orderId: 'ORD_88213', amount: 320.50, currency: 'GBP', psp: 'Stripe', method: 'Card', status: 'Captured', timestamp: '5 mins ago' },
     { id: 'PAY_77490', orderId: 'ORD_88212', amount: 1250.00, currency: 'USD', psp: 'Adyen', method: 'Card', status: 'Captured', timestamp: '8 mins ago' },
     { id: 'PAY_77489', orderId: 'ORD_88211', amount: 88.00, currency: 'EUR', psp: 'PayPal', method: 'Wallet', status: 'Authorized', timestamp: '15 mins ago' },
@@ -57,6 +58,7 @@ const mockPayments: Payment[] = [
 ];
 
 export default function PaymentsPage() {
+  const [payments, setPayments] = useState<Payment[]>(initialMockPayments);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
   const { toast } = useToast();
@@ -72,11 +74,24 @@ export default function PaymentsPage() {
   };
 
   const handleFormSubmit = (data: Payment) => {
-    console.log(data);
-    toast({
-      title: editingPayment ? "Payment Updated" : "Payment Captured",
-      description: `Payment for Order ID "${data.orderId}" has been processed.`,
-    });
+    if (editingPayment) {
+      setPayments(payments.map(p => p.id === editingPayment.id ? {...p, ...data} : p));
+       toast({
+        title: "Payment Updated",
+        description: `Payment for Order ID "${data.orderId}" has been updated.`,
+      });
+    } else {
+      const newPayment: Payment = {
+        ...data,
+        id: `PAY_${Math.floor(Math.random() * 10000) + 77500}`,
+        timestamp: 'Just now',
+      };
+      setPayments([newPayment, ...payments]);
+      toast({
+        title: "Payment Captured",
+        description: `Payment for Order ID "${data.orderId}" has been processed.`,
+      });
+    }
     handleDialogClose();
   }
 
@@ -149,7 +164,7 @@ export default function PaymentsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockPayments.map((payment) => (
+              {payments.map((payment) => (
                 <TableRow key={payment.id}>
                   <TableCell className="font-medium font-mono">{payment.orderId}</TableCell>
                   <TableCell>{new Intl.NumberFormat('en-US', { style: 'currency', currency: payment.currency }).format(payment.amount)}</TableCell>
