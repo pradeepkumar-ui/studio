@@ -189,7 +189,7 @@ export function CommunicationTemplateForm({ template, onSubmit, onCancel }: Comm
                     </div>
                      <div className="flex flex-wrap gap-2">
                         {availableVariables.map((item) => (
-                            <Badge key={item} variant="outline" className="font-mono">{{item}}</Badge>
+                            <Badge key={item} variant="outline" className="font-mono">{`{{${item}}}`}</Badge>
                         ))}
                     </div>
                     <FormMessage />
