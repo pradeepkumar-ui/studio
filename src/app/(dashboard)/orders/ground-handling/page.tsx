@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -15,6 +16,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -55,6 +64,15 @@ const mockTasks: FlightTask[] = [
     { flightId: 'SQ 317', partner: 'Singapore Airlines', turnaroundProgress: 20, boarding: 'Pending', baggage: 'In-Progress', catering: 'Pending', cleaning: 'Pending', refueling: 'Pending' },
 ];
 
+const allFlightsData: FlightTask[] = [
+    ...mockTasks,
+    { flightId: 'AF 007', partner: 'Air France', turnaroundProgress: 0, boarding: 'Pending', baggage: 'Pending', catering: 'Pending', cleaning: 'Pending', refueling: 'Pending' },
+    { flightId: 'DL 123', partner: 'Delta', turnaroundProgress: 100, boarding: 'Completed', baggage: 'Completed', catering: 'Completed', cleaning: 'Completed', refueling: 'Completed' },
+    { flightId: 'QF 32', partner: 'Qantas', turnaroundProgress: 50, boarding: 'In-Progress', baggage: 'In-Progress', catering: 'Completed', cleaning: 'Pending', refueling: 'Pending' },
+    { flightId: 'EY 101', partner: 'Etihad', turnaroundProgress: 100, boarding: 'Completed', baggage: 'Completed', catering: 'Completed', cleaning: 'Completed', refueling: 'Completed' },
+    { flightId: 'JL 005', partner: 'Japan Airlines', turnaroundProgress: 10, boarding: 'Pending', baggage: 'Pending', catering: 'Pending', cleaning: 'Pending', refueling: 'Pending' },
+];
+
 
 const getStatusBadgeVariant = (status: ServiceStatus) => {
   switch (status) {
@@ -68,46 +86,117 @@ const getStatusBadgeVariant = (status: ServiceStatus) => {
 
 
 export default function GroundHandlingPage() {
-    return (
-        <div className="flex flex-col gap-6">
-            <div className="flex items-center justify-between">
-                <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold tracking-tight">
-                    Ground Handling – Other Airlines
-                </h1>
-                <p className="text-muted-foreground">
-                    Coordinate and monitor ground services performed by third-party partners.
-                </p>
-                </div>
-                <div className="flex gap-2">
-                    <Button variant="outline"><BellRing className="mr-2 h-4 w-4" /> Notify Partner</Button>
-                    <Button><Plane className="mr-2 h-4 w-4" /> View All Flights</Button>
-                </div>
-            </div>
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {kpiData.map((kpi) => (
-                <Card key={kpi.title}>
+    return (
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <div className="flex flex-col gap-6">
+                <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-2">
+                    <h1 className="text-3xl font-bold tracking-tight">
+                        Ground Handling – Other Airlines
+                    </h1>
+                    <p className="text-muted-foreground">
+                        Coordinate and monitor ground services performed by third-party partners.
+                    </p>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button variant="outline"><BellRing className="mr-2 h-4 w-4" /> Notify Partner</Button>
+                        <DialogTrigger asChild>
+                            <Button><Plane className="mr-2 h-4 w-4" /> View All Flights</Button>
+                        </DialogTrigger>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    {kpiData.map((kpi) => (
+                    <Card key={kpi.title}>
+                        <CardHeader>
+                        <CardTitle className="text-sm font-medium">
+                            {kpi.title}
+                        </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                        <div className="text-2xl font-bold">{kpi.value}</div>
+                        </CardContent>
+                    </Card>
+                    ))}
+                </div>
+
+                <Card>
                     <CardHeader>
-                    <CardTitle className="text-sm font-medium">
-                        {kpi.title}
-                    </CardTitle>
+                        <CardTitle>Task Tracker</CardTitle>
+                        <CardDescription>
+                            Live status of ground handling tasks for partner-managed flights.
+                        </CardDescription>
                     </CardHeader>
                     <CardContent>
-                    <div className="text-2xl font-bold">{kpi.value}</div>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Flight</TableHead>
+                                    <TableHead>Partner</TableHead>
+                                    <TableHead>Turnaround</TableHead>
+                                    <TableHead>Boarding</TableHead>
+                                    <TableHead>Baggage</TableHead>
+                                    <TableHead>Catering</TableHead>
+                                    <TableHead><span className="sr-only">Actions</span></TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {mockTasks.map((task) => (
+                                    <TableRow key={task.flightId}>
+                                        <TableCell className="font-medium">{task.flightId}</TableCell>
+                                        <TableCell>{task.partner}</TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center gap-2">
+                                                <Progress value={task.turnaroundProgress} className="h-2 w-32"/>
+                                                <span className="text-xs text-muted-foreground">{task.turnaroundProgress}%</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge variant={getStatusBadgeVariant(task.boarding)}>{task.boarding}</Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge variant={getStatusBadgeVariant(task.baggage)}>{task.baggage}</Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge variant={getStatusBadgeVariant(task.catering)}>{task.catering}</Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button
+                                                aria-haspopup="true"
+                                                size="icon"
+                                                variant="ghost"
+                                                >
+                                                <MoreHorizontal className="h-4 w-4" />
+                                                <span className="sr-only">Toggle menu</span>
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                <DropdownMenuItem>View Details</DropdownMenuItem>
+                                                <DropdownMenuItem>Send Update</DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
                     </CardContent>
                 </Card>
-                ))}
             </div>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Task Tracker</CardTitle>
-                    <CardDescription>
-                        Live status of ground handling tasks for partner-managed flights.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
+            <DialogContent className="max-w-4xl">
+                <DialogHeader>
+                <DialogTitle>All Flights Ground Handling</DialogTitle>
+                <DialogDescription>
+                    A comprehensive overview of all flights and their ground handling status.
+                </DialogDescription>
+                </DialogHeader>
+                <div className="max-h-[60vh] overflow-y-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -117,54 +206,34 @@ export default function GroundHandlingPage() {
                                 <TableHead>Boarding</TableHead>
                                 <TableHead>Baggage</TableHead>
                                 <TableHead>Catering</TableHead>
-                                <TableHead><span className="sr-only">Actions</span></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {mockTasks.map((task) => (
+                            {allFlightsData.map((task) => (
                                 <TableRow key={task.flightId}>
                                     <TableCell className="font-medium">{task.flightId}</TableCell>
                                     <TableCell>{task.partner}</TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
-                                            <Progress value={task.turnaroundProgress} className="h-2 w-32"/>
+                                            <Progress value={task.turnaroundProgress} className="h-2 w-24"/>
                                             <span className="text-xs text-muted-foreground">{task.turnaroundProgress}%</span>
                                         </div>
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant={getStatusBadgeVariant(task.boarding)}>{task.boarding}</Badge>
                                     </TableCell>
-                                     <TableCell>
+                                    <TableCell>
                                         <Badge variant={getStatusBadgeVariant(task.baggage)}>{task.baggage}</Badge>
                                     </TableCell>
-                                     <TableCell>
+                                    <TableCell>
                                         <Badge variant={getStatusBadgeVariant(task.catering)}>{task.catering}</Badge>
-                                    </TableCell>
-                                     <TableCell>
-                                        <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button
-                                            aria-haspopup="true"
-                                            size="icon"
-                                            variant="ghost"
-                                            >
-                                            <MoreHorizontal className="h-4 w-4" />
-                                            <span className="sr-only">Toggle menu</span>
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                            <DropdownMenuItem>View Details</DropdownMenuItem>
-                                            <DropdownMenuItem>Send Update</DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                        </DropdownMenu>
                                     </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
-                </CardContent>
-            </Card>
-        </div>
+                </div>
+            </DialogContent>
+        </Dialog>
     )
 }
