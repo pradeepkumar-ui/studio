@@ -25,28 +25,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { MoreHorizontal, PlusCircle, Download, RotateCcw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { LoyaltyOrderForm, type LoyaltyOrder } from '@/components/forms/loyalty-order-form';
+import { format } from 'date-fns';
 
-type LoyaltyOrder = {
-    id: string;
-    memberId: string;
-    type: 'Award' | 'Upgrade' | 'Ancillary';
-    pointsUsed: number;
-    cashPortion: number;
-    status: 'Confirmed' | 'Pending' | 'Reversed';
-    date: string;
-};
-
-const kpiData = [
-    { title: 'Loyalty Orders', value: '2,310' },
-    { title: 'Points Redeemed', value: '28.7M' },
-    { title: 'Points Reversed', value: '0.9M' },
-    { title: 'Pending Sync', value: '12' },
-];
-
-const mockLoyaltyOrders: LoyaltyOrder[] = [
+const initialLoyaltyOrders: LoyaltyOrder[] = [
     { id: 'ORD_88452', memberId: 'FFP_34521', type: 'Upgrade', pointsUsed: 25000, cashPortion: 80.00, status: 'Confirmed', date: '2025-10-30' },
     { id: 'ORD_88451', memberId: 'FFP_98765', type: 'Award', pointsUsed: 55000, cashPortion: 45.50, status: 'Confirmed', date: '2025-10-30' },
     { id: 'ORD_88450', memberId: 'FFP_12345', type: 'Ancillary', pointsUsed: 5000, cashPortion: 0.00, status: 'Pending', date: '2025-10-29' },
@@ -62,6 +54,9 @@ const mockLoyaltyOrders: LoyaltyOrder[] = [
 
 export default function LoyaltyPage() {
   const { toast } = useToast();
+  const [loyaltyOrders, setLoyaltyOrders] = useState<LoyaltyOrder[]>(initialLoyaltyOrders);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingOrder, setEditingOrder] = useState<LoyaltyOrder | null>(null);
 
   const getStatusBadgeVariant = (status: LoyaltyOrder['status']) => {
     switch (status) {
@@ -76,7 +71,34 @@ export default function LoyaltyPage() {
     }
   };
 
+  const handleOpenDialog = (order: LoyaltyOrder | null = null) => {
+    setEditingOrder(order);
+    setIsDialogOpen(true);
+  };
+  
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setEditingOrder(null);
+  };
+
+  const handleFormSubmit = (data: LoyaltyOrder) => {
+    const newOrder: LoyaltyOrder = {
+        ...data,
+        id: `ORD_${Math.floor(Math.random() * 90000) + 10000}`,
+        status: 'Pending',
+        date: format(new Date(), 'yyyy-MM-dd'),
+    };
+    setLoyaltyOrders([newOrder, ...loyaltyOrders]);
+    toast({
+      title: 'Loyalty Order Created',
+      description: `Order for member ${data.memberId} is now pending.`,
+    });
+    handleDialogClose();
+  };
+
+
   return (
+    <>
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
@@ -90,7 +112,7 @@ export default function LoyaltyPage() {
         <div className="flex gap-2">
             <Button variant="outline"><RotateCcw className="mr-2 h-4 w-4" /> Refund/Reinstate</Button>
             <Button variant="outline"><Download className="mr-2 h-4 w-4" /> Export Audit</Button>
-            <Button><PlusCircle className="mr-2 h-4 w-4" /> Create Award Order</Button>
+            <Button onClick={() => handleOpenDialog()}><PlusCircle className="mr-2 h-4 w-4" /> Create Award Order</Button>
         </div>
       </div>
       
@@ -132,7 +154,7 @@ export default function LoyaltyPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockLoyaltyOrders.map((order) => (
+              {loyaltyOrders.map((order) => (
                 <TableRow key={order.id}>
                   <TableCell className="font-medium font-mono">{order.id}</TableCell>
                   <TableCell className="font-mono">{order.memberId}</TableCell>
@@ -176,5 +198,22 @@ export default function LoyaltyPage() {
         </CardContent>
       </Card>
     </div>
+
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+            <DialogTitle>{editingOrder ? 'Edit Loyalty Order' : 'Create New Award Order'}</DialogTitle>
+            <DialogDescription>
+                Manually create a new loyalty redemption order.
+            </DialogDescription>
+            </DialogHeader>
+            <LoyaltyOrderForm
+                order={editingOrder}
+                onSubmit={handleFormSubmit}
+                onCancel={handleDialogClose}
+            />
+        </DialogContent>
+    </Dialog>
+    </>
   );
 }
