@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -15,10 +16,24 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { ScanLine, UserPlus, FileText, CheckCircle, AlertTriangle, Clock } from 'lucide-react';
+import { ScanLine, UserPlus, FileText, CheckCircle, AlertTriangle, Clock, MoreHorizontal } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 const kpiData = [
@@ -49,11 +64,37 @@ const liveFeed = [
     { type: 'success', message: 'Passenger L. Taylor (ORD-11298) boarded.', time: '5 mins ago' },
 ];
 
+type Passenger = {
+    pnr: string;
+    name: string;
+    seat: string;
+    status: 'Boarded' | 'Checked-in' | 'No-show';
+    ssr: string;
+};
+
+const mockManifest: Passenger[] = [
+    { pnr: 'L8Y2N3', name: 'John Smith', seat: '12A', status: 'Boarded', ssr: 'VGML' },
+    { pnr: 'P4X5T6', name: 'Jane Doe', seat: '12B', status: 'Boarded', ssr: '' },
+    { pnr: 'K9Z1M2', name: 'Mike Johnson', seat: '14C', status: 'Boarded', ssr: 'WCHR' },
+    { pnr: 'R7V8W9', name: 'Sarah Chen', seat: '15A', status: 'Checked-in', ssr: '' },
+    { pnr: 'A3B4C5', name: 'Alex Williams', seat: '16F', status: 'No-show', ssr: '' },
+];
+
+
 const getStatusBadgeVariant = (status: string) => {
     switch (status) {
         case 'Boarding': return 'default';
         case 'Final Call': return 'destructive';
         case 'Pre-Boarding': return 'secondary';
+        default: return 'outline';
+    }
+}
+
+const getPassengerStatusBadgeVariant = (status: string) => {
+    switch (status) {
+        case 'Boarded': return 'default';
+        case 'Checked-in': return 'secondary';
+        case 'No-show': return 'destructive';
         default: return 'outline';
     }
 }
@@ -67,6 +108,14 @@ const getFeedIcon = (type: string) => {
 }
 
 export default function BoardingPage() {
+    const [isManifestOpen, setIsManifestOpen] = useState(false);
+    const [selectedFlight, setSelectedFlight] = useState<typeof boardingFlights[0] | null>(null);
+
+    const handleViewManifest = (flight: typeof boardingFlights[0]) => {
+        setSelectedFlight(flight);
+        setIsManifestOpen(true);
+    };
+
     return (
         <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
@@ -81,7 +130,6 @@ export default function BoardingPage() {
                 <div className="flex gap-2">
                     <Button variant="outline"><ScanLine className="mr-2 h-4 w-4" /> Scan Boarding Pass</Button>
                     <Button variant="secondary"><UserPlus className="mr-2 h-4 w-4" /> Manual Boarding</Button>
-                    <Button><FileText className="mr-2 h-4 w-4" /> View Flight Manifest</Button>
                 </div>
             </div>
 
@@ -116,6 +164,7 @@ export default function BoardingPage() {
                                     <TableHead>Progress</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead>Current Group</TableHead>
+                                    <TableHead><span className="sr-only">Actions</span></TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -136,6 +185,22 @@ export default function BoardingPage() {
                                         </TableCell>
                                         <TableCell>
                                             <Badge variant="outline">{flight.currentGroup}</Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button aria-haspopup="true" size="icon" variant="ghost">
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                        <span className="sr-only">Actions</span>
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                    <DropdownMenuItem onClick={() => handleViewManifest(flight)}>
+                                                        <FileText className="mr-2 h-4 w-4"/>View Manifest
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -166,6 +231,43 @@ export default function BoardingPage() {
                     </CardContent>
                 </Card>
             </div>
+
+            <Dialog open={isManifestOpen} onOpenChange={setIsManifestOpen}>
+                <DialogContent className="max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle>Flight Manifest for {selectedFlight?.flightId}</DialogTitle>
+                        <DialogDescription>
+                            List of all passengers for flight {selectedFlight?.flightId} to {selectedFlight?.destination}.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="max-h-[60vh] overflow-y-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>PNR</TableHead>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Seat</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>SSR</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {mockManifest.map(pax => (
+                                    <TableRow key={pax.pnr}>
+                                        <TableCell className="font-mono">{pax.pnr}</TableCell>
+                                        <TableCell>{pax.name}</TableCell>
+                                        <TableCell>{pax.seat}</TableCell>
+                                        <TableCell>
+                                            <Badge variant={getPassengerStatusBadgeVariant(pax.status)}>{pax.status}</Badge>
+                                        </TableCell>
+                                        <TableCell>{pax.ssr || 'N/A'}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
