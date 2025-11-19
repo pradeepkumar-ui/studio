@@ -183,7 +183,6 @@ const menuItems: MenuItem[] = [
           { href: '/payments', label: 'Payments', icon: CreditCard },
           { href: '/accounting', label: 'Reconciliation', icon: GitCompare },
           { href: '/airline-revenue', label: 'Airline Revenue', icon: Landmark },
-          { href: '/reporting', label: 'Reporting', icon: BarChartHorizontal },
         ],
       },
     ],
