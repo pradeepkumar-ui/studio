@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -62,7 +63,7 @@ type ValidationItem = {
   timestamp: string;
 };
 
-const validationQueue: ValidationItem[] = [
+const initialValidationQueue: ValidationItem[] = [
   { orderId: 'ORD_9011', status: 'Ready', payment: true, inventory: true, services: true, timestamp: '1 min ago' },
   { orderId: 'ORD_9010', status: 'Pending', payment: true, inventory: true, services: false, timestamp: '5 mins ago' },
   { orderId: 'ORD_9009', status: 'Ready', payment: true, inventory: true, services: true, timestamp: '8 mins ago' },
@@ -95,6 +96,8 @@ const getCheckIcon = (isValid: boolean) => {
 export default function OrderFinalisationPage() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<ValidationItem | null>(null);
+    const [validationQueue, setValidationQueue] = useState<ValidationItem[]>(initialValidationQueue);
+    const [isBatchClosing, setIsBatchClosing] = useState(false);
     const { toast } = useToast();
 
     const handleOpenDialog = (order: ValidationItem) => {
@@ -103,15 +106,44 @@ export default function OrderFinalisationPage() {
     };
 
     const handleFormSubmit = (data: FinaliseOrder) => {
-        console.log(data);
         toast({
-        title: "Order Closure Initiated",
-        description: `Manual closure process started for Order ID: ${data.orderId}`,
+            title: "Order Closure Initiated",
+            description: `Manual closure process started for Order ID: ${data.orderId}`,
         });
+        setValidationQueue(prevQueue => 
+            prevQueue.map(item => 
+                item.orderId === data.orderId ? { ...item, status: 'Closed' } : item
+            )
+        );
         setIsDialogOpen(false);
         setSelectedOrder(null);
-  }
+    };
 
+    const handleBatchClosure = () => {
+        setIsBatchClosing(true);
+        toast({
+            title: 'Batch Closure Started',
+            description: 'Closing all orders that are ready for finalisation.'
+        });
+
+        setTimeout(() => {
+            let closedCount = 0;
+            setValidationQueue(prevQueue => 
+                prevQueue.map(item => {
+                    if (item.status === 'Ready') {
+                        closedCount++;
+                        return { ...item, status: 'Closed' };
+                    }
+                    return item;
+                })
+            );
+            setIsBatchClosing(false);
+            toast({
+                title: 'Batch Closure Complete',
+                description: `${closedCount} orders have been successfully closed.`
+            });
+        }, 2000);
+    };
 
   return (
     <div className="flex flex-col gap-6">
@@ -129,8 +161,8 @@ export default function OrderFinalisationPage() {
             <FileDown className="mr-2" />
             Export Audit
           </Button>
-          <Button>
-            <Archive className="mr-2" />
+          <Button onClick={handleBatchClosure} disabled={isBatchClosing}>
+            {isBatchClosing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Archive className="mr-2" />}
             Trigger Batch Closure
           </Button>
         </div>
