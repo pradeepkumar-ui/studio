@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -171,7 +172,6 @@ const menuItems: MenuItem[] = [
           { href: '/orders/ground-handling', label: 'Ground Handling', icon: Truck },
           { href: '/service-consumption', label: 'Service Consumption', icon: ClipboardCheck },
           { href: '/communication', label: 'Communication', icon: MessageSquare },
-          { href: '/documentation', label: 'Documentation', icon: FileText },
         ],
       },
       {
@@ -280,8 +280,8 @@ export default function SidebarNav() {
                 >
                   <Settings />
                   <span>Settings</span>
-                  <ChevronRight className="ml-auto size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/c-trigger:rotate-90 group-data-[collapsible=icon]:hidden" />
-                </SidebarMenuButton>
+                  <ChevronRight className="ml-auto size-4-4 shrink-0 transition-transform duration-200 group-data-[state=open]/c-trigger:rotate-90 group-data-[collapsible=icon]:hidden" />
+                </ButtonComp>
               </CollapsibleTrigger>
               <SidebarMenuCollapsibleContent>
                 <SidebarMenuSub>{renderNav(settingsItems, true)}</SidebarMenuSub>
