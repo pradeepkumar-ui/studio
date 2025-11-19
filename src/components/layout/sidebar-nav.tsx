@@ -281,7 +281,7 @@ export default function SidebarNav() {
                   <Settings />
                   <span>Settings</span>
                   <ChevronRight className="ml-auto size-4-4 shrink-0 transition-transform duration-200 group-data-[state=open]/c-trigger:rotate-90 group-data-[collapsible=icon]:hidden" />
-                </ButtonComp>
+                </SidebarMenuButton>
               </CollapsibleTrigger>
               <SidebarMenuCollapsibleContent>
                 <SidebarMenuSub>{renderNav(settingsItems, true)}</SidebarMenuSub>
