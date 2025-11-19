@@ -27,6 +27,17 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { Timestamp } from 'firebase/firestore';
 import { Textarea } from '../ui/textarea';
+import { Checkbox } from '../ui/checkbox';
+import { Separator } from '../ui/separator';
+
+const ancillaryOptions = [
+    { id: 'seat_selection', label: 'Seat Selection' },
+    { id: 'checked_bag', label: 'Checked Bag (1st)' },
+    { id: 'priority_boarding', label: 'Priority Boarding' },
+    { id: 'meal_service', label: 'Meal Service' },
+    { id: 'lounge_access', label: 'Lounge Access' },
+    { id: 'flexibility', label: 'Flexibility (Change/Cancel)' },
+] as const;
 
 const offerSchema = z.object({
   id: z.string().optional(),
@@ -37,6 +48,7 @@ const offerSchema = z.object({
   rounding: z.enum(['None', 'Round Half-Up', 'Round Down']),
   criteria: z.string(),
   cohorts: z.array(z.object({ value: z.string() })).optional(),
+  includedAncillaries: z.array(z.string()).optional(),
   effectiveDate: z.union([z.instanceof(Date), z.instanceof(Timestamp)]),
   expiryDate: z.union([z.instanceof(Date), z.instanceof(Timestamp)]),
   notes: z.string().optional(),
@@ -74,6 +86,7 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
       effectiveDate: toDate(offer.effectiveDate),
       expiryDate: toDate(offer.expiryDate),
       cohorts: parseStringToArray(offer.cohorts as any),
+      includedAncillaries: Array.isArray(offer.includedAncillaries) ? offer.includedAncillaries : [],
     } : {
       name: '',
       scope: 'Market',
@@ -82,6 +95,7 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
       rounding: 'Round Half-Up',
       criteria: 'Market: US, EU',
       cohorts: [],
+      includedAncillaries: [],
       effectiveDate: new Date(),
       expiryDate: new Date(new Date().setDate(new Date().getDate() + 30)),
       notes: '',
@@ -223,6 +237,56 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
             ))}
             <Button type="button" variant="outline" size="sm" onClick={() => appendCohort({ value: '' })}><PlusCircle className="mr-2 h-4 w-4" /> Add Cohort</Button>
         </div>
+
+        <Separator />
+        <FormField
+            control={form.control}
+            name="includedAncillaries"
+            render={() => (
+                <FormItem>
+                    <div>
+                        <FormLabel className="text-base font-semibold">Included Ancillaries</FormLabel>
+                    </div>
+                     <div className="grid grid-cols-2 gap-4 pt-2">
+                        {ancillaryOptions.map((item) => (
+                        <FormField
+                            key={item.id}
+                            control={form.control}
+                            name="includedAncillaries"
+                            render={({ field }) => {
+                            return (
+                                <FormItem
+                                key={item.id}
+                                className="flex flex-row items-start space-x-3 space-y-0"
+                                >
+                                <FormControl>
+                                    <Checkbox
+                                    checked={field.value?.includes(item.id)}
+                                    onCheckedChange={(checked) => {
+                                        return checked
+                                        ? field.onChange([...(field.value || []), item.id])
+                                        : field.onChange(
+                                            field.value?.filter(
+                                                (value) => value !== item.id
+                                            )
+                                            )
+                                    }}
+                                    />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                    {item.label}
+                                </FormLabel>
+                                </FormItem>
+                            )
+                            }}
+                        />
+                        ))}
+                    </div>
+                    <FormMessage />
+                </FormItem>
+            )}
+        />
+        <Separator />
 
         <div className="grid grid-cols-2 gap-4">
           <FormField
