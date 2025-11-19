@@ -51,6 +51,13 @@ const initialLoyaltyOrders: LoyaltyOrder[] = [
     { id: 'ORD_88457', memberId: 'FFP_22334', type: 'Ancillary', pointsUsed: 12000, cashPortion: 0.00, status: 'Confirmed', date: '2025-10-25' },
 ];
 
+const kpiData = [
+  { title: 'Redemptions (24h)', value: '1,205' },
+  { title: 'Points Redeemed (24h)', value: '8.2M' },
+  { title: 'Pending Redemptions', value: '42' },
+  { title: 'Reversals (24h)', value: '18' },
+];
+
 
 export default function LoyaltyPage() {
   const { toast } = useToast();
