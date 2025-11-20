@@ -54,6 +54,7 @@ const pricingRuleSchema = z.object({
     // New
     cohorts: z.array(z.string()).default([]),
     includedAncillaries: z.array(z.string()).default([]),
+    includedBundles: z.array(z.string()).default([]),
   }),
   
   // --- Action ---
@@ -109,6 +110,12 @@ const ancillaryOptions = [
     { id: 'anc_wifi_1', label: 'In-flight Wi-Fi' },
 ];
 
+const bundleOptions = [
+    { id: 'BUN-001', label: 'Business Saver+' },
+    { id: 'BUN-002', label: 'Family Pack' },
+    { id: 'BUN-004', label: 'Long Haul Comfort' },
+]
+
 // Dummy function to parse string from table into form data
 const parseRuleForForm = (rule: PricingRule | null): PricingRuleFormData | undefined => {
     if (!rule) return undefined;
@@ -127,6 +134,7 @@ const parseRuleForForm = (rule: PricingRule | null): PricingRuleFormData | undef
             departureValue: rule.conditions.includes('Departure') ? parseInt(rule.conditions.split('Departure ')[1]?.split(' ')[1]) : undefined,
             cohorts: [],
             includedAncillaries: [],
+            includedBundles: [],
         },
         action: {
             type: rule.action.includes('%') ? 'PERCENTAGE' : 'FIXED_AMOUNT',
@@ -155,6 +163,9 @@ const formatRuleForSubmit = (data: PricingRuleFormData): PricingRule => {
     if (data.conditions.includedAncillaries && data.conditions.includedAncillaries.length > 0) {
         conditionsParts.push(`Ancillaries: ${data.conditions.includedAncillaries.length}`);
     }
+    if (data.conditions.includedBundles && data.conditions.includedBundles.length > 0) {
+        conditionsParts.push(`Bundles: ${data.conditions.includedBundles.length}`);
+    }
     if (data.validity?.effectiveDate && data.validity?.expiryDate) {
         conditionsParts.push(`Dates: ${format(data.validity.effectiveDate, 'PP')} - ${format(data.validity.expiryDate, 'PP')}`);
     }
@@ -181,7 +192,7 @@ export function PricingRuleForm({ rule, onSubmit, onCancel }: PricingRuleFormPro
       name: '',
       status: 'Test',
       trigger: { type: 'Scheduled', source: '' },
-      conditions: { cohorts: [], includedAncillaries: [] },
+      conditions: { cohorts: [], includedAncillaries: [], includedBundles: [] },
       action: { type: 'PERCENTAGE', adjustment: 10, cabinClass: 'All' },
       guardrails: {},
       validity: {},
@@ -274,7 +285,7 @@ export function PricingRuleForm({ rule, onSubmit, onCancel }: PricingRuleFormPro
                             className={cn('w-full pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
                         >
                             {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
                         </Button>
                         </FormControl>
                     </PopoverTrigger>
@@ -300,7 +311,7 @@ export function PricingRuleForm({ rule, onSubmit, onCancel }: PricingRuleFormPro
                             className={cn('w-full pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
                         >
                             {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
                         </Button>
                         </FormControl>
                     </PopoverTrigger>
@@ -338,13 +349,33 @@ export function PricingRuleForm({ rule, onSubmit, onCancel }: PricingRuleFormPro
             name="conditions.includedAncillaries"
             render={() => (
                 <FormItem>
-                    <div className="mb-2"><FormLabel>Ancillary Conditions</FormLabel></div>
+                    <div className="mb-2"><FormLabel>Ancillary Conditions (is in cart)</FormLabel></div>
                      <div className="flex flex-wrap gap-x-4 gap-y-2">
                         {ancillaryOptions.map((item) => (
                         <FormField
                             key={item.id}
                             control={form.control}
                             name="conditions.includedAncillaries"
+                            render={({ field }) => (<FormItem key={item.id} className="flex flex-row items-start space-x-2 space-y-0"><FormControl><Checkbox checked={field.value?.includes(item.id)} onCheckedChange={(checked) => {return checked ? field.onChange([...(field.value || []), item.id]) : field.onChange(field.value?.filter((value) => value !== item.id))}} /></FormControl><FormLabel className="font-normal">{item.label}</FormLabel></FormItem>)}
+                        />
+                        ))}
+                    </div>
+                    <FormMessage />
+                </FormItem>
+            )}
+        />
+         <FormField
+            control={form.control}
+            name="conditions.includedBundles"
+            render={() => (
+                <FormItem>
+                    <div className="mb-2"><FormLabel>Bundle Conditions (is in cart)</FormLabel></div>
+                     <div className="flex flex-wrap gap-x-4 gap-y-2">
+                        {bundleOptions.map((item) => (
+                        <FormField
+                            key={item.id}
+                            control={form.control}
+                            name="conditions.includedBundles"
                             render={({ field }) => (<FormItem key={item.id} className="flex flex-row items-start space-x-2 space-y-0"><FormControl><Checkbox checked={field.value?.includes(item.id)} onCheckedChange={(checked) => {return checked ? field.onChange([...(field.value || []), item.id]) : field.onChange(field.value?.filter((value) => value !== item.id))}} /></FormControl><FormLabel className="font-normal">{item.label}</FormLabel></FormItem>)}
                         />
                         ))}
