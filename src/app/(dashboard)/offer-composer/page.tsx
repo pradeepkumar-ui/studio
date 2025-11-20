@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { format, differenceInHours, addDays, isBefore } from 'date-fns';
-import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket, BadgeCheck, XCircle, Tag, CheckSquare, Square, Gift, AlertCircle, RefreshCw } from 'lucide-react';
+import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket, BadgeCheck, XCircle, Tag, CheckSquare, Square, Gift, AlertCircle, RefreshCw, Package } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -61,6 +60,15 @@ type Promotion = {
 type AppliedRule = {
     name: string;
     adjustment: number;
+};
+
+type RecommendedBundle = {
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+    originalPrice: number;
+    items: string[];
 };
 
 const offerSearchSchema = z.object({
@@ -142,17 +150,24 @@ const mockPromotions: Promotion[] = [
     { id: 'PROMO-03', title: 'Loyalty Bonus', description: 'Earn double loyalty points on this booking.', type: 'FIXED', value: 0 },
     { id: 'PROMO-04', title: 'Weekend Getaway', description: '$25 off your booking for weekend travel.', type: 'FIXED', value: 25 },
     { id: 'PROMO-05', title: 'First-time Booker', description: '15% off your first booking with us.', type: 'PERCENTAGE', value: 15 },
-]
+];
+
+const mockBundles: RecommendedBundle[] = [
+    { id: 'BUN-001', name: 'Business Comfort', description: 'Elevate your business trip.', price: 75, originalPrice: 100, items: ['Lounge Access', 'Premium Meal'] },
+    { id: 'BUN-002', name: 'Family Pack', description: 'Convenience for the whole family.', price: 60, originalPrice: 85, items: ['1st Checked Bag', 'Standard Seat Selection (x3)'] },
+];
 
 
 export default function OfferComposerPage() {
   const [searchResults, setSearchResults] = useState<FlightJourney[] | null>(null);
+  const [recommendedBundles, setRecommendedBundles] = useState<RecommendedBundle[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState<BrandedFare | null>(null);
   const [appliedRules, setAppliedRules] = useState<AppliedRule[]>([]);
   const [activeCohort, setActiveCohort] = useState<string | null>(null);
   const [selectedAncillaries, setSelectedAncillaries] = useState<Ancillary[]>([]);
+  const [selectedBundle, setSelectedBundle] = useState<RecommendedBundle | null>(null);
   const [selectedPromotion, setSelectedPromotion] = useState<Promotion | null>(null);
   const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
   const [offerStatus, setOfferStatus] = useState<OfferStatus | null>(null);
@@ -262,6 +277,7 @@ export default function OfferComposerPage() {
   function onSearchSubmit(data: z.infer<typeof offerSearchSchema>) {
     setIsLoading(true);
     setSearchResults(null);
+    setRecommendedBundles(null);
     setSelectedOffer(null);
     setAppliedRules([]);
     setActiveCohort(null);
@@ -282,25 +298,27 @@ export default function OfferComposerPage() {
         
         const activeRules: AppliedRule[] = [];
         let cohortName: string | null = null;
+        let bundlesToShow: RecommendedBundle[] = [];
 
         // ** SIMULATED ENGINE LOGIC **
         if (data.corporateId && data.cabinClass === 'BUSINESS') {
             cohortName = "Corporate Traveller";
+            bundlesToShow.push(mockBundles[0]);
             results = results.map(j => ({
                 ...j,
                 fares: j.fares.map(f => {
                     if (f.cabinClass === 'BUSINESS') {
                         const discount = f.basePrice * 0.05;
-                        const newPrice = f.basePrice - discount;
                         activeRules.push({ name: 'Corporate Discount', adjustment: -discount });
                         const newIncluded = [...f.includedServices, 'Lounge Access', 'Priority Boarding', 'Wi-Fi'];
-                        return { ...f, price: newPrice, includedServices: Array.from(new Set(newIncluded)) };
+                        return { ...f, price: f.basePrice - discount, includedServices: Array.from(new Set(newIncluded)) };
                     }
                     return f;
                 })
             }));
         } else if ((data.passengers.adt + data.passengers.chd) >= 3 && data.passengers.chd > 0) {
             cohortName = "Family Leisure Cohort";
+            bundlesToShow.push(mockBundles[1]);
              results = results.map(j => ({...j, fares: j.fares.map(f => {
                 const discount = f.basePrice * 0.10;
                 activeRules.push({ name: 'Family Offer', adjustment: -discount });
@@ -328,6 +346,7 @@ export default function OfferComposerPage() {
         
         setActiveCohort(cohortName);
         setAppliedRules(activeRules);
+        setRecommendedBundles(bundlesToShow);
         setSearchResults(results);
         setIsLoading(false);
         setOfferStatus('OfferCreated');
@@ -367,6 +386,15 @@ export default function OfferComposerPage() {
     }
   }
 
+  function handleSelectBundle(bundle: RecommendedBundle) {
+    setSelectedBundle(bundle);
+    toast({ title: 'Bundle Added', description: `The "${bundle.name}" bundle has been added to your cart.`});
+    // Reset validation status on change
+    if (offerStatus === 'OfferPriceValidated' || offerStatus === 'OfferStockChecked') {
+        setOfferStatus('OfferSelected');
+    }
+  }
+
   function handleSeatSelect(seat: string | null) {
       setSelectedSeat(seat);
        // Reset validation status on change
@@ -394,6 +422,7 @@ export default function OfferComposerPage() {
   }
 
   const totalAncillaryPrice = selectedAncillaries.reduce((acc, anc) => acc + anc.price, 0);
+  const totalBundlePrice = selectedBundle?.price || 0;
   const totalSeatPrice = selectedSeat ? 75 : 0; 
   const passengerCount = (form.getValues().passengers.adt || 1) + (form.getValues().passengers.chd || 0);
 
@@ -407,7 +436,7 @@ export default function OfferComposerPage() {
     }
   }
 
-  const totalOrderPrice = (baseOfferPrice - promotionDiscount) + (totalAncillaryPrice * passengerCount) + (totalSeatPrice * passengerCount);
+  const totalOrderPrice = (baseOfferPrice - promotionDiscount) + totalBundlePrice + (totalAncillaryPrice * passengerCount) + (totalSeatPrice * passengerCount);
   
   const passengerRefs = Array.from({ length: passengerCount }, (_, i) => `P${i + 1}`);
 
@@ -420,6 +449,7 @@ export default function OfferComposerPage() {
       items: [
         { offer_item_id: `flight-${selectedOffer?.id}`, passenger_refs: passengerRefs, type: 'Flight' },
         ...selectedAncillaries.map(anc => ({ offer_item_id: anc.id, passenger_refs: passengerRefs, type: 'Ancillary' })),
+        ...(selectedBundle ? [{ offer_item_id: selectedBundle.id, passenger_refs: passengerRefs, type: 'Bundle' }] : []),
         ...(selectedPromotion ? [{ offer_item_id: selectedPromotion.id, passenger_refs: passengerRefs, type: 'Promotion' }] : []),
         ...(selectedSeat ? [{ offer_item_id: `seat-${selectedSeat}`, passenger_refs: passengerRefs, type: 'Seat' }] : [])
       ]
@@ -454,7 +484,7 @@ export default function OfferComposerPage() {
     }
 
     // 3. (Simulated) Price Integrity Check
-    const calculatedPrice = (baseOfferPrice - promotionDiscount) + (totalAncillaryPrice * passengerCount) + (totalSeatPrice * passengerCount);
+    const calculatedPrice = (baseOfferPrice - promotionDiscount) + totalBundlePrice + (totalAncillaryPrice * passengerCount) + (totalSeatPrice * passengerCount);
     if (Math.abs(calculatedPrice - totalOrderPrice) > 0.01) {
          toast({
             variant: 'destructive',
@@ -797,12 +827,45 @@ export default function OfferComposerPage() {
                 </CardContent>
             </Card>
           )}
+
+           {recommendedBundles && recommendedBundles.length > 0 && (
+            <Card>
+                <CardHeader>
+                    <CardTitle>3. Recommended Bundles</CardTitle>
+                    <CardDescription>Save more by choosing one of our recommended bundles for your trip.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {recommendedBundles.map(bundle => (
+                        <Card key={bundle.id} className="flex flex-col">
+                            <CardHeader>
+                                <CardTitle className="text-lg">{bundle.name}</CardTitle>
+                                <CardDescription>{bundle.description}</CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex-grow">
+                                <ul className="text-sm text-muted-foreground list-disc pl-4 space-y-1">
+                                    {bundle.items.map(item => <li key={item}>{item}</li>)}
+                                </ul>
+                            </CardContent>
+                            <div className="p-4 flex flex-col items-end gap-2">
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-muted-foreground line-through">${bundle.originalPrice.toFixed(2)}</span>
+                                    <span className="text-2xl font-bold">${bundle.price.toFixed(2)}</span>
+                                </div>
+                                <Button onClick={() => handleSelectBundle(bundle)} disabled={selectedBundle?.id === bundle.id} className="w-full">
+                                    {selectedBundle?.id === bundle.id ? 'Added' : 'Add Bundle'}
+                                </Button>
+                            </div>
+                        </Card>
+                    ))}
+                </CardContent>
+            </Card>
+           )}
           
           {selectedOffer && (
             <>
               <Card>
                 <CardHeader>
-                    <CardTitle>3. Dynamic Offers &amp; Promotions</CardTitle>
+                    <CardTitle>4. Dynamic Offers &amp; Promotions</CardTitle>
                     <CardDescription>
                         Review auto-applied rules and select any additional promotions for your offer.
                         {activeCohort && (
@@ -854,7 +917,7 @@ export default function OfferComposerPage() {
               
               <Card>
                   <CardHeader>
-                      <CardTitle>4. Add Ancillaries &amp; Seats</CardTitle>
+                      <CardTitle>5. Add Ancillaries &amp; Seats</CardTitle>
                       <CardDescription>Select optional services for the chosen flight.</CardDescription>
                   </CardHeader>
                   <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -901,7 +964,7 @@ export default function OfferComposerPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center gap-2">
                         <ShoppingBasket className="h-5 w-5" />
-                        <CardTitle>5. Shopping Cart</CardTitle>
+                        <CardTitle>6. Shopping Cart</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2 text-sm">
@@ -916,6 +979,12 @@ export default function OfferComposerPage() {
                                         {selectedPromotion.type === 'PERCENTAGE' ? `-${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(promotionDiscount)}` : `-$${selectedPromotion.value.toFixed(2)}`}
                                     </span>
                                 </div>
+                            )}
+                             {selectedBundle && (
+                                <div className="flex justify-between">
+                                <span className="text-muted-foreground font-mono">{selectedBundle.id} (x1)</span>
+                                <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(selectedBundle.price)}</span>
+                            </div>
                             )}
                             {selectedAncillaries.map(anc => (
                                 <div key={anc.id} className="flex justify-between">
@@ -1013,5 +1082,3 @@ export default function OfferComposerPage() {
     </div>
   );
 }
-
-    
