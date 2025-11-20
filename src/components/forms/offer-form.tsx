@@ -42,6 +42,8 @@ const ancillaryOptions = [
 const offerSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(5, 'Offer name is required and must be at least 5 characters.'),
+  targetProduct: z.enum(['Air', 'Ancillary']).default('Air'),
+  targetAncillaries: z.string().optional(),
   scope: z.enum(['Airline', 'Brand', 'Market', 'Channel']),
   offerType: z.enum(['Discount', 'Fixed', 'Step']),
   currency: z.string().length(3, 'Must be a 3-letter currency code.'),
@@ -89,6 +91,8 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
       includedAncillaries: Array.isArray(offer.includedAncillaries) ? offer.includedAncillaries : [],
     } : {
       name: '',
+      targetProduct: 'Air',
+      targetAncillaries: '',
       scope: 'Market',
       offerType: 'Discount',
       currency: 'USD',
@@ -104,6 +108,8 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
   });
 
   const { fields: cohortFields, append: appendCohort, remove: removeCohort } = useFieldArray({ control: form.control, name: "cohorts" });
+  
+  const targetProduct = form.watch('targetProduct');
 
   const handleFinalSubmit = (data: Offer) => {
     const finalData = {
@@ -129,6 +135,51 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
             </FormItem>
           )}
         />
+        
+        <Separator />
+        <h4 className="text-md font-semibold">Target</h4>
+        <div className="grid grid-cols-2 gap-4">
+            <FormField
+                control={form.control}
+                name="targetProduct"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Target Product</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                        <SelectTrigger>
+                        <SelectValue placeholder="Select target product" />
+                        </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        <SelectItem value="Air">Air (Fares)</SelectItem>
+                        <SelectItem value="Ancillary">Ancillary</SelectItem>
+                    </SelectContent>
+                    </Select>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+            {targetProduct === 'Ancillary' && (
+                 <FormField
+                    control={form.control}
+                    name="targetAncillaries"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Ancillary SKU(s)</FormLabel>
+                        <FormControl>
+                            <Input placeholder="e.g., ANC-001, SEAT-*" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+            )}
+        </div>
+
+
+        <Separator />
+        <h4 className="text-md font-semibold">Pricing &amp; Scope</h4>
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -213,6 +264,9 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
             )}
           />
         </div>
+
+        <Separator />
+        <h4 className="text-md font-semibold">Conditions</h4>
          <FormField
           control={form.control}
           name="criteria"
@@ -245,7 +299,7 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
             render={() => (
                 <FormItem>
                     <div>
-                        <FormLabel className="text-base font-semibold">Included Ancillaries</FormLabel>
+                        <FormLabel className="text-base font-semibold">Included Ancillaries (Free of Charge)</FormLabel>
                     </div>
                      <div className="grid grid-cols-2 gap-4 pt-2">
                         {ancillaryOptions.map((item) => (

@@ -127,18 +127,14 @@
       "type": "object",
       "properties": {
         "name": { "type": "string" },
+        "targetProduct": { "type": "string", "enum": ["Air", "Ancillary"] },
+        "targetAncillaries": { "type": "string" },
         "scope": { "type": "string", "enum": ["Airline", "Brand", "Market", "Channel"] },
         "offerType": { "type": "string", "enum": ["Discount", "Fixed", "Step"] },
         "currency": { "type": "string" },
         "rounding": { "type": "string", "enum": ["None", "Round Half-Up", "Round Down"] },
-        "criteria": {
-          "type": "object",
-          "properties": {
-            "channel": { "type": "string" },
-            "market": { "type": "string" },
-            "brand": { "type": "string" }
-          }
-        },
+        "criteria": { "type": "string" },
+        "cohorts": { "type": "array", "items": { "type": "string" } },
         "effectiveDate": { "type": "string", "format": "date-time" },
         "expiryDate": { "type": "string", "format": "date-time" },
         "notes": { "type": "string" },
@@ -149,7 +145,7 @@
         "updatedAt": { "type": "string", "format": "date-time" },
         "includedAncillaries": { "type": "array", "items": { "type": "string" } }
       },
-      "required": ["name", "scope", "offerType", "currency", "rounding", "criteria", "effectiveDate", "expiryDate", "status", "version"]
+      "required": ["name", "targetProduct", "scope", "offerType", "currency", "rounding", "criteria", "effectiveDate", "expiryDate", "status", "version"]
     },
     "promotion": {
       "title": "Promotion",
