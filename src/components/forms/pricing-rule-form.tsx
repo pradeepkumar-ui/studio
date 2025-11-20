@@ -119,7 +119,7 @@ const parseRuleForForm = (rule: PricingRule | null): PricingRuleFormData | undef
         },
         action: {
             type: rule.action.includes('%') ? 'PERCENTAGE' : 'FIXED_AMOUNT',
-            adjustment: parseInt(rule.action.match(/-?\+?(\d+)/)?.[0] || '0'),
+            adjustment: parseInt(rule.action.match(/-?\\+?(\\d+)/)?.[0] || '0'),
             cabinClass: rule.action.includes('Economy') ? 'Economy' : (rule.action.includes('Business') ? 'Business' : 'All'),
         },
         guardrails: {},
@@ -325,3 +325,5 @@ export function PricingRuleForm({ rule, onSubmit, onCancel }: PricingRuleFormPro
     </Form>
   );
 }
+
+    
