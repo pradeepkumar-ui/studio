@@ -46,11 +46,11 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
 const mockFares: Fare[] = [
-    { id: 'F-001', route: 'JFK-LAX', class: 'Economy', price: 350, currency: 'USD', status: 'Active', version: 1 },
-    { id: 'F-002', route: 'LHR-DXB', class: 'Business', price: 2500, currency: 'GBP', status: 'Active', version: 2 },
-    { id: 'F-003', route: 'SIN-HKG', class: 'Economy', price: 280, currency: 'SGD', status: 'Active', version: 1 },
-    { id: 'F-004', route: 'JFK-LHR', class: 'First', price: 5500, currency: 'USD', status: 'Draft', version: 1 },
-    { id: 'F-005', route: 'CDG-IST', class: 'Economy', price: 180, currency: 'EUR', status: 'Inactive', version: 3 },
+    { id: 'F-001', route: 'JFK-LAX', class: 'Economy', price: 350, currency: 'USD', status: 'Active', version: 1, fareBasisCode: 'YFLEX', rbd: 'Y', validity: { effectiveDate: new Date(), expiryDate: new Date() } },
+    { id: 'F-002', route: 'LHR-DXB', class: 'Business', price: 2500, currency: 'GBP', status: 'Active', version: 2, fareBasisCode: 'JCLASS', rbd: 'J', validity: { effectiveDate: new Date(), expiryDate: new Date() } },
+    { id: 'F-003', route: 'SIN-HKG', class: 'Economy', price: 280, currency: 'SGD', status: 'Active', version: 1, fareBasisCode: 'QFLEX', rbd: 'Q', validity: { effectiveDate: new Date(), expiryDate: new Date() } },
+    { id: 'F-004', route: 'JFK-LHR', class: 'First', price: 5500, currency: 'USD', status: 'Draft', version: 1, fareBasisCode: 'FFLEX', rbd: 'F', validity: { effectiveDate: new Date(), expiryDate: new Date() } },
+    { id: 'F-005', route: 'CDG-IST', class: 'Economy', price: 180, currency: 'EUR', status: 'Inactive', version: 3, fareBasisCode: 'EFLEX', rbd: 'E', validity: { effectiveDate: new Date(), expiryDate: new Date() } },
 ];
 
 export default function FaresPage() {
@@ -208,7 +208,7 @@ export default function FaresPage() {
                 <TableHeader>
                 <TableRow>
                     <TableHead>Route</TableHead>
-                    <TableHead>Class</TableHead>
+                    <TableHead>FBC / RBD</TableHead>
                     <TableHead>Price</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Version</TableHead>
@@ -221,7 +221,10 @@ export default function FaresPage() {
                 {displayFares.map((fare) => (
                     <TableRow key={fare.id}>
                     <TableCell className="font-medium">{fare.route}</TableCell>
-                    <TableCell>{fare.class}</TableCell>
+                    <TableCell>
+                      <div>{fare.fareBasisCode}</div>
+                      <div className="text-xs text-muted-foreground">{fare.rbd}</div>
+                    </TableCell>
                     <TableCell>
                         {new Intl.NumberFormat('en-US', {
                         style: 'currency',
