@@ -84,26 +84,33 @@ const menuItems: MenuItem[] = [
       { href: '/offers/dashboard', label: 'Offers Dashboard', icon: LayoutDashboard },
       {
         href: '/catalog',
-        label: 'Product Hub',
+        label: 'Catalogue',
         icon: BookOpen,
         subItems: [
-          { href: '/promotions', label: 'Promotions', icon: Gift },
-          { href: '/loyalty-program', label: 'Loyalty Program', icon: Award },
-          { href: '/corporate', label: 'Corporate Contracts', icon: Briefcase },
-          { href: '/channels', label: 'Channels', icon: RadioTower },
-          { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
-        ],
-      },
-       {
-        href: '/pricing',
-        label: 'Pricing',
-        icon: DollarSign,
-        subItems: [
-          { href: '/catalog', label: 'Fare Products', icon: Package },
-          { href: '/fares', label: 'Fares', icon: DollarSign },
-          { href: '/pricing/filing', label: 'Fare Filing', icon: FileJson },
-          { href: '/pricing/ancillary', label: 'Ancillaries', icon: Container },
-          { href: '/pricing/seat', label: 'Seats', icon: Armchair },
+          {
+            href: '/promotions',
+            label: 'Product Hub',
+            icon: Briefcase,
+            subItems: [
+              { href: '/promotions', label: 'Promotions', icon: Gift },
+              { href: '/loyalty-program', label: 'Loyalty Program', icon: Award },
+              { href: '/corporate', label: 'Corporate Contracts', icon: Handshake },
+              { href: '/channels', label: 'Channels', icon: RadioTower },
+              { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
+            ],
+          },
+          {
+            href: '/pricing',
+            label: 'Pricing',
+            icon: DollarSign,
+            subItems: [
+              { href: '/catalog', label: 'Fare Products', icon: Package },
+              { href: '/fares', label: 'Fares', icon: DollarSign },
+              { href: '/pricing/filing', label: 'Fare Filing', icon: FileJson },
+              { href: '/pricing/ancillary', label: 'Ancillaries', icon: Container },
+              { href: '/pricing/seat', label: 'Seats', icon: Armchair },
+            ],
+          },
         ],
       },
       {
