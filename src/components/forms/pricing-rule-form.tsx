@@ -23,6 +23,11 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Calendar } from '../ui/calendar';
+import { format } from 'date-fns';
+import { CalendarIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 
 // --- Zod Schema for the new detailed form ---
@@ -64,6 +69,12 @@ const pricingRuleSchema = z.object({
     minPriceAdjustment: z.coerce.number().optional(),
     velocityLimit: z.string().optional(), // e.g., "5 times per hour"
   }),
+  
+  // --- Validity ---
+  validity: z.object({
+      effectiveDate: z.date().optional(),
+      expiryDate: z.date().optional(),
+  }).optional(),
 });
 
 
@@ -123,6 +134,7 @@ const parseRuleForForm = (rule: PricingRule | null): PricingRuleFormData | undef
             cabinClass: rule.action.includes('Economy') ? 'Economy' : (rule.action.includes('Business') ? 'Business' : 'All'),
         },
         guardrails: {},
+        validity: {},
     };
 }
 
@@ -142,6 +154,9 @@ const formatRuleForSubmit = (data: PricingRuleFormData): PricingRule => {
     }
     if (data.conditions.includedAncillaries && data.conditions.includedAncillaries.length > 0) {
         conditionsParts.push(`Ancillaries: ${data.conditions.includedAncillaries.length}`);
+    }
+    if (data.validity?.effectiveDate && data.validity?.expiryDate) {
+        conditionsParts.push(`Dates: ${format(data.validity.effectiveDate, 'PP')} - ${format(data.validity.expiryDate, 'PP')}`);
     }
 
 
@@ -169,6 +184,7 @@ export function PricingRuleForm({ rule, onSubmit, onCancel }: PricingRuleFormPro
       conditions: { cohorts: [], includedAncillaries: [] },
       action: { type: 'PERCENTAGE', adjustment: 10, cabinClass: 'All' },
       guardrails: {},
+      validity: {},
     },
   });
 
@@ -242,6 +258,60 @@ export function PricingRuleForm({ rule, onSubmit, onCancel }: PricingRuleFormPro
         <div className="grid grid-cols-2 gap-4">
             <FormField control={form.control} name="conditions.loadFactorOperator" render={({ field }) => (<FormItem><FormLabel>Load Factor</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Operator" /></SelectTrigger></FormControl><SelectContent><SelectItem value=">">Greater than (&gt;)</SelectItem><SelectItem value="<">Less than (&lt;)</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
             <FormField control={form.control} name="conditions.loadFactorValue" render={({ field }) => (<FormItem><FormLabel>Load Factor Value (%)</FormLabel><FormControl><Input type="number" placeholder="e.g., 80" {...field} /></FormControl><FormMessage /></FormItem>)} />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+            <FormField
+                control={form.control}
+                name="validity.effectiveDate"
+                render={({ field }) => (
+                <FormItem className="flex flex-col">
+                    <FormLabel>Effective Date</FormLabel>
+                    <Popover>
+                    <PopoverTrigger asChild>
+                        <FormControl>
+                        <Button
+                            variant={'outline'}
+                            className={cn('w-full pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
+                        >
+                            {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                        </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                    </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="validity.expiryDate"
+                render={({ field }) => (
+                <FormItem className="flex flex-col">
+                    <FormLabel>Expiry Date</FormLabel>
+                    <Popover>
+                    <PopoverTrigger asChild>
+                        <FormControl>
+                        <Button
+                            variant={'outline'}
+                            className={cn('w-full pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
+                        >
+                            {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                        </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                    </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
         </div>
         <FormField
             control={form.control}
