@@ -373,7 +373,7 @@ export default function OfferComposerPage() {
              adjustmentPercentage += 2;
         }
 
-        const finalCohortName = cohortList.length > 0 ? cohortList.join(', ') : null;
+        const finalCohortName = cohortList.length > 0 ? cohortList.join(', ') : 'Standard';
         
         // Apply final calculated adjustment to all fares
         const finalResults = baseResults.map(journey => ({
@@ -386,7 +386,7 @@ export default function OfferComposerPage() {
         
         const finalAppliedRules: AppliedRule[] = [];
         if (adjustmentPercentage !== 0) {
-            const ruleName = `${finalCohortName || 'Dynamic'} Adjustment`;
+            const ruleName = `${finalCohortName} Adjustment`;
             // We calculate the adjustment on a sample price for display purposes, e.g., the first fare found
             const sampleBasePrice = finalResults[0]?.fares[0]?.basePrice || 0;
             const sampleAdjustment = sampleBasePrice * (adjustmentPercentage / 100);
@@ -478,10 +478,10 @@ export default function OfferComposerPage() {
     })
   }
 
-  const totalAncillaryPrice = selectedAncillaries.reduce((acc, anc) => acc + anc.price, 0);
-  const totalBundlePrice = selectedBundle?.price || 0;
-  const totalSeatPrice = selectedSeat ? 75 : 0; 
   const passengerCount = (form.getValues().passengers.adt || 1) + (form.getValues().passengers.chd || 0);
+  const totalAncillaryPrice = selectedAncillaries.reduce((acc, anc) => acc + anc.price, 0) * passengerCount;
+  const totalBundlePrice = selectedBundle?.price || 0; // Bundles are usually per-booking, not per-passenger
+  const totalSeatPrice = (selectedSeat ? 75 : 0) * passengerCount; 
 
   const baseOfferPrice = (selectedOffer?.price || 0) * passengerCount;
   let promotionDiscount = 0;
@@ -493,7 +493,7 @@ export default function OfferComposerPage() {
     }
   }
 
-  const totalOrderPrice = (baseOfferPrice - promotionDiscount) + totalBundlePrice + (totalAncillaryPrice * passengerCount) + (totalSeatPrice * passengerCount);
+  const totalOrderPrice = (baseOfferPrice - promotionDiscount) + totalBundlePrice + totalAncillaryPrice + totalSeatPrice;
   
   const passengerRefs = Array.from({ length: passengerCount }, (_, i) => `P${i + 1}`);
 
@@ -541,7 +541,7 @@ export default function OfferComposerPage() {
     }
 
     // 3. (Simulated) Price Integrity Check
-    const calculatedPrice = (baseOfferPrice - promotionDiscount) + totalBundlePrice + (totalAncillaryPrice * passengerCount) + (totalSeatPrice * passengerCount);
+    const calculatedPrice = (baseOfferPrice - promotionDiscount) + totalBundlePrice + totalAncillaryPrice + totalSeatPrice;
     if (Math.abs(calculatedPrice - totalOrderPrice) > 0.01) {
          toast({
             variant: 'destructive',
@@ -1140,7 +1140,7 @@ export default function OfferComposerPage() {
                             {selectedSeat && (
                                  <div className="flex justify-between">
                                     <span className="text-muted-foreground font-mono">SEAT-{selectedSeat} (x{passengerCount})</span>
-                                    <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalSeatPrice * passengerCount)}</span>
+                                    <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalSeatPrice)}</span>
                                 </div>
                             )}
                         </div>
