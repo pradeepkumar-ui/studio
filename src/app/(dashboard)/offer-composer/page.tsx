@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -330,85 +331,75 @@ export default function OfferComposerPage() {
     });
     
     setTimeout(() => {
-        let results = mockFlightJourneys.map(journey => ({
+        let baseResults = mockFlightJourneys.map(journey => ({
             ...journey,
             fares: journey.fares.filter(fare => fare.cabinClass.toUpperCase() === data.cabinClass)
         })).filter(journey => journey.fares.length > 0);
         
-        let activeRules: AppliedRule[] = [];
-        let cohortName: string | null = null;
+        const cohortList: string[] = [];
+        let adjustmentPercentage = 0;
         let bundlesToShow: RecommendedBundle[] = [];
 
         // ** SIMULATED ENGINE LOGIC **
+        // Determine cohorts and base adjustments
         if (data.corporateId && data.cabinClass === 'BUSINESS') {
-            cohortName = "Corporate Traveller";
+            cohortList.push("Corporate Traveller");
             bundlesToShow.push(mockBundles[0]);
-            results = results.map(j => ({
-                ...j,
-                fares: j.fares.map(f => {
-                    if (f.cabinClass === 'BUSINESS') {
-                        const discount = f.basePrice * 0.05;
-                        activeRules.push({ name: 'Corporate Discount', adjustment: -discount });
-                        const newIncluded = [...f.includedServices, 'Lounge Access', 'Priority Boarding', 'Wi-Fi'];
-                        return { ...f, price: f.basePrice - discount, includedServices: Array.from(new Set(newIncluded)) };
-                    }
-                    return f;
-                })
-            }));
+            adjustmentPercentage -= 5;
         } else if ((data.passengers.adt + data.passengers.chd) >= 3 && data.passengers.chd > 0) {
-            cohortName = "Family Leisure";
+            cohortList.push("Family Leisure");
             bundlesToShow.push(mockBundles[1]);
-             results = results.map(j => ({...j, fares: j.fares.map(f => {
-                const discount = f.basePrice * 0.10;
-                activeRules.push({ name: 'Family Offer', adjustment: -discount });
-                return {...f, price: f.basePrice - discount };
-             }) }));
+            adjustmentPercentage -= 10;
         } else if (data.isStudent) {
-            cohortName = "Student";
+            cohortList.push("Student");
             bundlesToShow.push(mockBundles[2]);
-            results = results.map(j => ({...j, fares: j.fares.map(f => {
-                const discount = f.basePrice * 0.08;
-                activeRules.push({ name: 'Student Discount', adjustment: -discount });
-                return {...f, price: f.basePrice - discount };
-            })}));
+            adjustmentPercentage -= 8;
         } else if (data.loyaltyTier === 'Platinum') {
-            cohortName = "Platinum Elite";
+            cohortList.push("Platinum Elite");
             bundlesToShow.push(mockBundles[3]);
-            results = results.map(j => ({...j, fares: j.fares.map(f => {
-                const discount = f.basePrice * 0.07;
-                activeRules.push({ name: 'Elite Discount', adjustment: -discount });
-                return {...f, price: f.basePrice - discount };
-            })}));
+            adjustmentPercentage -= 7;
         }
         
         if (data.departureDate && differenceInHours(data.departureDate, new Date()) < 48) {
-            cohortName = cohortName ? `${cohortName}, Last-Minute` : 'Last-Minute Traveller';
-            results = results.map(j => ({...j, fares: j.fares.map(f => {
-                const surge = f.basePrice * 0.15;
-                activeRules.push({ name: 'Last-Minute Surge', adjustment: surge });
-                return {...f, price: f.price + surge };
-            })}));
+            cohortList.push('Last-Minute');
+            adjustmentPercentage += 15;
         }
         
         if (data.channel === 'OTA') {
-             cohortName = cohortName ? `${cohortName}, OTA` : 'OTA Shopper';
-             results = results.map(j => ({...j, fares: j.fares.map(f => {
-                const markup = f.price * 0.02;
-                activeRules.push({ name: 'OTA Channel Markup', adjustment: markup });
-                return {...f, price: f.price + markup };
-            }) }));
+             cohortList.push('OTA Shopper');
+             adjustmentPercentage += 2;
+        }
+
+        const finalCohortName = cohortList.length > 0 ? cohortList.join(', ') : null;
+        
+        // Apply final calculated adjustment to all fares
+        const finalResults = baseResults.map(journey => ({
+            ...journey,
+            fares: journey.fares.map(fare => ({
+                ...fare,
+                price: fare.basePrice * (1 + (adjustmentPercentage / 100))
+            }))
+        }));
+        
+        const finalAppliedRules: AppliedRule[] = [];
+        if (adjustmentPercentage !== 0) {
+            const ruleName = `${finalCohortName || 'Dynamic'} Adjustment`;
+            // We calculate the adjustment on a sample price for display purposes, e.g., the first fare found
+            const sampleBasePrice = finalResults[0]?.fares[0]?.basePrice || 0;
+            const sampleAdjustment = sampleBasePrice * (adjustmentPercentage / 100);
+            finalAppliedRules.push({ name: ruleName, adjustment: sampleAdjustment });
         }
         
-        setActiveCohort(cohortName);
-        setAppliedRules(activeRules);
+        setActiveCohort(finalCohortName);
+        setAppliedRules(finalAppliedRules);
         setRecommendedBundles(bundlesToShow);
-        setSearchResults(results);
+        setSearchResults(finalResults);
         setIsLoading(false);
         setOfferStatus('OfferCreated');
         toast({
             title: 'Search complete!',
-            description: `${results.reduce((acc, j) => acc + j.fares.length, 0)} offers found.`,
-          });
+            description: `${finalResults.reduce((acc, j) => acc + j.fares.length, 0)} offers found.`,
+        });
     }, 1500);
   }
 
@@ -421,7 +412,7 @@ export default function OfferComposerPage() {
 
     // Filter available promotions based on cohort
     const filteredPromos = mockPromotions.filter(promo => 
-        !promo.requiredCohort || promo.requiredCohort === activeCohort
+        !promo.requiredCohort || activeCohort?.includes(promo.requiredCohort)
     );
     setAvailablePromotions(filteredPromos);
 
