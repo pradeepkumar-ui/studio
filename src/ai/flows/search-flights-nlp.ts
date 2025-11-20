@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -37,7 +38,7 @@ const SearchFlightsNLPOutputSchema = z.object({
   returnDate: z
     .string()
     .optional()
-    .describe('The return date in YYYY-MM-DD format, if specified.'),
+    .describe('The return date in YYYY-MM-DD format, if specified for a round trip. Omit for one-way.'),
   passengers: z.number().describe('The number of passengers.'),
 });
 export type SearchFlightsNLPOutput = z.infer<typeof SearchFlightsNLPOutputSchema>;
@@ -58,6 +59,7 @@ const prompt = ai.definePrompt({
     Analyze the following user query and extract the Origin, Destination, Departure Date, Return Date (if any), and number of passengers.
     - Always respond with a valid IATA code for origin and destination.
     - If the user provides a vague date like "next month", calculate the actual date based on the current date.
+    - If a return date is mentioned or implied (e.g., "round trip", "return"), provide the returnDate. Otherwise, omit it.
     - Default to 1 passenger if not specified.
 
     Query:
@@ -76,3 +78,5 @@ const searchFlightsNLPFlow = ai.defineFlow(
     return output!;
   }
 );
+
+    

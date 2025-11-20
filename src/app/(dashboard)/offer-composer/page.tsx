@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -7,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { format, differenceInHours, addDays, isBefore } from 'date-fns';
-import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket, BadgeCheck, XCircle, Tag, CheckSquare, Square, Gift, AlertCircle } from 'lucide-react';
+import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket, BadgeCheck, XCircle, Tag, CheckSquare, Square, Gift, AlertCircle, RefreshCw } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -63,11 +64,13 @@ type AppliedRule = {
 };
 
 const offerSearchSchema = z.object({
+  tripType: z.enum(['one-way', 'return']).default('one-way'),
   origin: z.string().length(3, 'Origin must be a 3-letter IATA code.').toUpperCase(),
   destination: z.string().length(3, 'Destination must be a 3-letter IATA code.').toUpperCase(),
   departureDate: z.date({
     required_error: 'A departure date is required.',
   }),
+  returnDate: z.date().optional(),
   passengers: z.object({
       adt: z.coerce.number().min(1),
       chd: z.coerce.number().min(0),
@@ -76,6 +79,22 @@ const offerSearchSchema = z.object({
   brand: z.string().optional(),
   corporateId: z.string().optional(),
   channel: z.string().optional(),
+}).refine(data => {
+    if (data.tripType === 'return' && !data.returnDate) {
+        return false;
+    }
+    return true;
+}, {
+    message: 'Return date is required for a return trip.',
+    path: ['returnDate'],
+}).refine(data => {
+    if (data.tripType === 'return' && data.returnDate && data.departureDate > data.returnDate) {
+        return false;
+    }
+    return true;
+}, {
+    message: 'Return date must be after departure date.',
+    path: ['returnDate'],
 });
 
 const aiSearchSchema = z.object({
@@ -145,6 +164,7 @@ export default function OfferComposerPage() {
   const form = useForm<z.infer<typeof offerSearchSchema>>({
     resolver: zodResolver(offerSearchSchema),
     defaultValues: {
+      tripType: 'one-way',
       origin: 'JFK',
       destination: 'LAX',
       passengers: { adt: 1, chd: 0},
@@ -162,6 +182,8 @@ export default function OfferComposerPage() {
     },
   });
   
+  const tripType = form.watch('tripType');
+
   useEffect(() => {
     const reshopOrderString = sessionStorage.getItem('reshop_order_context');
     if (reshopOrderString) {
@@ -212,6 +234,12 @@ export default function OfferComposerPage() {
       form.setValue('passengers.adt', result.passengers || 1);
       if (result.departureDate) {
         form.setValue('departureDate', new Date(result.departureDate));
+      }
+      if (result.returnDate) {
+        form.setValue('tripType', 'return');
+        form.setValue('returnDate', new Date(result.returnDate));
+      } else {
+        form.setValue('tripType', 'one-way');
       }
       toast({
         title: 'Form populated!',
@@ -488,6 +516,36 @@ export default function OfferComposerPage() {
               <CardContent>
               <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSearchSubmit)} className="space-y-6">
+                    <FormField
+                        control={form.control}
+                        name="tripType"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Trip Type</FormLabel>
+                                <FormControl>
+                                    <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex items-center gap-4"
+                                    >
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                        <FormControl>
+                                        <RadioGroupItem value="one-way" id="one-way" />
+                                        </FormControl>
+                                        <FormLabel htmlFor="one-way" className="font-normal">One Way</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                        <FormControl>
+                                        <RadioGroupItem value="return" id="return" />
+                                        </FormControl>
+                                        <FormLabel htmlFor="return" className="font-normal">Return</FormLabel>
+                                    </FormItem>
+                                    </RadioGroup>
+                                </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <FormField
                         control={form.control}
@@ -564,6 +622,49 @@ export default function OfferComposerPage() {
                             </FormItem>
                         )}
                         />
+                         {tripType === 'return' && (
+                            <FormField
+                            control={form.control}
+                            name="returnDate"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-col pt-2">
+                                <FormLabel>Return Date</FormLabel>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                    <FormControl>
+                                        <Button
+                                        variant={'outline'}
+                                        className={cn(
+                                            'w-full pl-3 text-left font-normal',
+                                            !field.value && 'text-muted-foreground'
+                                        )}
+                                        >
+                                        {field.value ? (
+                                            format(field.value, 'PPP')
+                                        ) : (
+                                            <span>Pick a date</span>
+                                        )}
+                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                        </Button>
+                                    </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                        mode="single"
+                                        selected={field.value}
+                                        onSelect={field.onChange}
+                                        disabled={(date) => date < form.getValues().departureDate}
+                                        initialFocus
+                                    />
+                                    </PopoverContent>
+                                </Popover>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                        )}
+                    </div>
+                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div className="flex gap-4 pt-2">
                             <FormField
                             control={form.control}
@@ -912,3 +1013,5 @@ export default function OfferComposerPage() {
     </div>
   );
 }
+
+    
