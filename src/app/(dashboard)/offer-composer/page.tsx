@@ -232,7 +232,7 @@ export default function OfferComposerPage() {
 
             toast({
               title: 'Reshop Mode Activated',
-              description: `Loaded context for Order ${order.id}.`,
+              description: `Loaded context for Order ${'order.id'}.`,
             });
 
         } catch (e) {
@@ -1128,7 +1128,5 @@ export default function OfferComposerPage() {
     </div>
   );
 }
-
-    
 
     
