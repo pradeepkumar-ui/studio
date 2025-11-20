@@ -39,6 +39,15 @@ const ancillaryOptions = [
     { id: 'flexibility', label: 'Flexibility (Change/Cancel)' },
 ] as const;
 
+const ancillaryProducts = [
+  { id: 'ANC-001', name: '1st Checked Bag (23kg)' },
+  { id: 'ANC-002', name: 'Extra Legroom Seat' },
+  { id: 'ANC-003', name: 'In-flight Wi-Fi' },
+  { id: 'ANC-004', name: 'Priority Boarding' },
+  { id: 'ANC-005', name: 'Flight Change Fee' },
+  { id: 'ANC-006', name: 'Lounge Access' },
+];
+
 const offerSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(5, 'Offer name is required and must be at least 5 characters.'),
@@ -166,10 +175,19 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
                     name="targetAncillaries"
                     render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Ancillary SKU(s)</FormLabel>
-                        <FormControl>
-                            <Input placeholder="e.g., ANC-001, SEAT-*" {...field} />
-                        </FormControl>
+                        <FormLabel>Ancillary Product</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select an ancillary" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {ancillaryProducts.map(anc => (
+                              <SelectItem key={anc.id} value={anc.id}>{anc.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                     </FormItem>
                     )}
@@ -292,54 +310,58 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
             <Button type="button" variant="outline" size="sm" onClick={() => appendCohort({ value: '' })}><PlusCircle className="mr-2 h-4 w-4" /> Add Cohort</Button>
         </div>
 
-        <Separator />
-        <FormField
-            control={form.control}
-            name="includedAncillaries"
-            render={() => (
-                <FormItem>
-                    <div>
-                        <FormLabel className="text-base font-semibold">Included Ancillaries (Free of Charge)</FormLabel>
-                    </div>
-                     <div className="grid grid-cols-2 gap-4 pt-2">
-                        {ancillaryOptions.map((item) => (
-                        <FormField
-                            key={item.id}
-                            control={form.control}
-                            name="includedAncillaries"
-                            render={({ field }) => {
-                            return (
-                                <FormItem
+        {targetProduct === 'Air' && (
+          <>
+            <Separator />
+            <FormField
+                control={form.control}
+                name="includedAncillaries"
+                render={() => (
+                    <FormItem>
+                        <div>
+                            <FormLabel className="text-base font-semibold">Included Ancillaries (Free of Charge)</FormLabel>
+                        </div>
+                         <div className="grid grid-cols-2 gap-4 pt-2">
+                            {ancillaryOptions.map((item) => (
+                            <FormField
                                 key={item.id}
-                                className="flex flex-row items-start space-x-3 space-y-0"
-                                >
-                                <FormControl>
-                                    <Checkbox
-                                    checked={field.value?.includes(item.id)}
-                                    onCheckedChange={(checked) => {
-                                        return checked
-                                        ? field.onChange([...(field.value || []), item.id])
-                                        : field.onChange(
-                                            field.value?.filter(
-                                                (value) => value !== item.id
-                                            )
-                                            )
-                                    }}
-                                    />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                    {item.label}
-                                </FormLabel>
-                                </FormItem>
-                            )
-                            }}
-                        />
-                        ))}
-                    </div>
-                    <FormMessage />
-                </FormItem>
-            )}
-        />
+                                control={form.control}
+                                name="includedAncillaries"
+                                render={({ field }) => {
+                                return (
+                                    <FormItem
+                                    key={item.id}
+                                    className="flex flex-row items-start space-x-3 space-y-0"
+                                    >
+                                    <FormControl>
+                                        <Checkbox
+                                        checked={field.value?.includes(item.id)}
+                                        onCheckedChange={(checked) => {
+                                            return checked
+                                            ? field.onChange([...(field.value || []), item.id])
+                                            : field.onChange(
+                                                field.value?.filter(
+                                                    (value) => value !== item.id
+                                                )
+                                                )
+                                        }}
+                                        />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">
+                                        {item.label}
+                                    </FormLabel>
+                                    </FormItem>
+                                )
+                                }}
+                            />
+                            ))}
+                        </div>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+          </>
+        )}
         <Separator />
 
         <div className="grid grid-cols-2 gap-4">
