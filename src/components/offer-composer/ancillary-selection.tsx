@@ -4,6 +4,7 @@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import type { BrandedFare } from './journey-result-card';
 
 export type Ancillary = {
   id: string;
@@ -11,28 +12,30 @@ export type Ancillary = {
   price: number;
   currency: string;
   category: string;
+  excludedFareBrands?: string[];
 };
 
-const availableAncillaries: Ancillary[] = [
-  { id: 'ANC-001', name: '1st Checked Bag (23kg)', price: 35, currency: 'USD', category: 'Baggage' },
-  { id: 'ANC-007', name: '2nd Checked Bag (23kg)', price: 50, currency: 'USD', category: 'Baggage' },
+const allAncillaries: Ancillary[] = [
+  { id: 'ANC-001', name: '1st Checked Bag (23kg)', price: 35, currency: 'USD', category: 'Baggage', excludedFareBrands: ['Economy Flex', 'Business Saver', 'Business Flex'] },
+  { id: 'ANC-007', name: '2nd Checked Bag (23kg)', price: 50, currency: 'USD', category: 'Baggage', excludedFareBrands: ['Business Saver', 'Business Flex'] },
   { id: 'ANC-008', name: 'Oversize Baggage', price: 100, currency: 'USD', category: 'Baggage' },
   { id: 'ANC-002', name: 'Extra Legroom Seat', price: 50, currency: 'USD', category: 'Seats' },
   { id: 'ANC-009', name: 'Up-front Seat', price: 25, currency: 'USD', category: 'Seats' },
-  { id: 'ANC-003', name: 'In-flight Wi-Fi', price: 8, currency: 'USD', category: 'On-board Services' },
-  { id: 'ANC-006', name: 'Lounge Access', price: 45, currency: 'USD', category: 'On-board Services' },
+  { id: 'ANC-003', name: 'In-flight Wi-Fi', price: 8, currency: 'USD', category: 'On-board Services', excludedFareBrands: ['Business Flex'] },
+  { id: 'ANC-006', name: 'Lounge Access', price: 45, currency: 'USD', category: 'On-board Services', excludedFareBrands: ['Business Saver', 'Business Flex'] },
   { id: 'ANC-010', name: 'Premium Meal', price: 25, currency: 'USD', category: 'On-board Services' },
-  { id: 'ANC-004', name: 'Priority Boarding', price: 15, currency: 'USD', category: 'On-board Services' },
-  { id: 'ANC-005', name: 'Flight Change Fee', price: 75, currency: 'USD', category: 'Flexibility' },
+  { id: 'ANC-004', name: 'Priority Boarding', price: 15, currency: 'USD', category: 'On-board Services', excludedFareBrands: ['Business Saver', 'Business Flex'] },
+  { id: 'ANC-005', name: 'Flight Change Fee', price: 75, currency: 'USD', category: 'Flexibility', excludedFareBrands: ['Economy Flex', 'Business Flex'] },
   { id: 'ANC-011', name: 'Cancel for any reason', price: 40, currency: 'USD', category: 'Flexibility' },
 ];
 
 interface AncillarySelectionProps {
   selectedAncillaries: Ancillary[];
   onAncillaryChange: (ancillaries: Ancillary[]) => void;
+  selectedFare: BrandedFare | null;
 }
 
-export function AncillarySelection({ selectedAncillaries, onAncillaryChange }: AncillarySelectionProps) {
+export function AncillarySelection({ selectedAncillaries, onAncillaryChange, selectedFare }: AncillarySelectionProps) {
   const handleCheckedChange = (checked: boolean | 'indeterminate', ancillary: Ancillary) => {
     if (checked) {
       onAncillaryChange([...selectedAncillaries, ancillary]);
@@ -40,6 +43,18 @@ export function AncillarySelection({ selectedAncillaries, onAncillaryChange }: A
       onAncillaryChange(selectedAncillaries.filter((a) => a.id !== ancillary.id));
     }
   };
+
+  const availableAncillaries = allAncillaries.filter(ancillary => {
+    // Filter out ancillaries that are already included in the fare
+    if (selectedFare?.includedServices?.some(service => service.toLowerCase().includes(ancillary.name.split('(')[0].trim().toLowerCase()))) {
+      return false;
+    }
+    // Filter out ancillaries that are excluded for the selected fare brand
+    if (ancillary.excludedFareBrands?.includes(selectedFare?.brand || '')) {
+      return false;
+    }
+    return true;
+  });
   
   const groupedAncillaries = availableAncillaries.reduce((acc, ancillary) => {
     (acc[ancillary.category] = acc[ancillary.category] || []).push(ancillary);

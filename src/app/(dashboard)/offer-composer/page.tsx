@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -56,6 +57,7 @@ type Promotion = {
     description: string;
     type: 'PERCENTAGE' | 'FIXED';
     value: number;
+    requiredCohort?: string;
 };
 
 type AppliedRule = {
@@ -169,8 +171,7 @@ const mockFlightJourneys: FlightJourney[] = [
 
 const mockPromotions: Promotion[] = [
     { id: 'PROMO-01', title: 'Winter Sale', description: '10% off base fare for winter travel.', type: 'PERCENTAGE', value: 10 },
-    { id: 'PROMO-02', title: 'Lounge Pass', description: 'Complimentary lounge access on your next flight.', type: 'FIXED', value: 45 },
-    { id: 'PROMO-03', title: 'Loyalty Bonus', description: 'Earn double loyalty points on this booking.', type: 'FIXED', value: 0 },
+    { id: 'PROMO-02', title: 'Loyalty Bonus', description: 'Earn double loyalty points on this booking.', type: 'FIXED', value: 0, requiredCohort: 'Platinum Elite' },
     { id: 'PROMO-04', title: 'Weekend Getaway', description: '$25 off your booking for weekend travel.', type: 'FIXED', value: 25 },
     { id: 'PROMO-05', title: 'First-time Booker', description: '15% off your first booking with us.', type: 'PERCENTAGE', value: 15 },
 ];
@@ -196,6 +197,7 @@ const offerLifecycleSteps = [
 export default function OfferComposerPage() {
   const [searchResults, setSearchResults] = useState<FlightJourney[] | null>(null);
   const [recommendedBundles, setRecommendedBundles] = useState<RecommendedBundle[] | null>(null);
+  const [availablePromotions, setAvailablePromotions] = useState<Promotion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState<BrandedFare | null>(null);
@@ -321,6 +323,7 @@ export default function OfferComposerPage() {
     setSelectedAncillaries([]);
     setSelectedSeat(null);
     setSelectedPromotion(null);
+    setAvailablePromotions([]);
     setOfferStatus('OfferRequested');
     toast({
       title: 'Searching for offers...',
@@ -415,6 +418,14 @@ export default function OfferComposerPage() {
     setSelectedAncillaries([]);
     setSelectedSeat(null);
     setSelectedPromotion(null);
+    setSelectedBundle(null);
+
+    // Filter available promotions based on cohort
+    const filteredPromos = mockPromotions.filter(promo => 
+        !promo.requiredCohort || promo.requiredCohort === activeCohort
+    );
+    setAvailablePromotions(filteredPromos);
+
     setOfferStatus('OfferSelected');
     toast({
       title: 'Offer Added to Cart',
@@ -934,7 +945,7 @@ export default function OfferComposerPage() {
             </Card>
           )}
 
-           {recommendedBundles && recommendedBundles.length > 0 && (
+           {selectedOffer && recommendedBundles && recommendedBundles.length > 0 && (
             <Card>
                 <CardHeader>
                     <CardTitle>3. Recommended Bundles</CardTitle>
@@ -997,27 +1008,29 @@ export default function OfferComposerPage() {
                             <p className="text-sm text-muted-foreground">No automatic rules were applied for this search.</p>
                         )}
                     </div>
-                    <div>
-                        <h4 className="font-semibold text-md mb-3">Available Promotions</h4>
-                        <RadioGroup onValueChange={handleSelectPromotion} value={selectedPromotion?.id}>
-                            <div className="space-y-2">
-                                {mockPromotions.map(promo => (
-                                    <Label key={promo.id} htmlFor={promo.id} className={cn("p-3 border rounded-md flex items-start justify-between transition-colors cursor-pointer", selectedPromotion?.id === promo.id && "bg-accent/50 border-primary")}>
-                                        <div className="flex items-center gap-3">
-                                            <RadioGroupItem value={promo.id} id={promo.id} />
-                                            <div>
-                                                <p className="font-medium">{promo.title}</p>
-                                                <p className="text-sm text-muted-foreground font-normal">{promo.description}</p>
+                    {availablePromotions.length > 0 && (
+                        <div>
+                            <h4 className="font-semibold text-md mb-3">Available Promotions</h4>
+                            <RadioGroup onValueChange={handleSelectPromotion} value={selectedPromotion?.id}>
+                                <div className="space-y-2">
+                                    {availablePromotions.map(promo => (
+                                        <Label key={promo.id} htmlFor={promo.id} className={cn("p-3 border rounded-md flex items-start justify-between transition-colors cursor-pointer", selectedPromotion?.id === promo.id && "bg-accent/50 border-primary")}>
+                                            <div className="flex items-center gap-3">
+                                                <RadioGroupItem value={promo.id} id={promo.id} />
+                                                <div>
+                                                    <p className="font-medium">{promo.title}</p>
+                                                    <p className="text-sm text-muted-foreground font-normal">{promo.description}</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="font-semibold text-sm">
-                                            {promo.type === 'PERCENTAGE' ? `${promo.value}% OFF` : `-$${promo.value}`}
-                                        </div>
-                                    </Label>
-                                ))}
-                            </div>
-                        </RadioGroup>
-                    </div>
+                                            <div className="font-semibold text-sm">
+                                                {promo.type === 'PERCENTAGE' ? `${promo.value}% OFF` : `-$${promo.value}`}
+                                            </div>
+                                        </Label>
+                                    ))}
+                                </div>
+                            </RadioGroup>
+                        </div>
+                    )}
                 </CardContent>
               </Card>
               
@@ -1027,7 +1040,7 @@ export default function OfferComposerPage() {
                       <CardDescription>Select optional services for the chosen flight.</CardDescription>
                   </CardHeader>
                   <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <AncillarySelection selectedAncillaries={selectedAncillaries} onAncillaryChange={handleAncillaryChange} />
+                      <AncillarySelection selectedAncillaries={selectedAncillaries} onAncillaryChange={handleAncillaryChange} selectedFare={selectedOffer} />
                       <SeatMap selectedSeat={selectedSeat} onSeatSelect={handleSeatSelect} />
                   </CardContent>
               </Card>
@@ -1221,3 +1234,4 @@ export default function OfferComposerPage() {
     </div>
   );
 }
+
