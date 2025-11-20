@@ -325,5 +325,3 @@ export function PricingRuleForm({ rule, onSubmit, onCancel }: PricingRuleFormPro
     </Form>
   );
 }
-
-    
