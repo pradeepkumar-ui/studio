@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { format, differenceInHours, addDays, isBefore } from 'date-fns';
-import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket, BadgeCheck, XCircle, Tag, CheckSquare, Square, Gift, AlertCircle, RefreshCw, Package, Check, Circle, Workflow } from 'lucide-react';
+import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket, BadgeCheck, XCircle, Tag, CheckSquare, Square, Gift, AlertCircle, RefreshCw, Package, Check, Circle, Workflow, Award, GraduationCap } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -45,6 +45,7 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { OrderDetails } from '@/components/orders/order-details-view';
+import { Checkbox } from '@/components/ui/checkbox';
 
 
 type OfferStatus = 'OfferRequested' | 'OfferProcessing' | 'OfferCreated' | 'OfferSelected' | 'OfferPriceValidated' | 'OfferStockChecked' | 'OfferConvertedToOrder' | 'OfferExpired';
@@ -87,6 +88,8 @@ const offerSearchSchema = z.object({
   brand: z.string().optional(),
   corporateId: z.string().optional(),
   channel: z.string().optional(),
+  loyaltyTier: z.string().optional(),
+  isStudent: z.boolean().default(false).optional(),
 }).refine(data => {
     if (data.tripType === 'return' && !data.returnDate) {
         return false;
@@ -141,7 +144,27 @@ const mockFlightJourneys: FlightJourney[] = [
         { id: 'F-003B', brand: 'Business', cabinClass: 'BUSINESS', price: 2500, basePrice: 2500, includedServices: ['1 Carry-on', '2 Checked Bags (32kg)', 'Lounge Access', 'Priority Boarding', 'Flexibility'] },
         { id: 'F-003C', brand: 'First', cabinClass: 'FIRST', price: 4800, basePrice: 4800, includedServices: ['1 Carry-on', '3 Checked Bags (32kg)', 'Lounge Access', 'Priority Boarding', 'Flexibility', 'First Class Suite', 'Premium Dining'] },
     ]
-  }
+  },
+    {
+    id: 'J-004',
+    departureTime: '18:00', departureCode: 'DEL',
+    arrivalTime: '22:30', arrivalCode: 'LHR',
+    duration: '9h 30m', airline: 'Airline D', stops: 0,
+    fares: [
+        { id: 'F-004A', brand: 'Student Fare', cabinClass: 'ECONOMY', price: 850, basePrice: 850, includedServices: ['1 Carry-on', '1 Checked Bag (23kg)', 'Standard Seat Selection', 'Flexible Change'] },
+        { id: 'F-004B', brand: 'Economy Flex', cabinClass: 'ECONOMY', price: 920, basePrice: 920, includedServices: ['1 Carry-on', '1 Checked Bag (23kg)', 'Standard Seat Selection', 'Flexibility'] },
+    ]
+    },
+    {
+    id: 'J-005',
+    departureTime: '23:00', departureCode: 'DXB',
+    arrivalTime: '11:20', arrivalCode: 'SIN',
+    duration: '7h 20m', airline: 'Airline E', stops: 0,
+    fares: [
+        { id: 'F-005A', brand: 'Economy', cabinClass: 'ECONOMY', price: 900, basePrice: 900, includedServices: ['1 Carry-on', '1 Checked Bag (23kg)'] },
+        { id: 'F-005B', brand: 'Business', cabinClass: 'BUSINESS', price: 2800, basePrice: 2800, includedServices: ['1 Carry-on', '2 Checked Bags (32kg)', 'Lounge Access'] },
+    ]
+  },
 ];
 
 const mockPromotions: Promotion[] = [
@@ -155,6 +178,8 @@ const mockPromotions: Promotion[] = [
 const mockBundles: RecommendedBundle[] = [
     { id: 'BUN-001', name: 'Business Comfort', description: 'Elevate your business trip.', price: 75, originalPrice: 100, items: ['Lounge Access', 'Premium Meal'] },
     { id: 'BUN-002', name: 'Family Pack', description: 'Convenience for the whole family.', price: 60, originalPrice: 85, items: ['1st Checked Bag', 'Standard Seat Selection (x3)'] },
+    { id: 'BUN-003', name: 'Student Pack', description: 'Extra baggage and flexibility.', price: 60, originalPrice: 90, items: ['Extra Baggage', 'Free Meal'] },
+    { id: 'BUN-004', name: 'Elite Privileges', description: 'Upgrade your elite experience.', price: 40, originalPrice: 60, items: ['Premium Meal', 'Double Miles'] },
 ];
 
 const offerLifecycleSteps = [
@@ -197,6 +222,8 @@ export default function OfferComposerPage() {
       brand: 'All',
       corporateId: '',
       channel: 'Direct',
+      loyaltyTier: 'None',
+      isStudent: false,
     },
   });
   
@@ -306,7 +333,7 @@ export default function OfferComposerPage() {
             fares: journey.fares.filter(fare => fare.cabinClass.toUpperCase() === data.cabinClass)
         })).filter(journey => journey.fares.length > 0);
         
-        const activeRules: AppliedRule[] = [];
+        let activeRules: AppliedRule[] = [];
         let cohortName: string | null = null;
         let bundlesToShow: RecommendedBundle[] = [];
 
@@ -327,13 +354,29 @@ export default function OfferComposerPage() {
                 })
             }));
         } else if ((data.passengers.adt + data.passengers.chd) >= 3 && data.passengers.chd > 0) {
-            cohortName = "Family Leisure Cohort";
+            cohortName = "Family Leisure";
             bundlesToShow.push(mockBundles[1]);
              results = results.map(j => ({...j, fares: j.fares.map(f => {
                 const discount = f.basePrice * 0.10;
                 activeRules.push({ name: 'Family Offer', adjustment: -discount });
                 return {...f, price: f.basePrice - discount };
              }) }));
+        } else if (data.isStudent) {
+            cohortName = "Student";
+            bundlesToShow.push(mockBundles[2]);
+            results = results.map(j => ({...j, fares: j.fares.map(f => {
+                const discount = f.basePrice * 0.08;
+                activeRules.push({ name: 'Student Discount', adjustment: -discount });
+                return {...f, price: f.basePrice - discount };
+            })}));
+        } else if (data.loyaltyTier === 'Platinum') {
+            cohortName = "Platinum Elite";
+            bundlesToShow.push(mockBundles[3]);
+            results = results.map(j => ({...j, fares: j.fares.map(f => {
+                const discount = f.basePrice * 0.07;
+                activeRules.push({ name: 'Elite Discount', adjustment: -discount });
+                return {...f, price: f.basePrice - discount };
+            })}));
         }
         
         if (data.departureDate && differenceInHours(data.departureDate, new Date()) < 48) {
@@ -770,9 +813,12 @@ export default function OfferComposerPage() {
                             render={({ field }) => (
                                 <FormItem>
                                 <FormLabel>Corporate ID (Optional)</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="e.g., TCS_123" {...field} />
-                                </FormControl>
+                                 <div className="relative">
+                                     <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <FormControl>
+                                        <Input placeholder="e.g., TCS_123" {...field} className="pl-9" />
+                                    </FormControl>
+                                </div>
                                 <FormMessage />
                                 </FormItem>
                             )}
@@ -800,6 +846,53 @@ export default function OfferComposerPage() {
                             <FormMessage />
                             </FormItem>
                         )}
+                        />
+                    </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center pt-4">
+                         <FormField
+                            control={form.control}
+                            name="loyaltyTier"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Loyalty Tier (Optional)</FormLabel>
+                                <div className="relative">
+                                <Award className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                    <FormControl>
+                                    <SelectTrigger className="pl-9">
+                                        <SelectValue placeholder="Select loyalty tier" />
+                                    </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                    <SelectItem value="None">None</SelectItem>
+                                    <SelectItem value="Silver">Silver</SelectItem>
+                                    <SelectItem value="Gold">Gold</SelectItem>
+                                    <SelectItem value="Platinum">Platinum Elite</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                </div>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="isStudent"
+                            render={({ field }) => (
+                            <FormItem className="flex flex-row items-center gap-2 pt-8">
+                                <FormControl>
+                                    <Checkbox
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                        id="isStudent"
+                                    />
+                                </FormControl>
+                                 <Label htmlFor="isStudent" className="flex items-center gap-2 font-normal">
+                                    <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                                    Student
+                                </Label>
+                            </FormItem>
+                            )}
                         />
                     </div>
                     <div className="flex justify-end pt-6">
@@ -1128,5 +1221,3 @@ export default function OfferComposerPage() {
     </div>
   );
 }
-
-    
