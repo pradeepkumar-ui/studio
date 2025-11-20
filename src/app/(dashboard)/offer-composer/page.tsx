@@ -346,15 +346,18 @@ export default function OfferComposerPage() {
             cohortList.push("Corporate Traveller");
             bundlesToShow.push(mockBundles[0]);
             adjustmentPercentage -= 5;
-        } else if ((data.passengers.adt + data.passengers.chd) >= 3 && data.passengers.chd > 0) {
+        }
+        if ((data.passengers.adt + data.passengers.chd) >= 3 && data.passengers.chd > 0) {
             cohortList.push("Family Leisure");
             bundlesToShow.push(mockBundles[1]);
             adjustmentPercentage -= 10;
-        } else if (data.isStudent) {
+        }
+        if (data.isStudent) {
             cohortList.push("Student");
             bundlesToShow.push(mockBundles[2]);
             adjustmentPercentage -= 8;
-        } else if (data.loyaltyTier === 'Platinum') {
+        }
+        if (data.loyaltyTier === 'Platinum') {
             cohortList.push("Platinum Elite");
             bundlesToShow.push(mockBundles[3]);
             adjustmentPercentage -= 7;
