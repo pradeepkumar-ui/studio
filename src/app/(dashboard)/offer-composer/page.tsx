@@ -1128,5 +1128,3 @@ export default function OfferComposerPage() {
     </div>
   );
 }
-
-    
