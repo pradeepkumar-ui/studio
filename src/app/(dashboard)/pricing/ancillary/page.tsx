@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -44,6 +45,7 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { AncillaryForm, type Ancillary } from '@/components/forms/ancillary-form';
+import { AncillaryOverrides } from '@/components/pricing/ancillary-overrides';
 
 
 const initialAncillaries: Ancillary[] = [
@@ -99,7 +101,8 @@ const initialAncillaries: Ancillary[] = [
 
 export default function AncillaryPricingPage() {
   const [ancillaries, setAncillaries] = React.useState<Ancillary[]>(initialAncillaries);
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [isFormOpen, setIsFormOpen] = React.useState(false);
+  const [isOverridesOpen, setIsOverridesOpen] = React.useState(false);
   const [editingAncillary, setEditingAncillary] = React.useState<Ancillary | null>(null);
   const { toast } = useToast();
   
@@ -120,13 +123,19 @@ export default function AncillaryPricingPage() {
     });
   };
   
-  const handleOpenDialog = (ancillary: Ancillary | null = null) => {
+  const handleOpenForm = (ancillary: Ancillary | null = null) => {
     setEditingAncillary(ancillary);
-    setIsDialogOpen(true);
+    setIsFormOpen(true);
   };
   
+  const handleOpenOverrides = (ancillary: Ancillary) => {
+    setEditingAncillary(ancillary);
+    setIsOverridesOpen(true);
+  };
+
   const handleDialogClose = () => {
-    setIsDialogOpen(false);
+    setIsFormOpen(false);
+    setIsOverridesOpen(false);
     setEditingAncillary(null);
   };
   
@@ -175,7 +184,7 @@ export default function AncillaryPricingPage() {
             toggles and overrides.
           </p>
         </div>
-        <Button onClick={() => handleOpenDialog()}>
+        <Button onClick={() => handleOpenForm()}>
           <PlusCircle className="mr-2" />
           Create Ancillary
         </Button>
@@ -267,11 +276,11 @@ export default function AncillaryPricingPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem onClick={() => handleOpenDialog(anc)}>Edit Price</DropdownMenuItem>
-                              <DropdownMenuItem>Manage Bundles</DropdownMenuItem>
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleOpenForm(anc)}>Edit</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleOpenOverrides(anc)}>
                                 Segment Overrides
                               </DropdownMenuItem>
+                              <DropdownMenuItem>Manage Bundles</DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 onClick={() => toggleStatus(anc)}
@@ -298,7 +307,7 @@ export default function AncillaryPricingPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogContent>
               <DialogHeader>
                   <DialogTitle>{editingAncillary ? 'Edit Ancillary' : 'Create New Ancillary'}</DialogTitle>
@@ -311,6 +320,18 @@ export default function AncillaryPricingPage() {
                   onSubmit={handleFormSubmit}
                   onCancel={handleDialogClose}
               />
+          </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isOverridesOpen} onOpenChange={setIsOverridesOpen}>
+          <DialogContent>
+              <DialogHeader>
+                  <DialogTitle>Segment Overrides for "{editingAncillary?.name}"</DialogTitle>
+                  <DialogDescription>
+                      Define specific prices for different market conditions, overriding the default price.
+                  </DialogDescription>
+              </DialogHeader>
+              {editingAncillary && <AncillaryOverrides ancillary={editingAncillary} />}
           </DialogContent>
       </Dialog>
     </div>
