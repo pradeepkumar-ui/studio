@@ -21,7 +21,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '../ui/separator';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { PlusCircle, Trash2, CalendarIcon } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Calendar } from '../ui/calendar';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+
+const ancillaryProducts = [
+  { id: 'ANC-001', name: '1st Checked Bag (23kg)' },
+  { id: 'ANC-002', name: 'Extra Legroom Seat' },
+  { id: 'ANC-003', name: 'In-flight Wi-Fi' },
+  { id: 'ANC-004', name: 'Priority Boarding' },
+  { id: 'ANC-006', name: 'Lounge Access' },
+];
 
 const bundleSchema = z.object({
   id: z.string().optional(),
@@ -34,14 +46,13 @@ const bundleSchema = z.object({
     route: z.string().optional(),
     cohorts: z.string().optional(),
   }),
-  components: z.object({
-    seat: z.string().optional(),
-    baggage: z.string().optional(),
-    meal: z.string().optional(),
-    other: z.string().optional(),
-  }),
+  components: z.array(z.object({ value: z.string().min(1, "Please select an ancillary.") })).min(1, "At least one ancillary component is required."),
   pricingStrategy: z.enum(['Percent Discount', 'Fixed Discount', 'Absolute Price']),
   discount: z.coerce.number().min(0),
+  validity: z.object({
+    effectiveDate: z.date(),
+    expiryDate: z.date(),
+  }).optional(),
   itemCount: z.number().optional()
 });
 
@@ -56,7 +67,14 @@ interface BundleFormProps {
 export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
   const form = useForm<Bundle>({
     resolver: zodResolver(bundleSchema),
-    defaultValues: bundle || {
+    defaultValues: bundle ? {
+      ...bundle,
+      components: Array.isArray(bundle.components) ? bundle.components.map(c => ({ value: c.seat || c.baggage || c.meal || c.other || '' })) : [],
+      validity: {
+        effectiveDate: new Date(),
+        expiryDate: new Date(new Date().setDate(new Date().getDate() + 30)),
+      }
+    } : {
       name: '',
       description: '',
       status: 'Draft',
@@ -66,19 +84,24 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
         route: '',
         cohorts: '',
       },
-      components: {
-        seat: '',
-        baggage: '',
-        meal: '',
-        other: ''
-      },
+      components: [{value: ''}],
       pricingStrategy: 'Percent Discount',
       discount: 10,
+      validity: {
+        effectiveDate: new Date(),
+        expiryDate: new Date(new Date().setDate(new Date().getDate() + 30)),
+      }
     },
   });
 
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "components"
+  });
+
   const handleFinalSubmit = (data: Bundle) => {
-    onSubmit(data);
+    const itemCount = data.components.filter(c => c.value).length;
+    onSubmit({ ...data, itemCount });
   }
 
   return (
@@ -123,62 +146,98 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
             <FormField control={form.control} name="scope.route" render={({field}) => <FormItem><FormLabel>Routes</FormLabel><FormControl><Input {...field} placeholder="e.g., JFK-MIA, LHR-*" /></FormControl><FormMessage/></FormItem>} />
             <FormField control={form.control} name="scope.cohorts" render={({field}) => <FormItem><FormLabel>Target Cohorts</FormLabel><FormControl><Input {...field} placeholder="e.g., BusinessLoyal_IN" /></FormControl><FormMessage/></FormItem>} />
         </div>
+
+        <div className="grid grid-cols-2 gap-4">
+           <FormField
+            control={form.control}
+            name="validity.effectiveDate"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Effective Date</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button variant="outline" className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}>
+                        {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+           <FormField
+            control={form.control}
+            name="validity.expiryDate"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Expiry Date</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button variant="outline" className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}>
+                        {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         
         <h4 className="text-md font-semibold pt-4">Components</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
-            <FormField
-            control={form.control}
-            name="components.seat"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Seat</FormLabel>
-                <FormControl>
-                    <Input placeholder="e.g., Front, Legroom" {...field} />
-                </FormControl>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
-            <FormField
-            control={form.control}
-            name="components.baggage"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Baggage</FormLabel>
-                <FormControl>
-                    <Input placeholder="e.g., 15kg, 23kg" {...field} />
-                </FormControl>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
-            <FormField
-            control={form.control}
-            name="components.meal"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Meal</FormLabel>
-                <FormControl>
-                    <Input placeholder="e.g., Veg, Child" {...field} />
-                </FormControl>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
-             <FormField
-            control={form.control}
-            name="components.other"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Other</FormLabel>
-                <FormControl>
-                    <Input placeholder="e.g., Wifi, Lounge" {...field} />
-                </FormControl>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
+        <div className="space-y-2">
+            {fields.map((field, index) => (
+              <div key={field.id} className="flex items-center gap-2">
+                <FormField
+                  control={form.control}
+                  name={`components.${index}.value`}
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select an ancillary component" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {ancillaryProducts.map(product => (
+                            <SelectItem key={product.id} value={product.id}>{product.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} disabled={fields.length <= 1}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+             <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mt-2"
+            onClick={() => append({ value: "" })}
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Component
+          </Button>
         </div>
+
 
         <Separator className="my-6" />
 
