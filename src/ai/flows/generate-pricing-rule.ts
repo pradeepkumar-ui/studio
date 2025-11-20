@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -39,9 +40,10 @@ const prompt = ai.definePrompt({
   Analyze the following description and generate a structured JSON object as a string. The JSON should be well-formed and include keys for 'name', 'status', 'trigger', 'conditions', 'action', and 'guardrails'.
 
   - 'trigger.type' can be 'Scheduled', 'OnDemand', or 'CompetitorPriceChange'.
-  - 'conditions' can include 'route', 'market', 'loadFactorOperator' ('>' or '<'), 'loadFactorValue', etc.
+  - 'conditions' can include 'route', 'market', 'loadFactorOperator' ('>' or '<'), 'loadFactorValue', 'departureOperator', 'departureValue' etc.
   - 'action.type' can be 'PERCENTAGE' or 'FIXED_AMOUNT'.
   - 'action.adjustment' should be a number (positive for increase, negative for decrease).
+  - 'action.cabinClass' can be 'Economy', 'Premium Economy', 'Business', 'First', or 'All'.
 
   Description:
   {{{description}}}
