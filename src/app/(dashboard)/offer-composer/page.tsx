@@ -478,7 +478,10 @@ export default function OfferComposerPage() {
     })
   }
 
-  const passengerCount = (form.getValues().passengers.adt || 1) + (form.getValues().passengers.chd || 0);
+  const adultCount = Number(form.getValues().passengers.adt) || 0;
+  const childCount = Number(form.getValues().passengers.chd) || 0;
+  const passengerCount = adultCount + childCount;
+
   const totalAncillaryPrice = selectedAncillaries.reduce((acc, anc) => acc + anc.price, 0) * passengerCount;
   const totalBundlePrice = selectedBundle?.price || 0;
   const totalSeatPrice = (selectedSeat ? 75 : 0) * passengerCount; 
