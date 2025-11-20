@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { format, differenceInHours, addDays, isBefore } from 'date-fns';
-import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket, BadgeCheck, XCircle, Tag, CheckSquare, Square, Gift, AlertCircle, RefreshCw, Package } from 'lucide-react';
+import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket, BadgeCheck, XCircle, Tag, CheckSquare, Square, Gift, AlertCircle, RefreshCw, Package, Check, Circle, Workflow } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -155,6 +155,16 @@ const mockPromotions: Promotion[] = [
 const mockBundles: RecommendedBundle[] = [
     { id: 'BUN-001', name: 'Business Comfort', description: 'Elevate your business trip.', price: 75, originalPrice: 100, items: ['Lounge Access', 'Premium Meal'] },
     { id: 'BUN-002', name: 'Family Pack', description: 'Convenience for the whole family.', price: 60, originalPrice: 85, items: ['1st Checked Bag', 'Standard Seat Selection (x3)'] },
+];
+
+const offerLifecycleSteps = [
+    { status: 'OfferRequested', label: 'Offer Requested', description: 'Shopping request received from the channel.' },
+    { status: 'OfferProcessing', label: 'Offer Processing', description: 'Constructing and pricing solutions.' },
+    { status: 'OfferCreated', label: 'Offer Created', description: 'Priced offers returned to the channel.' },
+    { status: 'OfferSelected', label: 'Offer Selected', description: 'An offer has been added to the cart.' },
+    { status: 'OfferPriceValidated', label: 'Price Validated', description: 'Offer price and rules re-validated.' },
+    { status: 'OfferStockChecked', label: 'Stock Checked', description: 'Seat and ancillary inventory confirmed.' },
+    { status: 'OfferConvertedToOrder', label: 'Order Created', description: 'Offer converted to a confirmed order.' },
 ];
 
 
@@ -516,6 +526,9 @@ export default function OfferComposerPage() {
     
     setTimeout(() => router.push('/orders'), 1000);
   };
+  
+  const currentStatusIndex = offerLifecycleSteps.findIndex(step => step.status === offerStatus);
+
 
   return (
     <div className="flex flex-col gap-6">
@@ -960,6 +973,39 @@ export default function OfferComposerPage() {
                     </Form>
                 </CardContent>
             </Card>
+
+            {offerStatus && (
+                <Card>
+                    <CardHeader className="flex flex-row items-center gap-2">
+                        <Workflow className="h-5 w-5" />
+                        <CardTitle>Offer Lifecycle</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="relative">
+                            <div className="absolute left-2.5 top-0 bottom-0 w-0.5 bg-border" />
+                            {offerLifecycleSteps.map((step, index) => {
+                                const isCompleted = index < currentStatusIndex;
+                                const isCurrent = index === currentStatusIndex;
+                                return (
+                                <div key={step.status} className="flex items-start gap-4 relative">
+                                    <div className={cn(
+                                        "w-5 h-5 rounded-full flex items-center justify-center mt-0.5",
+                                        isCompleted ? "bg-primary" : "bg-muted-foreground/30",
+                                        isCurrent && "bg-primary ring-4 ring-primary/20"
+                                    )}>
+                                        {isCompleted && <Check className="w-3 h-3 text-primary-foreground" />}
+                                    </div>
+                                    <div className="pb-8">
+                                        <p className="font-semibold">{step.label}</p>
+                                        <p className="text-xs text-muted-foreground">{step.description}</p>
+                                    </div>
+                                </div>
+                            )})}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
             {selectedOffer && (
                 <Card>
                     <CardHeader className="flex flex-row items-center gap-2">
