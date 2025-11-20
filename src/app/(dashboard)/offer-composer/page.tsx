@@ -480,7 +480,7 @@ export default function OfferComposerPage() {
 
   const passengerCount = (form.getValues().passengers.adt || 1) + (form.getValues().passengers.chd || 0);
   const totalAncillaryPrice = selectedAncillaries.reduce((acc, anc) => acc + anc.price, 0) * passengerCount;
-  const totalBundlePrice = selectedBundle?.price || 0; // Bundles are usually per-booking, not per-passenger
+  const totalBundlePrice = selectedBundle?.price || 0;
   const totalSeatPrice = (selectedSeat ? 75 : 0) * passengerCount; 
 
   const baseOfferPrice = (selectedOffer?.price || 0) * passengerCount;
@@ -1227,5 +1227,3 @@ export default function OfferComposerPage() {
     </div>
   );
 }
-
-    
