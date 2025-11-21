@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { format, differenceInHours, addDays, isBefore } from 'date-fns';
-import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket, BadgeCheck, XCircle, Tag, CheckSquare, Square, Gift, AlertCircle, RefreshCw, Package, Check, Circle, Workflow, Award, GraduationCap } from 'lucide-react';
+import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket, BadgeCheck, XCircle, Tag, CheckSquare, Square, Gift, AlertCircle, RefreshCw, Package, Check, Circle, Workflow, Award, GraduationCap, HeartHandshake } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -92,6 +92,7 @@ const offerSearchSchema = z.object({
   channel: z.string().optional(),
   loyaltyTier: z.string().optional(),
   isStudent: z.boolean().default(false).optional(),
+  travelPurpose: z.enum(['Leisure', 'Business', 'Other']).optional(),
 }).refine(data => {
     if (data.tripType === 'return' && !data.returnDate) {
         return false;
@@ -225,6 +226,7 @@ export default function OfferComposerPage() {
       corporateId: '',
       channel: 'Direct',
       loyaltyTier: 'None',
+      travelPurpose: 'Leisure',
       isStudent: false,
     },
   });
@@ -342,7 +344,7 @@ export default function OfferComposerPage() {
 
         // ** SIMULATED ENGINE LOGIC **
         // Determine cohorts and base adjustments
-        if (data.corporateId && data.cabinClass === 'BUSINESS') {
+        if (data.corporateId || data.travelPurpose === 'Business') {
             cohortList.push("Corporate Traveller");
             bundlesToShow.push(mockBundles[0]);
             adjustmentPercentage -= 5;
@@ -853,6 +855,31 @@ export default function OfferComposerPage() {
                             <FormMessage />
                             </FormItem>
                         )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="travelPurpose"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Travel Purpose (Optional)</FormLabel>
+                                <div className="relative">
+                                <HeartHandshake className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                    <FormControl>
+                                    <SelectTrigger className="pl-9">
+                                        <SelectValue placeholder="Select purpose" />
+                                    </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                    <SelectItem value="Leisure">Leisure</SelectItem>
+                                    <SelectItem value="Business">Business</SelectItem>
+                                    <SelectItem value="Other">Other</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                </div>
+                                <FormMessage />
+                            </FormItem>
+                            )}
                         />
                     </div>
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center pt-4">
