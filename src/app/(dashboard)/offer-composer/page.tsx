@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { format, differenceInHours, addDays, isBefore } from 'date-fns';
-import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket, BadgeCheck, XCircle, Tag, CheckSquare, Square, Gift, AlertCircle, RefreshCw, Package, Check, Circle, Workflow, Award, GraduationCap, HeartHandshake } from 'lucide-react';
+import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket, BadgeCheck, XCircle, Tag, CheckSquare, Square, Gift, AlertCircle, RefreshCw, Package, Check, Circle, Workflow, Award, GraduationCap, HeartHandshake, TicketCheck } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -63,6 +63,16 @@ type Promotion = {
 type AppliedRule = {
     name: string;
     adjustment: number;
+};
+
+type StaticOffer = {
+    id: string;
+    name: string;
+    description: string;
+    conditions: {
+        cabinClass?: string[];
+        route?: string[];
+    };
 };
 
 type RecommendedBundle = {
@@ -172,9 +182,24 @@ const mockFlightJourneys: FlightJourney[] = [
 
 const mockPromotions: Promotion[] = [
     { id: 'PROMO-01', title: 'Winter Sale', description: '10% off base fare for winter travel.', type: 'PERCENTAGE', value: 10 },
-    { id: 'PROMO-02', title: 'Loyalty Bonus', description: 'Earn double loyalty points on this booking.', type: 'FIXED', value: 0, requiredCohort: 'Platinum Elite' },
+    { id: 'PROMO-02', title: 'Loyalty Bonus', description: 'Earn double loyalty points on this booking.', type: 'FIXED', value: 0, requiredCohort: 'Platinum' },
     { id: 'PROMO-04', title: 'Weekend Getaway', description: '$25 off your booking for weekend travel.', type: 'FIXED', value: 25 },
     { id: 'PROMO-05', title: 'First-time Booker', description: '15% off your first booking with us.', type: 'PERCENTAGE', value: 15 },
+];
+
+const mockStaticOffers: StaticOffer[] = [
+    {
+        id: 'STATIC-01',
+        name: 'Free Wi-Fi in Business/First',
+        description: 'Enjoy complimentary Wi-Fi on all Business and First Class fares.',
+        conditions: { cabinClass: ['BUSINESS', 'FIRST'] }
+    },
+    {
+        id: 'STATIC-02',
+        name: 'Transatlantic Premium Meal',
+        description: 'A complimentary premium meal is included on transatlantic flights.',
+        conditions: { route: ['JFK-LHR', 'LHR-JFK'] }
+    },
 ];
 
 const mockBundles: RecommendedBundle[] = [
@@ -203,6 +228,7 @@ export default function OfferComposerPage() {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState<BrandedFare | null>(null);
   const [appliedRules, setAppliedRules] = useState<AppliedRule[]>([]);
+  const [appliedStaticOffers, setAppliedStaticOffers] = useState<StaticOffer[]>([]);
   const [activeCohort, setActiveCohort] = useState<string | null>(null);
   const [selectedAncillaries, setSelectedAncillaries] = useState<Ancillary[]>([]);
   const [selectedBundle, setSelectedBundle] = useState<RecommendedBundle | null>(null);
@@ -247,7 +273,6 @@ export default function OfferComposerPage() {
             const order: OrderDetails = JSON.parse(reshopOrderString);
             setReshopContext(order);
             
-            // For now, we'll make a best-effort to parse the route from the first flight service
             const flightService = order.services.find(s => s.type === 'Flight');
             if (flightService) {
                 const parts = flightService.description.split(', ')[1]?.split('-');
@@ -257,7 +282,6 @@ export default function OfferComposerPage() {
                 }
             }
             form.setValue('departureDate', new Date(order.date));
-            // This is a simplification; a real app would need to parse passenger types
             const passengerCount = order.auditTrail[0]?.actor.includes('Pax') ? parseInt(order.auditTrail[0].actor.split(' ')[0]) : 1;
             form.setValue('passengers.adt', passengerCount);
 
@@ -321,6 +345,7 @@ export default function OfferComposerPage() {
     setRecommendedBundles(null);
     setSelectedOffer(null);
     setAppliedRules([]);
+    setAppliedStaticOffers([]);
     setActiveCohort(null);
     setSelectedAncillaries([]);
     setSelectedSeat(null);
@@ -343,13 +368,12 @@ export default function OfferComposerPage() {
         let bundlesToShow: RecommendedBundle[] = [];
 
         // ** SIMULATED ENGINE LOGIC **
-        // Determine cohorts and base adjustments
         if (data.corporateId || data.travelPurpose === 'Business') {
             if (!cohortList.includes("Corporate Traveller")) cohortList.push("Corporate Traveller");
             if (!bundlesToShow.some(b => b.id === mockBundles[0].id)) bundlesToShow.push(mockBundles[0]);
             adjustmentPercentage -= 5;
         }
-        if ((data.passengers.adt + data.passengers.chd) >= 3 && data.passengers.chd > 0) {
+        if ((Number(data.passengers.adt) + Number(data.passengers.chd)) >= 3 && Number(data.passengers.chd) > 0) {
             if (!cohortList.includes("Family Leisure")) cohortList.push("Family Leisure");
             if (!bundlesToShow.some(b => b.id === mockBundles[1].id)) bundlesToShow.push(mockBundles[1]);
             adjustmentPercentage -= 10;
@@ -377,7 +401,6 @@ export default function OfferComposerPage() {
 
         const finalCohortName = cohortList.length > 0 ? cohortList.join(', ') : 'Standard';
         
-        // Apply final calculated adjustment to all fares
         const finalResults = baseResults.map(journey => ({
             ...journey,
             fares: journey.fares.map(fare => ({
@@ -386,17 +409,22 @@ export default function OfferComposerPage() {
             }))
         }));
         
-        const finalAppliedRules: AppliedRule[] = [];
         if (adjustmentPercentage !== 0) {
             const ruleName = `${finalCohortName} Adjustment`;
-            // We calculate the adjustment on a sample price for display purposes, e.g., the first fare found
-            const sampleBasePrice = finalResults[0]?.fares[0]?.basePrice || 300; // Use a fallback
+            const sampleBasePrice = finalResults[0]?.fares[0]?.basePrice || 300;
             const sampleAdjustment = sampleBasePrice * (adjustmentPercentage / 100);
-            finalAppliedRules.push({ name: ruleName, adjustment: sampleAdjustment });
+            setAppliedRules([{ name: ruleName, adjustment: sampleAdjustment }]);
         }
+
+        // Check for static offers
+        const staticOffersToApply = mockStaticOffers.filter(offer => {
+            const cabinMatch = !offer.conditions.cabinClass || offer.conditions.cabinClass.includes(data.cabinClass);
+            const routeMatch = !offer.conditions.route || offer.conditions.route.includes(`${data.origin}-${data.destination}`);
+            return cabinMatch && routeMatch;
+        });
+        setAppliedStaticOffers(staticOffersToApply);
         
         setActiveCohort(finalCohortName);
-        setAppliedRules(finalAppliedRules);
         setRecommendedBundles(bundlesToShow);
         setSearchResults(finalResults);
         setIsLoading(false);
@@ -415,7 +443,6 @@ export default function OfferComposerPage() {
     setSelectedPromotion(null);
     setSelectedBundle(null);
 
-    // Filter available promotions based on cohort
     const filteredPromos = mockPromotions.filter(promo => 
         !promo.requiredCohort || activeCohort?.includes(promo.requiredCohort)
     );
@@ -431,7 +458,6 @@ export default function OfferComposerPage() {
   function handleSelectPromotion(promoId: string) {
     const promotion = mockPromotions.find(p => p.id === promoId);
     setSelectedPromotion(promotion || null);
-    // Reset validation status on change
     if (offerStatus === 'OfferPriceValidated' || offerStatus === 'OfferStockChecked') {
         setOfferStatus('OfferSelected');
     }
@@ -439,7 +465,6 @@ export default function OfferComposerPage() {
 
   function handleAncillaryChange(ancillaries: Ancillary[]) {
     setSelectedAncillaries(ancillaries);
-    // Reset validation status on change
     if (offerStatus === 'OfferPriceValidated' || offerStatus === 'OfferStockChecked') {
         setOfferStatus('OfferSelected');
     }
@@ -448,7 +473,6 @@ export default function OfferComposerPage() {
   function handleSelectBundle(bundle: RecommendedBundle) {
     setSelectedBundle(bundle);
     toast({ title: 'Bundle Added', description: `The "${bundle.name}" bundle has been added to your cart.`});
-    // Reset validation status on change
     if (offerStatus === 'OfferPriceValidated' || offerStatus === 'OfferStockChecked') {
         setOfferStatus('OfferSelected');
     }
@@ -456,7 +480,6 @@ export default function OfferComposerPage() {
 
   function handleSeatSelect(seat: string | null) {
       setSelectedSeat(seat);
-       // Reset validation status on change
     if (offerStatus === 'OfferPriceValidated' || offerStatus === 'OfferStockChecked') {
         setOfferStatus('OfferSelected');
     }
@@ -493,7 +516,7 @@ export default function OfferComposerPage() {
   if (selectedPromotion) {
     if (selectedPromotion.type === 'PERCENTAGE') {
         promotionDiscount = baseOfferPrice * (selectedPromotion.value / 100);
-    } else { // FIXED
+    } else {
         promotionDiscount = selectedPromotion.value;
     }
   }
@@ -517,14 +540,13 @@ export default function OfferComposerPage() {
       ]
     },
     passengers: [
-        ...Array.from({length: form.getValues().passengers.adt}, () => ({ type: "ADT" })),
-        ...Array.from({length: form.getValues().passengers.chd}, () => ({ type: "CHD" })),
+        ...Array.from({length: Number(form.getValues().passengers.adt)}, () => ({ type: "ADT" })),
+        ...Array.from({length: Number(form.getValues().passengers.chd)}, () => ({ type: "CHD" })),
     ].map((p, i) => ({...p, id: `P${i+1}`})),
     pricing: { currency: "USD", total: totalOrderPrice },
   };
 
   const handleSendToOrderModule = () => {
-    // 1. Expiry Check
     if (validTill && isBefore(validTill, new Date())) {
         toast({
             variant: 'destructive',
@@ -535,7 +557,6 @@ export default function OfferComposerPage() {
         return;
     }
 
-    // 2. Status Check
     if (offerStatus !== 'OfferStockChecked') {
       toast({
         variant: 'destructive',
@@ -544,8 +565,7 @@ export default function OfferComposerPage() {
       });
       return;
     }
-
-    // 3. (Simulated) Price Integrity Check
+    
     const calculatedPrice = (baseOfferPrice - promotionDiscount) + totalBundlePrice + totalAncillaryPrice + totalSeatPrice;
     if (Math.abs(calculatedPrice - totalOrderPrice) > 0.01) {
          toast({
@@ -557,7 +577,6 @@ export default function OfferComposerPage() {
         return;
     }
     
-    // All checks passed, proceed to create order
     setOfferStatus('OfferConvertedToOrder');
     
     const newOrder = {
@@ -901,7 +920,7 @@ export default function OfferComposerPage() {
                                     <SelectItem value="None">None</SelectItem>
                                     <SelectItem value="Silver">Silver</SelectItem>
                                     <SelectItem value="Gold">Gold</SelectItem>
-                                    <SelectItem value="Platinum">Platinum Elite</SelectItem>
+                                    <SelectItem value="Platinum">Platinum</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 </div>
@@ -1003,6 +1022,23 @@ export default function OfferComposerPage() {
           
           {selectedOffer && (
             <>
+            {appliedStaticOffers.length > 0 && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Applied Static Offers</CardTitle>
+                        <CardDescription>These offers have been automatically included based on your search.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {appliedStaticOffers.map(offer => (
+                            <div key={offer.id} className="p-3 border rounded-md">
+                                <h4 className="font-semibold">{offer.name}</h4>
+                                <p className="text-sm text-muted-foreground">{offer.description}</p>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            )}
+
               <Card>
                 <CardHeader>
                     <CardTitle>4. Dynamic Offers &amp; Promotions</CardTitle>
@@ -1017,7 +1053,7 @@ export default function OfferComposerPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div>
-                        <h4 className="font-semibold text-md mb-2">Automatically Applied Rules</h4>
+                        <h4 className="font-semibold text-md mb-2">Automatically Applied Dynamic Rules</h4>
                         {appliedRules.length > 0 ? (
                              <div className="space-y-1 text-sm text-muted-foreground">
                                 {appliedRules.map((rule, index) => (
@@ -1028,7 +1064,7 @@ export default function OfferComposerPage() {
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-sm text-muted-foreground">No automatic rules were applied for this search.</p>
+                            <p className="text-sm text-muted-foreground">No automatic dynamic rules were applied for this search.</p>
                         )}
                     </div>
                     {availablePromotions.length > 0 && (
