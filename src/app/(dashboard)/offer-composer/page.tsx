@@ -405,6 +405,13 @@ export default function OfferComposerPage() {
 
         const finalCohortName = cohortList.length > 0 ? cohortList.join(', ') : 'Standard';
         
+        if(adjustmentPercentage !== 0) {
+            const ruleName = `${finalCohortName} Adjustment`;
+            const sampleBasePrice = 300; // a sample price for adjustment calculation
+            const sampleAdjustment = sampleBasePrice * (adjustmentPercentage / 100);
+            setAppliedRules([{ name: ruleName, adjustment: sampleAdjustment }]);
+        }
+
         const finalResults = baseResults.map(journey => ({
             ...journey,
             fares: journey.fares.map(fare => ({
@@ -413,12 +420,6 @@ export default function OfferComposerPage() {
             }))
         }));
         
-        if (adjustmentPercentage !== 0) {
-            const ruleName = `${finalCohortName} Adjustment`;
-            const sampleBasePrice = finalResults[0]?.fares[0]?.basePrice || 300;
-            const sampleAdjustment = sampleBasePrice * (adjustmentPercentage / 100);
-            setAppliedRules([{ name: ruleName, adjustment: sampleAdjustment }]);
-        }
 
         setActiveCohort(finalCohortName);
         setRecommendedBundles(bundlesToShow);
@@ -1326,3 +1327,4 @@ export default function OfferComposerPage() {
     </div>
   );
 }
+
