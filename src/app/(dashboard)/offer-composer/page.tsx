@@ -416,14 +416,6 @@ export default function OfferComposerPage() {
             setAppliedRules([{ name: ruleName, adjustment: sampleAdjustment }]);
         }
 
-        // Check for static offers
-        const staticOffersToApply = mockStaticOffers.filter(offer => {
-            const cabinMatch = !offer.conditions.cabinClass || offer.conditions.cabinClass.includes(data.cabinClass);
-            const routeMatch = !offer.conditions.route || offer.conditions.route.includes(`${data.origin}-${data.destination}`);
-            return cabinMatch && routeMatch;
-        });
-        setAppliedStaticOffers(staticOffersToApply);
-        
         setActiveCohort(finalCohortName);
         setRecommendedBundles(bundlesToShow);
         setSearchResults(finalResults);
@@ -437,11 +429,20 @@ export default function OfferComposerPage() {
   }
 
   function handleSelectOffer(offer: BrandedFare) {
+    const data = form.getValues();
     setSelectedOffer(offer);
     setSelectedAncillaries([]);
     setSelectedSeat(null);
     setSelectedPromotion(null);
     setSelectedBundle(null);
+
+    // Check for static offers
+    const staticOffersToApply = mockStaticOffers.filter(staticOffer => {
+        const cabinMatch = !staticOffer.conditions.cabinClass || staticOffer.conditions.cabinClass.includes(offer.cabinClass);
+        const routeMatch = !staticOffer.conditions.route || staticOffer.conditions.route.includes(`${data.origin}-${data.destination}`);
+        return cabinMatch && routeMatch;
+    });
+    setAppliedStaticOffers(staticOffersToApply);
 
     const filteredPromos = mockPromotions.filter(promo => 
         !promo.requiredCohort || activeCohort?.includes(promo.requiredCohort)
@@ -1293,4 +1294,3 @@ export default function OfferComposerPage() {
     </div>
   );
 }
-
