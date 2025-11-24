@@ -345,33 +345,33 @@ export default function OfferComposerPage() {
         // ** SIMULATED ENGINE LOGIC **
         // Determine cohorts and base adjustments
         if (data.corporateId || data.travelPurpose === 'Business') {
-            cohortList.push("Corporate Traveller");
-            bundlesToShow.push(mockBundles[0]);
+            if (!cohortList.includes("Corporate Traveller")) cohortList.push("Corporate Traveller");
+            if (!bundlesToShow.some(b => b.id === mockBundles[0].id)) bundlesToShow.push(mockBundles[0]);
             adjustmentPercentage -= 5;
         }
         if ((data.passengers.adt + data.passengers.chd) >= 3 && data.passengers.chd > 0) {
-            cohortList.push("Family Leisure");
-            bundlesToShow.push(mockBundles[1]);
+            if (!cohortList.includes("Family Leisure")) cohortList.push("Family Leisure");
+            if (!bundlesToShow.some(b => b.id === mockBundles[1].id)) bundlesToShow.push(mockBundles[1]);
             adjustmentPercentage -= 10;
         }
         if (data.isStudent) {
-            cohortList.push("Student");
-            bundlesToShow.push(mockBundles[2]);
+            if (!cohortList.includes("Student")) cohortList.push("Student");
+            if (!bundlesToShow.some(b => b.id === mockBundles[2].id)) bundlesToShow.push(mockBundles[2]);
             adjustmentPercentage -= 8;
         }
         if (data.loyaltyTier === 'Platinum') {
-            cohortList.push("Platinum Elite");
-            bundlesToShow.push(mockBundles[3]);
+            if (!cohortList.includes("Platinum Elite")) cohortList.push("Platinum Elite");
+            if (!bundlesToShow.some(b => b.id === mockBundles[3].id)) bundlesToShow.push(mockBundles[3]);
             adjustmentPercentage -= 7;
         }
         
         if (data.departureDate && differenceInHours(data.departureDate, new Date()) < 48) {
-            cohortList.push('Last-Minute');
+             if (!cohortList.includes('Last-Minute')) cohortList.push('Last-Minute');
             adjustmentPercentage += 15;
         }
         
         if (data.channel === 'OTA') {
-             cohortList.push('OTA Shopper');
+             if (!cohortList.includes('OTA Shopper')) cohortList.push('OTA Shopper');
              adjustmentPercentage += 2;
         }
 
@@ -390,7 +390,7 @@ export default function OfferComposerPage() {
         if (adjustmentPercentage !== 0) {
             const ruleName = `${finalCohortName} Adjustment`;
             // We calculate the adjustment on a sample price for display purposes, e.g., the first fare found
-            const sampleBasePrice = finalResults[0]?.fares[0]?.basePrice || 0;
+            const sampleBasePrice = finalResults[0]?.fares[0]?.basePrice || 300; // Use a fallback
             const sampleAdjustment = sampleBasePrice * (adjustmentPercentage / 100);
             finalAppliedRules.push({ name: ruleName, adjustment: sampleAdjustment });
         }
