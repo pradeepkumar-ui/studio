@@ -103,6 +103,8 @@ const offerSearchSchema = z.object({
   loyaltyTier: z.string().optional(),
   isStudent: z.boolean().default(false).optional(),
   travelPurpose: z.enum(['Leisure', 'Business', 'Other']).optional(),
+  includeStaticOffers: z.boolean().default(true),
+  includeDynamicOffers: z.boolean().default(true),
 }).refine(data => {
     if (data.tripType === 'return' && !data.returnDate) {
         return false;
@@ -254,6 +256,8 @@ export default function OfferComposerPage() {
       loyaltyTier: 'None',
       travelPurpose: 'Leisure',
       isStudent: false,
+      includeStaticOffers: true,
+      includeDynamicOffers: true,
     },
   });
   
@@ -949,6 +953,32 @@ export default function OfferComposerPage() {
                             )}
                         />
                     </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center pt-4">
+                        <FormField
+                            control={form.control}
+                            name="includeStaticOffers"
+                            render={({ field }) => (
+                            <FormItem className="flex flex-row items-center gap-2">
+                                <FormControl>
+                                    <Checkbox checked={field.value} onCheckedChange={field.onChange} id="includeStaticOffers" />
+                                </FormControl>
+                                <Label htmlFor="includeStaticOffers" className="font-normal">Static offers</Label>
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="includeDynamicOffers"
+                            render={({ field }) => (
+                            <FormItem className="flex flex-row items-center gap-2">
+                                <FormControl>
+                                    <Checkbox checked={field.value} onCheckedChange={field.onChange} id="includeDynamicOffers" />
+                                </FormControl>
+                                <Label htmlFor="includeDynamicOffers" className="font-normal">Dynamic offers</Label>
+                            </FormItem>
+                            )}
+                        />
+                    </div>
                     <div className="flex justify-end pt-6">
                         <Button type="submit" className="w-full md:w-auto" disabled={isLoading}>
                             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
@@ -1023,7 +1053,7 @@ export default function OfferComposerPage() {
           
           {selectedOffer && (
             <>
-            {appliedStaticOffers.length > 0 && (
+            {form.getValues().includeStaticOffers && appliedStaticOffers.length > 0 && (
                 <Card>
                     <CardHeader>
                         <CardTitle>Applied Static Offers</CardTitle>
@@ -1040,6 +1070,7 @@ export default function OfferComposerPage() {
                 </Card>
             )}
 
+            {form.getValues().includeDynamicOffers && (
               <Card>
                 <CardHeader>
                     <CardTitle>4. Dynamic Offers &amp; Promotions</CardTitle>
@@ -1093,6 +1124,7 @@ export default function OfferComposerPage() {
                     )}
                 </CardContent>
               </Card>
+            )}
               
               <Card>
                   <CardHeader>
