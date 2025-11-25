@@ -277,11 +277,11 @@ export default function SidebarNav() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem asChild>
-            <SidebarMenuCollapsible defaultOpen={isItemActive({ href: '/settings', label: 'Settings', icon: Settings, subItems: settingsItems })}>
+            <SidebarMenuCollapsible defaultOpen={pathname.startsWith('/settings') || pathname === '/broker'}>
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton
                   className="group/c-trigger"
-                  isActive={isItemActive({ href: '/settings', label: 'Settings', icon: Settings, subItems: settingsItems })}
+                  isActive={pathname.startsWith('/settings') || pathname === '/broker'}
                   tooltip={{ children: 'Settings', side: 'right' }}
                 >
                   <Settings />
