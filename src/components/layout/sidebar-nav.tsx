@@ -176,7 +176,6 @@ const menuItems: MenuItem[] = [
         subItems: [
           { href: '/orders/delivery', label: 'Delivery Queue', icon: Send },
           { href: '/check-in', label: 'Check-in', icon: UserCheck },
-          { href: '/baggage', label: 'Baggage Tracking', icon: Luggage },
           { href: '/boarding', label: 'Boarding Gate', icon: PlaneTakeoff },
           { href: '/orders/ground-handling', label: 'Ground Handling', icon: Truck },
           { href: '/service-consumption', label: 'Service Consumption', icon: ClipboardCheck },
