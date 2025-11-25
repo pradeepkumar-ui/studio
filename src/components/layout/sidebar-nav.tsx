@@ -95,7 +95,6 @@ const menuItems: MenuItem[] = [
             subItems: [
               { href: '/promotions', label: 'Promotions', icon: Gift },
               { href: '/loyalty-program', label: 'Loyalty Program', icon: Award },
-              { href: '/corporate', label: 'Corporate Contracts', icon: Handshake },
               { href: '/channels', label: 'Channels', icon: RadioTower },
               { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
             ],
