@@ -63,6 +63,7 @@ import {
   Truck,
   Target,
   Megaphone,
+  Luggage,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -170,11 +171,12 @@ const menuItems: MenuItem[] = [
       },
       {
         href: '/delivery-fulfilment',
-        label: 'Delivery & Fulfilment',
+        label: 'Delivery &amp; Fulfilment',
         icon: Truck,
         subItems: [
           { href: '/orders/delivery', label: 'Delivery Queue', icon: Send },
           { href: '/check-in', label: 'Check-in', icon: UserCheck },
+          { href: '/baggage', label: 'Baggage Tracking', icon: Luggage },
           { href: '/boarding', label: 'Boarding Gate', icon: PlaneTakeoff },
           { href: '/orders/ground-handling', label: 'Ground Handling', icon: Truck },
           { href: '/service-consumption', label: 'Service Consumption', icon: ClipboardCheck },
@@ -186,7 +188,7 @@ const menuItems: MenuItem[] = [
         label: 'Accounting',
         icon: BookOpen,
         subItems: [
-          { href: '/orders/finalisation', label: 'Finalisation & Closure', icon: BadgeCheck },
+          { href: '/orders/finalisation', label: 'Finalisation &amp; Closure', icon: BadgeCheck },
           { href: '/payments', label: 'Payments', icon: CreditCard },
           { href: '/accounting', label: 'Reconciliation', icon: GitCompare },
           { href: '/airline-revenue', label: 'Airline Revenue', icon: Landmark },
