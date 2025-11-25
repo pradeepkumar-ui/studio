@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -268,13 +269,12 @@ export default function OrdersPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by ID, Customer, Email..."
+                placeholder="Search by ID, Customer..."
                 value={(table.getColumn('customer')?.getFilterValue() as string) ?? ''}
                 onChange={(event) => {
                     const value = event.target.value;
                     table.getColumn('customer')?.setFilterValue(value);
                     table.getColumn('id')?.setFilterValue(value);
-                    table.getColumn('email')?.setFilterValue(value);
                 }}
                 className="max-w-sm pl-9"
               />
