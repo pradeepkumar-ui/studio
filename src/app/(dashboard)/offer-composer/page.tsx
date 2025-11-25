@@ -369,46 +369,55 @@ export default function OfferComposerPage() {
         
         const cohortList: string[] = [];
         let adjustmentPercentage = 0;
+        const appliedRulesList: {name: string; adjustment: number}[] = [];
         let bundlesToShow: RecommendedBundle[] = [];
 
         // ** SIMULATED ENGINE LOGIC **
         if (data.corporateId || data.travelPurpose === 'Business') {
             if (!cohortList.includes("Corporate Traveller")) cohortList.push("Corporate Traveller");
             if (!bundlesToShow.some(b => b.id === mockBundles[0].id)) bundlesToShow.push(mockBundles[0]);
-            adjustmentPercentage -= 5;
+             adjustmentPercentage -= 5;
+             appliedRulesList.push({ name: 'Corporate Traveller Discount', adjustment: -5 });
         }
         if ((Number(data.passengers.adt) + Number(data.passengers.chd)) >= 3 && Number(data.passengers.chd) > 0) {
             if (!cohortList.includes("Family Leisure")) cohortList.push("Family Leisure");
             if (!bundlesToShow.some(b => b.id === mockBundles[1].id)) bundlesToShow.push(mockBundles[1]);
             adjustmentPercentage -= 10;
+            appliedRulesList.push({ name: 'Family Leisure Discount', adjustment: -10 });
         }
         if (data.isStudent) {
             if (!cohortList.includes("Student")) cohortList.push("Student");
             if (!bundlesToShow.some(b => b.id === mockBundles[2].id)) bundlesToShow.push(mockBundles[2]);
             adjustmentPercentage -= 8;
+            appliedRulesList.push({ name: 'Student Discount', adjustment: -8 });
         }
         if (data.loyaltyTier === 'Platinum') {
             if (!cohortList.includes("Platinum Elite")) cohortList.push("Platinum Elite");
             if (!bundlesToShow.some(b => b.id === mockBundles[3].id)) bundlesToShow.push(mockBundles[3]);
             adjustmentPercentage -= 7;
+            appliedRulesList.push({ name: 'Platinum Elite Discount', adjustment: -7 });
         }
         
         if (data.departureDate && differenceInHours(data.departureDate, new Date()) < 48) {
              if (!cohortList.includes('Last-Minute')) cohortList.push('Last-Minute');
             adjustmentPercentage += 15;
+            appliedRulesList.push({ name: 'Last-Minute Surge', adjustment: 15 });
         }
         
         if (data.channel === 'OTA') {
              if (!cohortList.includes('OTA Shopper')) cohortList.push('OTA Shopper');
              adjustmentPercentage += 2;
+             appliedRulesList.push({ name: 'OTA Channel Markup', adjustment: 2 });
         }
 
         const finalCohortName = cohortList.length > 0 ? cohortList.join(', ') : 'Standard';
         
-        if(adjustmentPercentage !== 0) {
+        const netAdjustment = appliedRulesList.reduce((acc, rule) => acc + rule.adjustment, 0);
+
+        if(netAdjustment !== 0) {
             const ruleName = `${finalCohortName} Adjustment`;
-            const sampleBasePrice = 300; // a sample price for adjustment calculation
-            const sampleAdjustment = sampleBasePrice * (adjustmentPercentage / 100);
+            const sampleBasePrice = 300; 
+            const sampleAdjustment = sampleBasePrice * (netAdjustment / 100);
             setAppliedRules([{ name: ruleName, adjustment: sampleAdjustment }]);
         }
 
@@ -416,7 +425,7 @@ export default function OfferComposerPage() {
             ...journey,
             fares: journey.fares.map(fare => ({
                 ...fare,
-                price: fare.basePrice * (1 + (adjustmentPercentage / 100))
+                price: fare.basePrice * (1 + (netAdjustment / 100))
             }))
         }));
         
@@ -793,7 +802,7 @@ export default function OfferComposerPage() {
                                 <FormItem className="flex-1">
                                 <FormLabel>Adults</FormLabel>
                                 <FormControl>
-                                    <Input type="number" min={1} {...field} />
+                                    <Input type="number" min={1} {...field} onChange={e => field.onChange(parseInt(e.target.value, 10))}/>
                                 </FormControl>
                                 <FormMessage />
                                 </FormItem>
@@ -806,7 +815,7 @@ export default function OfferComposerPage() {
                                 <FormItem className="flex-1">
                                 <FormLabel>Children</FormLabel>
                                 <FormControl>
-                                    <Input type="number" min={0} {...field} />
+                                    <Input type="number" min={0} {...field} onChange={e => field.onChange(parseInt(e.target.value, 10))}/>
                                 </FormControl>
                                 <FormMessage />
                                 </FormItem>
@@ -1327,4 +1336,3 @@ export default function OfferComposerPage() {
     </div>
   );
 }
-
