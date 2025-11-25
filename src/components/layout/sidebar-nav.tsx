@@ -181,6 +181,7 @@ const menuItems: MenuItem[] = [
           { href: '/orders/ground-handling', label: 'Ground Handling', icon: Truck },
           { href: '/service-consumption', label: 'Service Consumption', icon: ClipboardCheck },
           { href: '/communication', label: 'Communication', icon: MessageSquare },
+          { href: '/baggage', label: 'Baggage Reconciliation & Tracking', icon: Luggage },
         ],
       },
       {
