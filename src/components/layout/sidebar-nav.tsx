@@ -94,8 +94,6 @@ const menuItems: MenuItem[] = [
             icon: Briefcase,
             subItems: [
               { href: '/promotions', label: 'Promotions', icon: Gift },
-              { href: '/channels', label: 'Channels', icon: RadioTower },
-              { href: '/nsa', label: 'Negotiated Agreements', icon: Handshake },
             ],
           },
           {
