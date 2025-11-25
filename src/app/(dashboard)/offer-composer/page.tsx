@@ -9,6 +9,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { format, differenceInHours, addDays, isBefore } from 'date-fns';
 import { CalendarIcon, PlaneTakeoff, PlaneLanding, Users, Search, Wand2, Loader2, Armchair, Briefcase, Plus, Minus, FileJson, ShoppingBasket, BadgeCheck, XCircle, Tag, CheckSquare, Square, Gift, AlertCircle, RefreshCw, Package, Check, Circle, Workflow, Award, GraduationCap, HeartHandshake, TicketCheck } from 'lucide-react';
+import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -82,6 +83,8 @@ type RecommendedBundle = {
     price: number;
     originalPrice: number;
     items: string[];
+    imageUrl: string;
+    imageHint: string;
 };
 
 const offerSearchSchema = z.object({
@@ -205,10 +208,10 @@ const mockStaticOffers: StaticOffer[] = [
 ];
 
 const mockBundles: RecommendedBundle[] = [
-    { id: 'BUN-001', name: 'Business Comfort', description: 'Elevate your business trip.', price: 75, originalPrice: 100, items: ['Lounge Access', 'Premium Meal'] },
-    { id: 'BUN-002', name: 'Family Pack', description: 'Convenience for the whole family.', price: 60, originalPrice: 85, items: ['1st Checked Bag', 'Standard Seat Selection (x3)'] },
-    { id: 'BUN-003', name: 'Student Pack', description: 'Extra baggage and flexibility.', price: 60, originalPrice: 90, items: ['Extra Baggage', 'Free Meal'] },
-    { id: 'BUN-004', name: 'Elite Privileges', description: 'Upgrade your elite experience.', price: 40, originalPrice: 60, items: ['Premium Meal', 'Double Miles'] },
+    { id: 'BUN-001', name: 'Business Comfort', description: 'Elevate your business trip.', price: 75, originalPrice: 100, items: ['Lounge Access', 'Premium Meal'], imageUrl: 'https://picsum.photos/seed/bundle1/600/400', imageHint: 'business travel' },
+    { id: 'BUN-002', name: 'Family Pack', description: 'Convenience for the whole family.', price: 60, originalPrice: 85, items: ['1st Checked Bag', 'Standard Seat Selection (x3)'], imageUrl: 'https://picsum.photos/seed/bundle2/600/400', imageHint: 'family vacation' },
+    { id: 'BUN-003', name: 'Student Pack', description: 'Extra baggage and flexibility.', price: 60, originalPrice: 90, items: ['Extra Baggage', 'Free Meal'], imageUrl: 'https://picsum.photos/seed/bundle3/600/400', imageHint: 'student traveling' },
+    { id: 'BUN-004', name: 'Elite Privileges', description: 'Upgrade your elite experience.', price: 40, originalPrice: 60, items: ['Premium Meal', 'Double Miles'], imageUrl: 'https://picsum.photos/seed/bundle4/600/400', imageHint: 'luxury travel' },
 ];
 
 const offerLifecycleSteps = [
@@ -368,7 +371,6 @@ export default function OfferComposerPage() {
         })).filter(journey => journey.fares.length > 0);
         
         const cohortList: string[] = [];
-        let adjustmentPercentage = 0;
         const appliedRulesList: {name: string; adjustment: number}[] = [];
         let bundlesToShow: RecommendedBundle[] = [];
 
@@ -376,37 +378,31 @@ export default function OfferComposerPage() {
         if (data.corporateId || data.travelPurpose === 'Business') {
             if (!cohortList.includes("Corporate Traveller")) cohortList.push("Corporate Traveller");
             if (!bundlesToShow.some(b => b.id === mockBundles[0].id)) bundlesToShow.push(mockBundles[0]);
-             adjustmentPercentage -= 5;
              appliedRulesList.push({ name: 'Corporate Traveller Discount', adjustment: -5 });
         }
         if ((Number(data.passengers.adt) + Number(data.passengers.chd)) >= 3 && Number(data.passengers.chd) > 0) {
             if (!cohortList.includes("Family Leisure")) cohortList.push("Family Leisure");
             if (!bundlesToShow.some(b => b.id === mockBundles[1].id)) bundlesToShow.push(mockBundles[1]);
-            adjustmentPercentage -= 10;
             appliedRulesList.push({ name: 'Family Leisure Discount', adjustment: -10 });
         }
         if (data.isStudent) {
             if (!cohortList.includes("Student")) cohortList.push("Student");
             if (!bundlesToShow.some(b => b.id === mockBundles[2].id)) bundlesToShow.push(mockBundles[2]);
-            adjustmentPercentage -= 8;
             appliedRulesList.push({ name: 'Student Discount', adjustment: -8 });
         }
         if (data.loyaltyTier === 'Platinum') {
             if (!cohortList.includes("Platinum Elite")) cohortList.push("Platinum Elite");
             if (!bundlesToShow.some(b => b.id === mockBundles[3].id)) bundlesToShow.push(mockBundles[3]);
-            adjustmentPercentage -= 7;
             appliedRulesList.push({ name: 'Platinum Elite Discount', adjustment: -7 });
         }
         
         if (data.departureDate && differenceInHours(data.departureDate, new Date()) < 48) {
              if (!cohortList.includes('Last-Minute')) cohortList.push('Last-Minute');
-            adjustmentPercentage += 15;
             appliedRulesList.push({ name: 'Last-Minute Surge', adjustment: 15 });
         }
         
         if (data.channel === 'OTA') {
              if (!cohortList.includes('OTA Shopper')) cohortList.push('OTA Shopper');
-             adjustmentPercentage += 2;
              appliedRulesList.push({ name: 'OTA Channel Markup', adjustment: 2 });
         }
 
@@ -416,9 +412,7 @@ export default function OfferComposerPage() {
 
         if(netAdjustment !== 0) {
             const ruleName = `${finalCohortName} Adjustment`;
-            const sampleBasePrice = 300; 
-            const sampleAdjustment = sampleBasePrice * (netAdjustment / 100);
-            setAppliedRules([{ name: ruleName, adjustment: sampleAdjustment }]);
+            setAppliedRules([{ name: ruleName, adjustment: netAdjustment }]);
         }
 
         const finalResults = baseResults.map(journey => ({
@@ -429,7 +423,6 @@ export default function OfferComposerPage() {
             }))
         }));
         
-
         setActiveCohort(finalCohortName);
         setRecommendedBundles(bundlesToShow);
         setSearchResults(finalResults);
@@ -802,7 +795,7 @@ export default function OfferComposerPage() {
                                 <FormItem className="flex-1">
                                 <FormLabel>Adults</FormLabel>
                                 <FormControl>
-                                    <Input type="number" min={1} {...field} onChange={e => field.onChange(parseInt(e.target.value, 10))}/>
+                                    <Input type="number" min={1} {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 1)}/>
                                 </FormControl>
                                 <FormMessage />
                                 </FormItem>
@@ -815,7 +808,7 @@ export default function OfferComposerPage() {
                                 <FormItem className="flex-1">
                                 <FormLabel>Children</FormLabel>
                                 <FormControl>
-                                    <Input type="number" min={0} {...field} onChange={e => field.onChange(parseInt(e.target.value, 10))}/>
+                                    <Input type="number" min={0} {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)}/>
                                 </FormControl>
                                 <FormMessage />
                                 </FormItem>
@@ -1028,7 +1021,7 @@ export default function OfferComposerPage() {
             </Card>
           )}
 
-           {selectedOffer && recommendedBundles && recommendedBundles.length > 0 && (
+           {selectedOffer && form.getValues().includeStaticOffers && recommendedBundles && recommendedBundles.length > 0 && (
             <Card>
                 <CardHeader>
                     <CardTitle>3. Recommended Bundles</CardTitle>
@@ -1036,7 +1029,16 @@ export default function OfferComposerPage() {
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {recommendedBundles.map(bundle => (
-                        <Card key={bundle.id} className="flex flex-col">
+                        <Card key={bundle.id} className="flex flex-col overflow-hidden">
+                            <div className="relative w-full h-40">
+                                <Image
+                                    src={bundle.imageUrl}
+                                    alt={bundle.name}
+                                    fill
+                                    style={{ objectFit: 'cover' }}
+                                    data-ai-hint={bundle.imageHint}
+                                />
+                            </div>
                             <CardHeader>
                                 <CardTitle className="text-lg">{bundle.name}</CardTitle>
                                 <CardDescription>{bundle.description}</CardDescription>
