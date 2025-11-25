@@ -444,12 +444,16 @@ export default function OfferComposerPage() {
     setSelectedBundle(null);
 
     // Check for static offers
-    const staticOffersToApply = mockStaticOffers.filter(staticOffer => {
+    if (data.includeStaticOffers) {
+      const staticOffersToApply = mockStaticOffers.filter(staticOffer => {
         const cabinMatch = !staticOffer.conditions.cabinClass || staticOffer.conditions.cabinClass.includes(offer.cabinClass);
         const routeMatch = !staticOffer.conditions.route || staticOffer.conditions.route.includes(`${data.origin}-${data.destination}`);
         return cabinMatch && routeMatch;
-    });
-    setAppliedStaticOffers(staticOffersToApply);
+      });
+      setAppliedStaticOffers(staticOffersToApply);
+    } else {
+        setAppliedStaticOffers([]);
+    }
 
     const filteredPromos = mockPromotions.filter(promo => 
         !promo.requiredCohort || activeCohort?.includes(promo.requiredCohort)
