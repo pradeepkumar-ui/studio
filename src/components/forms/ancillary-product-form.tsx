@@ -39,6 +39,19 @@ interface AncillaryProductFormProps {
   onCancel: () => void;
 }
 
+const ancillaryCategories = [
+    'Baggage',
+    'Seats',
+    'On-board Services',
+    'Flexibility',
+    'Gift Cards',
+    'Lounge Access',
+    'Merchandise',
+    'Vouchers',
+    'Meals',
+    'Other'
+];
+
 export function AncillaryProductForm({ product, onSubmit, onCancel }: AncillaryProductFormProps) {
   const form = useForm<AncillaryProduct>({
     resolver: zodResolver(ancillaryProductSchema),
@@ -97,10 +110,7 @@ export function AncillaryProductForm({ product, onSubmit, onCancel }: AncillaryP
                     </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                    <SelectItem value="Gift Cards">Gift Cards</SelectItem>
-                    <SelectItem value="Lounge Access">Lounge Access</SelectItem>
-                    <SelectItem value="Merchandise">Merchandise</SelectItem>
-                    <SelectItem value="Vouchers">Vouchers</SelectItem>
+                    {ancillaryCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
                 </SelectContent>
                 </Select>
                 <FormMessage />
