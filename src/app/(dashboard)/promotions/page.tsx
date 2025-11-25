@@ -37,6 +37,7 @@ import { MoreHorizontal, PlusCircle, Import, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { PromotionForm, type Promotion } from '@/components/forms/promotion-form';
+import { AncillaryProductForm, type AncillaryProduct } from '@/components/forms/ancillary-product-form';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 
@@ -47,11 +48,11 @@ const mockPromotions: Promotion[] = [
     { id: 'PRO-004', name: 'Summer Getaway', description: '15% off on all flights', prefix: 'SUMMER15', poolSize: 20000, usageType: 'multi', expiryDate: new Date('2024-09-30'), status: 'Expired' },
 ];
 
-const otherProducts = [
-    { sku: 'GC-1000-INR', name: '₹1000 Gift Card', category: 'Gift Cards', price: '₹1000', stock: 482, status: 'Active' },
-    { sku: 'LP-SIN-01', name: 'SIN Lounge Pass', category: 'Lounge Access', price: '$45', stock: 'N/A', status: 'Active' },
-    { sku: 'MERCH-NP-01', name: 'Branded Neck Pillow', category: 'Merchandise', price: '$25', stock: 112, status: 'Active' },
-    { sku: 'VOUCH-CC-01', name: 'Carbon Offset Voucher', category: 'Vouchers', price: '$10', stock: 'N/A', status: 'Draft' },
+const initialOtherProducts: AncillaryProduct[] = [
+    { sku: 'GC-1000-INR', name: '₹1000 Gift Card', category: 'Gift Cards', price: 1000, currency: 'INR', stock: 482, status: 'Active' },
+    { sku: 'LP-SIN-01', name: 'SIN Lounge Pass', category: 'Lounge Access', price: 45, currency: 'USD', stock: 'N/A', status: 'Active' },
+    { sku: 'MERCH-NP-01', name: 'Branded Neck Pillow', category: 'Merchandise', price: 25, currency: 'USD', stock: 112, status: 'Active' },
+    { sku: 'VOUCH-CC-01', name: 'Carbon Offset Voucher', category: 'Vouchers', price: 10, currency: 'USD', stock: 'N/A', status: 'Draft' },
 ]
 
 export default function PromotionsPage() {
@@ -61,21 +62,34 @@ export default function PromotionsPage() {
   const promotions = promotionsCollection ? promotionsCollection as Promotion[] : [];
   const displayPromotions = promotions.length > 0 ? promotions : mockPromotions;
 
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [otherProducts, setOtherProducts] = useState<AncillaryProduct[]>(initialOtherProducts);
+  const [isPromoDialogOpen, setIsPromoDialogOpen] = useState(false);
+  const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null);
+  const [editingProduct, setEditingProduct] = useState<AncillaryProduct | null>(null);
   const { toast } = useToast();
 
-  const handleOpenDialog = (promo: Promotion | null = null) => {
+  const handleOpenPromoDialog = (promo: Promotion | null = null) => {
     setEditingPromotion(promo);
-    setIsDialogOpen(true);
+    setIsPromoDialogOpen(true);
+  };
+  
+  const handleOpenProductDialog = (product: AncillaryProduct | null = null) => {
+    setEditingProduct(product);
+    setIsProductDialogOpen(true);
   };
 
-  const handleDialogClose = () => {
-    setIsDialogOpen(false);
+  const handlePromoDialogClose = () => {
+    setIsPromoDialogOpen(false);
     setEditingPromotion(null);
   };
 
-  const handleFormSubmit = async (data: Promotion) => {
+  const handleProductDialogClose = () => {
+    setIsProductDialogOpen(false);
+    setEditingProduct(null);
+  }
+
+  const handlePromoSubmit = async (data: Promotion) => {
     if (!firestore) return;
     try {
       const promoData = {
@@ -98,8 +112,24 @@ export default function PromotionsPage() {
             description: e.message || "There was a problem with your request.",
         });
     }
-    handleDialogClose();
+    handlePromoDialogClose();
   };
+
+  const handleProductSubmit = (data: AncillaryProduct) => {
+    if (editingProduct) {
+        setOtherProducts(otherProducts.map(p => p.sku === data.sku ? data : p));
+        toast({ title: 'Product Updated', description: `Product "${data.name}" has been updated.`});
+    } else {
+        if (otherProducts.some(p => p.sku === data.sku)) {
+            toast({ variant: 'destructive', title: 'SKU already exists', description: 'A product with this SKU already exists.'});
+            return;
+        }
+        setOtherProducts([data, ...otherProducts]);
+        toast({ title: 'Product Created', description: `Product "${data.name}" has been created.`});
+    }
+    handleProductDialogClose();
+  };
+
 
   const handleDelete = async (promoId: string) => {
      if (!promoId || !firestore) return;
@@ -152,9 +182,9 @@ export default function PromotionsPage() {
             <Import className="mr-2" />
             Import
           </Button>
-          <Button onClick={() => handleOpenDialog()}>
+          <Button onClick={() => handleOpenPromoDialog()}>
             <PlusCircle className="mr-2" />
-            Create New
+            Create Promotion
           </Button>
         </div>
       </div>
@@ -215,7 +245,7 @@ export default function PromotionsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleOpenDialog(promo)}>Edit</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleOpenPromoDialog(promo)}>Edit</DropdownMenuItem>
                             <DropdownMenuItem>View Codes</DropdownMenuItem>
                             <DropdownMenuItem>Assign to Offer</DropdownMenuItem>
                             <DropdownMenuSeparator />
@@ -235,11 +265,17 @@ export default function PromotionsPage() {
       </Card>
 
         <Card>
-        <CardHeader>
-          <CardTitle>Ancillary Products</CardTitle>
-          <CardDescription>
-            Manage other non-air services and products like gift cards, lounge passes, and merchandise.
-          </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Ancillary Products</CardTitle>
+              <CardDescription>
+                Manage other non-air services and products like gift cards, lounge passes, and merchandise.
+              </CardDescription>
+            </div>
+             <Button variant="outline" size="sm" onClick={() => handleOpenProductDialog()}>
+                <PlusCircle className="mr-2" />
+                Create Product
+            </Button>
         </CardHeader>
         <CardContent>
           <Table>
@@ -267,7 +303,9 @@ export default function PromotionsPage() {
                       {product.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>{product.price}</TableCell>
+                  <TableCell>
+                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: product.currency }).format(product.price)}
+                  </TableCell>
                   <TableCell>{product.stock}</TableCell>
                    <TableCell>
                     <DropdownMenu>
@@ -283,7 +321,7 @@ export default function PromotionsPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Edit Product</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleOpenProductDialog(product)}>Edit Product</DropdownMenuItem>
                         <DropdownMenuItem>Manage Inventory</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive">
@@ -299,7 +337,7 @@ export default function PromotionsPage() {
         </CardContent>
       </Card>
       
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isPromoDialogOpen} onOpenChange={setIsPromoDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editingPromotion ? 'Edit Promotion' : 'Create New Promotion'}</DialogTitle>
@@ -309,11 +347,28 @@ export default function PromotionsPage() {
           </DialogHeader>
           <PromotionForm
             promotion={editingPromotion}
-            onSubmit={handleFormSubmit}
-            onCancel={handleDialogClose}
+            onSubmit={handlePromoSubmit}
+            onCancel={handlePromoDialogClose}
           />
         </DialogContent>
       </Dialog>
+      
+      <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>{editingProduct ? 'Edit Product' : 'Create New Ancillary Product'}</DialogTitle>
+            <DialogDescription>
+              Define a new non-air product or service.
+            </DialogDescription>
+          </DialogHeader>
+          <AncillaryProductForm
+            product={editingProduct}
+            onSubmit={handleProductSubmit}
+            onCancel={handleProductDialogClose}
+          />
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
