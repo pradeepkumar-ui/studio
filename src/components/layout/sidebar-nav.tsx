@@ -120,6 +120,7 @@ const menuItems: MenuItem[] = [
           { href: '/bundles', label: 'Bundle Studio and Offer Creation', icon: Package },
           { href: '/offers', label: 'Offers Config', icon: Layers },
           { href: '/offer-composer', label: 'Composer', icon: Layers },
+          { href: '/offers/automated-creation', label: 'Automated Offer Generation', icon: Wand2 },
           { href: '/optimisation', label: 'Offer Optimisation', icon: Wand2 },
           { href: '/disruption-waivers', label: 'Disruption Waivers', icon: Waves },
         ],

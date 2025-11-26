@@ -115,7 +115,8 @@ const bundleSchema = z.object({
     effectiveDate: z.date(),
     expiryDate: z.date(),
   }).optional(),
-  itemCount: z.number().optional()
+  itemCount: z.number().optional(),
+  source: z.enum(['Manual', 'AI']).optional(),
 });
 
 export type Bundle = z.infer<typeof bundleSchema>;
