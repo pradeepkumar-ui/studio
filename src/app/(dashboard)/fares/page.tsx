@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -46,11 +47,11 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
 const mockFares: Fare[] = [
-    { id: 'F-001', route: 'JFK-LAX', class: 'Economy', price: 350, currency: 'USD', status: 'Active', version: 1, fareBasisCode: 'YFLEX', rbd: 'Y', validity: { effectiveDate: new Date(), expiryDate: new Date() } },
-    { id: 'F-002', route: 'LHR-DXB', class: 'Business', price: 2500, currency: 'GBP', status: 'Active', version: 2, fareBasisCode: 'JCLASS', rbd: 'J', validity: { effectiveDate: new Date(), expiryDate: new Date() } },
-    { id: 'F-003', route: 'SIN-HKG', class: 'Economy', price: 280, currency: 'SGD', status: 'Active', version: 1, fareBasisCode: 'QFLEX', rbd: 'Q', validity: { effectiveDate: new Date(), expiryDate: new Date() } },
-    { id: 'F-004', route: 'JFK-LHR', class: 'First', price: 5500, currency: 'USD', status: 'Draft', version: 1, fareBasisCode: 'FFLEX', rbd: 'F', validity: { effectiveDate: new Date(), expiryDate: new Date() } },
-    { id: 'F-005', route: 'CDG-IST', class: 'Economy', price: 180, currency: 'EUR', status: 'Inactive', version: 3, fareBasisCode: 'EFLEX', rbd: 'E', validity: { effectiveDate: new Date(), expiryDate: new Date() } },
+    { id: 'F-001', route: 'JFK-LAX', cabinClass: 'Economy', price: 350, currency: 'USD', status: 'Active', version: 1, fareBasisCode: 'YFLEX', validity: { effectiveDate: new Date(), expiryDate: new Date() } },
+    { id: 'F-002', route: 'LHR-DXB', cabinClass: 'Business', price: 2500, currency: 'GBP', status: 'Active', version: 2, fareBasisCode: 'JCLASS', validity: { effectiveDate: new Date(), expiryDate: new Date() } },
+    { id: 'F-003', route: 'SIN-HKG', cabinClass: 'Economy', price: 280, currency: 'SGD', status: 'Active', version: 1, fareBasisCode: 'QFLEX', validity: { effectiveDate: new Date(), expiryDate: new Date() } },
+    { id: 'F-004', route: 'JFK-LHR', cabinClass: 'First', price: 5500, currency: 'USD', status: 'Draft', version: 1, fareBasisCode: 'FFLEX', validity: { effectiveDate: new Date(), expiryDate: new Date() } },
+    { id: 'F-005', route: 'CDG-IST', cabinClass: 'Economy', price: 180, currency: 'EUR', status: 'Inactive', version: 3, fareBasisCode: 'EFLEX', validity: { effectiveDate: new Date(), expiryDate: new Date() } },
 ];
 
 export default function FaresPage() {
@@ -207,8 +208,8 @@ export default function FaresPage() {
             <Table>
                 <TableHeader>
                 <TableRow>
-                    <TableHead>Route</TableHead>
-                    <TableHead>FBC / RBD</TableHead>
+                    <TableHead>Scope</TableHead>
+                    <TableHead>FBC / Cabin</TableHead>
                     <TableHead>Price</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Version</TableHead>
@@ -223,7 +224,7 @@ export default function FaresPage() {
                     <TableCell className="font-medium">{fare.route}</TableCell>
                     <TableCell>
                       <div>{fare.fareBasisCode}</div>
-                      <div className="text-xs text-muted-foreground">{fare.rbd}</div>
+                      <div className="text-xs text-muted-foreground">{fare.cabinClass || fare.class}</div>
                     </TableCell>
                     <TableCell>
                         {new Intl.NumberFormat('en-US', {
@@ -281,11 +282,11 @@ export default function FaresPage() {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>{editingFare ? 'Edit Fare' : 'Create New Fare'}</DialogTitle>
             <DialogDescription>
-              {editingFare ? `Editing fare for route ${editingFare.route}.` : 'Enter the details for the new fare.'}
+              {editingFare ? `Editing fare for scope ${editingFare.route}.` : 'Enter the details for the new fare.'}
             </DialogDescription>
           </DialogHeader>
           <FareForm
