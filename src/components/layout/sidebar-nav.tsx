@@ -105,7 +105,6 @@ const menuItems: MenuItem[] = [
               { href: '/fares', label: 'Fares', icon: DollarSign },
               { href: '/catalog', label: 'Branded Fares', icon: Package },
               { href: '/pricing/filing', label: 'Fare Filing', icon: FileJson },
-              { href: '/pricing/ancillary', label: 'Ancillaries', icon: Container },
               { href: '/pricing/seat', label: 'Seats', icon: Armchair },
               { href: '/pricing/rules', label: 'Dynamic Pricing', icon: Target },
             ],
