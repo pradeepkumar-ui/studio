@@ -57,7 +57,7 @@ export default function BundlesPage() {
   const bundlesQuery = useMemo(() => firestore ? collection(firestore, 'bundles') : undefined, [firestore]);
   const { data: bundlesCollection, loading, error } = useCollection(bundlesQuery);
   
-  const displayOffers = loading || !bundlesCollection ? mockOffers : (bundlesCollection as Bundle[]);
+  const displayOffers = (bundlesCollection && bundlesCollection.length > 0) ? (bundlesCollection as Bundle[]) : mockOffers;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBundle, setEditingBundle] = useState<Bundle | null>(null);
@@ -159,12 +159,12 @@ export default function BundlesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {(loading && !bundlesCollection) && (
+          {loading && (
              <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
              </div>
            )}
-           {displayOffers.length > 0 && !error && (
+           {!loading && displayOffers.length > 0 && !error && (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -262,3 +262,5 @@ export default function BundlesPage() {
     </div>
   );
 }
+
+    
