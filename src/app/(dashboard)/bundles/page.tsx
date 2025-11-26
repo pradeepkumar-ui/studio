@@ -41,12 +41,14 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 const mockOffers: Bundle[] = [
-  { id: 'BUN-001', name: 'Business Saver+', category: 'Normal', description: 'Front seat, 1 checked bag, and a meal.', status: 'Published', scope: { brand: 'Flex, Premium' }, components: { seat: 'Front', baggage: '23kg', meal: 'Any'}, pricingStrategy: 'Percent Discount', discount: 15, itemCount: 3 },
-  { id: 'BUN-002', name: 'Family Pack', category: 'Normal', description: 'Adjacent seats, extra baggage, and child meals.', status: 'Published', scope: { brand: 'ADT, CHD' }, components: { seat: 'Adjacent', baggage: '15kg, 2', meal: 'Child' }, pricingStrategy: 'Fixed Discount', discount: 50, itemCount: 3 },
-  { id: 'BUN-003', name: 'Weekend Getaway', category: 'Promotional', description: 'Late checkout, priority boarding.', status: 'Draft', scope: { route: 'JFK-MIA', channel: 'Direct' }, components: { other: 'Hotel(Late Checkout), Boarding(Priority)' }, pricingStrategy: 'Absolute Price', discount: 75, itemCount: 2 },
-  { id: 'BUN-004', name: 'Long Haul Comfort', category: 'Normal', description: 'Extra legroom seat, amenity kit, and Wi-Fi.', status: 'Published', scope: { brand: 'Flight Duration > 6h' }, components: { seat: 'Legroom', other: 'Amenity Kit, Wi-Fi(Unlimited)' }, pricingStrategy: 'Percent Discount', discount: 20, itemCount: 3 },
-  { id: 'BUN-005', name: 'Flexi Traveler', category: 'Normal', description: 'Flight change waiver and seat selection.', status: 'Published', scope: { brand: 'Flex' }, components: { other: 'Flexibility(Change)', seat: 'Any' }, pricingStrategy: 'Absolute Price', discount: 99, itemCount: 2 },
-  { id: 'BUN-006', name: 'Disruption Recovery', category: 'Disruption', description: 'Lounge access, fast-track security, chauffeur.', status: 'Archived', scope: { channel: 'TMC' }, components: { other: 'Lounge, Security(Fast), Chauffeur' }, pricingStrategy: 'Absolute Price', discount: 250, itemCount: 3 },
+    { id: 'BUN-001', name: 'Business Saver+', category: 'Normal', description: 'Front seat, 1 checked bag, and a meal.', status: 'Published', scope: { brand: 'Flex, Premium', route: 'All', channel: 'Direct, TMC' }, components: { seat: 'Front', baggage: '23kg', meal: 'Any' }, pricingStrategy: 'Percent Discount', discount: 15, itemCount: 3 },
+    { id: 'BUN-002', name: 'Family Pack', category: 'Normal', description: 'Adjacent seats, extra baggage, and child meals.', status: 'Published', scope: { brand: 'Economy Saver', route: 'JFK-MIA', channel: 'Web' }, components: { seat: 'Adjacent', baggage: '15kg, 2', meal: 'Child' }, pricingStrategy: 'Fixed Discount', discount: 50, itemCount: 3 },
+    { id: 'BUN-003', name: 'Weekend Getaway', category: 'Promotional', description: 'Late checkout, priority boarding.', status: 'Draft', scope: { route: 'JFK-MIA', channel: 'Direct' }, components: { other: 'Hotel(Late Checkout), Boarding(Priority)' }, pricingStrategy: 'Absolute Price', discount: 75, itemCount: 2 },
+    { id: 'BUN-004', name: 'Long Haul Comfort', category: 'Normal', description: 'Extra legroom seat, amenity kit, and Wi-Fi.', status: 'Published', scope: { route: 'Duration > 6h' }, components: { seat: 'Legroom', other: 'Amenity Kit, Wi-Fi(Unlimited)' }, pricingStrategy: 'Percent Discount', discount: 20, itemCount: 3 },
+    { id: 'BUN-005', name: 'Disruption Recovery Pack', category: 'Disruption', description: 'Lounge access, meal voucher, and hotel credit.', status: 'Published', scope: { route: 'All' }, components: { other: 'Lounge, Meal Voucher, Hotel Credit' }, pricingStrategy: 'Absolute Price', discount: 0, itemCount: 3 },
+    { id: 'BUN-006', name: 'Flexi Traveler', category: 'Normal', description: 'Flight change waiver and seat selection.', status: 'Published', scope: { brand: 'Economy Flex' }, components: { other: 'Flexibility(Change)', seat: 'Any' }, pricingStrategy: 'Absolute Price', discount: 99, itemCount: 2 },
+    { id: 'BUN-007', name: 'Holiday Special', category: 'Promotional', description: 'Extra bag and festive meal.', status: 'Published', scope: { route: 'All', channel: 'Web, Mobile' }, components: { baggage: '23kg', meal: 'Festive' }, pricingStrategy: 'Fixed Discount', discount: 25, itemCount: 2 },
+    { id: 'BUN-008', name: 'TMC Recovery Bundle', category: 'Disruption', description: 'Lounge access, fast-track security, chauffeur.', status: 'Archived', scope: { channel: 'TMC' }, components: { other: 'Lounge, Security(Fast), Chauffeur' }, pricingStrategy: 'Absolute Price', discount: 0, itemCount: 3 },
 ];
 
 
@@ -55,9 +57,7 @@ export default function BundlesPage() {
   const bundlesQuery = useMemo(() => firestore ? collection(firestore, 'bundles') : undefined, [firestore]);
   const { data: bundlesCollection, loading, error } = useCollection(bundlesQuery);
   
-  const [bundles, setBundles] = useState<Bundle[]>(mockOffers);
-  
-  const displayOffers = loading ? mockOffers : (bundlesCollection ? bundlesCollection as Bundle[] : bundles);
+  const displayOffers = loading || !bundlesCollection ? mockOffers : (bundlesCollection as Bundle[]);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBundle, setEditingBundle] = useState<Bundle | null>(null);
@@ -76,7 +76,8 @@ export default function BundlesPage() {
   const handleFormSubmit = async (data: Bundle) => {
     if (!firestore) return;
     try {
-      const itemCount = Object.values(data.components || {}).filter(Boolean).length;
+      const itemCount = (data.components ? Object.values(data.components).filter(Boolean).length : 0) + (data.promotions ? Object.values(data.promotions).filter(Boolean).length : 0);
+      
       const bundleData = { 
         ...data, 
         itemCount
@@ -124,6 +125,15 @@ export default function BundlesPage() {
         return 'N/A';
     }
   }
+
+  const getScopeString = (scope: Bundle['scope']) => {
+    if (!scope) return 'N/A';
+    const parts = [];
+    if (scope.brand) parts.push(`Brand: ${scope.brand}`);
+    if (scope.channel) parts.push(`Channel: ${scope.channel}`);
+    if (scope.route) parts.push(`Route: ${scope.route}`);
+    return parts.join('; ') || 'All';
+  }
   
   return (
     <div className="flex flex-col gap-6">
@@ -148,7 +158,7 @@ export default function BundlesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {(loading && displayOffers.length === 0) && (
+          {(loading && !bundlesCollection) && (
              <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
              </div>
@@ -182,9 +192,7 @@ export default function BundlesPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1 max-w-xs">
-                        {bundle.scope?.brand && <Badge variant="outline">Brand: {bundle.scope.brand}</Badge>}
-                        {bundle.scope?.channel && <Badge variant="outline">Channel: {bundle.scope.channel}</Badge>}
-                        {bundle.scope?.route && <Badge variant="outline">Route: {bundle.scope.route}</Badge>}
+                        <span className="text-xs">{getScopeString(bundle.scope)}</span>
                       </div>
                     </TableCell>
                     <TableCell>{bundle.itemCount}</TableCell>
