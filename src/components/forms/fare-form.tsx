@@ -61,6 +61,9 @@ const fareSchema = z.object({
   bookingDaysOfWeek: z.array(z.string()).optional(),
   price: z.coerce.number().min(0, 'Price must be a positive number'),
   currency: z.string().length(3, 'Currency must be a 3-letter code'),
+  refundability: z.enum(['Allowed', 'Allowed with Penalty', 'Not Allowed']),
+  exchangeability: z.enum(['Allowed', 'Allowed with Penalty', 'Not Allowed']),
+  transferability: z.enum(['Allowed', 'Not Allowed']),
   status: z.enum(['Active', 'Inactive', 'Draft']),
   version: z.number().optional(),
   route: z.string().optional(),
@@ -155,6 +158,9 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
       bookingDaysOfWeek: [],
       price: 0,
       currency: 'USD',
+      refundability: 'Allowed with Penalty',
+      exchangeability: 'Allowed with Penalty',
+      transferability: 'Not Allowed',
       status: 'Draft',
     },
   });
@@ -355,7 +361,7 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
                     <FormItem>
                         <Popover>
                             <PopoverTrigger asChild>
-                                <FormControl><Button variant="outline" className={cn('w-full pl-3 text-left font-normal', !field.value?.from && 'text-muted-foreground')}><CalendarIcon className="mr-2 h-4 w-4" />{field.value?.from ? (field.value.to ? <>{format(field.value.from, "LLL dd, y")} - {format(field.value.to, "LLL dd, y")}</> : format(field.value.from, "LLL dd, y")) : <span>Pick a date range</span>}</Button></FormControl>
+                                <FormControl><Button variant="outline" className={cn('w-full pl-3 text-left font-normal', !field.value?.from && 'text-muted-foreground')}><CalendarIcon className="mr-2 h-4 w-4" />{field.value?.from ? (field.value.to ? <>{format(field.value.from, "LLL dd, y")} - {format(field.value.to, "LLL dd, y")}</> : format(field.value.from, "LLL dd, y")) : <span>Pick a date range (optional)</span>}</Button></FormControl>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start"><Calendar initialFocus mode="range" defaultMonth={field.value?.from} selected={field.value as any} onSelect={field.onChange} numberOfMonths={2} /></PopoverContent>
                         </Popover>
@@ -377,7 +383,7 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
                     <FormItem>
                         <Popover>
                             <PopoverTrigger asChild>
-                                <FormControl><Button variant="outline" className={cn('w-full pl-3 text-left font-normal', !field.value?.from && 'text-muted-foreground')}><CalendarIcon className="mr-2 h-4 w-4" />{field.value?.from ? (field.value.to ? <>{format(field.value.from, "LLL dd, y")} - {format(field.value.to, "LLL dd, y")}</> : format(field.value.from, "LLL dd, y")) : <span>Pick a date range</span>}</Button></FormControl>
+                                <FormControl><Button variant="outline" className={cn('w-full pl-3 text-left font-normal', !field.value?.from && 'text-muted-foreground')}><CalendarIcon className="mr-2 h-4 w-4" />{field.value?.from ? (field.value.to ? <>{format(field.value.from, "LLL dd, y")} - {format(field.value.to, "LLL dd, y")}</> : format(field.value.from, "LLL dd, y")) : <span>Pick a date range (optional)</span>}</Button></FormControl>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start"><Calendar initialFocus mode="range" defaultMonth={field.value?.from} selected={field.value as any} onSelect={field.onChange} numberOfMonths={2} /></PopoverContent>
                         </Popover>
@@ -420,6 +426,77 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
             )} />
         </div>
         
+        <Separator />
+        <h4 className="text-md font-semibold">Service Terms</h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <FormField
+                control={form.control}
+                name="refundability"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Refundability</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a rule" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                        <SelectItem value="Allowed">Allowed</SelectItem>
+                        <SelectItem value="Allowed with Penalty">Allowed with Penalty</SelectItem>
+                        <SelectItem value="Not Allowed">Not Allowed</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="exchangeability"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Exchangeability</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a rule" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                        <SelectItem value="Allowed">Allowed</SelectItem>
+                        <SelectItem value="Allowed with Penalty">Allowed with Penalty</SelectItem>
+                        <SelectItem value="Not Allowed">Not Allowed</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
+             <FormField
+                control={form.control}
+                name="transferability"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Transferability</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a rule" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                        <SelectItem value="Allowed">Allowed</SelectItem>
+                        <SelectItem value="Not Allowed">Not Allowed</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
+        </div>
+
+
         <Separator />
 
         <FormField
