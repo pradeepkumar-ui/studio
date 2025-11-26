@@ -22,6 +22,12 @@ const GenerateAutomatedOfferInputSchema = z.object({
 export type GenerateAutomatedOfferInput = z.infer<typeof GenerateAutomatedOfferInputSchema>;
 
 const GenerateAutomatedOfferOutputSchema = z.object({
+  considerations: z.string().describe('A bulleted list summarizing the key strategic considerations for this offer.'),
+  simulation: z.object({
+    name: z.string().describe("A creative and descriptive name for the simulated offer."),
+    description: z.string().describe("A short, user-facing description for the simulated offer."),
+    price: z.string().describe("The final calculated price or discount for the offer (e.g., '$85' or '15% Off')."),
+  }),
   offerJson: z.string().describe('A structured JSON representation of the generated offer. This should be a stringified JSON object compatible with the Bundle form.'),
 });
 export type GenerateAutomatedOfferOutput = z.infer<typeof GenerateAutomatedOfferOutputSchema>;
@@ -36,9 +42,11 @@ const prompt = ai.definePrompt({
   output: { schema: GenerateAutomatedOfferOutputSchema },
   prompt: `You are an expert airline offer strategist. Your task is to generate a structured JSON offer based on a high-level goal and a specific set of parameters.
 
-  Analyze the following goal, target market, constraints, and selected parameters to generate a complete offer JSON object as a string in 'offerJson'.
+  First, provide your strategic **considerations** as a bulleted list. Explain your reasoning for the components and pricing strategy you chose based on the user's goal.
 
-  The JSON object must conform to the following structure:
+  Second, create a simple **simulation** with a compelling name, description, and a final calculated price (e.g., '$85' or '15% Off').
+
+  Finally, generate the complete offer **JSON object as a string** in 'offerJson'. The JSON object must conform to the following structure:
   - name: string (A creative and descriptive name for the offer)
   - description: string (A short, user-facing description)
   - category: 'Normal', 'Disruption', or 'Promotional'

@@ -24,14 +24,16 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Wand2, Loader2, PlusCircle, Trash2 } from 'lucide-react';
-import { generateAutomatedOffer } from '@/ai/flows/generate-automated-offer';
+import { Wand2, Loader2, PlusCircle, Trash2, ClipboardCopy, FilePlus2, Lightbulb, Sparkles } from 'lucide-react';
+import { generateAutomatedOffer, type GenerateAutomatedOfferOutput } from '@/ai/flows/generate-automated-offer';
 import { useRouter } from 'next/navigation';
 import { useFirestore } from '@/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import type { Bundle } from '@/components/forms/bundle-form';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
 
 const parameterCategories = {
   "Passenger Profile & Personal Attributes": [
@@ -86,6 +88,7 @@ const formSchema = z.object({
 
 export default function AutomatedOfferCreationPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [aiResult, setAiResult] = useState<GenerateAutomatedOfferOutput | null>(null);
   const { toast } = useToast();
   const router = useRouter();
   const firestore = useFirestore();
@@ -108,6 +111,7 @@ export default function AutomatedOfferCreationPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
+    setAiResult(null);
     toast({
       title: 'Generating Offer...',
       description: 'The AI is creating a custom offer based on your parameters.',
@@ -115,7 +119,24 @@ export default function AutomatedOfferCreationPage() {
 
     try {
       const result = await generateAutomatedOffer(values);
-      const newOffer = JSON.parse(result.offerJson);
+      setAiResult(result);
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'An error occurred',
+        description: 'Failed to generate the offer. Please try again.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const handleCreateOffer = async () => {
+    if (!aiResult) return;
+
+    try {
+      const newOffer = JSON.parse(aiResult.offerJson);
 
       if (!firestore) {
         throw new Error("Firestore not available");
@@ -135,17 +156,25 @@ export default function AutomatedOfferCreationPage() {
       });
 
       router.push('/bundles');
-    } catch (error) {
-      console.error(error);
+    } catch (e) {
+      console.error("Failed to parse or save AI-generated offer:", e);
       toast({
-        variant: 'destructive',
-        title: 'An error occurred',
-        description: 'Failed to generate and save the offer. Please try again.',
+        variant: "destructive",
+        title: "Error Creating Offer",
+        description: "There was an issue saving the AI's response.",
       });
-    } finally {
-      setIsLoading(false);
     }
-  }
+  };
+
+  const handleCopyToClipboard = () => {
+    if (aiResult?.offerJson) {
+      navigator.clipboard.writeText(aiResult.offerJson);
+      toast({
+        title: 'Copied to clipboard!',
+        description: 'The generated JSON has been copied.',
+      });
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -160,7 +189,7 @@ export default function AutomatedOfferCreationPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Define Offer Parameters</CardTitle>
+          <CardTitle>1. Define Offer Parameters</CardTitle>
           <CardDescription>
             Provide high-level goals, constraints, and select the parameters for the AI to consider.
           </CardDescription>
@@ -327,14 +356,96 @@ export default function AutomatedOfferCreationPage() {
                 ) : (
                   <Wand2 className="mr-2 h-4 w-4" />
                 )}
-                Generate &amp; Save Offer
+                Generate Offer
               </Button>
             </form>
           </Form>
         </CardContent>
       </Card>
+      
+      {(isLoading || aiResult) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Lightbulb className="text-yellow-500" />
+                        2. AI Considerations & Simulation
+                    </CardTitle>
+                    <CardDescription>The AI's reasoning and a preview of the proposed offer.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {isLoading ? (
+                        <div className="space-y-6">
+                            <div className="space-y-2">
+                                <Skeleton className="h-4 w-1/4" />
+                                <Skeleton className="h-6 w-full" />
+                                <Skeleton className="h-6 w-3/4" />
+                            </div>
+                             <Separator />
+                            <div className="space-y-2">
+                                <Skeleton className="h-4 w-1/3" />
+                                <Skeleton className="h-10 w-full" />
+                            </div>
+                        </div>
+                    ) : (
+                       aiResult && (
+                            <div className="space-y-4">
+                                <div>
+                                    <h4 className="font-semibold text-sm">Considerations</h4>
+                                    <div className="text-sm text-muted-foreground mt-2 space-y-1" dangerouslySetInnerHTML={{ __html: aiResult.considerations.replace(/\n/g, '<br />') }}/>
+                                </div>
+                                <Separator />
+                                <div>
+                                    <h4 className="font-semibold text-sm">Simulated Offer Preview</h4>
+                                    <div className="mt-2 rounded-lg border p-4 space-y-1">
+                                        <p className="font-bold text-primary">{aiResult.simulation.name}</p>
+                                        <p className="text-xs text-muted-foreground">{aiResult.simulation.description}</p>
+                                        <p className="text-lg font-bold text-right pt-2">{aiResult.simulation.price}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    )}
+                </CardContent>
+            </Card>
+
+             <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Sparkles className="text-primary" />
+                        3. Generated Offer JSON
+                    </CardTitle>
+                     <CardDescription>Review the structured JSON output below. You can copy it or save it directly.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {isLoading ? (
+                    <div className="space-y-2 p-4 bg-muted rounded-md">
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-4 w-1/2" />
+                        <Skeleton className="h-4 w-5/6" />
+                        <Skeleton className="h-4 w-2/3" />
+                        <Skeleton className="h-4 w-4/5" />
+                    </div>
+                    ) : (
+                        aiResult && (
+                            <pre className="p-4 bg-muted rounded-md text-sm text-secondary-foreground overflow-x-auto max-h-[22.5rem]">
+                                <code>{aiResult.offerJson}</code>
+                            </pre>
+                        )
+                    )}
+                </CardContent>
+             </Card>
+
+        </div>
+      )}
+
+      {aiResult && !isLoading && (
+        <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={handleCopyToClipboard}><ClipboardCopy className="mr-2" /> Copy JSON</Button>
+            <Button onClick={handleCreateOffer}><FilePlus2 className="mr-2" /> Create Offer from AI</Button>
+        </div>
+      )}
+
     </div>
   );
 }
-
-    
