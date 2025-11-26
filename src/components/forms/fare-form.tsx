@@ -54,7 +54,7 @@ const fareSchema = z.object({
   scopes: z.array(scopeSchema).min(1, 'At least one scope must be defined.'),
   tripTypes: z.array(z.string()).min(1, "At least one trip type is required."),
   passengerTypes: z.array(z.string()).min(1, "At least one passenger type is required."),
-  pointOfSale: z.string().optional(),
+  pointOfSale: z.array(z.string()).optional(),
   travelDate: z.object({ from: z.date(), to: z.date().optional() }),
   travelDaysOfWeek: z.array(z.string()).optional(),
   bookingDate: z.object({ from: z.date(), to: z.date().optional() }),
@@ -88,6 +88,18 @@ const airportOptions = [
     { value: 'MUC', label: 'MUC - Munich' },
     { value: 'DEL', label: 'DEL - Delhi' },
     { value: 'BOM', label: 'BOM - Mumbai' },
+];
+
+const posOptions = [
+    { value: 'US', label: 'United States' },
+    { value: 'CA', label: 'Canada' },
+    { value: 'GB', label: 'United Kingdom' },
+    { value: 'DE', label: 'Germany' },
+    { value: 'FR', label: 'France' },
+    { value: 'IN', label: 'India' },
+    { value: 'SG', label: 'Singapore' },
+    { value: 'AU', label: 'Australia' },
+    { value: 'ALL', label: 'All' },
 ];
 
 const tripTypeOptions = [
@@ -136,7 +148,7 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
       scopes: [{ type: 'route-one-to-many', source: [], destination: [] }],
       tripTypes: ['one_way', 'return'],
       passengerTypes: ['ADT'],
-      pointOfSale: 'US',
+      pointOfSale: ['US'],
       travelDate: {
           from: new Date(),
           to: new Date(new Date().setMonth(new Date().getMonth() + 6)),
@@ -337,9 +349,7 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
             render={({ field }) => (
                 <FormItem>
                 <FormLabel>Point of Sale</FormLabel>
-                <FormControl>
-                    <Input placeholder="e.g., US, IN, EU (comma-separated)" {...field} />
-                </FormControl>
+                 <MultiSelect options={posOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select points of sale..."/>
                 <FormMessage />
                 </FormItem>
             )}
