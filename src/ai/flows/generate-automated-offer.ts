@@ -16,6 +16,8 @@ const GenerateAutomatedOfferInputSchema = z.object({
   goal: z.string().describe('The primary business goal for creating this offer.'),
   targetMarket: z.string().describe('The target market, audience, and/or timeframe.'),
   constraints: z.string().optional().describe('Any constraints or specific requirements for the offer.'),
+  selectedParameters: z.array(z.string()).optional().describe('A list of specific parameters the AI should consider.'),
+  additionalParameters: z.array(z.object({ category: z.string(), parameter: z.string() })).optional().describe('A list of additional custom parameters provided by the user.'),
 });
 export type GenerateAutomatedOfferInput = z.infer<typeof GenerateAutomatedOfferInputSchema>;
 
@@ -32,27 +34,40 @@ const prompt = ai.definePrompt({
   name: 'generateAutomatedOfferPrompt',
   input: { schema: GenerateAutomatedOfferInputSchema },
   output: { schema: GenerateAutomatedOfferOutputSchema },
-  prompt: `You are an expert airline offer strategist. Your task is to generate a structured JSON offer based on a high-level goal.
+  prompt: `You are an expert airline offer strategist. Your task is to generate a structured JSON offer based on a high-level goal and a specific set of parameters.
 
-  Analyze the following goal, target market, and constraints, and generate a complete offer JSON object as a string in 'offerJson'.
+  Analyze the following goal, target market, constraints, and selected parameters to generate a complete offer JSON object as a string in 'offerJson'.
 
   The JSON object must conform to the following structure:
   - name: string (A creative and descriptive name for the offer)
   - description: string (A short, user-facing description)
   - category: 'Normal', 'Disruption', or 'Promotional'
   - status: 'Draft'
-  - scope: object with optional keys: brand (string), channel (string), route (string)
+  - scope: object with optional keys: brand (string), channel (string), route (string), market (string)
   - components: object with optional keys for ancillary products like 'seat', 'baggage', 'meal', 'other'.
   - promotions: array of strings (promotion IDs)
   - pricingStrategy: 'Percent Discount', 'Fixed Discount', or 'Absolute Price'
   - discount: number (The value for the chosen pricing strategy)
   - itemCount: number (The total number of components and promotions)
 
-  Goal: {{{goal}}}
-  Target Market: {{{targetMarket}}}
-  Constraints: {{{constraints}}}
+  **Business Context:**
+  - Goal: {{{goal}}}
+  - Target Market: {{{targetMarket}}}
+  - Constraints: {{{constraints}}}
 
-  Generate a compelling and logical offer. Be creative with the naming and components.
+  **Parameters to Consider:**
+  {{#if selectedParameters}}
+  - Selected Predefined Parameters: {{{json selectedParameters}}}
+  {{/if}}
+
+  {{#if additionalParameters}}
+  - Additional User-Defined Parameters:
+    {{#each additionalParameters}}
+    - Category: {{this.category}}, Parameter: {{this.parameter}}
+    {{/each}}
+  {{/if}}
+
+  Generate a compelling and logical offer that directly addresses the specified goals and parameters. Be creative with the naming and components.
   `,
 });
 
@@ -75,3 +90,5 @@ const generateAutomatedOfferFlow = ai.defineFlow(
     return output!;
   }
 );
+
+    
