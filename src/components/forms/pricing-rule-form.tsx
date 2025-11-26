@@ -77,7 +77,10 @@ const pricingRuleSchema = z.object({
   guardrails: z.object({
     maxPriceAdjustment: z.coerce.number().optional(),
     minPriceAdjustment: z.coerce.number().optional(),
-    velocityLimit: z.string().optional(), // e.g., "5 times per hour"
+    velocityLimit: z.object({
+        value: z.coerce.number().optional(),
+        unit: z.enum(['per_minute', 'per_hour', 'per_day']).optional(),
+    }).optional(),
   }),
   
   // --- Validity ---
@@ -189,6 +192,10 @@ export const formatRuleForSubmit = (data: PricingRuleFormData, source: 'Manual' 
     }
     if (data.validity?.effectiveDate && data.validity?.expiryDate) {
         conditionsParts.push(`Dates: ${format(data.validity.effectiveDate, 'PP')} - ${format(data.validity.expiryDate, 'PP')}`);
+    }
+     if (data.guardrails?.velocityLimit?.value && data.guardrails?.velocityLimit?.unit) {
+        const unitMap = { per_minute: 'min', per_hour: 'hr', per_day: 'day' };
+        conditionsParts.push(`Velocity: ${data.guardrails.velocityLimit.value}/${unitMap[data.guardrails.velocityLimit.unit]}`);
     }
 
     const actionSign = data.action.adjustment >= 0 ? '+' : '';
@@ -496,7 +503,10 @@ export function PricingRuleForm({ rule, onSubmit, onCancel }: PricingRuleFormPro
             <FormField control={form.control} name="guardrails.minPriceAdjustment" render={({ field }) => (<FormItem><FormLabel>Min Price Adjustment ($)</FormLabel><FormControl><Input type="number" placeholder="e.g., -50" {...field} /></FormControl><FormMessage /></FormItem>)} />
             <FormField control={form.control} name="guardrails.maxPriceAdjustment" render={({ field }) => (<FormItem><FormLabel>Max Price Adjustment ($)</FormLabel><FormControl><Input type="number" placeholder="e.g., 100" {...field} /></FormControl><FormMessage /></FormItem>)} />
         </div>
-        <FormField control={form.control} name="guardrails.velocityLimit" render={({ field }) => (<FormItem><FormLabel>Velocity Limit</FormLabel><FormControl><Input placeholder="e.g., 5 times per hour" {...field} /></FormControl><FormMessage /></FormItem>)} />
+        <div className="grid grid-cols-2 gap-4">
+             <FormField control={form.control} name="guardrails.velocityLimit.value" render={({ field }) => (<FormItem><FormLabel>Velocity Limit Value</FormLabel><FormControl><Input type="number" placeholder="e.g., 5" {...field} /></FormControl><FormMessage /></FormItem>)} />
+            <FormField control={form.control} name="guardrails.velocityLimit.unit" render={({ field }) => (<FormItem><FormLabel>Velocity Limit Unit</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Unit" /></SelectTrigger></FormControl><SelectContent><SelectItem value="per_minute">per Minute</SelectItem><SelectItem value="per_hour">per Hour</SelectItem><SelectItem value="per_day">per Day</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
+        </div>
 
 
         <Separator />
@@ -522,3 +532,5 @@ export function PricingRuleForm({ rule, onSubmit, onCancel }: PricingRuleFormPro
     </Form>
   );
 }
+
+    
