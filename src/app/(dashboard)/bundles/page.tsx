@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -52,7 +52,8 @@ const mockOffers: Bundle[] = [
 
 export default function BundlesPage() {
   const firestore = useFirestore();
-  const { data: bundlesCollection, loading, error } = useCollection(firestore ? collection(firestore, 'bundles') : undefined);
+  const bundlesQuery = useMemo(() => firestore ? collection(firestore, 'bundles') : undefined, [firestore]);
+  const { data: bundlesCollection, loading, error } = useCollection(bundlesQuery);
   
   const [bundles, setBundles] = useState<Bundle[]>(mockOffers);
   
