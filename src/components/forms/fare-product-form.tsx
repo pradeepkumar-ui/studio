@@ -190,7 +190,9 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
         <h4 className="text-md font-semibold">Scope & Pricing</h4>
         
         <div className="space-y-4">
-            {fields.map((field, index) => (
+            {fields.map((field, index) => {
+                const scopeType = form.watch(`scopes.${index}.type`);
+                return (
                 <Card key={field.id} className="p-4 relative bg-muted/50">
                      <Button 
                         type="button" 
@@ -222,7 +224,7 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
                             )}
                         />
                        
-                        {form.watch(`scopes.${index}.type`) === 'route-one-to-many' && (
+                        {scopeType === 'route-one-to-many' && (
                             <div className="grid grid-cols-2 gap-4">
                                 <FormField control={form.control} name={`scopes.${index}.source`} render={({field}) => (
                                     <FormItem>
@@ -245,7 +247,7 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
                                 )} />
                             </div>
                         )}
-                        {form.watch(`scopes.${index}.type`) === 'route-many-to-one' && (
+                        {scopeType === 'route-many-to-one' && (
                              <div className="grid grid-cols-2 gap-4">
                                 <FormField control={form.control} name={`scopes.${index}.source`} render={({field}) => (
                                     <FormItem>
@@ -268,7 +270,7 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
                                 )} />
                             </div>
                         )}
-                         {form.watch(`scopes.${index}.type`) === 'source' && (
+                         {scopeType === 'source' && (
                              <FormField control={form.control} name={`scopes.${index}.source`} render={({field}) => (
                                 <FormItem>
                                     <FormLabel>Source Airports</FormLabel>
@@ -277,7 +279,7 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
                                 </FormItem>
                             )} />
                         )}
-                        {form.watch(`scopes.${index}.type`) === 'destination' && (
+                        {scopeType === 'destination' && (
                             <FormField control={form.control} name={`scopes.${index}.destination`} render={({field}) => (
                                 <FormItem>
                                     <FormLabel>Destination Airports</FormLabel>
@@ -323,7 +325,7 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
                         </div>
                     </CardContent>
                 </Card>
-            ))}
+            )})}
             <Button
                 type="button"
                 variant="outline"
