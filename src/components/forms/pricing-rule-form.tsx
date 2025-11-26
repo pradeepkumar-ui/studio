@@ -88,12 +88,13 @@ const pricingRuleSchema = z.object({
 
 
 // The data structure for the page state needs to be updated.
-// We'll keep a string representation for display purposes in the table.
 export type PricingRule = {
   id: string;
   name: string;
+  targetProduct: 'Air' | 'Ancillary';
+  targetIdentifier?: string;
   conditions: string;
-  action: string;
+  adjustment: string;
   status: 'Active' | 'Inactive' | 'Test';
   source: 'Manual' | 'AI';
 };
@@ -135,7 +136,10 @@ const parseRuleForForm = (rule: PricingRule | null): PricingRuleFormData | undef
         name: rule.name,
         status: rule.status,
         trigger: { type: 'Scheduled' }, // Default
-        target: { product: 'Air' },
+        target: { 
+          product: rule.targetProduct,
+          ancillaryId: rule.targetProduct === 'Ancillary' ? rule.targetIdentifier : undefined,
+        },
         conditions: {
             route: rule.conditions.includes('Route:') ? rule.conditions.split('Route: ')[1]?.split(',')[0].trim() : undefined,
             market: rule.conditions.includes('Market:') ? rule.conditions.split('Market: ')[1]?.split(',')[0].trim() : undefined,
@@ -148,9 +152,9 @@ const parseRuleForForm = (rule: PricingRule | null): PricingRuleFormData | undef
             includedBundles: [],
         },
         action: {
-            type: rule.action.includes('%') ? 'PERCENTAGE' : 'FIXED_AMOUNT',
-            adjustment: parseInt(rule.action.match(/-?\\+?(\\d+)/)?.[0] || '0'),
-            cabinClass: rule.action.includes('Economy') ? 'Economy' : (rule.action.includes('Business') ? 'Business' : 'All'),
+            type: rule.adjustment.includes('%') ? 'PERCENTAGE' : 'FIXED_AMOUNT',
+            adjustment: parseInt(rule.adjustment.match(/-?\\+?(\\d+)/)?.[0] || '0'),
+            cabinClass: rule.targetProduct === 'Air' ? (rule.targetIdentifier as any) : undefined,
         },
         guardrails: {},
         validity: {},
@@ -158,12 +162,8 @@ const parseRuleForForm = (rule: PricingRule | null): PricingRuleFormData | undef
 }
 
 // Function to format form data back into a display string for the table
-const formatRuleForSubmit = (data: PricingRuleFormData, source: 'Manual' | 'AI'): PricingRule => {
+export const formatRuleForSubmit = (data: PricingRuleFormData, source: 'Manual' | 'AI'): PricingRule => {
     const conditionsParts: string[] = [];
-    if(data.target.product === 'Ancillary' && data.target.ancillaryId) {
-        const ancillaryName = ancillaryOptions.find(o => o.id === data.target.ancillaryId)?.label || data.target.ancillaryId;
-        conditionsParts.push(`Ancillary: ${ancillaryName}`);
-    }
     if (data.conditions.route) conditionsParts.push(`Route: ${data.conditions.route}`);
     if (data.conditions.market) conditionsParts.push(`Market: ${data.conditions.market}`);
     if (data.conditions.loadFactorOperator && data.conditions.loadFactorValue) {
@@ -188,17 +188,25 @@ const formatRuleForSubmit = (data: PricingRuleFormData, source: 'Manual' | 'AI')
         conditionsParts.push(`Dates: ${format(data.validity.effectiveDate, 'PP')} - ${format(data.validity.expiryDate, 'PP')}`);
     }
 
-
     const actionSign = data.action.adjustment >= 0 ? '+' : '';
     const actionValue = data.action.type === 'PERCENTAGE' ? `${data.action.adjustment}%` : `$${data.action.adjustment}`;
-    const targetCabin = data.target.product === 'Air' && data.action.cabinClass ? ` on ${data.action.cabinClass}` : '';
-    const actionString = `${actionSign}${actionValue}${targetCabin}`;
+    const adjustmentString = `${actionSign}${actionValue}`;
+    
+    let targetIdentifier: string | undefined;
+    if (data.target.product === 'Air') {
+        targetIdentifier = data.action.cabinClass;
+    } else {
+        targetIdentifier = ancillaryOptions.find(o => o.id === data.target.ancillaryId)?.label || data.target.ancillaryId;
+    }
+
 
     return {
         id: data.id || `dp-${Math.random().toString(36).substr(2, 9)}`,
         name: data.name,
+        targetProduct: data.target.product,
+        targetIdentifier,
         conditions: conditionsParts.join(', ') || 'N/A',
-        action: actionString,
+        adjustment: adjustmentString,
         status: data.status,
         source: source
     };

@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Wand2, Loader2, ClipboardCopy, ArrowRight, PlusCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { type PricingRule, formatRuleForSubmit } from "@/components/forms/pricing-rule-form";
 
 const formSchema = z.object({
   description: z.string().min(10, {
@@ -29,7 +30,7 @@ const formSchema = z.object({
 });
 
 interface DynamicPricingRuleAssistantProps {
-    onRuleCreate: (ruleData: GeneratePricingRuleOutput) => void;
+    onRuleCreate: (aiOutput: GeneratePricingRuleOutput, newRule: PricingRule) => void;
 }
 
 export function DynamicPricingRuleAssistant({ onRuleCreate }: DynamicPricingRuleAssistantProps) {
@@ -63,6 +64,51 @@ export function DynamicPricingRuleAssistant({ onRuleCreate }: DynamicPricingRule
       setIsLoading(false);
     }
   }
+
+  const handleCreateRuleFromAI = () => {
+    if (!result) return;
+    try {
+      const parsedRule = JSON.parse(result.ruleJson);
+      // We need to shape this into PricingRuleFormData to use the formatter
+      const formData = {
+        name: parsedRule.name || 'AI Generated Rule',
+        status: parsedRule.status === 'Active' ? 'Active' : 'Test',
+        trigger: {
+            type: parsedRule.trigger?.type || 'Scheduled'
+        },
+        target: {
+            product: parsedRule.target?.product || 'Air'
+        },
+        conditions: {
+            route: parsedRule.conditions?.route,
+            market: parsedRule.conditions?.market,
+            loadFactorOperator: parsedRule.conditions?.loadFactorOperator,
+            loadFactorValue: parsedRule.conditions?.loadFactorValue,
+            departureOperator: parsedRule.conditions?.departureOperator,
+            departureValue: parsedRule.conditions?.departureValue,
+        },
+        action: {
+            type: parsedRule.action?.type || 'PERCENTAGE',
+            adjustment: parsedRule.action?.adjustment || 0,
+            cabinClass: parsedRule.action?.cabinClass || 'All',
+        },
+        guardrails: {},
+        validity: {},
+      };
+      
+      const newRule = formatRuleForSubmit(formData as any, 'AI');
+      onRuleCreate(result, newRule);
+
+    } catch (e) {
+      console.error("Failed to parse or format AI rule:", e);
+      toast({
+        variant: "destructive",
+        title: "Error Creating Rule",
+        description: "There was an issue processing the AI's response.",
+      });
+    }
+  };
+
 
   const handleCopyToClipboard = () => {
     if (result?.ruleJson) {
@@ -182,7 +228,7 @@ export function DynamicPricingRuleAssistant({ onRuleCreate }: DynamicPricingRule
                 </CardContent>
                 {result && !isLoading && (
                     <CardFooter>
-                        <Button className="w-full" onClick={() => onRuleCreate(result)}>
+                        <Button className="w-full" onClick={handleCreateRuleFromAI}>
                             <PlusCircle className="mr-2 h-4 w-4" />
                             Create Rule from AI
                         </Button>
