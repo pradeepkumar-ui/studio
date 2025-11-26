@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -57,6 +58,26 @@ const cohortOptions = [
     { value: 'Family Leisure', label: 'Family Leisure' },
 ];
 
+const airportOptions = [
+    { value: 'JFK', label: 'JFK - New York' },
+    { value: 'LAX', label: 'LAX - Los Angeles' },
+    { value: 'LHR', label: 'LHR - London Heathrow' },
+    { value: 'DXB', label: 'DXB - Dubai' },
+    { value: 'SIN', label: 'SIN - Singapore' },
+    { value: 'HKG', label: 'HKG - Hong Kong' },
+    { value: 'CDG', label: 'CDG - Paris' },
+    { value: 'FRA', label: 'FRA - Frankfurt' },
+    { value: 'MUC', label: 'MUC - Munich' },
+    { value: 'DEL', label: 'DEL - Delhi' },
+    { value: 'BOM', label: 'BOM - Mumbai' },
+];
+
+const routeScopeSchema = z.object({
+    type: z.enum(['route-one-to-many', 'route-many-to-one', 'source', 'destination']).default('route-one-to-many'),
+    source: z.array(z.string()).optional(),
+    destination: z.array(z.string()).optional(),
+});
+
 
 const bundleSchema = z.object({
   id: z.string().optional(),
@@ -66,8 +87,9 @@ const bundleSchema = z.object({
   scope: z.object({
     brand: z.array(z.string()).optional(),
     channel: z.array(z.string()).optional(),
-    route: z.string().optional(),
+    routes: z.array(routeScopeSchema).optional(),
     cohorts: z.array(z.string()).optional(),
+    route: z.string().optional(),
   }),
   components: z.array(z.object({ value: z.string().min(1, "Please select an ancillary.") })).min(1, "At least one ancillary component is required."),
   pricingStrategy: z.enum(['Percent Discount', 'Fixed Discount', 'Absolute Price']),
@@ -87,12 +109,40 @@ interface BundleFormProps {
   onCancel: () => void;
 }
 
+const getRouteStringFromScope = (scope: z.infer<typeof routeScopeSchema>): string => {
+    switch (scope.type) {
+        case 'source':
+            return `From: ${scope.source?.join(', ') || 'N/A'}`;
+        case 'destination':
+            return `To: ${scope.destination?.join(', ') || 'N/A'}`;
+        case 'route-one-to-many':
+             return `${scope.source?.[0] || 'N/A'} -> ${scope.destination?.join(', ') || 'N/A'}`;
+        case 'route-many-to-one':
+             return `${scope.source?.join(', ') || 'N/A'} -> ${scope.destination?.[0] || 'N/A'}`;
+        default:
+            return 'Invalid Scope';
+    }
+}
+
 const parseScope = (bundle: Bundle | null) => {
-    if (!bundle || !bundle.scope) return { brand: [], channel: [], route: '', cohorts: []};
+    if (!bundle || !bundle.scope) return { brand: [], channel: [], routes: [], cohorts: []};
+    
+    let routes = [];
+     if (bundle.scope.route) { // Handle legacy string-based route
+        if (bundle.scope.route.includes('->')) {
+            const parts = bundle.scope.route.split('->');
+            routes.push({ type: 'route-one-to-many', source: [parts[0]], destination: [parts[1]] });
+        } else {
+            routes.push({ type: 'route-one-to-many', source: [bundle.scope.route], destination: [] });
+        }
+    } else if (Array.isArray(bundle.scope.routes)) {
+        routes = bundle.scope.routes;
+    }
+
     return {
         brand: Array.isArray(bundle.scope.brand) ? bundle.scope.brand : (bundle.scope.brand ? (bundle.scope.brand as string).split(',').map(s => s.trim()) : []),
         channel: Array.isArray(bundle.scope.channel) ? bundle.scope.channel : (bundle.scope.channel ? (bundle.scope.channel as string).split(',').map(s => s.trim()) : []),
-        route: bundle.scope.route,
+        routes: routes,
         cohorts: Array.isArray(bundle.scope.cohorts) ? bundle.scope.cohorts : (bundle.scope.cohorts ? (bundle.scope.cohorts as string).split(',').map(s => s.trim()) : []),
     }
 }
@@ -118,7 +168,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
       scope: {
         brand: [],
         channel: [],
-        route: '',
+        routes: [{ type: 'route-one-to-many', source: [], destination: [] }],
         cohorts: [],
       },
       components: [{value: ''}],
@@ -134,6 +184,11 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "components"
+  });
+
+  const { fields: routeFields, append: appendRoute, remove: removeRoute } = useFieldArray({
+    control: form.control,
+    name: "scope.routes",
   });
 
   const handleFinalSubmit = (data: Bundle) => {
@@ -155,6 +210,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
           brand: data.scope.brand?.join(', '),
           channel: data.scope.channel?.join(', '),
           cohorts: data.scope.cohorts?.join(', '),
+          route: data.scope.routes?.map(getRouteStringFromScope).join('; '),
         }
     };
     
@@ -216,10 +272,64 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
 
         <h4 className="text-md font-semibold">Scope & Rules</h4>
         <p className="text-sm text-muted-foreground -mt-2">Define the conditions under which this bundle is available.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-4">
              <FormField control={form.control} name="scope.brand" render={({field}) => <FormItem><FormLabel>Fare Brands</FormLabel><MultiSelect options={fareBrandOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select brands..."/><FormMessage/></FormItem>} />
             <FormField control={form.control} name="scope.channel" render={({field}) => <FormItem><FormLabel>Channels</FormLabel><MultiSelect options={channelOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select channels..."/><FormMessage/></FormItem>} />
-            <FormField control={form.control} name="scope.route" render={({field}) => <FormItem><FormLabel>Routes</FormLabel><FormControl><Input {...field} placeholder="e.g., JFK-MIA, LHR-*" /></FormControl><FormMessage/></FormItem>} />
+            
+            <div className="space-y-2">
+            <FormLabel>Routes</FormLabel>
+            {routeFields.map((field, index) => {
+                 const scopeType = form.watch(`scope.routes.${index}.type`);
+                return (
+                    <Card key={field.id} className="p-3 relative bg-muted/50">
+                        <Button type="button" variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={() => removeRoute(index)} disabled={routeFields.length <= 1} >
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                         <CardContent className="p-0 space-y-4">
+                            <FormField control={form.control} name={`scope.routes.${index}.type`} render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Scope Type</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl><SelectTrigger><SelectValue placeholder="Select scope type" /></SelectTrigger></FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="route-one-to-many">Route (One Origin to Many Destinations)</SelectItem>
+                                            <SelectItem value="route-many-to-one">Route (Many Origins to One Destination)</SelectItem>
+                                            <SelectItem value="source">Source (Any Destination)</SelectItem>
+                                            <SelectItem value="destination">Destination (Any Source)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </FormItem>
+                            )}/>
+                            {scopeType === 'route-one-to-many' && (
+                                <div className="grid grid-cols-2 gap-4">
+                                    <FormField control={form.control} name={`scope.routes.${index}.source`} render={({field}) => (
+                                        <FormItem><FormLabel>Origin</FormLabel>
+                                            <Select onValueChange={(value) => field.onChange([value])} defaultValue={field.value?.[0]}><FormControl><SelectTrigger><SelectValue placeholder="Select origin..." /></SelectTrigger></FormControl>
+                                                <SelectContent>{airportOptions.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent>
+                                            </Select>
+                                        </FormItem>
+                                    )} />
+                                    <FormField control={form.control} name={`scope.routes.${index}.destination`} render={({field}) => (
+                                        <FormItem><FormLabel>Destinations</FormLabel><MultiSelect options={airportOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select..."/>
+                                        </FormItem>
+                                    )} />
+                                </div>
+                            )}
+                             {scopeType === 'route-many-to-one' && (
+                                <div className="grid grid-cols-2 gap-4">
+                                    <FormField control={form.control} name={`scope.routes.${index}.source`} render={({field}) => (<FormItem><FormLabel>Origins</FormLabel><MultiSelect options={airportOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select..."/></FormItem>)} />
+                                    <FormField control={form.control} name={`scope.routes.${index}.destination`} render={({field}) => (<FormItem><FormLabel>Destination</FormLabel><Select onValueChange={(value) => field.onChange([value])} defaultValue={field.value?.[0]}><FormControl><SelectTrigger><SelectValue placeholder="Select destination..." /></SelectTrigger></FormControl><SelectContent>{airportOptions.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select></FormItem>)} />
+                                </div>
+                            )}
+                             {scopeType === 'source' && ( <FormField control={form.control} name={`scope.routes.${index}.source`} render={({field}) => ( <FormItem><FormLabel>Source Airports</FormLabel><MultiSelect options={airportOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select..."/></FormItem>)} />)}
+                            {scopeType === 'destination' && (<FormField control={form.control} name={`scope.routes.${index}.destination`} render={({field}) => (<FormItem><FormLabel>Destination Airports</FormLabel><MultiSelect options={airportOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select..."/></FormItem>)} />)}
+                         </CardContent>
+                    </Card>
+                )
+            })}
+             <Button type="button" variant="outline" size="sm" onClick={() => appendRoute({ type: 'route-one-to-many', source: [], destination: [] })}><PlusCircle className="mr-2 h-4 w-4" /> Add Route Scope</Button>
+            </div>
+            
             <FormField control={form.control} name="scope.cohorts" render={({field}) => <FormItem><FormLabel>Target Cohorts</FormLabel><MultiSelect options={cohortOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select cohorts..."/><FormMessage/></FormItem>} />
         </div>
 
