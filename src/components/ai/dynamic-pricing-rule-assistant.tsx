@@ -18,10 +18,11 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Wand2, Loader2, ClipboardCopy, ArrowRight, PlusCircle } from "lucide-react";
+import { Wand2, Loader2, ClipboardCopy, ArrowRight, PlusCircle, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { type PricingRule, formatRuleForSubmit } from "@/components/forms/pricing-rule-form";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 
 const formSchema = z.object({
   description: z.string().min(10, {
@@ -195,6 +196,13 @@ export function DynamicPricingRuleAssistant({ onRuleCreate }: DynamicPricingRule
                                         </div>
                                     </div>
                                     <p className="text-center text-xs text-muted-foreground mt-1">{result.simulation.impact}</p>
+                                    <Alert variant="default" className="mt-4">
+                                      <Info className="h-4 w-4" />
+                                      <AlertTitle className="text-xs">Simulation Assumptions</AlertTitle>
+                                      <AlertDescription className="text-xs">
+                                        {result.simulation.assumptions}
+                                      </AlertDescription>
+                                    </Alert>
                                 </div>
                             </div>
                         )
@@ -221,7 +229,7 @@ export function DynamicPricingRuleAssistant({ onRuleCreate }: DynamicPricingRule
                         <Skeleton className="h-4 w-4/5" />
                     </div>
                     ) : (
-                    <pre className="p-4 bg-secondary rounded-md text-sm text-secondary-foreground overflow-x-auto max-h-60">
+                    <pre className="p-4 bg-secondary rounded-md text-sm text-secondary-foreground overflow-x-auto max-h-[22.5rem]">
                         <code>{result?.ruleJson}</code>
                     </pre>
                     )}

@@ -26,7 +26,8 @@ const GeneratePricingRuleOutputSchema = z.object({
     .describe('A structured JSON representation of the dynamic pricing rule. This should be a stringified JSON object.'),
   ruleSummary: z.string().describe("A human-readable summary of the rule's logic and action."),
   simulation: z.object({
-      scenario: z.string().describe("A brief description of the simulation scenario."),
+      scenario: z.string().describe("A brief description of the simulation scenario, including any assumed context like route or cabin class."),
+      assumptions: z.string().describe("A brief outline of the assumptions made for the simulation, for example the base fare used."),
       beforePrice: z.number().describe("The price before the rule is applied."),
       afterPrice: z.number().describe("The price after the rule is applied."),
       impact: z.string().describe("A short sentence describing the impact."),
@@ -52,7 +53,7 @@ const prompt = ai.definePrompt({
      - 'action.adjustment' should be a number (positive for increase, negative for decrease).
      - 'action.cabinClass' can be 'Economy', 'Premium Economy', 'Business', 'First', or 'All'.
   2. A short, human-readable summary of what the rule does in 'ruleSummary'.
-  3. A simple simulation in 'simulation' showing the rule's effect. Create a realistic 'scenario' and calculate 'beforePrice' and 'afterPrice'.
+  3. A simple simulation in 'simulation' showing the rule's effect. Create a realistic 'scenario', provide the 'assumptions' you made (e.g. the base fare), and calculate 'beforePrice' and 'afterPrice'.
 
   Description:
   {{{description}}}
