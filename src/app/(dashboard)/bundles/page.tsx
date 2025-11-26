@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -118,9 +119,9 @@ export default function BundlesPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight">Bundles Studio</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Bundle Studio and Offer Creation</h1>
           <p className="text-muted-foreground">
-            Create, manage, and price ancillary bundles.
+            Create, manage, and price ancillary bundles and offers.
           </p>
         </div>
         <Button onClick={() => handleOpenDialog()}>
@@ -146,7 +147,7 @@ export default function BundlesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Bundle Name</TableHead>
+                  <TableHead>Offer Name</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Scope</TableHead>
                   <TableHead>Items</TableHead>
