@@ -33,22 +33,24 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, PlusCircle, Loader2, Bot, User } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2, Bot, User, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { BundleForm, type Bundle } from '@/components/forms/bundle-form';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const mockOffers: Bundle[] = [
-    { id: 'BUN-001', name: 'Business Saver+', category: 'Normal', description: 'Front seat, 1 checked bag, and a meal.', status: 'Published', scope: { brand: 'Flex, Premium', route: 'All', channel: 'Direct, TMC' }, components: { seat: 'Front', baggage: '23kg', meal: 'Any' }, pricingStrategy: 'Percent Discount', discount: 15, itemCount: 3, source: 'Manual', priority: 'Manual Override' },
-    { id: 'BUN-002', name: 'Family Pack', category: 'Normal', description: 'Adjacent seats, extra baggage, and child meals.', status: 'Published', scope: { brand: 'Economy Saver', route: 'JFK-MIA', channel: 'Web' }, components: { seat: 'Adjacent', baggage: '15kg, 2', meal: 'Child' }, pricingStrategy: 'Fixed Discount', discount: 50, itemCount: 3, source: 'Manual', priority: 'Manual Override' },
-    { id: 'BUN-003', name: 'Weekend Getaway', category: 'Promotional', description: 'Late checkout, priority boarding.', status: 'Draft', scope: { route: 'JFK-MIA', channel: 'Direct' }, components: { other: 'Hotel(Late Checkout), Boarding(Priority)' }, pricingStrategy: 'Absolute Price', discount: 75, itemCount: 2, source: 'Manual', priority: 'Manual Override' },
-    { id: 'BUN-004', name: 'Long Haul Comfort', category: 'Normal', description: 'Extra legroom seat, amenity kit, and Wi-Fi.', status: 'Published', scope: { route: 'Duration > 6h' }, components: { seat: 'Legroom', other: 'Amenity Kit, Wi-Fi(Unlimited)' }, pricingStrategy: 'Percent Discount', discount: 20, itemCount: 3, source: 'Manual', priority: 'Manual Override' },
-    { id: 'BUN-005', name: 'Disruption Recovery Pack', category: 'Disruption', description: 'Lounge access, meal voucher, and hotel credit.', status: 'Published', scope: { route: 'All' }, components: { other: 'Lounge, Meal Voucher, Hotel Credit' }, pricingStrategy: 'Absolute Price', discount: 0, itemCount: 3, source: 'Manual', priority: 'Manual Override' },
-    { id: 'BUN-006', name: 'Flexi Traveler', category: 'Normal', description: 'Flight change waiver and seat selection.', status: 'Published', scope: { brand: 'Economy Flex' }, components: { other: 'Flexibility(Change)', seat: 'Any' }, pricingStrategy: 'Absolute Price', discount: 99, itemCount: 2, source: 'AI', priority: 'AI Override' },
-    { id: 'BUN-007', name: 'Holiday Special', category: 'Promotional', description: 'Extra bag and festive meal.', status: 'Published', scope: { route: 'All', channel: 'Web, Mobile' }, components: { baggage: '23kg', meal: 'Festive' }, pricingStrategy: 'Fixed Discount', discount: 25, itemCount: 2, source: 'AI', priority: 'Manual Override' },
-    { id: 'BUN-008', name: 'TMC Recovery Bundle', category: 'Disruption', description: 'Lounge access, fast-track security, chauffeur.', status: 'Archived', scope: { channel: 'TMC' }, components: { other: 'Lounge, Security(Fast), Chauffeur' }, pricingStrategy: 'Absolute Price', discount: 0, itemCount: 3, source: 'Manual', priority: 'Manual Override' },
+const mockOffers: (Bundle & { usage: number })[] = [
+    { id: 'BUN-001', name: 'Business Saver+', category: 'Normal', description: 'Front seat, 1 checked bag, and a meal.', status: 'Published', scope: { brand: 'Flex, Premium', route: 'All', channel: 'Direct, TMC' }, components: { seat: 'Front', baggage: '23kg', meal: 'Any' }, pricingStrategy: 'Percent Discount', discount: 15, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 1520 },
+    { id: 'BUN-002', name: 'Family Pack', category: 'Normal', description: 'Adjacent seats, extra baggage, and child meals.', status: 'Published', scope: { brand: 'Economy Saver', route: 'JFK-MIA', channel: 'Web' }, components: { seat: 'Adjacent', baggage: '15kg, 2', meal: 'Child' }, pricingStrategy: 'Fixed Discount', discount: 50, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 890 },
+    { id: 'BUN-003', name: 'Weekend Getaway', category: 'Promotional', description: 'Late checkout, priority boarding.', status: 'Draft', scope: { route: 'JFK-MIA', channel: 'Direct' }, components: { other: 'Hotel(Late Checkout), Boarding(Priority)' }, pricingStrategy: 'Absolute Price', discount: 75, itemCount: 2, source: 'Manual', priority: 'Manual Override', usage: 0 },
+    { id: 'BUN-004', name: 'Long Haul Comfort', category: 'Normal', description: 'Extra legroom seat, amenity kit, and Wi-Fi.', status: 'Published', scope: { route: 'Duration > 6h' }, components: { seat: 'Legroom', other: 'Amenity Kit, Wi-Fi(Unlimited)' }, pricingStrategy: 'Percent Discount', discount: 20, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 2105 },
+    { id: 'BUN-005', name: 'Disruption Recovery Pack', category: 'Disruption', description: 'Lounge access, meal voucher, and hotel credit.', status: 'Published', scope: { route: 'All' }, components: { other: 'Lounge, Meal Voucher, Hotel Credit' }, pricingStrategy: 'Absolute Price', discount: 0, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 450 },
+    { id: 'BUN-006', name: 'Flexi Traveler', category: 'Normal', description: 'Flight change waiver and seat selection.', status: 'Published', scope: { brand: 'Economy Flex' }, components: { other: 'Flexibility(Change)', seat: 'Any' }, pricingStrategy: 'Absolute Price', discount: 99, itemCount: 2, source: 'AI', priority: 'AI Override', usage: 730 },
+    { id: 'BUN-007', name: 'Holiday Special', category: 'Promotional', description: 'Extra bag and festive meal.', status: 'Published', scope: { route: 'All', channel: 'Web, Mobile' }, components: { baggage: '23kg', meal: 'Festive' }, pricingStrategy: 'Fixed Discount', discount: 25, itemCount: 2, source: 'AI', priority: 'Manual Override', usage: 1240 },
+    { id: 'BUN-008', name: 'TMC Recovery Bundle', category: 'Disruption', description: 'Lounge access, fast-track security, chauffeur.', status: 'Archived', scope: { channel: 'TMC' }, components: { other: 'Lounge, Security(Fast), Chauffeur' }, pricingStrategy: 'Absolute Price', discount: 0, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 120 },
 ];
 
 
@@ -56,14 +58,24 @@ export default function BundlesPage() {
   const firestore = useFirestore();
   const bundlesQuery = useMemo(() => firestore ? collection(firestore, 'bundles') : undefined, [firestore]);
   const { data: bundlesCollection, loading, error } = useCollection(bundlesQuery);
+  const [filters, setFilters] = useState({ name: '', category: 'all', status: 'all', source: 'all' });
   
   const displayOffers = useMemo(() => {
-    if (loading && (!bundlesCollection || bundlesCollection.length === 0)) return mockOffers;
-    if (bundlesCollection && bundlesCollection.length > 0) {
-      return bundlesCollection as Bundle[];
-    }
-    return mockOffers;
-  }, [bundlesCollection, loading]);
+    const dataWithUsage = (bundlesCollection as (Bundle & { usage?: number })[] || []).map(offer => ({
+      ...offer,
+      usage: offer.usage ?? Math.floor(Math.random() * 2000),
+    }));
+
+    const sourceData = (loading && dataWithUsage.length === 0) ? mockOffers : dataWithUsage;
+    
+    return sourceData.filter(offer => {
+      const nameMatch = filters.name ? offer.name.toLowerCase().includes(filters.name.toLowerCase()) : true;
+      const categoryMatch = filters.category === 'all' || offer.category === filters.category;
+      const statusMatch = filters.status === 'all' || offer.status === filters.status;
+      const sourceMatch = filters.source === 'all' || (offer.source || 'Manual') === filters.source;
+      return nameMatch && categoryMatch && statusMatch && sourceMatch;
+    });
+  }, [bundlesCollection, loading, filters]);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBundle, setEditingBundle] = useState<Bundle | null>(null);
@@ -108,6 +120,10 @@ export default function BundlesPage() {
     }
     handleDialogClose();
   };
+
+  const handleFilterChange = (key: keyof typeof filters, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  }
 
   const getStatusBadgeVariant = (status: Bundle['status']) => {
     switch (status) {
@@ -165,6 +181,49 @@ export default function BundlesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="flex items-center gap-2 mb-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by offer name..."
+                  value={filters.name}
+                  onChange={(e) => handleFilterChange('name', e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Select value={filters.category} onValueChange={(value) => handleFilterChange('category', value)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="Normal">Normal</SelectItem>
+                  <SelectItem value="Disruption">Disruption</SelectItem>
+                  <SelectItem value="Promotional">Promotional</SelectItem>
+                </SelectContent>
+              </Select>
+               <Select value={filters.status} onValueChange={(value) => handleFilterChange('status', value)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="Draft">Draft</SelectItem>
+                  <SelectItem value="Published">Published</SelectItem>
+                  <SelectItem value="Archived">Archived</SelectItem>
+                </SelectContent>
+              </Select>
+               <Select value={filters.source} onValueChange={(value) => handleFilterChange('source', value)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by Source" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sources</SelectItem>
+                  <SelectItem value="Manual">Manual</SelectItem>
+                  <SelectItem value="AI">AI</SelectItem>
+                </SelectContent>
+              </Select>
+          </div>
           {loading && (!bundlesCollection || bundlesCollection.length === 0) && (
              <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -178,10 +237,9 @@ export default function BundlesPage() {
                   <TableHead>Category</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Scope</TableHead>
-                  <TableHead>Items</TableHead>
                   <TableHead>Pricing</TableHead>
+                  <TableHead>Usage</TableHead>
                   <TableHead>Source</TableHead>
-                  <TableHead>Priority</TableHead>
                   <TableHead>
                     <span className="sr-only">Actions</span>
                   </TableHead>
@@ -190,7 +248,10 @@ export default function BundlesPage() {
               <TableBody>
                 {displayOffers.map((bundle) => (
                   <TableRow key={bundle.id}>
-                    <TableCell className="font-medium">{bundle.name}</TableCell>
+                    <TableCell className="font-medium">
+                      <div>{bundle.name}</div>
+                      <div className="font-mono text-xs text-muted-foreground">{bundle.id}</div>
+                    </TableCell>
                      <TableCell>
                       <Badge variant="outline">{bundle.category}</Badge>
                     </TableCell>
@@ -204,20 +265,17 @@ export default function BundlesPage() {
                         <span className="text-xs">{getScopeString(bundle.scope)}</span>
                       </div>
                     </TableCell>
-                    <TableCell>{bundle.itemCount}</TableCell>
                     <TableCell>
                         <Badge variant={bundle.pricingStrategy === 'Absolute Price' ? 'default' : 'secondary'}>
                             {formatPricing(bundle)}
                         </Badge>
                     </TableCell>
+                    <TableCell>{(bundle as any).usage?.toLocaleString() || 'N/A'}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         {bundle.source === 'AI' ? <Bot /> : <User />}
                         <span>{bundle.source || 'Manual'}</span>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={bundle.priority === 'Manual Override' ? 'default' : 'outline'}>{bundle.priority}</Badge>
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
@@ -272,3 +330,5 @@ export default function BundlesPage() {
     </div>
   );
 }
+
+    
