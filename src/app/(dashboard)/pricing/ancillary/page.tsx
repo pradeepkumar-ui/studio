@@ -8,14 +8,13 @@ import {
   Search,
   ChevronDown,
 } from 'lucide-react';
-
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuCheckboxItem,
 } from '@/components/ui/dropdown-menu';
@@ -36,19 +35,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { AncillaryForm, type Ancillary } from '@/components/forms/ancillary-form';
-import { AncillaryOverrides } from '@/components/pricing/ancillary-overrides';
+import type { Ancillary } from '@/components/forms/ancillary-form';
 
-
-const initialAncillaries: Ancillary[] = [
+const initialAncillaries: (Ancillary & { overrideCount: number })[] = [
   {
     id: 'ANC-001',
     name: '1st Checked Bag (23kg)',
@@ -56,6 +46,7 @@ const initialAncillaries: Ancillary[] = [
     defaultPrice: 35,
     currency: 'USD',
     status: 'Active',
+    overrideCount: 2,
   },
   {
     id: 'ANC-002',
@@ -64,6 +55,7 @@ const initialAncillaries: Ancillary[] = [
     defaultPrice: 50,
     currency: 'USD',
     status: 'Active',
+    overrideCount: 1,
   },
   {
     id: 'ANC-003',
@@ -72,6 +64,7 @@ const initialAncillaries: Ancillary[] = [
     defaultPrice: 8,
     currency: 'USD',
     status: 'Active',
+    overrideCount: 0,
   },
   {
     id: 'ANC-004',
@@ -80,6 +73,7 @@ const initialAncillaries: Ancillary[] = [
     defaultPrice: 15,
     currency: 'USD',
     status: 'Disabled',
+    overrideCount: 0,
   },
   {
     id: 'ANC-005',
@@ -88,6 +82,7 @@ const initialAncillaries: Ancillary[] = [
     defaultPrice: 75,
     currency: 'USD',
     status: 'Active',
+    overrideCount: 1,
   },
   {
     id: 'ANC-006',
@@ -96,16 +91,12 @@ const initialAncillaries: Ancillary[] = [
     defaultPrice: 45,
     currency: 'USD',
     status: 'Active',
+    overrideCount: 3,
   },
 ];
 
 export default function AncillaryPricingPage() {
-  const [ancillaries, setAncillaries] = React.useState<Ancillary[]>(initialAncillaries);
-  const [isFormOpen, setIsFormOpen] = React.useState(false);
-  const [isOverridesOpen, setIsOverridesOpen] = React.useState(false);
-  const [editingAncillary, setEditingAncillary] = React.useState<Ancillary | null>(null);
-  const { toast } = useToast();
-  
+  const [ancillaries] = React.useState<(Ancillary & { overrideCount: number })[]>(initialAncillaries);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filters, setFilters] = React.useState<{ category: Set<string> }>({
     category: new Set(),
@@ -122,34 +113,6 @@ export default function AncillaryPricingPage() {
       return { ...prev, category: newCategories };
     });
   };
-  
-  const handleOpenForm = (ancillary: Ancillary | null = null) => {
-    setEditingAncillary(ancillary);
-    setIsFormOpen(true);
-  };
-  
-  const handleOpenOverrides = (ancillary: Ancillary) => {
-    setEditingAncillary(ancillary);
-    setIsOverridesOpen(true);
-  };
-
-  const handleDialogClose = () => {
-    setIsFormOpen(false);
-    setIsOverridesOpen(false);
-    setEditingAncillary(null);
-  };
-  
-  const handleFormSubmit = (data: Ancillary) => {
-    if (editingAncillary) {
-      setAncillaries(ancillaries.map((a) => (a.id === editingAncillary.id ? { ...a, ...data } : a)));
-      toast({ title: "Ancillary Updated", description: `Ancillary "${data.name}" has been updated.` });
-    } else {
-      const newAncillary = { ...data, id: `ANC-${String(ancillaries.length + 1).padStart(3, '0')}` };
-      setAncillaries([...ancillaries, newAncillary]);
-      toast({ title: "Ancillary Created", description: `Ancillary "${newAncillary.name}" has been created.` });
-    }
-    handleDialogClose();
-  };
 
   const filteredAncillaries = ancillaries
     .filter((anc) =>
@@ -163,38 +126,30 @@ export default function AncillaryPricingPage() {
     return status === 'Active' ? 'default' : 'outline';
   };
 
-  const toggleStatus = (ancillary: Ancillary) => {
-    const newStatus = ancillary.status === 'Active' ? 'Disabled' : 'Active';
-    setAncillaries(ancillaries.map(a => a.id === ancillary.id ? {...a, status: newStatus} : a));
-    toast({
-        title: `Ancillary ${newStatus === 'Active' ? 'Enabled' : 'Disabled'}`,
-        description: `"${ancillary.name}" is now ${newStatus.toLowerCase()}.`
-    })
-  }
-
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold tracking-tight">
-            Ancillaries
+            Ancillary Pricing
           </h1>
           <p className="text-muted-foreground">
-            Manage pricing and bundling of ancillaries, with per-segment
-            toggles and overrides.
+            Manage dynamic pricing rules and overrides for ancillary products.
           </p>
         </div>
-        <Button onClick={() => handleOpenForm()}>
-          <PlusCircle className="mr-2" />
-          Create Ancillary
+        <Button asChild>
+          <Link href="/pricing/rules">
+            <PlusCircle className="mr-2" />
+            Manage Pricing Rules
+          </Link>
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Ancillary Products</CardTitle>
+          <CardTitle>Ancillary Pricing Overview</CardTitle>
           <CardDescription>
-            Manage all ancillary products and their default pricing.
+            A summary of all ancillary products and their active pricing overrides.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -236,10 +191,8 @@ export default function AncillaryPricingPage() {
                   <TableHead>Ancillary Name</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Pricing Overrides</TableHead>
                   <TableHead className="text-right">Default Price</TableHead>
-                  <TableHead>
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -255,42 +208,14 @@ export default function AncillaryPricingPage() {
                           {anc.status}
                         </Badge>
                       </TableCell>
+                      <TableCell>
+                        <Badge variant={anc.overrideCount > 0 ? 'default' : 'outline'}>{anc.overrideCount} Active</Badge>
+                      </TableCell>
                       <TableCell className="text-right">
                         {new Intl.NumberFormat('en-US', {
                           style: 'currency',
                           currency: anc.currency,
                         }).format(anc.defaultPrice)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-end">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                aria-haspopup="true"
-                                size="icon"
-                                variant="ghost"
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Toggle menu</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem onClick={() => handleOpenForm(anc)}>Edit</DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleOpenOverrides(anc)}>
-                                Segment Overrides
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>Manage Bundles</DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => toggleStatus(anc)}
-                                className={anc.status === 'Active' ? 'text-destructive' : ''}
-                              >
-                                {anc.status === 'Active' ? 'Disable' : 'Enable'}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -306,34 +231,6 @@ export default function AncillaryPricingPage() {
           </div>
         </CardContent>
       </Card>
-
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogContent>
-              <DialogHeader>
-                  <DialogTitle>{editingAncillary ? 'Edit Ancillary' : 'Create New Ancillary'}</DialogTitle>
-                  <DialogDescription>
-                      {editingAncillary ? `Editing ancillary "${editingAncillary.name}".` : 'Define a new ancillary product.'}
-                  </DialogDescription>
-              </DialogHeader>
-              <AncillaryForm 
-                  ancillary={editingAncillary}
-                  onSubmit={handleFormSubmit}
-                  onCancel={handleDialogClose}
-              />
-          </DialogContent>
-      </Dialog>
-      
-      <Dialog open={isOverridesOpen} onOpenChange={setIsOverridesOpen}>
-          <DialogContent>
-              <DialogHeader>
-                  <DialogTitle>Segment Overrides for "{editingAncillary?.name}"</DialogTitle>
-                  <DialogDescription>
-                      Define specific prices for different market conditions, overriding the default price.
-                  </DialogDescription>
-              </DialogHeader>
-              {editingAncillary && <AncillaryOverrides ancillary={editingAncillary} />}
-          </DialogContent>
-      </Dialog>
     </div>
   );
 }
