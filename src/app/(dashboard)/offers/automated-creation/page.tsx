@@ -25,6 +25,7 @@ import { useToast } from '@/hooks/use-toast';
 import { PlusCircle, Trash2, Save } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Separator } from '@/components/ui/separator';
 
 const parameterCategories = {
   "Passenger Profile & Personal Attributes": [
@@ -69,9 +70,21 @@ const parameterCategories = {
   ],
 };
 
+const customParamSchema = z.object({ value: z.string().min(1, "Parameter cannot be empty.") });
+const customCategorySchema = z.object({
+  name: z.string().min(1, "Category name cannot be empty."),
+  parameters: z.array(customParamSchema),
+});
+
 const formSchema = z.object({
   selectedParameters: z.array(z.string()).optional(),
-  additionalParameters: z.array(z.object({ category: z.string(), parameter: z.string() })).optional(),
+  customParameters: z.object(
+    Object.keys(parameterCategories).reduce((acc, key) => {
+      acc[key] = z.array(customParamSchema).optional();
+      return acc;
+    }, {} as Record<string, z.ZodOptional<z.ZodArray<typeof customParamSchema>>>)
+  ).optional(),
+  newCategories: z.array(customCategorySchema).optional(),
 });
 
 export default function AIConfigurationPage() {
@@ -81,13 +94,14 @@ export default function AIConfigurationPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       selectedParameters: ["frequent_flyer_status", "travel_purpose", "origin_destination", "date_time", "inventory_availability"],
-      additionalParameters: [{ category: '', parameter: '' }],
+      customParameters: {},
+      newCategories: [],
     },
   });
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: "additionalParameters",
+    name: "newCategories",
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
@@ -165,6 +179,12 @@ export default function AIConfigurationPage() {
                                         />
                                     ))}
                                     </div>
+                                    <Separator className="my-4" />
+                                    <p className="text-xs font-semibold text-muted-foreground px-2 mb-2">Custom parameters for this category:</p>
+                                     <div className="px-2 space-y-2">
+                                        <CustomParameterFields category={category} form={form} />
+                                     </div>
+
                                 </AccordionContent>
                                 </AccordionItem>
                             ))}
@@ -175,45 +195,39 @@ export default function AIConfigurationPage() {
                     />
 
                     <div>
-                        <FormLabel className="text-base font-semibold">Additional Parameters</FormLabel>
+                        <FormLabel className="text-base font-semibold">Additional Categories & Parameters</FormLabel>
                         <p className="text-sm text-muted-foreground">Add any extra categories or parameters for the AI.</p>
-                        <div className="space-y-2 mt-2">
-                        {fields.map((field, index) => (
-                            <div key={field.id} className="flex items-center gap-2">
-                            <FormField
-                                control={form.control}
-                                name={`additionalParameters.${index}.category`}
-                                render={({ field }) => (
-                                <Input {...field} placeholder="Category (e.g., Competitor Actions)" />
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name={`additionalParameters.${index}.parameter`}
-                                render={({ field }) => (
-                                <Input {...field} placeholder="Parameter (e.g., Delta launched a sale on LHR-JFK)" className="flex-1" />
-                                )}
-                            />
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => remove(index)}
-                                disabled={fields.length <= 1 && fields[0].category === '' && fields[0].parameter === ''}
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                            </div>
-                        ))}
-                        <Button
+                        <div className="space-y-4 mt-4">
+                          {fields.map((field, index) => (
+                            <Card key={field.id} className="bg-muted/30 p-4">
+                              <div className="flex justify-between items-center mb-2">
+                                <FormField
+                                  control={form.control}
+                                  name={`newCategories.${index}.name`}
+                                  render={({ field }) => (
+                                    <FormItem className="flex-1 mr-2">
+                                      <FormLabel className="sr-only">Category Name</FormLabel>
+                                      <Input {...field} placeholder="New Category Name" className="font-semibold" />
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              <CustomParameterFields category={`newCategories.${index}.parameters`} form={form} isNewCategory />
+                            </Card>
+                          ))}
+                          <Button
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => append({ category: "", parameter: "" })}
-                        >
+                            onClick={() => append({ name: "", parameters: [{ value: "" }] })}
+                          >
                             <PlusCircle className="mr-2 h-4 w-4" />
-                            Add Parameter
-                        </Button>
+                            Create New Category
+                          </Button>
                         </div>
                     </div>
                 </CardContent>
@@ -229,3 +243,43 @@ export default function AIConfigurationPage() {
     </div>
   );
 }
+
+
+// Helper component for dynamic custom fields
+function CustomParameterFields({ category, form, isNewCategory = false }: { category: string, form: any, isNewCategory?: boolean }) {
+  const fieldName = isNewCategory ? category : `customParameters.${category}`;
+  
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: fieldName,
+  });
+
+  return (
+    <div className="space-y-2">
+      {fields.map((field, index) => (
+        <div key={field.id} className="flex items-center gap-2">
+          <FormField
+            control={form.control}
+            name={`${fieldName}.${index}.value`}
+            render={({ field }) => (
+              <FormItem className="flex-1">
+                <FormControl>
+                  <Input {...field} placeholder="New parameter..." />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
+            <Trash2 className="h-4 w-4 text-muted-foreground" />
+          </Button>
+        </div>
+      ))}
+      <Button type="button" variant="outline" size="sm" onClick={() => append({ value: '' })}>
+        <PlusCircle className="mr-2 h-4 w-4" />
+        Add Parameter
+      </Button>
+    </div>
+  );
+}
+
