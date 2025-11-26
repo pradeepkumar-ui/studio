@@ -55,9 +55,9 @@ const fareSchema = z.object({
   tripTypes: z.array(z.string()).min(1, "At least one trip type is required."),
   passengerTypes: z.array(z.string()).min(1, "At least one passenger type is required."),
   pointOfSale: z.array(z.string()).optional(),
-  travelDate: z.object({ from: z.date(), to: z.date().optional() }),
+  travelDate: z.object({ from: z.date().optional(), to: z.date().optional() }).optional(),
   travelDaysOfWeek: z.array(z.string()).optional(),
-  bookingDate: z.object({ from: z.date(), to: z.date().optional() }),
+  bookingDate: z.object({ from: z.date().optional(), to: z.date().optional() }).optional(),
   bookingDaysOfWeek: z.array(z.string()).optional(),
   price: z.coerce.number().min(0, 'Price must be a positive number'),
   currency: z.string().length(3, 'Currency must be a 3-letter code'),
@@ -135,8 +135,8 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
     defaultValues: fare ? {
       ...fare,
       travelDate: {
-          from: fare.validity?.effectiveDate || new Date(),
-          to: fare.validity?.expiryDate || new Date(new Date().setDate(new Date().getDate() + 30)),
+          from: fare.validity?.effectiveDate,
+          to: fare.validity?.expiryDate,
       },
       bookingDate: {
           from: new Date(),
@@ -149,15 +149,9 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
       tripTypes: ['one_way', 'return'],
       passengerTypes: ['ADT'],
       pointOfSale: ['US'],
-      travelDate: {
-          from: new Date(),
-          to: new Date(new Date().setMonth(new Date().getMonth() + 6)),
-      },
+      travelDate: {},
       travelDaysOfWeek: [],
-      bookingDate: {
-          from: new Date(),
-          to: new Date(new Date().setDate(new Date().getDate() + 30)),
-      },
+      bookingDate: {},
       bookingDaysOfWeek: [],
       price: 0,
       currency: 'USD',
@@ -361,9 +355,9 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
                     <FormItem>
                         <Popover>
                             <PopoverTrigger asChild>
-                                <FormControl><Button variant="outline" className={cn('w-full pl-3 text-left font-normal', !field.value.from && 'text-muted-foreground')}><CalendarIcon className="mr-2 h-4 w-4" />{field.value.from ? (field.value.to ? <>{format(field.value.from, "LLL dd, y")} - {format(field.value.to, "LLL dd, y")}</> : format(field.value.from, "LLL dd, y")) : <span>Pick a date range</span>}</Button></FormControl>
+                                <FormControl><Button variant="outline" className={cn('w-full pl-3 text-left font-normal', !field.value?.from && 'text-muted-foreground')}><CalendarIcon className="mr-2 h-4 w-4" />{field.value?.from ? (field.value.to ? <>{format(field.value.from, "LLL dd, y")} - {format(field.value.to, "LLL dd, y")}</> : format(field.value.from, "LLL dd, y")) : <span>Pick a date range</span>}</Button></FormControl>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start"><Calendar initialFocus mode="range" defaultMonth={field.value.from} selected={field.value} onSelect={field.onChange} numberOfMonths={2} /></PopoverContent>
+                            <PopoverContent className="w-auto p-0" align="start"><Calendar initialFocus mode="range" defaultMonth={field.value?.from} selected={field.value as any} onSelect={field.onChange} numberOfMonths={2} /></PopoverContent>
                         </Popover>
                     </FormItem>
                 )} />
@@ -383,9 +377,9 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
                     <FormItem>
                         <Popover>
                             <PopoverTrigger asChild>
-                                <FormControl><Button variant="outline" className={cn('w-full pl-3 text-left font-normal', !field.value.from && 'text-muted-foreground')}><CalendarIcon className="mr-2 h-4 w-4" />{field.value.from ? (field.value.to ? <>{format(field.value.from, "LLL dd, y")} - {format(field.value.to, "LLL dd, y")}</> : format(field.value.from, "LLL dd, y")) : <span>Pick a date range</span>}</Button></FormControl>
+                                <FormControl><Button variant="outline" className={cn('w-full pl-3 text-left font-normal', !field.value?.from && 'text-muted-foreground')}><CalendarIcon className="mr-2 h-4 w-4" />{field.value?.from ? (field.value.to ? <>{format(field.value.from, "LLL dd, y")} - {format(field.value.to, "LLL dd, y")}</> : format(field.value.from, "LLL dd, y")) : <span>Pick a date range</span>}</Button></FormControl>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start"><Calendar initialFocus mode="range" defaultMonth={field.value.from} selected={field.value} onSelect={field.onChange} numberOfMonths={2} /></PopoverContent>
+                            <PopoverContent className="w-auto p-0" align="start"><Calendar initialFocus mode="range" defaultMonth={field.value?.from} selected={field.value as any} onSelect={field.onChange} numberOfMonths={2} /></PopoverContent>
                         </Popover>
                     </FormItem>
                 )} />
