@@ -64,6 +64,7 @@ import {
   Target,
   Megaphone,
   Luggage,
+  UserRoundCog,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -120,6 +121,7 @@ const menuItems: MenuItem[] = [
           { href: '/bundles', label: 'Bundles Studio', icon: Package },
           { href: '/offers', label: 'Offers Config', icon: Layers },
           { href: '/offer-composer', label: 'Composer', icon: Layers },
+          { href: '/offers/user-mapping', label: 'Promotion Assignment', icon: UserRoundCog },
           { href: '/optimisation', label: 'Offer Optimisation', icon: Wand2 },
           { href: '/disruption-waivers', label: 'Disruption Waivers', icon: Waves },
         ],
