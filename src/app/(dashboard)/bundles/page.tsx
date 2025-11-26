@@ -33,7 +33,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, PlusCircle, Loader2, Bot, User, Search } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2, Bot, User, Search, Package, Ticket } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { BundleForm, type Bundle } from '@/components/forms/bundle-form';
@@ -41,16 +41,17 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const mockOffers: (Bundle & { usage: number })[] = [
-    { id: 'BUN-001', name: 'Business Saver+', category: 'Normal', description: 'Front seat, 1 checked bag, and a meal.', status: 'Published', scope: { brand: 'Flex, Premium', route: 'All', channel: 'Direct, TMC' }, components: { seat: 'Front', baggage: '23kg', meal: 'Any' }, pricingStrategy: 'Percent Discount', discount: 15, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 1520 },
-    { id: 'BUN-002', name: 'Family Pack', category: 'Normal', description: 'Adjacent seats, extra baggage, and child meals.', status: 'Published', scope: { brand: 'Economy Saver', route: 'JFK-MIA', channel: 'Web' }, components: { seat: 'Adjacent', baggage: '15kg, 2', meal: 'Child' }, pricingStrategy: 'Fixed Discount', discount: 50, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 890 },
-    { id: 'BUN-003', name: 'Weekend Getaway', category: 'Promotional', description: 'Late checkout, priority boarding.', status: 'Draft', scope: { route: 'JFK-MIA', channel: 'Direct' }, components: { other: 'Hotel(Late Checkout), Boarding(Priority)' }, pricingStrategy: 'Absolute Price', discount: 75, itemCount: 2, source: 'Manual', priority: 'Manual Override', usage: 0 },
-    { id: 'BUN-004', name: 'Long Haul Comfort', category: 'Normal', description: 'Extra legroom seat, amenity kit, and Wi-Fi.', status: 'Published', scope: { route: 'Duration > 6h' }, components: { seat: 'Legroom', other: 'Amenity Kit, Wi-Fi(Unlimited)' }, pricingStrategy: 'Percent Discount', discount: 20, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 2105 },
-    { id: 'BUN-005', name: 'Disruption Recovery Pack', category: 'Disruption', description: 'Lounge access, meal voucher, and hotel credit.', status: 'Published', scope: { route: 'All' }, components: { other: 'Lounge, Meal Voucher, Hotel Credit' }, pricingStrategy: 'Absolute Price', discount: 0, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 450 },
-    { id: 'BUN-006', name: 'Flexi Traveler', category: 'Normal', description: 'Flight change waiver and seat selection.', status: 'Published', scope: { brand: 'Economy Flex' }, components: { other: 'Flexibility(Change)', seat: 'Any' }, pricingStrategy: 'Absolute Price', discount: 99, itemCount: 2, source: 'AI', priority: 'AI Override', usage: 730 },
-    { id: 'BUN-007', name: 'Holiday Special', category: 'Promotional', description: 'Extra bag and festive meal.', status: 'Published', scope: { route: 'All', channel: 'Web, Mobile' }, components: { baggage: '23kg', meal: 'Festive' }, pricingStrategy: 'Fixed Discount', discount: 25, itemCount: 2, source: 'AI', priority: 'Manual Override', usage: 1240 },
-    { id: 'BUN-008', name: 'TMC Recovery Bundle', category: 'Disruption', description: 'Lounge access, fast-track security, chauffeur.', status: 'Archived', scope: { channel: 'TMC' }, components: { other: 'Lounge, Security(Fast), Chauffeur' }, pricingStrategy: 'Absolute Price', discount: 0, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 120 },
+    { id: 'BUN-001', name: 'Business Saver+', category: 'Normal', description: 'Front seat, 1 checked bag, and a meal.', status: 'Published', scope: { brand: 'Flex, Premium', route: 'All', channel: 'Direct, TMC' }, components: { seat: 'Front', baggage: '23kg', meal: 'Any' }, promotions: [], pricingStrategy: 'Percent Discount', discount: 15, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 1520 },
+    { id: 'BUN-002', name: 'Family Pack', category: 'Normal', description: 'Adjacent seats, extra baggage, and child meals.', status: 'Published', scope: { brand: 'Economy Saver', route: 'JFK-MIA', channel: 'Web' }, components: { seat: 'Adjacent', baggage: '15kg, 2', meal: 'Child' }, promotions: [], pricingStrategy: 'Fixed Discount', discount: 50, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 890 },
+    { id: 'BUN-003', name: 'Weekend Getaway', category: 'Promotional', description: 'Late checkout, priority boarding.', status: 'Draft', scope: { route: 'JFK-MIA', channel: 'Direct' }, components: { other: 'Hotel(Late Checkout), Boarding(Priority)' }, promotions: ['PROMO-04'], pricingStrategy: 'Absolute Price', discount: 75, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 0 },
+    { id: 'BUN-004', name: 'Long Haul Comfort', category: 'Normal', description: 'Extra legroom seat, amenity kit, and Wi-Fi.', status: 'Published', scope: { route: 'Duration > 6h' }, components: { seat: 'Legroom', other: 'Amenity Kit, Wi-Fi(Unlimited)' }, promotions: [], pricingStrategy: 'Percent Discount', discount: 20, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 2105 },
+    { id: 'BUN-005', name: 'Disruption Recovery Pack', category: 'Disruption', description: 'Lounge access, meal voucher, and hotel credit.', status: 'Published', scope: { route: 'All' }, components: { other: 'Lounge, Meal Voucher, Hotel Credit' }, promotions: [], pricingStrategy: 'Absolute Price', discount: 0, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 450 },
+    { id: 'BUN-006', name: 'Flexi Traveler', category: 'Normal', description: 'Flight change waiver and seat selection.', status: 'Published', scope: { brand: 'Economy Flex' }, components: { other: 'Flexibility(Change)', seat: 'Any' }, promotions: [], pricingStrategy: 'Absolute Price', discount: 99, itemCount: 2, source: 'AI', priority: 'AI Override', usage: 730 },
+    { id: 'BUN-007', name: 'Holiday Special', category: 'Promotional', description: 'Extra bag and festive meal.', status: 'Published', scope: { route: 'All', channel: 'Web, Mobile' }, components: { baggage: '23kg', meal: 'Festive' }, promotions: ['PROMO-01'], pricingStrategy: 'Fixed Discount', discount: 25, itemCount: 3, source: 'AI', priority: 'Manual Override', usage: 1240 },
+    { id: 'BUN-008', name: 'TMC Recovery Bundle', category: 'Disruption', description: 'Lounge access, fast-track security, chauffeur.', status: 'Archived', scope: { channel: 'TMC' }, components: { other: 'Lounge, Security(Fast), Chauffeur' }, promotions: [], pricingStrategy: 'Absolute Price', discount: 0, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 120 },
 ];
 
 
@@ -100,6 +101,7 @@ export default function BundlesPage() {
         ...data, 
         itemCount,
         source: data.source || 'Manual',
+        priority: data.priority || 'Manual Override',
       };
 
       if (editingBundle?.id) {
@@ -230,16 +232,18 @@ export default function BundlesPage() {
              </div>
            )}
            {!loading && displayOffers.length > 0 && !error && (
+            <TooltipProvider>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Offer Name</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Scope</TableHead>
+                  <TableHead>Items</TableHead>
                   <TableHead>Pricing</TableHead>
                   <TableHead>Usage</TableHead>
                   <TableHead>Source</TableHead>
+                  <TableHead>Priority</TableHead>
                   <TableHead>
                     <span className="sr-only">Actions</span>
                   </TableHead>
@@ -261,9 +265,23 @@ export default function BundlesPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-wrap gap-1 max-w-xs">
-                        <span className="text-xs">{getScopeString(bundle.scope)}</span>
-                      </div>
+                      <Tooltip>
+                        <TooltipTrigger>
+                            <div className="flex items-center gap-1">
+                                <Package className="h-4 w-4" />
+                                <span>{bundle.itemCount}</span>
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <div className="p-1 text-sm">
+                            <h4 className="font-semibold mb-2">Included Items</h4>
+                            <ul className="list-disc list-inside space-y-1">
+                              {bundle.components && Object.values(bundle.components).filter(Boolean).map((comp, i) => <li key={i} className="capitalize">{comp.toString().toLowerCase()}</li>)}
+                              {bundle.promotions && Array.isArray(bundle.promotions) && bundle.promotions.map((promo, i) => <li key={i}>Promotion: {promo}</li>)}
+                            </ul>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
                     </TableCell>
                     <TableCell>
                         <Badge variant={bundle.pricingStrategy === 'Absolute Price' ? 'default' : 'secondary'}>
@@ -276,6 +294,9 @@ export default function BundlesPage() {
                         {bundle.source === 'AI' ? <Bot /> : <User />}
                         <span>{bundle.source || 'Manual'}</span>
                       </div>
+                    </TableCell>
+                     <TableCell>
+                      <Badge variant="outline">{bundle.priority}</Badge>
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
@@ -307,6 +328,7 @@ export default function BundlesPage() {
                 ))}
               </TableBody>
             </Table>
+            </TooltipProvider>
            )}
            {error && <p className="text-destructive">Error loading offers: {error.message}</p>}
         </CardContent>
