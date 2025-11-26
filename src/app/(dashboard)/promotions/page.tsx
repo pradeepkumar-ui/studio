@@ -42,10 +42,10 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 
 const mockPromotions: Promotion[] = [
-    { id: 'PRO-001', name: 'Winter Sale', description: '10% off on all flights to Europe', prefix: 'WINTER10', poolSize: 10000, usageType: 'multi', expiryDate: new Date('2025-03-31'), status: 'Active' },
-    { id: 'PRO-002', name: 'Business Special', description: '25% off on business class tickets', prefix: 'BIZ25', poolSize: 5000, usageType: 'single', expiryDate: new Date('2025-06-30'), status: 'Active' },
-    { id: 'PRO-003', name: 'New Route Launch', description: '50% off on flights to Tokyo', prefix: 'TOKYO50', poolSize: 1000, usageType: 'single', expiryDate: new Date('2025-04-30'), status: 'Draft' },
-    { id: 'PRO-004', name: 'Summer Getaway', description: '15% off on all flights', prefix: 'SUMMER15', poolSize: 20000, usageType: 'multi', expiryDate: new Date('2024-09-30'), status: 'Expired' },
+    { id: 'PRO-001', name: 'Winter Sale', description: '10% off on all flights to Europe', prefix: 'WINTER10', poolSize: 10000, usageType: 'multi', discountType: 'Percentage', discountValue: 10, expiryDate: new Date('2025-03-31'), status: 'Active' },
+    { id: 'PRO-002', name: 'Business Special', description: '$100 off on business class tickets', prefix: 'BIZ100', poolSize: 5000, usageType: 'single', discountType: 'Fixed Amount', discountValue: 100, expiryDate: new Date('2025-06-30'), status: 'Active' },
+    { id: 'PRO-003', name: 'New Route Launch', description: '50% off on flights to Tokyo', prefix: 'TOKYO50', poolSize: 1000, usageType: 'single', discountType: 'Percentage', discountValue: 50, expiryDate: new Date('2025-04-30'), status: 'Draft' },
+    { id: 'PRO-004', name: 'Summer Getaway', description: '15% off on all flights', prefix: 'SUMMER15', poolSize: 20000, usageType: 'multi', discountType: 'Percentage', discountValue: 15, expiryDate: new Date('2024-09-30'), status: 'Expired' },
 ];
 
 export default function PromotionsPage() {
@@ -129,6 +129,14 @@ export default function PromotionsPage() {
     }
     return format(date, 'PP');
   };
+  
+  const formatDiscount = (promo: Promotion) => {
+    if (promo.discountType === 'Percentage') {
+        return `${promo.discountValue}%`;
+    }
+    // Assuming USD for simplicity, a real app would need currency info
+    return `$${promo.discountValue.toFixed(2)}`;
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -171,7 +179,7 @@ export default function PromotionsPage() {
                 <TableRow>
                     <TableHead>Promotion Name</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Code Prefix</TableHead>
+                    <TableHead>Discount</TableHead>
                     <TableHead>Pool Size</TableHead>
                     <TableHead>Usage Type</TableHead>
                     <TableHead>Expiry Date</TableHead>
@@ -189,7 +197,9 @@ export default function PromotionsPage() {
                         {promo.status}
                         </Badge>
                     </TableCell>
-                    <TableCell className="font-mono">{promo.prefix}</TableCell>
+                    <TableCell>
+                        <Badge variant="outline">{formatDiscount(promo)}</Badge>
+                    </TableCell>
                     <TableCell>{promo.poolSize.toLocaleString()}</TableCell>
                     <TableCell className="capitalize">{promo.usageType}</TableCell>
                     <TableCell>

@@ -35,6 +35,8 @@ const promotionSchema = z.object({
   prefix: z.string().min(3, 'A code prefix is required.').max(10, 'Prefix cannot exceed 10 characters.'),
   poolSize: z.coerce.number().min(1, 'Pool size must be at least 1.'),
   usageType: z.enum(['single', 'multi', 'unlimited']),
+  discountType: z.enum(['Percentage', 'Fixed Amount']),
+  discountValue: z.coerce.number().min(1, 'Discount value must be greater than 0.'),
   expiryDate: z.union([z.instanceof(Date), z.instanceof(Timestamp)]),
   status: z.enum(['Active', 'Draft', 'Expired']),
 });
@@ -65,6 +67,8 @@ export function PromotionForm({ promotion, onSubmit, onCancel }: PromotionFormPr
       prefix: '',
       poolSize: 1000,
       usageType: 'multi',
+      discountType: 'Percentage',
+      discountValue: 10,
       expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
       status: 'Draft',
     },
@@ -126,6 +130,42 @@ export function PromotionForm({ promotion, onSubmit, onCancel }: PromotionFormPr
                 </FormItem>
             )}
            />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+            <FormField
+                control={form.control}
+                name="discountType"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Discount Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                        <SelectTrigger>
+                        <SelectValue placeholder="Select a discount type" />
+                        </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        <SelectItem value="Percentage">Percentage (%)</SelectItem>
+                        <SelectItem value="Fixed Amount">Fixed Amount ($)</SelectItem>
+                    </SelectContent>
+                    </Select>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="discountValue"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Discount Value</FormLabel>
+                    <FormControl>
+                        <Input type="number" placeholder="e.g., 15" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
         </div>
         <div className="grid grid-cols-2 gap-4">
             <FormField
