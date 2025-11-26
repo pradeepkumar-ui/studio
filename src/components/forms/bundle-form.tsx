@@ -21,12 +21,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '../ui/separator';
-import { PlusCircle, Trash2, CalendarIcon } from 'lucide-react';
+import { PlusCircle, Trash2, CalendarIcon, Eye } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { MultiSelect } from '../ui/multi-select';
+import { useState } from 'react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
+import Image from 'next/image';
 
 const ancillaryProducts = [
   { id: 'ANC-001', name: '1st Checked Bag (23kg)', price: 35 },
@@ -96,6 +99,8 @@ const parseScope = (bundle: Bundle | null) => {
 
 
 export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
+  const [showPreview, setShowPreview] = useState(false);
+    
   const form = useForm<Bundle>({
     resolver: zodResolver(bundleSchema),
     defaultValues: bundle ? {
@@ -157,10 +162,22 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
   }
 
   const selectedComponents = form.watch('components');
+  const pricingStrategy = form.watch('pricingStrategy');
+  const discountValue = form.watch('discount');
+
   const totalComponentValue = selectedComponents.reduce((total, current) => {
     const product = ancillaryProducts.find(p => p.id === current.value);
     return total + (product ? product.price : 0);
   }, 0);
+
+  let finalPrice = 0;
+  if (pricingStrategy === 'Absolute Price') {
+    finalPrice = discountValue;
+  } else if (pricingStrategy === 'Fixed Discount') {
+    finalPrice = totalComponentValue - discountValue;
+  } else if (pricingStrategy === 'Percent Discount') {
+    finalPrice = totalComponentValue * (1 - discountValue / 100);
+  }
 
 
   return (
@@ -312,6 +329,10 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                 <span className="text-muted-foreground">Total Component Value</span>
                 <span className="font-semibold">${totalComponentValue.toFixed(2)}</span>
             </div>
+            <div className="flex justify-between">
+                <span className="text-muted-foreground">Bundle Price</span>
+                <span className="font-semibold text-primary">${finalPrice.toFixed(2)}</span>
+            </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <FormField
@@ -353,6 +374,40 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
         
         <Separator className="my-6" />
 
+        {showPreview && (
+             <Card className="flex flex-col overflow-hidden">
+                <CardHeader>
+                    <CardTitle>Bundle Preview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex flex-col overflow-hidden border rounded-lg">
+                        <div className="relative w-full h-40">
+                            <Image
+                                src="https://picsum.photos/seed/bundle-preview/600/400"
+                                alt={form.getValues('name') || 'Bundle'}
+                                fill
+                                style={{ objectFit: 'cover' }}
+                                data-ai-hint="travel lifestyle"
+                            />
+                        </div>
+                        <div className="p-4">
+                            <h4 className="text-lg font-semibold">{form.getValues('name') || 'Your Bundle Name'}</h4>
+                            <p className="text-sm text-muted-foreground">{form.getValues('description') || 'Your bundle description'}</p>
+                            <ul className="text-sm text-muted-foreground list-disc pl-5 mt-2 space-y-1">
+                                {form.getValues('components').filter(c => c.value).map(c => <li key={c.value}>{ancillaryProducts.find(p => p.id === c.value)?.name}</li>)}
+                            </ul>
+                        </div>
+                        <div className="p-4 flex items-baseline gap-2 self-end border-t w-full mt-auto">
+                           <span className="text-muted-foreground line-through">${totalComponentValue.toFixed(2)}</span>
+                           <span className="text-2xl font-bold text-primary">${finalPrice.toFixed(2)}</span>
+                        </div>
+                    </div>
+                </CardContent>
+             </Card>
+        )}
+
+        <Separator className="my-6" />
+
         <FormField
           control={form.control}
           name="status"
@@ -377,6 +432,10 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
         />
         
         <div className="flex justify-end gap-4 pt-4">
+          <Button type="button" variant="outline" onClick={() => setShowPreview(!showPreview)}>
+            <Eye className="mr-2 h-4 w-4" />
+            {showPreview ? 'Hide Preview' : 'Show Preview'}
+          </Button>
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
