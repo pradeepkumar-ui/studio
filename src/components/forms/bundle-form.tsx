@@ -99,6 +99,7 @@ const bundleSchema = z.object({
   description: z.string().min(5, 'Description is required.'),
   category: z.enum(['Normal', 'Disruption', 'Promotional']).default('Normal'),
   status: z.enum(['Draft', 'Published', 'Archived']),
+  priority: z.enum(['Default', 'Manual Override', 'AI Override']).default('Default'),
   scope: z.object({
     brand: z.array(z.string()).optional(),
     channel: z.array(z.string()).optional(),
@@ -180,12 +181,14 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
       validity: {
         effectiveDate: new Date(),
         expiryDate: new Date(new Date().setDate(new Date().getDate() + 30)),
-      }
+      },
+      priority: bundle.priority || 'Default',
     } : {
       name: '',
       description: '',
       category: 'Normal',
       status: 'Draft',
+      priority: 'Default',
       scope: {
         brand: [],
         channel: [],
@@ -582,6 +585,53 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
         
         <Separator className="my-6" />
 
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Draft">Draft</SelectItem>
+                    <SelectItem value="Published">Published</SelectItem>
+                    <SelectItem value="Archived">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="priority"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Priority</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a priority" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Default">Default</SelectItem>
+                    <SelectItem value="Manual Override">Manual Override</SelectItem>
+                    <SelectItem value="AI Override">AI Override</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
         {showPreview && (
              <Card className="flex flex-col overflow-hidden">
                 <CardHeader>
@@ -622,31 +672,6 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
              </Card>
         )}
 
-        <Separator className="my-6" />
-
-        <FormField
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Status</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a status" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Draft">Draft</SelectItem>
-                  <SelectItem value="Published">Published</SelectItem>
-                  <SelectItem value="Archived">Archived</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
         <div className="flex justify-end gap-4 pt-4">
           <Button type="button" variant="outline" onClick={() => setShowPreview(!showPreview)}>
             <Eye className="mr-2 h-4 w-4" />
