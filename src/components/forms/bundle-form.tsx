@@ -34,9 +34,11 @@ import Image from 'next/image';
 
 const ancillaryProducts = [
   { id: 'ANC-001', name: '1st Checked Bag (23kg)', price: 35 },
+  { id: 'ANC-007', name: '2nd Checked Bag (23kg)', price: 50 },
+  { id: 'ANC-008', name: 'Oversize Baggage', price: 100 },
   { id: 'ANC-002', name: 'Extra Legroom Seat', price: 50 },
+  { id: 'ANC-009', name: 'Up-front Seat', price: 25 },
   { id: 'ANC-003', name: 'In-flight Wi-Fi', price: 8 },
-  { id: 'ANC-004', name: 'Priority Boarding', price: 15 },
   { id: 'ANC-006', name: 'Lounge Access', price: 45 },
   { id: 'ANC-010', name: 'Premium Meal', price: 25 },
   { id: 'ANC-011', name: 'Cancel for any reason', price: 40 },
@@ -99,7 +101,7 @@ const bundleSchema = z.object({
   description: z.string().min(5, 'Description is required.'),
   category: z.enum(['Normal', 'Disruption', 'Promotional']).default('Normal'),
   status: z.enum(['Draft', 'Published', 'Archived']),
-  priority: z.enum(['Default', 'Manual Override', 'AI Override']).default('Default'),
+  priority: z.enum(['Manual Override', 'AI Override']).default('Manual Override'),
   scope: z.object({
     brand: z.array(z.string()).optional(),
     channel: z.array(z.string()).optional(),
@@ -182,13 +184,13 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
         effectiveDate: new Date(),
         expiryDate: new Date(new Date().setDate(new Date().getDate() + 30)),
       },
-      priority: bundle.priority || 'Default',
+      priority: bundle.priority || 'Manual Override',
     } : {
       name: '',
       description: '',
       category: 'Normal',
       status: 'Draft',
-      priority: 'Default',
+      priority: 'Manual Override',
       scope: {
         brand: [],
         channel: [],
@@ -621,7 +623,6 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Default">Default</SelectItem>
                     <SelectItem value="Manual Override">Manual Override</SelectItem>
                     <SelectItem value="AI Override">AI Override</SelectItem>
                   </SelectContent>
