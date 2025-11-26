@@ -192,13 +192,15 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
                         name="source"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Origin(s)</FormLabel>
-                                <MultiSelect
-                                    options={airportOptions}
-                                    selected={field.value || []}
-                                    onChange={field.onChange}
-                                    placeholder="Select origins..."
-                                />
+                                <FormLabel>Origin</FormLabel>
+                                 <Select onValueChange={(value) => field.onChange([value])} defaultValue={field.value?.[0]}>
+                                    <FormControl><SelectTrigger><SelectValue placeholder="Select origin..." /></SelectTrigger></FormControl>
+                                    <SelectContent>
+                                        {airportOptions.map(option => (
+                                            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                                 <FormMessage />
                             </FormItem>
                         )}
