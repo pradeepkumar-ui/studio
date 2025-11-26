@@ -48,6 +48,12 @@ const ancillaryProducts = [
   { id: 'ANC-006', name: 'Lounge Access' },
 ];
 
+const cohortOptions = [
+    { id: 'FrequentMobile_UAE', label: 'Frequent Mobile Users UAE' },
+    { id: 'BusinessLoyal_IN', label: 'Business Travelers India' },
+    { id: 'NewUsers', label: 'New Users' },
+];
+
 const offerSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(5, 'Offer name is required and must be at least 5 characters.'),
@@ -303,7 +309,18 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
             <FormLabel>Target Cohorts (Optional)</FormLabel>
             {cohortFields.map((field, index) => (
                 <div key={field.id} className="flex items-center gap-2">
-                    <FormField control={form.control} name={`cohorts.${index}.value`} render={({field}) => <Input {...field} placeholder="e.g., BusinessLoyal_IN" />} />
+                    <FormField control={form.control} name={`cohorts.${index}.value`} render={({field}) => (
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a cohort"/>
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {cohortOptions.map(opt => <SelectItem key={opt.id} value={opt.id}>{opt.label}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    )} />
                     <Button type="button" variant="ghost" size="icon" onClick={() => removeCohort(index)}><Trash2 className="h-4 w-4" /></Button>
                 </div>
             ))}
