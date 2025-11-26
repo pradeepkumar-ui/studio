@@ -237,6 +237,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
   const selectedComponents = form.watch('components');
   const pricingStrategy = form.watch('pricingStrategy');
   const discountValue = form.watch('discount');
+  const selectedPromotions = form.watch('promotions');
 
   const totalComponentValue = selectedComponents.reduce((total, current) => {
     const product = ancillaryProducts.find(p => p.id === current.value);
@@ -588,6 +589,14 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                             <p className="text-sm text-muted-foreground">{form.getValues('description') || 'Your bundle description'}</p>
                             <ul className="text-sm text-muted-foreground list-disc pl-5 mt-2 space-y-1">
                                 {form.getValues('components').filter(c => c.value).map(c => <li key={c.value}>{ancillaryProducts.find(p => p.id === c.value)?.name}</li>)}
+                                {selectedPromotions?.filter(p => p.value).map(p => {
+                                    const promoDetails = mockPromotionsData.find(promo => promo.id === p.value);
+                                    return (
+                                        <li key={p.value}>
+                                            Promo Code Unlocked on Purchase ({promoDetails?.description})
+                                        </li>
+                                    )
+                                })}
                             </ul>
                         </div>
                         <div className="p-4 flex items-baseline gap-2 self-end border-t w-full mt-auto">
@@ -638,3 +647,5 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
     </Form>
   );
 }
+
+    
