@@ -25,15 +25,22 @@ import {
 import { Separator } from '../ui/separator';
 import { Checkbox } from '../ui/checkbox';
 import { MultiSelect } from '../ui/multi-select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const ancillaryOptions = [
-    { id: 'seat_selection', label: 'Seat Selection' },
-    { id: 'checked_bag', label: 'Checked Bag (1st)' },
-    { id: 'priority_boarding', label: 'Priority Boarding' },
-    { id: 'meal_service', label: 'Meal Service' },
-    { id: 'lounge_access', label: 'Lounge Access' },
-    { id: 'flexibility', label: 'Flexibility (Change/Cancel)' },
+    { id: 'ANC-001', label: '1st Checked Bag (23kg)', price: 35 },
+    { id: 'ANC-007', label: '2nd Checked Bag (23kg)', price: 50 },
+    { id: 'ANC-008', label: 'Oversize Baggage', price: 100 },
+    { id: 'ANC-002', label: 'Extra Legroom Seat', price: 50 },
+    { id: 'ANC-009', label: 'Up-front Seat', price: 25 },
+    { id: 'ANC-003', label: 'In-flight Wi-Fi', price: 8 },
+    { id: 'ANC-006', label: 'Lounge Access', price: 45 },
+    { id: 'ANC-010', label: 'Premium Meal', price: 25 },
+    { id: 'ANC-004', label: 'Priority Boarding', price: 15 },
+    { id: 'ANC-005', label: 'Flight Change Fee', price: 75 },
+    { id: 'ANC-011', label: 'Cancel for any reason', price: 40 },
 ] as const;
+
 
 const airportOptions = [
     { value: 'JFK', label: 'JFK - New York' },
@@ -286,39 +293,48 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
             render={() => (
                 <FormItem>
                      <div className="grid grid-cols-2 gap-4 pt-2">
-                        {ancillaryOptions.map((item) => (
-                        <FormField
-                            key={item.id}
-                            control={form.control}
-                            name="includedAncillaries"
-                            render={({ field }) => {
-                            return (
-                                <FormItem
-                                key={item.id}
-                                className="flex flex-row items-start space-x-3 space-y-0"
-                                >
-                                <FormControl>
-                                    <Checkbox
-                                    checked={field.value?.includes(item.id)}
-                                    onCheckedChange={(checked) => {
-                                        return checked
-                                        ? field.onChange([...(field.value || []), item.id])
-                                        : field.onChange(
-                                            field.value?.filter(
-                                                (value) => value !== item.id
-                                            )
-                                            )
+                        <TooltipProvider>
+                            {ancillaryOptions.map((item) => (
+                                <FormField
+                                    key={item.id}
+                                    control={form.control}
+                                    name="includedAncillaries"
+                                    render={({ field }) => {
+                                    return (
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <FormItem
+                                                key={item.id}
+                                                className="flex flex-row items-center space-x-3 space-y-0"
+                                                >
+                                                <FormControl>
+                                                    <Checkbox
+                                                    checked={field.value?.includes(item.id)}
+                                                    onCheckedChange={(checked) => {
+                                                        return checked
+                                                        ? field.onChange([...(field.value || []), item.id])
+                                                        : field.onChange(
+                                                            field.value?.filter(
+                                                                (value) => value !== item.id
+                                                            )
+                                                            )
+                                                    }}
+                                                    />
+                                                </FormControl>
+                                                <FormLabel className="font-normal cursor-pointer">
+                                                    {item.label}
+                                                </FormLabel>
+                                                </FormItem>
+                                            </TooltipTrigger>
+                                             <TooltipContent>
+                                                <p>Default Price: ${item.price}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    )
                                     }}
-                                    />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                    {item.label}
-                                </FormLabel>
-                                </FormItem>
-                            )
-                            }}
-                        />
-                        ))}
+                                />
+                            ))}
+                        </TooltipProvider>
                     </div>
                     <FormMessage />
                 </FormItem>
@@ -429,3 +445,4 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
     </Form>
   );
 }
+
