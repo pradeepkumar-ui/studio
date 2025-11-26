@@ -23,6 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Skeleton } from "@/components/ui/skeleton";
 import { type PricingRule, formatRuleForSubmit } from "@/components/forms/pricing-rule-form";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import { Separator } from "../ui/separator";
 
 const formSchema = z.object({
   description: z.string().min(10, {
@@ -149,100 +150,105 @@ export function DynamicPricingRuleAssistant({ onRuleCreate }: DynamicPricingRule
             ) : (
               <Wand2 className="mr-2 h-4 w-4" />
             )}
-            Generate Rule JSON
+            Generate Rule
           </Button>
         </form>
       </Form>
 
        {(isLoading || result) && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start mt-6">
-            <Card>
-                 <CardHeader>
-                    <CardTitle>Rule Preview & Simulation</CardTitle>
-                    <CardDescription>A summary and impact analysis of the generated rule.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                     {isLoading ? (
-                         <div className="space-y-6">
-                            <div className="space-y-2">
-                                <Skeleton className="h-4 w-1/4" />
-                                <Skeleton className="h-6 w-full" />
-                                <Skeleton className="h-6 w-3/4" />
-                            </div>
-                             <div className="space-y-2">
-                                <Skeleton className="h-4 w-1/3" />
-                                <Skeleton className="h-10 w-full" />
-                            </div>
-                        </div>
-                     ) : (
-                        result && (
-                             <div className="space-y-6">
-                                <div>
-                                    <h4 className="font-semibold text-sm">Summary</h4>
-                                    <p className="text-sm text-muted-foreground">{result.ruleSummary}</p>
+        <div className="mt-6 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Rule Preview & Simulation</CardTitle>
+                        <CardDescription>A summary and impact analysis of the generated rule.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {isLoading ? (
+                            <div className="space-y-6">
+                                <div className="space-y-2">
+                                    <Skeleton className="h-4 w-1/4" />
+                                    <Skeleton className="h-6 w-full" />
+                                    <Skeleton className="h-6 w-3/4" />
                                 </div>
-                                <div>
-                                    <h4 className="font-semibold text-sm">Simulation</h4>
-                                    <p className="text-xs text-muted-foreground">{result.simulation.scenario}</p>
-                                    <div className="flex items-center justify-around text-center mt-2 p-3 bg-muted rounded-md">
-                                        <div>
-                                            <p className="text-xs text-muted-foreground">Before</p>
-                                            <p className="text-lg font-bold">${result.simulation.beforePrice.toFixed(2)}</p>
-                                        </div>
-                                        <ArrowRight className="h-5 w-5 text-muted-foreground" />
-                                        <div>
-                                            <p className="text-xs text-muted-foreground">After</p>
-                                            <p className="text-lg font-bold text-primary">${result.simulation.afterPrice.toFixed(2)}</p>
-                                        </div>
+                                <div className="space-y-2">
+                                    <Skeleton className="h-4 w-1/3" />
+                                    <Skeleton className="h-10 w-full" />
+                                </div>
+                            </div>
+                        ) : (
+                            result && (
+                                <div className="space-y-6">
+                                    <div>
+                                        <h4 className="font-semibold text-sm">Summary</h4>
+                                        <p className="text-sm text-muted-foreground">{result.ruleSummary}</p>
                                     </div>
-                                    <p className="text-center text-xs text-muted-foreground mt-1">{result.simulation.impact}</p>
-                                    <Alert variant="default" className="mt-4">
-                                      <Info className="h-4 w-4" />
-                                      <AlertTitle className="text-xs">Simulation Assumptions</AlertTitle>
-                                      <AlertDescription className="text-xs">
-                                        {result.simulation.assumptions}
-                                      </AlertDescription>
-                                    </Alert>
+                                    <div>
+                                        <h4 className="font-semibold text-sm">Simulation</h4>
+                                        <p className="text-xs text-muted-foreground">{result.simulation.scenario}</p>
+                                        <div className="flex items-center justify-around text-center mt-2 p-3 bg-muted rounded-md">
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Before</p>
+                                                <p className="text-lg font-bold">${result.simulation.beforePrice.toFixed(2)}</p>
+                                            </div>
+                                            <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">After</p>
+                                                <p className="text-lg font-bold text-primary">${result.simulation.afterPrice.toFixed(2)}</p>
+                                            </div>
+                                        </div>
+                                        <p className="text-center text-xs text-muted-foreground mt-1">{result.simulation.impact}</p>
+                                        <Alert variant="default" className="mt-4">
+                                        <Info className="h-4 w-4" />
+                                        <AlertTitle className="text-xs">Simulation Assumptions</AlertTitle>
+                                        <AlertDescription className="text-xs">
+                                            {result.simulation.assumptions}
+                                        </AlertDescription>
+                                        </Alert>
+                                    </div>
                                 </div>
-                            </div>
-                        )
-                     )}
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row justify-between items-center">
-                    <CardTitle>Generated Rule (JSON)</CardTitle>
-                    {result && !isLoading && (
-                    <Button variant="ghost" size="sm" onClick={handleCopyToClipboard}>
-                        <ClipboardCopy className="mr-2 h-4 w-4" />
-                        Copy
-                    </Button>
-                    )}
-                </CardHeader>
-                <CardContent>
-                    {isLoading ? (
-                    <div className="space-y-2 p-4 bg-secondary rounded-md">
-                        <Skeleton className="h-4 w-3/4" />
-                        <Skeleton className="h-4 w-1/2" />
-                        <Skeleton className="h-4 w-5/6" />
-                        <Skeleton className="h-4 w-2/3" />
-                        <Skeleton className="h-4 w-4/5" />
-                    </div>
-                    ) : (
-                    <pre className="p-4 bg-secondary rounded-md text-sm text-secondary-foreground overflow-x-auto max-h-[22.5rem]">
-                        <code>{result?.ruleJson}</code>
-                    </pre>
-                    )}
-                </CardContent>
-                {result && !isLoading && (
-                    <CardFooter>
-                        <Button className="w-full" onClick={handleCreateRuleFromAI}>
+                            )
+                        )}
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row justify-between items-center">
+                        <CardTitle>Generated Rule (JSON)</CardTitle>
+                        {result && !isLoading && (
+                        <Button variant="ghost" size="sm" onClick={handleCopyToClipboard}>
+                            <ClipboardCopy className="mr-2 h-4 w-4" />
+                            Copy
+                        </Button>
+                        )}
+                    </CardHeader>
+                    <CardContent>
+                        {isLoading ? (
+                        <div className="space-y-2 p-4 bg-secondary rounded-md">
+                            <Skeleton className="h-4 w-3/4" />
+                            <Skeleton className="h-4 w-1/2" />
+                            <Skeleton className="h-4 w-5/6" />
+                            <Skeleton className="h-4 w-2/3" />
+                            <Skeleton className="h-4 w-4/5" />
+                        </div>
+                        ) : (
+                        <pre className="p-4 bg-secondary rounded-md text-sm text-secondary-foreground overflow-x-auto max-h-[22.5rem]">
+                            <code>{result?.ruleJson}</code>
+                        </pre>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+             {result && !isLoading && (
+                <div>
+                    <Separator />
+                    <div className="flex justify-end pt-6">
+                        <Button onClick={handleCreateRuleFromAI}>
                             <PlusCircle className="mr-2 h-4 w-4" />
                             Create Rule from AI
                         </Button>
-                    </CardFooter>
-                )}
-            </Card>
+                    </div>
+                </div>
+            )}
         </div>
       )}
     </div>
