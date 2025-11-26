@@ -38,22 +38,19 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { FareFilingForm, type FareFiling } from '@/components/forms/fare-filing-form';
-import type { FareProduct } from '@/components/forms/fare-product-form';
+import type { Fare } from '@/components/forms/fare-form';
 
-const mockFareProducts: FareProduct[] = [
-    { id: 'FP-001', name: 'Economy Light', description: 'Basic economy fare with no checked baggage.', status: 'Active', version: 1, refundability: 'Not Allowed', exchangeability: 'Allowed with Penalty', transferability: 'Not Allowed' },
-    { id: 'FP-002', name: 'Economy Flex', description: 'Flexible economy fare with seat selection and one checked bag.', status: 'Active', version: 2, refundability: 'Allowed', exchangeability: 'Allowed', transferability: 'Not Allowed' },
-    { id: 'FP-003', name: 'Business Saver', description: 'Promotional business class fare with some restrictions.', status: 'Active', version: 1, refundability: 'Allowed with Penalty', exchangeability: 'Allowed with Penalty', transferability: 'Not Allowed' },
-    { id: 'FP-004', name: 'Business Flex', description: 'Fully flexible business class fare with all benefits.', status: 'Draft', version: 1, refundability: 'Allowed', exchangeability: 'Allowed', transferability: 'Allowed' },
-    { id: 'FP-005', name: 'First Class', description: 'Premium first-class experience.', status: 'Active', version: 1, refundability: 'Allowed', exchangeability: 'Allowed', transferability: 'Allowed' },
+const mockFares: Fare[] = [
+    { id: 'F-001', route: 'JFK-LAX', cabinClass: 'Economy', price: 350, currency: 'USD', status: 'Active', version: 1, fareBasisCode: 'YFLEX', validity: { effectiveDate: new Date(), expiryDate: new Date() }, tripTypes: [], passengerTypes: [] },
+    { id: 'F-002', route: 'LHR-DXB', cabinClass: 'Business', price: 2500, currency: 'GBP', status: 'Active', version: 2, fareBasisCode: 'JCLASS', validity: { effectiveDate: new Date(), expiryDate: new Date() }, tripTypes: [], passengerTypes: [] },
+    { id: 'F-003', route: 'SIN-HKG', cabinClass: 'Economy', price: 280, currency: 'SGD', status: 'Active', version: 1, fareBasisCode: 'QFLEX', validity: { effectiveDate: new Date(), expiryDate: new Date() }, tripTypes: [], passengerTypes: [] },
 ];
 
-
 const mockFilings: FareFiling[] = [
-  { id: 'FF-001', fareProductId: 'FP-001', fareProductName: 'Economy Light', route: 'JFK-LAX', channel: 'Web', effectiveDate: new Date('2025-01-01'), expiryDate: new Date('2025-03-31'), status: 'Active' },
-  { id: 'FF-002', fareProductId: 'FP-002', fareProductName: 'Economy Flex', route: 'US-DOM', channel: 'ALL', effectiveDate: new Date('2025-01-01'), expiryDate: new Date('2025-12-31'), status: 'Active' },
-  { id: 'FF-003', fareProductId: 'FP-003', fareProductName: 'Business Saver', route: 'LHR-DXB', channel: 'TMC', effectiveDate: new Date('2025-04-01'), expiryDate: new Date('2025-06-30'), status: 'Draft' },
-  { id: 'FF-004', fareProductId: 'FP-005', fareProductName: 'First Class', route: 'LHR-JFK', channel: 'ALL', effectiveDate: new Date('2025-01-01'), expiryDate: new Date('2025-12-31'), status: 'Inactive' },
+  { id: 'FF-001', fareId: 'F-001', fareIdentifier: 'YFLEX (JFK-LAX)', channel: 'Web', pointOfSale: ['US'], status: 'Active', travelDate: { from: new Date('2025-01-01'), to: new Date('2025-03-31') } },
+  { id: 'FF-002', fareId: 'F-002', fareIdentifier: 'JCLASS (LHR-DXB)', channel: 'ALL', pointOfSale: ['ALL'], status: 'Active', travelDate: { from: new Date('2025-01-01'), to: new Date('2025-12-31') } },
+  { id: 'FF-003', fareId: 'F-001', fareIdentifier: 'YFLEX (JFK-LAX)', channel: 'TMC', pointOfSale: ['US', 'CA'], status: 'Draft', travelDate: { from: new Date('2025-04-01'), to: new Date('2025-06-30') } },
+  { id: 'FF-004', fareId: 'F-003', fareIdentifier: 'QFLEX (SIN-HKG)', channel: 'ALL', pointOfSale: ['SG', 'HK'], status: 'Inactive' },
 ];
 
 export default function FareFilingPage() {
@@ -92,7 +89,8 @@ export default function FareFilingPage() {
     }
   };
   
-  const formatDateRange = (start: Date, end: Date) => {
+  const formatDateRange = (start?: Date, end?: Date) => {
+    if (!start || !end) return 'Always Active';
     return `${format(start, 'dd-MMM-yy')} to ${format(end, 'dd-MMM-yy')}`;
   }
 
@@ -102,7 +100,7 @@ export default function FareFilingPage() {
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold tracking-tight">Fare Filing</h1>
           <p className="text-muted-foreground">
-            Apply Fare Products to specific market conditions and rules.
+            Apply base fares to specific market conditions and rules.
           </p>
         </div>
         <Button onClick={() => handleOpenDialog()}>
@@ -122,10 +120,10 @@ export default function FareFilingPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Fare Product</TableHead>
-                <TableHead>Route</TableHead>
+                <TableHead>Base Fare</TableHead>
                 <TableHead>Channel</TableHead>
-                <TableHead>Dates</TableHead>
+                <TableHead>Point of Sale</TableHead>
+                <TableHead>Travel Dates</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -136,12 +134,15 @@ export default function FareFilingPage() {
               {filings.map((filing) => (
                 <TableRow key={filing.id}>
                   <TableCell className="font-medium">
-                    <div>{filing.fareProductName}</div>
-                    <div className="text-xs text-muted-foreground font-mono">{filing.fareProductId}</div>
+                    <div>{filing.fareIdentifier}</div>
                   </TableCell>
-                  <TableCell>{filing.route}</TableCell>
                    <TableCell>{filing.channel}</TableCell>
-                   <TableCell>{formatDateRange(filing.effectiveDate, filing.expiryDate)}</TableCell>
+                   <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                            {filing.pointOfSale?.map(pos => <Badge key={pos} variant="outline">{pos}</Badge>)}
+                        </div>
+                    </TableCell>
+                   <TableCell>{formatDateRange(filing.travelDate?.from, filing.travelDate?.to)}</TableCell>
                   <TableCell>
                     <Badge variant={getStatusBadgeVariant(filing.status)}>
                       {filing.status}
@@ -176,12 +177,12 @@ export default function FareFilingPage() {
           <DialogHeader>
             <DialogTitle>{editingFiling ? 'Edit Fare Filing' : 'Create New Fare Filing'}</DialogTitle>
             <DialogDescription>
-              {editingFiling ? `Editing filing for "${editingFiling.fareProductName}".` : 'Apply a fare product to a specific set of conditions.'}
+              {editingFiling ? `Editing filing for "${editingFiling.fareIdentifier}".` : 'Apply a base fare to a specific set of conditions.'}
             </DialogDescription>
           </DialogHeader>
           <FareFilingForm
             filing={editingFiling}
-            fareProducts={mockFareProducts}
+            fares={mockFares}
             onSubmit={handleFormSubmit}
             onCancel={handleDialogClose}
           />
