@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -169,7 +170,7 @@ export default function OffersPage() {
         toast({
             variant: "destructive",
             title: "Uh oh! Something went wrong.",
-            description: e.message || "There was a problem with your request.",
+            description: e.message || "Could not delete the offer.",
         });
     }
   };

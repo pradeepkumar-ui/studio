@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -29,6 +30,7 @@ import { Timestamp } from 'firebase/firestore';
 import { Textarea } from '../ui/textarea';
 import { Checkbox } from '../ui/checkbox';
 import { Separator } from '../ui/separator';
+import { MultiSelect } from '../ui/multi-select';
 
 const ancillaryOptions = [
     { id: 'seat_selection', label: 'Seat Selection' },
