@@ -42,6 +42,12 @@ const pricingRuleSchema = z.object({
     source: z.string().optional(),
   }),
 
+  // --- Target ---
+  target: z.object({
+    product: z.enum(['Air', 'Ancillary']).default('Air'),
+    ancillaryId: z.string().optional(),
+  }),
+
   // --- Conditions ---
   conditions: z.object({
     // Existing
@@ -55,13 +61,15 @@ const pricingRuleSchema = z.object({
     cohorts: z.array(z.string()).default([]),
     includedAncillaries: z.array(z.string()).default([]),
     includedBundles: z.array(z.string()).default([]),
+    stockLevelOperator: z.enum(['>', '<']).optional(),
+    stockLevelValue: z.coerce.number().optional(),
   }),
   
   // --- Action ---
   action: z.object({
     type: z.enum(['PERCENTAGE', 'FIXED_AMOUNT']),
     adjustment: z.coerce.number(),
-    cabinClass: z.enum(['Economy', 'Premium Economy', 'Business', 'First', 'All']),
+    cabinClass: z.enum(['Economy', 'Premium Economy', 'Business', 'First', 'All']).optional(),
   }),
 
   // --- Guardrails ---
@@ -108,6 +116,7 @@ const ancillaryOptions = [
     { id: 'anc_bag_1', label: '1st Checked Bag' },
     { id: 'anc_lounge_1', label: 'Lounge Access' },
     { id: 'anc_wifi_1', label: 'In-flight Wi-Fi' },
+    { id: 'anc_seat_1', label: 'Extra Legroom Seat' },
 ];
 
 const bundleOptions = [
@@ -125,6 +134,7 @@ const parseRuleForForm = (rule: PricingRule | null): PricingRuleFormData | undef
         name: rule.name,
         status: rule.status,
         trigger: { type: 'Scheduled' }, // Default
+        target: { product: 'Air' },
         conditions: {
             route: rule.conditions.includes('Route:') ? rule.conditions.split('Route: ')[1]?.split(',')[0].trim() : undefined,
             market: rule.conditions.includes('Market:') ? rule.conditions.split('Market: ')[1]?.split(',')[0].trim() : undefined,
@@ -149,10 +159,17 @@ const parseRuleForForm = (rule: PricingRule | null): PricingRuleFormData | undef
 // Function to format form data back into a display string for the table
 const formatRuleForSubmit = (data: PricingRuleFormData): PricingRule => {
     const conditionsParts: string[] = [];
+    if(data.target.product === 'Ancillary' && data.target.ancillaryId) {
+        const ancillaryName = ancillaryOptions.find(o => o.id === data.target.ancillaryId)?.label || data.target.ancillaryId;
+        conditionsParts.push(`Ancillary: ${ancillaryName}`);
+    }
     if (data.conditions.route) conditionsParts.push(`Route: ${data.conditions.route}`);
     if (data.conditions.market) conditionsParts.push(`Market: ${data.conditions.market}`);
     if (data.conditions.loadFactorOperator && data.conditions.loadFactorValue) {
         conditionsParts.push(`Load Factor ${data.conditions.loadFactorOperator} ${data.conditions.loadFactorValue}%`);
+    }
+    if (data.conditions.stockLevelOperator && data.conditions.stockLevelValue) {
+        conditionsParts.push(`Stock Level ${data.conditions.stockLevelOperator} ${data.conditions.stockLevelValue}`);
     }
     if (data.conditions.departureOperator && data.conditions.departureValue) {
         conditionsParts.push(`Departure ${data.conditions.departureOperator} ${data.conditions.departureValue}h`);
@@ -161,10 +178,10 @@ const formatRuleForSubmit = (data: PricingRuleFormData): PricingRule => {
         conditionsParts.push(`Cohorts: ${data.conditions.cohorts.length}`);
     }
     if (data.conditions.includedAncillaries && data.conditions.includedAncillaries.length > 0) {
-        conditionsParts.push(`Ancillaries: ${data.conditions.includedAncillaries.length}`);
+        conditionsParts.push(`Ancillaries in cart: ${data.conditions.includedAncillaries.length}`);
     }
     if (data.conditions.includedBundles && data.conditions.includedBundles.length > 0) {
-        conditionsParts.push(`Bundles: ${data.conditions.includedBundles.length}`);
+        conditionsParts.push(`Bundles in cart: ${data.conditions.includedBundles.length}`);
     }
     if (data.validity?.effectiveDate && data.validity?.expiryDate) {
         conditionsParts.push(`Dates: ${format(data.validity.effectiveDate, 'PP')} - ${format(data.validity.expiryDate, 'PP')}`);
@@ -173,7 +190,8 @@ const formatRuleForSubmit = (data: PricingRuleFormData): PricingRule => {
 
     const actionSign = data.action.adjustment >= 0 ? '+' : '';
     const actionValue = data.action.type === 'PERCENTAGE' ? `${data.action.adjustment}%` : `$${data.action.adjustment}`;
-    const actionString = `${actionSign}${actionValue} on ${data.action.cabinClass}`;
+    const targetCabin = data.target.product === 'Air' && data.action.cabinClass ? ` on ${data.action.cabinClass}` : '';
+    const actionString = `${actionSign}${actionValue}${targetCabin}`;
 
     return {
         id: data.id || `dp-${Math.random().toString(36).substr(2, 9)}`,
@@ -192,6 +210,7 @@ export function PricingRuleForm({ rule, onSubmit, onCancel }: PricingRuleFormPro
       name: '',
       status: 'Test',
       trigger: { type: 'Scheduled', source: '' },
+      target: { product: 'Air' },
       conditions: { cohorts: [], includedAncillaries: [], includedBundles: [] },
       action: { type: 'PERCENTAGE', adjustment: 10, cabinClass: 'All' },
       guardrails: {},
@@ -205,6 +224,7 @@ export function PricingRuleForm({ rule, onSubmit, onCancel }: PricingRuleFormPro
   }
   
   const triggerType = form.watch('trigger.type');
+  const targetProduct = form.watch('target.product');
 
   return (
     <Form {...form}>
@@ -258,18 +278,70 @@ export function PricingRuleForm({ rule, onSubmit, onCancel }: PricingRuleFormPro
                 />
             )}
         </div>
+        
+        <Separator />
+        <h4 className="text-md font-semibold">Target</h4>
+         <div className="grid grid-cols-2 gap-4">
+            <FormField
+                control={form.control}
+                name="target.product"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Target Product</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl><SelectTrigger><SelectValue placeholder="Select Target" /></SelectTrigger></FormControl>
+                        <SelectContent>
+                            <SelectItem value="Air">Air (Fares)</SelectItem>
+                            <SelectItem value="Ancillary">Ancillary</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+            {targetProduct === 'Ancillary' && (
+                 <FormField
+                    control={form.control}
+                    name="target.ancillaryId"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Ancillary Product</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl><SelectTrigger><SelectValue placeholder="Select an ancillary" /></SelectTrigger></FormControl>
+                            <SelectContent>
+                                {ancillaryOptions.map(opt => <SelectItem key={opt.id} value={opt.id}>{opt.label}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+            )}
+        </div>
 
 
         <Separator />
         <h4 className="text-md font-semibold">Conditions</h4>
-        <div className="grid grid-cols-2 gap-4">
-            <FormField control={form.control} name="conditions.route" render={({ field }) => (<FormItem><FormLabel>Route (Optional)</FormLabel><FormControl><Input placeholder="e.g., LHR-JFK" {...field} /></FormControl><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="conditions.market" render={({ field }) => (<FormItem><FormLabel>Market (Optional)</FormLabel><FormControl><Input placeholder="e.g., US-DOM" {...field} /></FormControl><FormMessage /></FormItem>)} />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-            <FormField control={form.control} name="conditions.loadFactorOperator" render={({ field }) => (<FormItem><FormLabel>Load Factor</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Operator" /></SelectTrigger></FormControl><SelectContent><SelectItem value=">">Greater than (&gt;)</SelectItem><SelectItem value="<">Less than (&lt;)</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="conditions.loadFactorValue" render={({ field }) => (<FormItem><FormLabel>Load Factor Value (%)</FormLabel><FormControl><Input type="number" placeholder="e.g., 80" {...field} /></FormControl><FormMessage /></FormItem>)} />
-        </div>
+        {targetProduct === 'Air' && (
+            <>
+            <div className="grid grid-cols-2 gap-4">
+                <FormField control={form.control} name="conditions.route" render={({ field }) => (<FormItem><FormLabel>Route (Optional)</FormLabel><FormControl><Input placeholder="e.g., LHR-JFK" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="conditions.market" render={({ field }) => (<FormItem><FormLabel>Market (Optional)</FormLabel><FormControl><Input placeholder="e.g., US-DOM" {...field} /></FormControl><FormMessage /></FormItem>)} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+                <FormField control={form.control} name="conditions.loadFactorOperator" render={({ field }) => (<FormItem><FormLabel>Load Factor</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Operator" /></SelectTrigger></FormControl><SelectContent><SelectItem value=">">Greater than (&gt;)</SelectItem><SelectItem value="<">Less than (&lt;)</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="conditions.loadFactorValue" render={({ field }) => (<FormItem><FormLabel>Load Factor Value (%)</FormLabel><FormControl><Input type="number" placeholder="e.g., 80" {...field} /></FormControl><FormMessage /></FormItem>)} />
+            </div>
+            </>
+        )}
+        
+        {targetProduct === 'Ancillary' && (
+             <div className="grid grid-cols-2 gap-4">
+                <FormField control={form.control} name="conditions.stockLevelOperator" render={({ field }) => (<FormItem><FormLabel>Stock Level</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Operator" /></SelectTrigger></FormControl><SelectContent><SelectItem value=">">Greater than (&gt;)</SelectItem><SelectItem value="<">Less than (&lt;)</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="conditions.stockLevelValue" render={({ field }) => (<FormItem><FormLabel>Stock Level Value</FormLabel><FormControl><Input type="number" placeholder="e.g., 20" {...field} /></FormControl><FormMessage /></FormItem>)} />
+            </div>
+        )}
+        
         <div className="grid grid-cols-2 gap-4">
             <FormField
                 control={form.control}
@@ -392,7 +464,9 @@ export function PricingRuleForm({ rule, onSubmit, onCancel }: PricingRuleFormPro
              <FormField control={form.control} name="action.type" render={({ field }) => (<FormItem><FormLabel>Adjustment Type</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger></FormControl><SelectContent><SelectItem value="PERCENTAGE">Percentage (%)</SelectItem><SelectItem value="FIXED_AMOUNT">Fixed Amount ($)</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
              <FormField control={form.control} name="action.adjustment" render={({ field }) => (<FormItem><FormLabel>Adjustment Value</FormLabel><FormControl><Input type="number" placeholder="e.g., 10 or -15" {...field} /></FormControl><FormMessage /></FormItem>)}/>
         </div>
-         <FormField control={form.control} name="action.cabinClass" render={({ field }) => (<FormItem><FormLabel>On Cabin Class</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Cabin" /></SelectTrigger></FormControl><SelectContent><SelectItem value="All">All Classes</SelectItem><SelectItem value="Economy">Economy</SelectItem><SelectItem value="Premium Economy">Premium Economy</SelectItem><SelectItem value="Business">Business</SelectItem><SelectItem value="First">First</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
+         {targetProduct === 'Air' && (
+            <FormField control={form.control} name="action.cabinClass" render={({ field }) => (<FormItem><FormLabel>On Cabin Class</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Cabin" /></SelectTrigger></FormControl><SelectContent><SelectItem value="All">All Classes</SelectItem><SelectItem value="Economy">Economy</SelectItem><SelectItem value="Premium Economy">Premium Economy</SelectItem><SelectItem value="Business">Business</SelectItem><SelectItem value="First">First</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
+         )}
 
         <Separator />
         <h4 className="text-md font-semibold">Guardrails</h4>
@@ -426,3 +500,5 @@ export function PricingRuleForm({ rule, onSubmit, onCancel }: PricingRuleFormPro
     </Form>
   );
 }
+
+    
