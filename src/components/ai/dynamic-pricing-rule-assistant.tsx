@@ -18,8 +18,8 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Wand2, Loader2, ClipboardCopy, ArrowRight } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Wand2, Loader2, ClipboardCopy, ArrowRight, PlusCircle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const formSchema = z.object({
@@ -28,7 +28,11 @@ const formSchema = z.object({
   }),
 });
 
-export function DynamicPricingRuleAssistant() {
+interface DynamicPricingRuleAssistantProps {
+    onRuleCreate: (ruleData: GeneratePricingRuleOutput) => void;
+}
+
+export function DynamicPricingRuleAssistant({ onRuleCreate }: DynamicPricingRuleAssistantProps) {
   const [result, setResult] = useState<GeneratePricingRuleOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -171,11 +175,19 @@ export function DynamicPricingRuleAssistant() {
                         <Skeleton className="h-4 w-4/5" />
                     </div>
                     ) : (
-                    <pre className="p-4 bg-secondary rounded-md text-sm text-secondary-foreground overflow-x-auto max-h-96">
+                    <pre className="p-4 bg-secondary rounded-md text-sm text-secondary-foreground overflow-x-auto max-h-60">
                         <code>{result?.ruleJson}</code>
                     </pre>
                     )}
                 </CardContent>
+                {result && !isLoading && (
+                    <CardFooter>
+                        <Button className="w-full" onClick={() => onRuleCreate(result)}>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Create Rule from AI
+                        </Button>
+                    </CardFooter>
+                )}
             </Card>
         </div>
       )}

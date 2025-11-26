@@ -95,6 +95,7 @@ export type PricingRule = {
   conditions: string;
   action: string;
   status: 'Active' | 'Inactive' | 'Test';
+  source: 'Manual' | 'AI';
 };
 
 // Form data type from schema
@@ -157,7 +158,7 @@ const parseRuleForForm = (rule: PricingRule | null): PricingRuleFormData | undef
 }
 
 // Function to format form data back into a display string for the table
-const formatRuleForSubmit = (data: PricingRuleFormData): PricingRule => {
+const formatRuleForSubmit = (data: PricingRuleFormData, source: 'Manual' | 'AI'): PricingRule => {
     const conditionsParts: string[] = [];
     if(data.target.product === 'Ancillary' && data.target.ancillaryId) {
         const ancillaryName = ancillaryOptions.find(o => o.id === data.target.ancillaryId)?.label || data.target.ancillaryId;
@@ -199,6 +200,7 @@ const formatRuleForSubmit = (data: PricingRuleFormData): PricingRule => {
         conditions: conditionsParts.join(', ') || 'N/A',
         action: actionString,
         status: data.status,
+        source: source
     };
 }
 
@@ -219,7 +221,7 @@ export function PricingRuleForm({ rule, onSubmit, onCancel }: PricingRuleFormPro
   });
 
   const handleFormSubmit = (data: PricingRuleFormData) => {
-    const formattedData = formatRuleForSubmit(data);
+    const formattedData = formatRuleForSubmit(data, rule?.source || 'Manual');
     onSubmit(formattedData);
   }
   
@@ -500,5 +502,3 @@ export function PricingRuleForm({ rule, onSubmit, onCancel }: PricingRuleFormPro
     </Form>
   );
 }
-
-    
