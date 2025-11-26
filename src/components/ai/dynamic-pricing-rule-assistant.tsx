@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
-import { generatePricingRule } from "@/ai/flows/generate-pricing-rule";
+import { generatePricingRule, GeneratePricingRuleOutput } from "@/ai/flows/generate-pricing-rule";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -18,8 +18,8 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Wand2, Loader2, ClipboardCopy } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Wand2, Loader2, ClipboardCopy, ArrowRight } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const formSchema = z.object({
@@ -29,7 +29,7 @@ const formSchema = z.object({
 });
 
 export function DynamicPricingRuleAssistant() {
-  const [structuredRule, setStructuredRule] = useState<string | null>(null);
+  const [result, setResult] = useState<GeneratePricingRuleOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -42,12 +42,12 @@ export function DynamicPricingRuleAssistant() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    setStructuredRule(null);
+    setResult(null);
     try {
       const result = await generatePricingRule({
         description: values.description,
       });
-      setStructuredRule(result.ruleJson);
+      setResult(result);
     } catch (error) {
       console.error(error);
       toast({
@@ -61,8 +61,8 @@ export function DynamicPricingRuleAssistant() {
   }
 
   const handleCopyToClipboard = () => {
-    if (structuredRule) {
-      navigator.clipboard.writeText(structuredRule);
+    if (result?.ruleJson) {
+      navigator.clipboard.writeText(result.ruleJson);
       toast({
         title: "Copied to clipboard!",
         description: "The generated JSON rule has been copied.",
@@ -102,34 +102,82 @@ export function DynamicPricingRuleAssistant() {
           </Button>
         </form>
       </Form>
-      
-      {(isLoading || structuredRule) && (
-        <Card className="mt-6">
-          <CardHeader className="flex flex-row justify-between items-center">
-            <CardTitle>Generated Rule (JSON)</CardTitle>
-            {structuredRule && !isLoading && (
-              <Button variant="ghost" size="sm" onClick={handleCopyToClipboard}>
-                <ClipboardCopy className="mr-2 h-4 w-4" />
-                Copy
-              </Button>
-            )}
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="space-y-2 p-4 bg-secondary rounded-md">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-                <Skeleton className="h-4 w-5/6" />
-                <Skeleton className="h-4 w-2/3" />
-                <Skeleton className="h-4 w-4/5" />
-              </div>
-            ) : (
-              <pre className="p-4 bg-secondary rounded-md text-sm text-secondary-foreground overflow-x-auto">
-                <code>{structuredRule}</code>
-              </pre>
-            )}
-          </CardContent>
-        </Card>
+
+       {(isLoading || result) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start mt-6">
+            <Card>
+                 <CardHeader>
+                    <CardTitle>Rule Preview & Simulation</CardTitle>
+                    <CardDescription>A summary and impact analysis of the generated rule.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     {isLoading ? (
+                         <div className="space-y-6">
+                            <div className="space-y-2">
+                                <Skeleton className="h-4 w-1/4" />
+                                <Skeleton className="h-6 w-full" />
+                                <Skeleton className="h-6 w-3/4" />
+                            </div>
+                             <div className="space-y-2">
+                                <Skeleton className="h-4 w-1/3" />
+                                <Skeleton className="h-10 w-full" />
+                            </div>
+                        </div>
+                     ) : (
+                        result && (
+                             <div className="space-y-6">
+                                <div>
+                                    <h4 className="font-semibold text-sm">Summary</h4>
+                                    <p className="text-sm text-muted-foreground">{result.ruleSummary}</p>
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold text-sm">Simulation</h4>
+                                    <p className="text-xs text-muted-foreground">{result.simulation.scenario}</p>
+                                    <div className="flex items-center justify-around text-center mt-2 p-3 bg-muted rounded-md">
+                                        <div>
+                                            <p className="text-xs text-muted-foreground">Before</p>
+                                            <p className="text-lg font-bold">${result.simulation.beforePrice.toFixed(2)}</p>
+                                        </div>
+                                        <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                                        <div>
+                                            <p className="text-xs text-muted-foreground">After</p>
+                                            <p className="text-lg font-bold text-primary">${result.simulation.afterPrice.toFixed(2)}</p>
+                                        </div>
+                                    </div>
+                                    <p className="text-center text-xs text-muted-foreground mt-1">{result.simulation.impact}</p>
+                                </div>
+                            </div>
+                        )
+                     )}
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row justify-between items-center">
+                    <CardTitle>Generated Rule (JSON)</CardTitle>
+                    {result && !isLoading && (
+                    <Button variant="ghost" size="sm" onClick={handleCopyToClipboard}>
+                        <ClipboardCopy className="mr-2 h-4 w-4" />
+                        Copy
+                    </Button>
+                    )}
+                </CardHeader>
+                <CardContent>
+                    {isLoading ? (
+                    <div className="space-y-2 p-4 bg-secondary rounded-md">
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-4 w-1/2" />
+                        <Skeleton className="h-4 w-5/6" />
+                        <Skeleton className="h-4 w-2/3" />
+                        <Skeleton className="h-4 w-4/5" />
+                    </div>
+                    ) : (
+                    <pre className="p-4 bg-secondary rounded-md text-sm text-secondary-foreground overflow-x-auto max-h-96">
+                        <code>{result?.ruleJson}</code>
+                    </pre>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
       )}
     </div>
   );

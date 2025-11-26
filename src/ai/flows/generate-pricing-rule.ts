@@ -24,6 +24,13 @@ const GeneratePricingRuleOutputSchema = z.object({
   ruleJson: z
     .string()
     .describe('A structured JSON representation of the dynamic pricing rule. This should be a stringified JSON object.'),
+  ruleSummary: z.string().describe("A human-readable summary of the rule's logic and action."),
+  simulation: z.object({
+      scenario: z.string().describe("A brief description of the simulation scenario."),
+      beforePrice: z.number().describe("The price before the rule is applied."),
+      afterPrice: z.number().describe("The price after the rule is applied."),
+      impact: z.string().describe("A short sentence describing the impact."),
+  }).describe("A simulated scenario showing the rule's impact on a sample fare.")
 });
 export type GeneratePricingRuleOutput = z.infer<typeof GeneratePricingRuleOutputSchema>;
 
@@ -37,13 +44,15 @@ const prompt = ai.definePrompt({
   output: {schema: GeneratePricingRuleOutputSchema},
   prompt: `You are an expert in converting natural language descriptions into structured JSON for an airline's dynamic pricing engine.
 
-  Analyze the following description and generate a structured JSON object as a string. The JSON should be well-formed and include keys for 'name', 'status', 'trigger', 'conditions', 'action', and 'guardrails'.
-
-  - 'trigger.type' can be 'Scheduled', 'OnDemand', or 'CompetitorPriceChange'.
-  - 'conditions' can include 'route', 'market', 'loadFactorOperator' ('>' or '<'), 'loadFactorValue', 'departureOperator', 'departureValue' etc.
-  - 'action.type' can be 'PERCENTAGE' or 'FIXED_AMOUNT'.
-  - 'action.adjustment' should be a number (positive for increase, negative for decrease).
-  - 'action.cabinClass' can be 'Economy', 'Premium Economy', 'Business', 'First', or 'All'.
+  Analyze the following description and generate three things:
+  1. A structured JSON object as a string in 'ruleJson'. The JSON should include keys for 'name', 'status', 'trigger', 'conditions', 'action', and 'guardrails'.
+     - 'trigger.type' can be 'Scheduled', 'OnDemand', or 'CompetitorPriceChange'.
+     - 'conditions' can include 'route', 'market', 'loadFactorOperator' ('>' or '<'), 'loadFactorValue', 'departureOperator', 'departureValue' etc.
+     - 'action.type' can be 'PERCENTAGE' or 'FIXED_AMOUNT'.
+     - 'action.adjustment' should be a number (positive for increase, negative for decrease).
+     - 'action.cabinClass' can be 'Economy', 'Premium Economy', 'Business', 'First', or 'All'.
+  2. A short, human-readable summary of what the rule does in 'ruleSummary'.
+  3. A simple simulation in 'simulation' showing the rule's effect. Create a realistic 'scenario' and calculate 'beforePrice' and 'afterPrice'.
 
   Description:
   {{{description}}}
