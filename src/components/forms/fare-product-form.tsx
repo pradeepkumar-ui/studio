@@ -94,7 +94,13 @@ const getRouteString = (data: Partial<FareProduct>): string => {
             return `To: ${data.destination?.join(', ') || 'N/A'}`;
         case 'route':
         default:
-            return `${data.source?.[0] || 'ANY'}-${data.destination?.[0] || 'ANY'}`;
+             if (data.source?.length && data.destination?.length) {
+                if (data.source.length > 1 || data.destination.length > 1) {
+                    return `${data.source.join('/')} to ${data.destination.join('/')}`;
+                }
+                return `${data.source[0]}-${data.destination[0]}`;
+            }
+            return 'ANY-ANY';
     }
 }
 
@@ -186,11 +192,13 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
                         name="source"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Origin</FormLabel>
-                                <Select onValueChange={(value) => field.onChange([value])} defaultValue={field.value?.[0]}>
-                                    <FormControl><SelectTrigger><SelectValue placeholder="Select Origin" /></SelectTrigger></FormControl>
-                                    <SelectContent>{airportOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
-                                </Select>
+                                <FormLabel>Origin(s)</FormLabel>
+                                <MultiSelect
+                                    options={airportOptions}
+                                    selected={field.value || []}
+                                    onChange={field.onChange}
+                                    placeholder="Select origins..."
+                                />
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -199,12 +207,14 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
                         control={form.control}
                         name="destination"
                         render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Destination</FormLabel>
-                                <Select onValueChange={(value) => field.onChange([value])} defaultValue={field.value?.[0]}>
-                                    <FormControl><SelectTrigger><SelectValue placeholder="Select Destination" /></SelectTrigger></FormControl>
-                                    <SelectContent>{airportOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
-                                </Select>
+                           <FormItem>
+                                <FormLabel>Destination(s)</FormLabel>
+                                <MultiSelect
+                                    options={airportOptions}
+                                    selected={field.value || []}
+                                    onChange={field.onChange}
+                                    placeholder="Select destinations..."
+                                />
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -445,4 +455,3 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
     </Form>
   );
 }
-
