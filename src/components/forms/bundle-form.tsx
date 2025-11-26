@@ -83,6 +83,7 @@ const bundleSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(3, 'Bundle name is required.'),
   description: z.string().min(5, 'Description is required.'),
+  category: z.enum(['Normal', 'Disruption', 'Promotional']).default('Normal'),
   status: z.enum(['Draft', 'Published', 'Archived']),
   scope: z.object({
     brand: z.array(z.string()).optional(),
@@ -164,6 +165,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
     } : {
       name: '',
       description: '',
+      category: 'Normal',
       status: 'Draft',
       scope: {
         brand: [],
@@ -263,6 +265,28 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
               <FormControl>
                 <Input placeholder="e.g., Front seat + bag + meal" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="category"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Category</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="Normal">Normal</SelectItem>
+                  <SelectItem value="Disruption">Disruption</SelectItem>
+                  <SelectItem value="Promotional">Promotional</SelectItem>
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
