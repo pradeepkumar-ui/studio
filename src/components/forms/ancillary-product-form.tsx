@@ -20,11 +20,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useEffect } from 'react';
 
 const ancillaryProductSchema = z.object({
   sku: z.string().min(3, 'SKU is required.'),
   name: z.string().min(5, 'Product name is required.'),
   category: z.string().min(3, 'Category is required.'),
+  subCategory: z.string().min(3, 'Sub-category is required.'),
   price: z.coerce.number().min(0, 'Price must be a non-negative number.'),
   currency: z.string().length(3, 'Must be a 3-letter currency code.'),
   stock: z.union([z.coerce.number().min(0), z.literal('N/A')]),
@@ -52,6 +54,20 @@ const ancillaryCategories = [
     'Other'
 ];
 
+const subCategoryMap: Record<string, string[]> = {
+    Baggage: ['First Bag', 'Second Bag', 'Oversized'],
+    Seats: ['Extra Legroom', 'Up-front', 'Standard'],
+    'On-board Services': ['Wi-Fi', 'Lounge Access', 'Priority Boarding'],
+    Flexibility: ['Change Waiver', 'Cancellation'],
+    'Gift Cards': ['$50 Card', '$100 Card', '$250 Card'],
+    'Lounge Access': ['Standard Pass', 'Premium Pass'],
+    Merchandise: ['Neck Pillow', 'Model Plane', 'Travel Kit'],
+    Vouchers: ['Carbon Offset', 'Drink Voucher', 'Duty-Free'],
+    Meals: ['Standard', 'Premium', 'Special (VGML, KSML)'],
+    Other: ['General'],
+};
+
+
 export function AncillaryProductForm({ product, onSubmit, onCancel }: AncillaryProductFormProps) {
   const form = useForm<AncillaryProduct>({
     resolver: zodResolver(ancillaryProductSchema),
@@ -59,6 +75,7 @@ export function AncillaryProductForm({ product, onSubmit, onCancel }: AncillaryP
       sku: '',
       name: '',
       category: 'Merchandise',
+      subCategory: 'Model Plane',
       price: 0,
       currency: 'USD',
       stock: 0,
@@ -67,10 +84,18 @@ export function AncillaryProductForm({ product, onSubmit, onCancel }: AncillaryP
   });
   
   const stockIsNA = form.watch('stock') === 'N/A';
+  const selectedCategory = form.watch('category');
+
+  useEffect(() => {
+    // Reset subCategory when category changes, if it's not a new form with a product
+    if (!product) {
+        form.setValue('subCategory', subCategoryMap[selectedCategory]?.[0] || '');
+    }
+  }, [selectedCategory, form, product]);
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto pr-4">
         <FormField
           control={form.control}
           name="sku"
@@ -97,26 +122,48 @@ export function AncillaryProductForm({ product, onSubmit, onCancel }: AncillaryP
             </FormItem>
           )}
         />
-        <FormField
-            control={form.control}
-            name="category"
-            render={({ field }) => (
-            <FormItem>
-                <FormLabel>Category</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                    <SelectTrigger>
-                    <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                    {ancillaryCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
-                </SelectContent>
-                </Select>
-                <FormMessage />
-            </FormItem>
-            )}
-        />
+        <div className="grid grid-cols-2 gap-4">
+            <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                        <SelectTrigger>
+                        <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        {ancillaryCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                    </SelectContent>
+                    </Select>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="subCategory"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Sub-Category</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                    <FormControl>
+                        <SelectTrigger>
+                        <SelectValue placeholder="Select a sub-category" />
+                        </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        {subCategoryMap[selectedCategory]?.map(subCat => <SelectItem key={subCat} value={subCat}>{subCat}</SelectItem>)}
+                    </SelectContent>
+                    </Select>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+        </div>
         <div className="grid grid-cols-2 gap-4">
             <FormField
                 control={form.control}

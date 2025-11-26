@@ -39,10 +39,10 @@ import { useToast } from '@/hooks/use-toast';
 import { AncillaryProductForm, type AncillaryProduct } from '@/components/forms/ancillary-product-form';
 
 const initialOtherProducts: AncillaryProduct[] = [
-    { sku: 'GC-1000-INR', name: '₹1000 Gift Card', category: 'Gift Cards', price: 1000, currency: 'INR', stock: 482, status: 'Active' },
-    { sku: 'LP-SIN-01', name: 'SIN Lounge Pass', category: 'Lounge Access', price: 45, currency: 'USD', stock: 'N/A', status: 'Active' },
-    { sku: 'MERCH-NP-01', name: 'Branded Neck Pillow', category: 'Merchandise', price: 25, currency: 'USD', stock: 112, status: 'Active' },
-    { sku: 'VOUCH-CC-01', name: 'Carbon Offset Voucher', category: 'Vouchers', price: 10, currency: 'USD', stock: 'N/A', status: 'Draft' },
+    { sku: 'GC-1000-INR', name: '₹1000 Gift Card', category: 'Gift Cards', subCategory: '₹1000 Card', price: 1000, currency: 'INR', stock: 482, status: 'Active' },
+    { sku: 'LP-SIN-01', name: 'SIN Lounge Pass', category: 'Lounge Access', subCategory: 'Standard Pass', price: 45, currency: 'USD', stock: 'N/A', status: 'Active' },
+    { sku: 'MERCH-NP-01', name: 'Branded Neck Pillow', category: 'Merchandise', subCategory: 'Neck Pillow', price: 25, currency: 'USD', stock: 112, status: 'Active' },
+    { sku: 'VOUCH-CC-01', name: 'Carbon Offset Voucher', category: 'Vouchers', subCategory: 'Carbon Offset', price: 10, currency: 'USD', stock: 'N/A', status: 'Draft' },
 ]
 
 export default function AncillaryProductsPage() {
@@ -116,6 +116,7 @@ export default function AncillaryProductsPage() {
               <TableRow>
                 <TableHead>Product Name</TableHead>
                 <TableHead>Category</TableHead>
+                <TableHead>Sub-Category</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Stock</TableHead>
@@ -129,7 +130,10 @@ export default function AncillaryProductsPage() {
                 <TableRow key={product.sku}>
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{product.category}</Badge>
+                    <Badge variant="outline">{product.category}</Badge>
+                  </TableCell>
+                   <TableCell>
+                    <Badge variant="secondary">{product.subCategory}</Badge>
                   </TableCell>
                   <TableCell>
                     <Badge variant={getStatusBadgeVariant(product.status)}>
