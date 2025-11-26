@@ -42,10 +42,11 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 
 const mockPromotions: Promotion[] = [
-    { id: 'PRO-001', name: 'Winter Sale', description: '10% off on all flights to Europe', prefix: 'WINTER10', poolSize: 10000, usageType: 'multi', discountType: 'Percentage', discountValue: 10, expiryDate: new Date('2025-03-31'), status: 'Active' },
-    { id: 'PRO-002', name: 'Business Special', description: '$100 off on business class tickets', prefix: 'BIZ100', poolSize: 5000, usageType: 'single', discountType: 'Fixed Amount', discountValue: 100, expiryDate: new Date('2025-06-30'), status: 'Active' },
-    { id: 'PRO-003', name: 'New Route Launch', description: '50% off on flights to Tokyo', prefix: 'TOKYO50', poolSize: 1000, usageType: 'single', discountType: 'Percentage', discountValue: 50, expiryDate: new Date('2025-04-30'), status: 'Draft' },
-    { id: 'PRO-004', name: 'Summer Getaway', description: '15% off on all flights', prefix: 'SUMMER15', poolSize: 20000, usageType: 'multi', discountType: 'Percentage', discountValue: 15, expiryDate: new Date('2024-09-30'), status: 'Expired' },
+    { id: 'PRO-001', name: 'Winter Sale', description: '10% off on all flights to Europe', prefix: 'WINTER10', poolSize: 10000, usageType: 'multi', promotionType: 'Discount', discountType: 'Percentage', discountValue: 10, expiryDate: new Date('2025-03-31'), status: 'Active' },
+    { id: 'PRO-002', name: 'Business Special', description: '$100 off on business class tickets', prefix: 'BIZ100', poolSize: 5000, usageType: 'single', promotionType: 'Discount', discountType: 'Fixed Amount', discountValue: 100, expiryDate: new Date('2025-06-30'), status: 'Active' },
+    { id: 'PRO-003', name: 'Free Bag Offer', description: 'Free first checked bag', prefix: 'FREEBAG', poolSize: 1000, usageType: 'single', promotionType: 'Free Service', freeServices: ['free_baggage_1'], expiryDate: new Date('2025-04-30'), status: 'Draft' },
+    { id: 'PRO-004', name: 'Summer Getaway', description: '15% off on all flights', prefix: 'SUMMER15', poolSize: 20000, usageType: 'multi', promotionType: 'Discount', discountType: 'Percentage', discountValue: 15, expiryDate: new Date('2024-09-30'), status: 'Expired' },
+    { id: 'PRO-005', name: 'Next Trip Credit', description: '$50 credit for your next booking', prefix: 'NEXT50', poolSize: 500, usageType: 'single', promotionType: 'Future Credit', creditAmount: 50, creditValidityDays: 180, expiryDate: new Date('2025-12-31'), status: 'Active' },
 ];
 
 export default function PromotionsPage() {
@@ -131,11 +132,19 @@ export default function PromotionsPage() {
   };
   
   const formatDiscount = (promo: Promotion) => {
-    if (promo.discountType === 'Percentage') {
-        return `${promo.discountValue}%`;
+    switch (promo.promotionType) {
+        case 'Discount':
+            if (promo.discountType === 'Percentage') {
+                return `${promo.discountValue}% Off`;
+            }
+            return `$${promo.discountValue?.toFixed(2)} Off`;
+        case 'Free Service':
+            return `Free Service(s)`;
+        case 'Future Credit':
+            return `$${promo.creditAmount} Future Credit`;
+        default:
+            return 'N/A';
     }
-    // Assuming USD for simplicity, a real app would need currency info
-    return `$${promo.discountValue.toFixed(2)}`;
   }
 
   return (
@@ -179,7 +188,7 @@ export default function PromotionsPage() {
                 <TableRow>
                     <TableHead>Promotion Name</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Discount</TableHead>
+                    <TableHead>Value</TableHead>
                     <TableHead>Pool Size</TableHead>
                     <TableHead>Usage Type</TableHead>
                     <TableHead>Expiry Date</TableHead>
