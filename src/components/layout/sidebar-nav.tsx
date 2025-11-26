@@ -117,7 +117,7 @@ const menuItems: MenuItem[] = [
         icon: Ticket,
         subItems: [
           { href: '/offers/cohorts', label: 'Cohorts', icon: Users },
-          { href: '/bundles', label: 'Bundles Studio', icon: Package },
+          { href: '/bundles', label: 'Bundle Studio and Offer Creation', icon: Package },
           { href: '/offers', label: 'Offers Config', icon: Layers },
           { href: '/offer-composer', label: 'Composer', icon: Layers },
           { href: '/optimisation', label: 'Offer Optimisation', icon: Wand2 },

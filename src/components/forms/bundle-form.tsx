@@ -78,6 +78,14 @@ const airportOptions = [
     { value: 'BOM', label: 'BOM - Mumbai' },
 ];
 
+const marketOptions = [
+    { value: 'US-DOM', label: 'US Domestic' },
+    { value: 'EU', label: 'Europe' },
+    { value: 'APAC', label: 'Asia-Pacific' },
+    { value: 'ME', label: 'Middle East' },
+    { value: 'AF', label: 'Africa' },
+];
+
 const routeScopeSchema = z.object({
     type: z.enum(['route-one-to-many', 'route-many-to-one', 'source', 'destination']).default('route-one-to-many'),
     source: z.array(z.string()).optional(),
@@ -87,7 +95,7 @@ const routeScopeSchema = z.object({
 
 const bundleSchema = z.object({
   id: z.string().optional(),
-  name: z.string().min(3, 'Bundle name is required.'),
+  name: z.string().min(3, 'Offer name is required.'),
   description: z.string().min(5, 'Description is required.'),
   category: z.enum(['Normal', 'Disruption', 'Promotional']).default('Normal'),
   status: z.enum(['Draft', 'Published', 'Archived']),
@@ -97,6 +105,7 @@ const bundleSchema = z.object({
     routes: z.array(routeScopeSchema).optional(),
     cohorts: z.array(z.string()).optional(),
     route: z.string().optional(),
+    market: z.array(z.string()).optional(),
   }),
   components: z.array(z.object({ value: z.string().min(1, "Please select an ancillary.") })).min(1, "At least one ancillary component is required."),
   promotions: z.array(z.object({ value: z.string().min(1, "Please select a promotion.") })).optional(),
@@ -133,7 +142,7 @@ const getRouteStringFromScope = (scope: z.infer<typeof routeScopeSchema>): strin
 }
 
 const parseScope = (bundle: Bundle | null) => {
-    if (!bundle || !bundle.scope) return { brand: [], channel: [], routes: [], cohorts: []};
+    if (!bundle || !bundle.scope) return { brand: [], channel: [], routes: [], cohorts: [], market: []};
     
     let routes = [];
      if (bundle.scope.route) { // Handle legacy string-based route
@@ -152,6 +161,7 @@ const parseScope = (bundle: Bundle | null) => {
         channel: Array.isArray(bundle.scope.channel) ? bundle.scope.channel : (bundle.scope.channel ? (bundle.scope.channel as string).split(',').map(s => s.trim()) : []),
         routes: routes,
         cohorts: Array.isArray(bundle.scope.cohorts) ? bundle.scope.cohorts : (bundle.scope.cohorts ? (bundle.scope.cohorts as string).split(',').map(s => s.trim()) : []),
+        market: Array.isArray(bundle.scope.market) ? bundle.scope.market : [],
     }
 }
 
@@ -180,6 +190,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
         channel: [],
         routes: [{ type: 'route-one-to-many', source: [], destination: [] }],
         cohorts: [],
+        market: [],
       },
       components: [{value: ''}],
       promotions: [],
@@ -228,6 +239,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
           channel: data.scope.channel?.join(', '),
           cohorts: data.scope.cohorts?.join(', '),
           route: data.scope.routes?.map(getRouteStringFromScope).join('; '),
+          market: data.scope.market?.join(', '),
         }
     };
     
@@ -264,7 +276,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Bundle Name</FormLabel>
+              <FormLabel>Offer Name</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., Business Saver+" {...field} />
               </FormControl>
@@ -313,8 +325,9 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
         <h4 className="text-md font-semibold">Scope & Rules</h4>
         <p className="text-sm text-muted-foreground -mt-2">Define the conditions under which this bundle is available.</p>
         <div className="space-y-4">
-             <FormField control={form.control} name="scope.brand" render={({field}) => <FormItem><FormLabel>Fare Brands</FormLabel><MultiSelect options={fareBrandOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select brands..."/><FormMessage/></FormItem>} />
+            <FormField control={form.control} name="scope.brand" render={({field}) => <FormItem><FormLabel>Fare Brands</FormLabel><MultiSelect options={fareBrandOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select brands..."/><FormMessage/></FormItem>} />
             <FormField control={form.control} name="scope.channel" render={({field}) => <FormItem><FormLabel>Channels</FormLabel><MultiSelect options={channelOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select channels..."/><FormMessage/></FormItem>} />
+            <FormField control={form.control} name="scope.market" render={({field}) => <FormItem><FormLabel>Markets</FormLabel><MultiSelect options={marketOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select markets..."/><FormMessage/></FormItem>} />
             
             <div className="space-y-2">
             <FormLabel>Routes</FormLabel>
