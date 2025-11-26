@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -115,10 +116,12 @@ const cohortOptions = [
 ];
 
 const ancillaryOptions = [
-    { id: 'anc_bag_1', label: '1st Checked Bag' },
-    { id: 'anc_lounge_1', label: 'Lounge Access' },
-    { id: 'anc_wifi_1', label: 'In-flight Wi-Fi' },
-    { id: 'anc_seat_1', label: 'Extra Legroom Seat' },
+    { id: 'ANC-001', label: '1st Checked Bag (23kg)' },
+    { id: 'ANC-002', label: 'Extra Legroom Seat' },
+    { id: 'ANC-003', label: 'In-flight Wi-Fi' },
+    { id: 'ANC-004', label: 'Priority Boarding' },
+    { id: 'ANC-005', label: 'Flight Change Fee' },
+    { id: 'ANC-006', label: 'Lounge Access' },
 ];
 
 const bundleOptions = [
@@ -212,6 +215,12 @@ export const formatRuleForSubmit = (data: PricingRuleFormData, source: 'Manual' 
     };
 }
 
+const triggerDescriptions = {
+    Scheduled: "Runs based on the 'Validity' date range.",
+    OnDemand: "Triggered manually or by an external API call.",
+    CompetitorPriceChange: "Triggered by an event from a competitor data source."
+};
+
 
 export function PricingRuleForm({ rule, onSubmit, onCancel }: PricingRuleFormProps) {
   const form = useForm<PricingRuleFormData>({
@@ -255,7 +264,7 @@ export function PricingRuleForm({ rule, onSubmit, onCancel }: PricingRuleFormPro
         
         <Separator />
         <h4 className="text-md font-semibold">Triggers</h4>
-        <div className="grid grid-cols-2 gap-4">
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
             <FormField
                 control={form.control}
                 name="trigger.type"
@@ -270,6 +279,9 @@ export function PricingRuleForm({ rule, onSubmit, onCancel }: PricingRuleFormPro
                             <SelectItem value="CompetitorPriceChange">Competitor Price Change</SelectItem>
                         </SelectContent>
                     </Select>
+                    <FormDescription>
+                        {triggerDescriptions[triggerType]}
+                    </FormDescription>
                     <FormMessage />
                 </FormItem>
                 )}
