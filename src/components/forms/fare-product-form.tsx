@@ -62,6 +62,8 @@ const scopeSchema = z.object({
     type: z.enum(['route-one-to-many', 'route-many-to-one', 'source', 'destination']).default('route-one-to-many'),
     source: z.array(z.string()).optional(),
     destination: z.array(z.string()).optional(),
+    priceModificationType: z.enum(['PERCENTAGE', 'ABSOLUTE']),
+    priceModificationValue: z.coerce.number(),
 });
 
 const fareProductSchema = z.object({
@@ -72,9 +74,6 @@ const fareProductSchema = z.object({
   version: z.number().optional(),
   
   scopes: z.array(scopeSchema).min(1, 'At least one scope must be defined.'),
-  
-  priceModificationType: z.enum(['PERCENTAGE', 'ABSOLUTE']),
-  priceModificationValue: z.coerce.number(),
 
   refundability: z.enum(['Allowed', 'Allowed with Penalty', 'Not Allowed']),
   exchangeability: z.enum(['Allowed', 'Allowed with Penalty', 'Not Allowed']),
@@ -82,6 +81,8 @@ const fareProductSchema = z.object({
 
   includedAncillaries: z.array(z.string()).optional(),
   route: z.string().optional(), // For display only
+  priceModificationType: z.enum(['PERCENTAGE', 'ABSOLUTE']).optional(),
+  priceModificationValue: z.coerce.number().optional(),
 });
 
 export type FareProduct = z.infer<typeof fareProductSchema>;
@@ -110,7 +111,16 @@ const getRouteStringFromScope = (scope: z.infer<typeof scopeSchema>): string => 
 export function FareProductForm({ product, onSubmit, onCancel }: FareProductFormProps) {
   const form = useForm<FareProduct>({
     resolver: zodResolver(fareProductSchema),
-    defaultValues: product || {
+    defaultValues: product ? {
+        ...product,
+        scopes: product.scopes || [{
+            type: 'route-one-to-many',
+            source: [],
+            destination: [],
+            priceModificationType: product.priceModificationType || 'PERCENTAGE',
+            priceModificationValue: product.priceModificationValue || 0,
+        }]
+    } : {
       name: '',
       description: '',
       status: 'Draft',
@@ -118,9 +128,9 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
         type: 'route-one-to-many',
         source: [],
         destination: [],
+        priceModificationType: 'PERCENTAGE',
+        priceModificationValue: 10,
       }],
-      priceModificationType: 'PERCENTAGE',
-      priceModificationValue: 10,
       refundability: 'Allowed with Penalty',
       exchangeability: 'Allowed with Penalty',
       transferability: 'Not Allowed',
@@ -136,7 +146,14 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
   const handleFormSubmit = (data: FareProduct) => {
     // Create a summarized route string for display purposes
     const routeString = data.scopes.map(getRouteStringFromScope).join('; ');
-    onSubmit({ ...data, route: routeString });
+    // For now, we will just take the first pricing rule for the top-level display
+    const firstScope = data.scopes[0];
+    onSubmit({ 
+        ...data, 
+        route: routeString, 
+        priceModificationType: firstScope.priceModificationType, 
+        priceModificationValue: firstScope.priceModificationValue 
+    });
   }
 
   return (
@@ -269,7 +286,41 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
                                 </FormItem>
                             )} />
                         )}
-
+                        
+                        <div className="grid grid-cols-2 gap-4 pt-4">
+                            <FormField
+                                control={form.control}
+                                name={`scopes.${index}.priceModificationType`}
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Price Adjustment Type</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="PERCENTAGE">Percentage (%)</SelectItem>
+                                        <SelectItem value="ABSOLUTE">Absolute ($)</SelectItem>
+                                    </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name={`scopes.${index}.priceModificationValue`}
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Adjustment Value</FormLabel>
+                                    <FormControl>
+                                    <Input type="number" placeholder="e.g., 10 or -25" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                        </div>
                     </CardContent>
                 </Card>
             ))}
@@ -277,47 +328,11 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => append({ type: 'route-one-to-many', source: [], destination: [] })}
+                onClick={() => append({ type: 'route-one-to-many', source: [], destination: [], priceModificationType: 'PERCENTAGE', priceModificationValue: 0 })}
             >
                 <PlusCircle className="mr-2 h-4 w-4" />
-                Add Scope
+                Add Scope & Pricing Block
             </Button>
-        </div>
-
-
-        <div className="grid grid-cols-2 gap-4 pt-4">
-            <FormField
-                control={form.control}
-                name="priceModificationType"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Price Adjustment Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                        <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                        <SelectItem value="PERCENTAGE">Percentage (%)</SelectItem>
-                        <SelectItem value="ABSOLUTE">Absolute ($)</SelectItem>
-                    </SelectContent>
-                    </Select>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="priceModificationValue"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Adjustment Value</FormLabel>
-                    <FormControl>
-                    <Input type="number" placeholder="e.g., 10 or -25" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
         </div>
 
         <Separator />

@@ -40,11 +40,11 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 const mockFareProducts: FareProduct[] = [
-    { id: 'FP-001', name: 'Economy Light', description: 'Basic economy fare with no checked baggage.', status: 'Active', version: 1, refundability: 'Not Allowed', exchangeability: 'Allowed with Penalty', transferability: 'Not Allowed', route: 'JFK-LAX', priceModificationType: 'PERCENTAGE', priceModificationValue: 0, includedAncillaries: [] },
-    { id: 'FP-002', name: 'Economy Flex', description: 'Flexible economy fare with seat selection and one checked bag.', status: 'Active', version: 2, refundability: 'Allowed', exchangeability: 'Allowed', transferability: 'Not Allowed', route: 'JFK-LAX', priceModificationType: 'ABSOLUTE', priceModificationValue: 50, includedAncillaries: ['seat_selection', 'checked_bag'] },
-    { id: 'FP-003', name: 'Business Saver', description: 'Promotional business class fare with some restrictions.', status: 'Active', version: 1, refundability: 'Allowed with Penalty', exchangeability: 'Allowed with Penalty', transferability: 'Not Allowed', route: 'LHR-DXB', priceModificationType: 'PERCENTAGE', priceModificationValue: 10, includedAncillaries: ['seat_selection', 'checked_bag', 'lounge_access'] },
-    { id: 'FP-004', name: 'Business Flex', description: 'Fully flexible business class fare with all benefits.', status: 'Draft', version: 1, refundability: 'Allowed', exchangeability: 'Allowed', transferability: 'Allowed', route: 'LHR-DXB', priceModificationType: 'ABSOLUTE', priceModificationValue: 200, includedAncillaries: ['seat_selection', 'checked_bag', 'lounge_access', 'priority_boarding', 'meal_service'] },
-    { id: 'FP-005', name: 'First Class', description: 'Premium first-class experience.', status: 'Active', version: 1, refundability: 'Allowed', exchangeability: 'Allowed', transferability: 'Allowed', route: '*', priceModificationType: 'PERCENTAGE', priceModificationValue: 50, includedAncillaries: ['seat_selection', 'checked_bag', 'lounge_access', 'priority_boarding', 'meal_service', 'flexibility'] },
+    { id: 'FP-001', name: 'Economy Light', description: 'Basic economy fare with no checked baggage.', status: 'Active', version: 1, refundability: 'Not Allowed', exchangeability: 'Allowed with Penalty', transferability: 'Not Allowed', route: 'JFK-LAX', priceModificationType: 'PERCENTAGE', priceModificationValue: 0, includedAncillaries: [], scopes: [] },
+    { id: 'FP-002', name: 'Economy Flex', description: 'Flexible economy fare with seat selection and one checked bag.', status: 'Active', version: 2, refundability: 'Allowed', exchangeability: 'Allowed', transferability: 'Not Allowed', route: 'JFK-LAX', priceModificationType: 'ABSOLUTE', priceModificationValue: 50, includedAncillaries: ['seat_selection', 'checked_bag'], scopes: [] },
+    { id: 'FP-003', name: 'Business Saver', description: 'Promotional business class fare with some restrictions.', status: 'Active', version: 1, refundability: 'Allowed with Penalty', exchangeability: 'Allowed with Penalty', transferability: 'Not Allowed', route: 'LHR-DXB', priceModificationType: 'PERCENTAGE', priceModificationValue: 10, includedAncillaries: ['seat_selection', 'checked_bag', 'lounge_access'], scopes: [] },
+    { id: 'FP-004', name: 'Business Flex', description: 'Fully flexible business class fare with all benefits.', status: 'Draft', version: 1, refundability: 'Allowed', exchangeability: 'Allowed', transferability: 'Allowed', route: 'LHR-DXB', priceModificationType: 'ABSOLUTE', priceModificationValue: 200, includedAncillaries: ['seat_selection', 'checked_bag', 'lounge_access', 'priority_boarding', 'meal_service'], scopes: [] },
+    { id: 'FP-005', name: 'First Class', description: 'Premium first-class experience.', status: 'Active', version: 1, refundability: 'Allowed', exchangeability: 'Allowed', transferability: 'Allowed', route: '*', priceModificationType: 'PERCENTAGE', priceModificationValue: 50, includedAncillaries: ['seat_selection', 'checked_bag', 'lounge_access', 'priority_boarding', 'meal_service', 'flexibility'], scopes: [] },
 ];
 
 const mockHistory = [
@@ -129,6 +129,7 @@ export default function CatalogPage() {
   };
   
   const formatPriceModification = (product: FareProduct) => {
+    if (!product.priceModificationType || product.priceModificationValue === undefined) return 'N/A';
     if (product.priceModificationType === 'PERCENTAGE') {
       return `${product.priceModificationValue >= 0 ? '+' : ''}${product.priceModificationValue}%`;
     }
@@ -190,7 +191,7 @@ export default function CatalogPage() {
                     </TableCell>
                     <TableCell>{product.route}</TableCell>
                     <TableCell>
-                      <Badge variant={product.priceModificationValue >= 0 ? 'default' : 'destructive'}>{formatPriceModification(product)}</Badge>
+                      <Badge variant={(product.priceModificationValue ?? 0) >= 0 ? 'default' : 'destructive'}>{formatPriceModification(product)}</Badge>
                     </TableCell>
                     <TableCell>{product.includedAncillaries?.length || 0}</TableCell>
                     <TableCell>
