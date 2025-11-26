@@ -537,7 +537,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                 <span className="font-semibold">${totalComponentValue.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-                <span className="text-muted-foreground">Bundle Price</span>
+                <span className="text-muted-foreground">Offer Price</span>
                 <span className="font-semibold text-primary">${finalPrice.toFixed(2)}</span>
             </div>
         </div>
@@ -660,5 +660,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
     </Form>
   );
 }
+
+    
 
     
