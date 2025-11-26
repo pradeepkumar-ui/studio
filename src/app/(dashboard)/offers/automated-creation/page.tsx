@@ -187,167 +187,178 @@ export default function AutomatedOfferCreationPage() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>1. Define Offer Parameters</CardTitle>
-          <CardDescription>
-            Provide high-level goals, constraints, and select the parameters for the AI to consider.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="goal"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Primary Goal</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="e.g., Increase load factor on underperforming EU-US routes during shoulder season."
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="targetMarket"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Target Market / Timeframe</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="e.g., Leisure travelers from Germany in Q2"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="constraints"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Constraints (Optional)</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="e.g., Discount cannot exceed 20%. Must include a baggage component."
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              <FormField
-                control={form.control}
-                name="selectedParameters"
-                render={() => (
-                  <FormItem>
-                    <div className="mb-4">
-                      <FormLabel className="text-base font-semibold">Parameters for AI Consideration</FormLabel>
-                      <p className="text-sm text-muted-foreground">Select the parameters the AI should use to construct the offer.</p>
-                    </div>
-                    <Accordion type="multiple" className="w-full">
-                      {Object.entries(parameterCategories).map(([category, params]) => (
-                        <AccordionItem value={category} key={category}>
-                          <AccordionTrigger>{category}</AccordionTrigger>
-                          <AccordionContent>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-2">
-                              {params.map((item) => (
-                                <FormField
-                                  key={item.id}
-                                  control={form.control}
-                                  name="selectedParameters"
-                                  render={({ field }) => (
-                                    <FormItem
-                                      key={item.id}
-                                      className="flex flex-row items-center space-x-3 space-y-0"
-                                    >
-                                      <FormControl>
-                                        <Checkbox
-                                          checked={field.value?.includes(item.id)}
-                                          onCheckedChange={(checked) => {
-                                            return checked
-                                              ? field.onChange([...(field.value || []), item.id])
-                                              : field.onChange(
-                                                  field.value?.filter(
-                                                    (value) => value !== item.id
-                                                  )
-                                                );
-                                          }}
-                                        />
-                                      </FormControl>
-                                      <FormLabel className="font-normal">
-                                        {item.label}
-                                      </FormLabel>
-                                    </FormItem>
-                                  )}
+       <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <Card>
+                <CardHeader>
+                <CardTitle>1. Define Offer Goal</CardTitle>
+                <CardDescription>
+                    Provide the high-level business objective, target market, and any constraints.
+                </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                        control={form.control}
+                        name="goal"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Primary Goal</FormLabel>
+                            <FormControl>
+                                <Textarea
+                                placeholder="e.g., Increase load factor on underperforming EU-US routes during shoulder season."
+                                {...field}
                                 />
-                              ))}
-                            </div>
-                          </AccordionContent>
-                        </AccordionItem>
-                      ))}
-                    </Accordion>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div>
-                <FormLabel className="text-base font-semibold">Additional Parameters</FormLabel>
-                <p className="text-sm text-muted-foreground">Add any extra categories or parameters for the AI.</p>
-                <div className="space-y-2 mt-2">
-                  {fields.map((field, index) => (
-                    <div key={field.id} className="flex items-center gap-2">
-                       <FormField
-                        control={form.control}
-                        name={`additionalParameters.${index}.category`}
-                        render={({ field }) => (
-                          <Input {...field} placeholder="Category (e.g., Competitor Actions)" />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
                         )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`additionalParameters.${index}.parameter`}
-                        render={({ field }) => (
-                          <Input {...field} placeholder="Parameter (e.g., Delta launched a sale on LHR-JFK)" className="flex-1" />
-                        )}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => remove(index)}
-                        disabled={fields.length <= 1}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                        />
+                        <div className="space-y-6">
+                        <FormField
+                            control={form.control}
+                            name="targetMarket"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Target Market / Timeframe</FormLabel>
+                                <FormControl>
+                                <Input
+                                    placeholder="e.g., Leisure travelers from Germany in Q2"
+                                    {...field}
+                                />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="constraints"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Constraints (Optional)</FormLabel>
+                                <FormControl>
+                                <Textarea
+                                    placeholder="e.g., Discount cannot exceed 20%. Must include a baggage component."
+                                    {...field}
+                                />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        </div>
                     </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => append({ category: "", parameter: "" })}
-                  >
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Parameter
-                  </Button>
-                </div>
-              </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                 <CardHeader>
+                    <CardTitle>2. Select AI Parameters</CardTitle>
+                    <CardDescription>
+                        Select the parameters the AI should use to construct the offer.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                     <FormField
+                        control={form.control}
+                        name="selectedParameters"
+                        render={() => (
+                        <FormItem>
+                            <div className="mb-4">
+                            <FormLabel className="text-base font-semibold">Parameters for AI Consideration</FormLabel>
+                            </div>
+                            <Accordion type="multiple" className="w-full">
+                            {Object.entries(parameterCategories).map(([category, params]) => (
+                                <AccordionItem value={category} key={category}>
+                                <AccordionTrigger>{category}</AccordionTrigger>
+                                <AccordionContent>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-2">
+                                    {params.map((item) => (
+                                        <FormField
+                                        key={item.id}
+                                        control={form.control}
+                                        name="selectedParameters"
+                                        render={({ field }) => (
+                                            <FormItem
+                                            key={item.id}
+                                            className="flex flex-row items-center space-x-3 space-y-0"
+                                            >
+                                            <FormControl>
+                                                <Checkbox
+                                                checked={field.value?.includes(item.id)}
+                                                onCheckedChange={(checked) => {
+                                                    return checked
+                                                    ? field.onChange([...(field.value || []), item.id])
+                                                    : field.onChange(
+                                                        field.value?.filter(
+                                                            (value) => value !== item.id
+                                                        )
+                                                        );
+                                                }}
+                                                />
+                                            </FormControl>
+                                            <FormLabel className="font-normal">
+                                                {item.label}
+                                            </FormLabel>
+                                            </FormItem>
+                                        )}
+                                        />
+                                    ))}
+                                    </div>
+                                </AccordionContent>
+                                </AccordionItem>
+                            ))}
+                            </Accordion>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+
+                    <div>
+                        <FormLabel className="text-base font-semibold">Additional Parameters</FormLabel>
+                        <p className="text-sm text-muted-foreground">Add any extra categories or parameters for the AI.</p>
+                        <div className="space-y-2 mt-2">
+                        {fields.map((field, index) => (
+                            <div key={field.id} className="flex items-center gap-2">
+                            <FormField
+                                control={form.control}
+                                name={`additionalParameters.${index}.category`}
+                                render={({ field }) => (
+                                <Input {...field} placeholder="Category (e.g., Competitor Actions)" />
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name={`additionalParameters.${index}.parameter`}
+                                render={({ field }) => (
+                                <Input {...field} placeholder="Parameter (e.g., Delta launched a sale on LHR-JFK)" className="flex-1" />
+                                )}
+                            />
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => remove(index)}
+                                disabled={fields.length <= 1}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                            </div>
+                        ))}
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => append({ category: "", parameter: "" })}
+                        >
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Add Parameter
+                        </Button>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
 
 
               <Button type="submit" disabled={isLoading} className="w-full md:w-auto">
@@ -360,8 +371,6 @@ export default function AutomatedOfferCreationPage() {
               </Button>
             </form>
           </Form>
-        </CardContent>
-      </Card>
       
       {(isLoading || aiResult) && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
@@ -369,7 +378,7 @@ export default function AutomatedOfferCreationPage() {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Lightbulb className="text-yellow-500" />
-                        2. AI Considerations & Simulation
+                        3. AI Considerations & Simulation
                     </CardTitle>
                     <CardDescription>The AI's reasoning and a preview of the proposed offer.</CardDescription>
                 </CardHeader>
@@ -413,7 +422,7 @@ export default function AutomatedOfferCreationPage() {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Sparkles className="text-primary" />
-                        3. Generated Offer JSON
+                        4. Generated Offer JSON
                     </CardTitle>
                      <CardDescription>Review the structured JSON output below. You can copy it or save it directly.</CardDescription>
                 </CardHeader>
@@ -449,3 +458,5 @@ export default function AutomatedOfferCreationPage() {
     </div>
   );
 }
+
+    
