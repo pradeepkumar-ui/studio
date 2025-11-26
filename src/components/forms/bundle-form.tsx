@@ -42,6 +42,12 @@ const ancillaryProducts = [
   { id: 'ANC-011', name: 'Cancel for any reason', price: 40 },
 ];
 
+const mockPromotionsData = [
+    { id: 'PRO-001', name: 'WINTER10', description: '10% off' },
+    { id: 'PRO-002', name: 'BIZ100', description: '$100 off Business' },
+    { id: 'PRO-005', name: 'NEXT50', description: '$50 Future Credit' },
+];
+
 const fareBrandOptions = [
     { value: 'Economy Flex', label: 'Economy Flex' },
     { value: 'Economy Saver', label: 'Economy Saver' },
@@ -93,6 +99,7 @@ const bundleSchema = z.object({
     route: z.string().optional(),
   }),
   components: z.array(z.object({ value: z.string().min(1, "Please select an ancillary.") })).min(1, "At least one ancillary component is required."),
+  promotions: z.array(z.object({ value: z.string().min(1, "Please select a promotion.") })).optional(),
   pricingStrategy: z.enum(['Percent Discount', 'Fixed Discount', 'Absolute Price']),
   discount: z.coerce.number().min(0),
   validity: z.object({
@@ -157,6 +164,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
     defaultValues: bundle ? {
       ...bundle,
       components: Array.isArray(bundle.components) ? Object.values(bundle.components).filter(c => typeof c === 'string').map(c => ({ value: c })) : [],
+      promotions: bundle.promotions || [],
       scope: parseScope(bundle),
       validity: {
         effectiveDate: new Date(),
@@ -174,6 +182,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
         cohorts: [],
       },
       components: [{value: ''}],
+      promotions: [],
       pricingStrategy: 'Percent Discount',
       discount: 10,
       validity: {
@@ -186,6 +195,11 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "components"
+  });
+
+  const { fields: promoFields, append: appendPromo, remove: removePromo } = useFieldArray({
+    control: form.control,
+    name: "promotions"
   });
 
   const { fields: routeFields, append: appendRoute, remove: removeRoute } = useFieldArray({
@@ -205,8 +219,9 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
 
     const finalData = {
         ...data,
-        itemCount: data.components.filter(c => c.value).length,
+        itemCount: (data.components.filter(c => c.value).length) + (data.promotions?.filter(p => p.value).length || 0),
         components: componentObject,
+        promotions: data.promotions?.map(p => p.value),
         scope: {
           ...data.scope,
           brand: data.scope.brand?.join(', '),
@@ -408,6 +423,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
         
         <h4 className="text-md font-semibold pt-4">Components</h4>
         <div className="space-y-2">
+            <FormLabel>Ancillaries</FormLabel>
             {fields.map((field, index) => {
               const selectedProduct = ancillaryProducts.find(p => p.id === selectedComponents[index]?.value);
               return (
@@ -450,7 +466,50 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
             onClick={() => append({ value: "" })}
           >
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Component
+            Add Ancillary
+          </Button>
+        </div>
+         <div className="space-y-2 pt-4">
+            <FormLabel>Promotions</FormLabel>
+            {promoFields.map((field, index) => {
+              return (
+                <div key={field.id} className="flex items-center gap-2">
+                  <FormField
+                    control={form.control}
+                    name={`promotions.${index}.value`}
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a promotion" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {mockPromotionsData.map(promo => (
+                              <SelectItem key={promo.id} value={promo.id}>{promo.name} - {promo.description}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="button" variant="ghost" size="icon" onClick={() => removePromo(index)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              )
+            })}
+             <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mt-2"
+            onClick={() => appendPromo({ value: "" })}
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Promotion
           </Button>
         </div>
 
