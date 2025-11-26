@@ -62,12 +62,20 @@ export default function BundlesPage() {
   const [filters, setFilters] = useState({ name: '', category: 'all', status: 'all', source: 'all' });
   
   const displayOffers = useMemo(() => {
-    const dataWithUsage = (bundlesCollection as (Bundle & { usage?: number })[] || []).map(offer => ({
-      ...offer,
-      usage: offer.usage ?? Math.floor(Math.random() * 2000),
-    }));
+    let sourceData: (Bundle & { usage?: number })[];
+    
+    if (!firestore || bundlesCollection === null) {
+      sourceData = mockOffers;
+    } else {
+      sourceData = bundlesCollection.map(offer => ({
+        ...offer,
+        usage: offer.usage ?? Math.floor(Math.random() * 2000),
+      }));
+    }
 
-    const sourceData = (loading && dataWithUsage.length === 0) ? mockOffers : dataWithUsage;
+    if (sourceData.length === 0 && !loading) {
+      sourceData = mockOffers;
+    }
     
     return sourceData.filter(offer => {
       const nameMatch = filters.name ? offer.name.toLowerCase().includes(filters.name.toLowerCase()) : true;
@@ -76,7 +84,7 @@ export default function BundlesPage() {
       const sourceMatch = filters.source === 'all' || (offer.source || 'Manual') === filters.source;
       return nameMatch && categoryMatch && statusMatch && sourceMatch;
     });
-  }, [bundlesCollection, loading, filters]);
+  }, [bundlesCollection, firestore, loading, filters]);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBundle, setEditingBundle] = useState<Bundle | null>(null);
@@ -226,12 +234,12 @@ export default function BundlesPage() {
                 </SelectContent>
               </Select>
           </div>
-          {loading && (!bundlesCollection || bundlesCollection.length === 0) && (
+          {(loading && displayOffers.length === 0) && (
              <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
              </div>
            )}
-           {!loading && displayOffers.length > 0 && !error && (
+           {(!loading && displayOffers.length > 0 && !error) && (
             <TooltipProvider>
             <Table>
               <TableHeader>
@@ -352,5 +360,3 @@ export default function BundlesPage() {
     </div>
   );
 }
-
-    
