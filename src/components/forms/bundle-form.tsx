@@ -584,7 +584,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
         {showPreview && (
              <Card className="flex flex-col overflow-hidden">
                 <CardHeader>
-                    <CardTitle>Bundle Preview</CardTitle>
+                    <CardTitle>Offer Preview</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="flex flex-col overflow-hidden border rounded-lg">
@@ -598,8 +598,8 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                             />
                         </div>
                         <div className="p-4">
-                            <h4 className="text-lg font-semibold">{form.getValues('name') || 'Your Bundle Name'}</h4>
-                            <p className="text-sm text-muted-foreground">{form.getValues('description') || 'Your bundle description'}</p>
+                            <h4 className="text-lg font-semibold">{form.getValues('name') || 'Your Offer Name'}</h4>
+                            <p className="text-sm text-muted-foreground">{form.getValues('description') || 'Your offer description'}</p>
                             <ul className="text-sm text-muted-foreground list-disc pl-5 mt-2 space-y-1">
                                 {form.getValues('components').filter(c => c.value).map(c => <li key={c.value}>{ancillaryProducts.find(p => p.id === c.value)?.name}</li>)}
                                 {selectedPromotions?.filter(p => p.value).map(p => {
@@ -654,13 +654,9 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit">{bundle ? 'Save Changes' : 'Create Bundle'}</Button>
+          <Button type="submit">{bundle ? 'Save Changes' : 'Create Offer'}</Button>
         </div>
       </form>
     </Form>
   );
 }
-
-    
-
-    
