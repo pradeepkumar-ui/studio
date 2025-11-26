@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -39,11 +40,11 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 const mockFareProducts: FareProduct[] = [
-    { id: 'FP-001', name: 'Economy Light', description: 'Basic economy fare with no checked baggage.', status: 'Active', version: 1, refundability: 'Not Allowed', exchangeability: 'Allowed with Penalty', transferability: 'Not Allowed' },
-    { id: 'FP-002', name: 'Economy Flex', description: 'Flexible economy fare with seat selection and one checked bag.', status: 'Active', version: 2, refundability: 'Allowed', exchangeability: 'Allowed', transferability: 'Not Allowed' },
-    { id: 'FP-003', name: 'Business Saver', description: 'Promotional business class fare with some restrictions.', status: 'Active', version: 1, refundability: 'Allowed with Penalty', exchangeability: 'Allowed with Penalty', transferability: 'Not Allowed' },
-    { id: 'FP-004', name: 'Business Flex', description: 'Fully flexible business class fare with all benefits.', status: 'Draft', version: 1, refundability: 'Allowed', exchangeability: 'Allowed', transferability: 'Allowed' },
-    { id: 'FP-005', name: 'First Class', description: 'Premium first-class experience.', status: 'Active', version: 1, refundability: 'Allowed', exchangeability: 'Allowed', transferability: 'Allowed' },
+    { id: 'FP-001', name: 'Economy Light', description: 'Basic economy fare with no checked baggage.', status: 'Active', version: 1, refundability: 'Not Allowed', exchangeability: 'Allowed with Penalty', transferability: 'Not Allowed', route: 'JFK-LAX', priceModificationType: 'PERCENTAGE', priceModificationValue: 0, includedAncillaries: [] },
+    { id: 'FP-002', name: 'Economy Flex', description: 'Flexible economy fare with seat selection and one checked bag.', status: 'Active', version: 2, refundability: 'Allowed', exchangeability: 'Allowed', transferability: 'Not Allowed', route: 'JFK-LAX', priceModificationType: 'ABSOLUTE', priceModificationValue: 50, includedAncillaries: ['seat_selection', 'checked_bag'] },
+    { id: 'FP-003', name: 'Business Saver', description: 'Promotional business class fare with some restrictions.', status: 'Active', version: 1, refundability: 'Allowed with Penalty', exchangeability: 'Allowed with Penalty', transferability: 'Not Allowed', route: 'LHR-DXB', priceModificationType: 'PERCENTAGE', priceModificationValue: 10, includedAncillaries: ['seat_selection', 'checked_bag', 'lounge_access'] },
+    { id: 'FP-004', name: 'Business Flex', description: 'Fully flexible business class fare with all benefits.', status: 'Draft', version: 1, refundability: 'Allowed', exchangeability: 'Allowed', transferability: 'Allowed', route: 'LHR-DXB', priceModificationType: 'ABSOLUTE', priceModificationValue: 200, includedAncillaries: ['seat_selection', 'checked_bag', 'lounge_access', 'priority_boarding', 'meal_service'] },
+    { id: 'FP-005', name: 'First Class', description: 'Premium first-class experience.', status: 'Active', version: 1, refundability: 'Allowed', exchangeability: 'Allowed', transferability: 'Allowed', route: '*', priceModificationType: 'PERCENTAGE', priceModificationValue: 50, includedAncillaries: ['seat_selection', 'checked_bag', 'lounge_access', 'priority_boarding', 'meal_service', 'flexibility'] },
 ];
 
 const mockHistory = [
@@ -81,11 +82,11 @@ export default function CatalogPage() {
         if (editingProduct?.id) {
           const productRef = doc(firestore, 'fareProducts', editingProduct.id);
           await setDoc(productRef, { ...data, version: editingProduct.version || 1 }, { merge: true });
-          toast({ title: "Product Updated", description: `Product ${data.name} has been successfully updated.` });
+          toast({ title: "Branded Fare Updated", description: `Branded Fare ${data.name} has been successfully updated.` });
         } else {
           const newProduct = { ...data, version: 1, createdAt: serverTimestamp() };
           await addDoc(collection(firestore, 'fareProducts'), newProduct);
-           toast({ title: "Product Created", description: `Product ${newProduct.name} has been successfully created.` });
+           toast({ title: "Branded Fare Created", description: `Branded Fare ${newProduct.name} has been successfully created.` });
         }
     } catch(e: any) {
         console.error(e);
@@ -126,28 +127,38 @@ export default function CatalogPage() {
     setSelectedProductForHistory(product);
     setIsHistoryDialogOpen(true);
   };
+  
+  const formatPriceModification = (product: FareProduct) => {
+    if (product.priceModificationType === 'PERCENTAGE') {
+      return `${product.priceModificationValue >= 0 ? '+' : ''}${product.priceModificationValue}%`;
+    }
+    if (product.priceModificationType === 'ABSOLUTE') {
+      return `${product.priceModificationValue >= 0 ? '+' : '-'}$${Math.abs(product.priceModificationValue)}`;
+    }
+    return 'N/A';
+  };
 
 
   return (
     <div className="flex flex-col gap-6">
        <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Catalogue</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Branded Fares</h1>
         <p className="text-muted-foreground">
-          Define fare products, corporate contracts, and sales channels.
+          Define branded fares with their routing, pricing adjustments, and included ancillaries.
         </p>
       </div>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Fare Products (Brands)</CardTitle>
+            <CardTitle>Branded Fares</CardTitle>
             <CardDescription>
-              Manage the attributes and rules of your fare products.
+              Manage the attributes and rules of your fare brands.
             </CardDescription>
           </div>
           <Button onClick={() => handleOpenDialog()}>
             <PlusCircle className="mr-2" />
-            New Fare Product
+            New Branded Fare
           </Button>
         </CardHeader>
         <CardContent>
@@ -160,10 +171,11 @@ export default function CatalogPage() {
             <Table>
                 <TableHeader>
                 <TableRow>
-                    <TableHead>Product Name</TableHead>
+                    <TableHead>Brand Name</TableHead>
+                    <TableHead>Route</TableHead>
+                    <TableHead>Pricing Adj.</TableHead>
+                    <TableHead>Ancillaries</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Refunds</TableHead>
-                    <TableHead>Exchanges</TableHead>
                     <TableHead>
                     <span className="sr-only">Actions</span>
                     </TableHead>
@@ -176,6 +188,11 @@ export default function CatalogPage() {
                         <div>{product.name}</div>
                         <div className="text-xs text-muted-foreground">v{product.version}</div>
                     </TableCell>
+                    <TableCell>{product.route}</TableCell>
+                    <TableCell>
+                      <Badge variant={product.priceModificationValue >= 0 ? 'default' : 'destructive'}>{formatPriceModification(product)}</Badge>
+                    </TableCell>
+                    <TableCell>{product.includedAncillaries?.length || 0}</TableCell>
                     <TableCell>
                         <Badge
                         variant={
@@ -187,8 +204,6 @@ export default function CatalogPage() {
                         {product.status}
                         </Badge>
                     </TableCell>
-                    <TableCell>{product.refundability}</TableCell>
-                    <TableCell>{product.exchangeability}</TableCell>
                     <TableCell>
                         <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -223,9 +238,9 @@ export default function CatalogPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{editingProduct ? 'Edit Fare Product' : 'Create New Fare Product'}</DialogTitle>
+            <DialogTitle>{editingProduct ? 'Edit Branded Fare' : 'Create New Branded Fare'}</DialogTitle>
             <DialogDescription>
-              {editingProduct ? `Editing product "${editingProduct.name}".` : 'Enter the details for the new fare product.'}
+              {editingProduct ? `Editing branded fare "${editingProduct.name}".` : 'Enter the details for the new branded fare.'}
             </DialogDescription>
           </DialogHeader>
           <FareProductForm

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,6 +23,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '../ui/separator';
+import { Checkbox } from '../ui/checkbox';
+
+const ancillaryOptions = [
+    { id: 'seat_selection', label: 'Seat Selection' },
+    { id: 'checked_bag', label: 'Checked Bag (1st)' },
+    { id: 'priority_boarding', label: 'Priority Boarding' },
+    { id: 'meal_service', label: 'Meal Service' },
+    { id: 'lounge_access', label: 'Lounge Access' },
+    { id: 'flexibility', label: 'Flexibility (Change/Cancel)' },
+] as const;
 
 const fareProductSchema = z.object({
   id: z.string().optional(),
@@ -29,15 +40,16 @@ const fareProductSchema = z.object({
   description: z.string().min(10, 'Description must be at least 10 characters.'),
   status: z.enum(['Active', 'Draft']),
   version: z.number().optional(),
+  route: z.string().min(1, 'Route is required. Use * for all routes.'),
+  
+  priceModificationType: z.enum(['PERCENTAGE', 'ABSOLUTE']),
+  priceModificationValue: z.coerce.number(),
+
   refundability: z.enum(['Allowed', 'Allowed with Penalty', 'Not Allowed']),
   exchangeability: z.enum(['Allowed', 'Allowed with Penalty', 'Not Allowed']),
   transferability: z.enum(['Allowed', 'Not Allowed']),
-  includedAncillaries: z.object({
-      seat: z.string().optional(),
-      baggage: z.string().optional(),
-      meal: z.string().optional(),
-      flexibility: z.string().optional(),
-  }).optional(),
+
+  includedAncillaries: z.array(z.string()).optional(),
 });
 
 export type FareProduct = z.infer<typeof fareProductSchema>;
@@ -51,19 +63,20 @@ interface FareProductFormProps {
 export function FareProductForm({ product, onSubmit, onCancel }: FareProductFormProps) {
   const form = useForm<FareProduct>({
     resolver: zodResolver(fareProductSchema),
-    defaultValues: product || {
+    defaultValues: product ? {
+        ...product,
+        includedAncillaries: product.includedAncillaries || [],
+    } : {
       name: '',
       description: '',
       status: 'Draft',
+      route: '*',
+      priceModificationType: 'PERCENTAGE',
+      priceModificationValue: 10,
       refundability: 'Allowed with Penalty',
       exchangeability: 'Allowed with Penalty',
       transferability: 'Not Allowed',
-      includedAncillaries: {
-          seat: 'Standard',
-          baggage: '',
-          meal: '',
-          flexibility: ''
-      },
+      includedAncillaries: [],
     },
   });
 
@@ -75,7 +88,7 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Product Name</FormLabel>
+              <FormLabel>Brand Name</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., Economy Flex" {...field} />
               </FormControl>
@@ -96,6 +109,105 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
             </FormItem>
           )}
         />
+        <Separator />
+        
+        <h4 className="text-md font-semibold">Scope & Pricing</h4>
+        <FormField
+          control={form.control}
+          name="route"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Route</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g., JFK-LAX or * for all routes" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <div className="grid grid-cols-2 gap-4">
+            <FormField
+                control={form.control}
+                name="priceModificationType"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Price Adjustment Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        <SelectItem value="PERCENTAGE">Percentage (%)</SelectItem>
+                        <SelectItem value="ABSOLUTE">Absolute ($)</SelectItem>
+                    </SelectContent>
+                    </Select>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="priceModificationValue"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Adjustment Value</FormLabel>
+                    <FormControl>
+                    <Input type="number" placeholder="e.g., 10 or -25" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+        </div>
+
+        <Separator />
+        <h4 className="text-md font-semibold">Included Ancillaries (Free of Charge)</h4>
+        <FormField
+            control={form.control}
+            name="includedAncillaries"
+            render={() => (
+                <FormItem>
+                     <div className="grid grid-cols-2 gap-4 pt-2">
+                        {ancillaryOptions.map((item) => (
+                        <FormField
+                            key={item.id}
+                            control={form.control}
+                            name="includedAncillaries"
+                            render={({ field }) => {
+                            return (
+                                <FormItem
+                                key={item.id}
+                                className="flex flex-row items-start space-x-3 space-y-0"
+                                >
+                                <FormControl>
+                                    <Checkbox
+                                    checked={field.value?.includes(item.id)}
+                                    onCheckedChange={(checked) => {
+                                        return checked
+                                        ? field.onChange([...(field.value || []), item.id])
+                                        : field.onChange(
+                                            field.value?.filter(
+                                                (value) => value !== item.id
+                                            )
+                                            )
+                                    }}
+                                    />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                    {item.label}
+                                </FormLabel>
+                                </FormItem>
+                            )
+                            }}
+                        />
+                        ))}
+                    </div>
+                    <FormMessage />
+                </FormItem>
+            )}
+        />
+
+
         <Separator />
         <h4 className="text-md font-semibold">Service Terms</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -165,16 +277,6 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
                 )}
             />
         </div>
-        
-        <Separator />
-         <h4 className="text-md font-semibold">Included Ancillaries</h4>
-          <div className="grid grid-cols-2 gap-4">
-            <FormField control={form.control} name="includedAncillaries.seat" render={({ field }) => (<FormItem><FormLabel>Seat</FormLabel><FormControl><Input placeholder="e.g., Standard" {...field} /></FormControl></FormItem>)} />
-            <FormField control={form.control} name="includedAncillaries.baggage" render={({ field }) => (<FormItem><FormLabel>Baggage</FormLabel><FormControl><Input placeholder="e.g., 1st Checked (23kg)" {...field} /></FormControl></FormItem>)} />
-            <FormField control={form.control} name="includedAncillaries.meal" render={({ field }) => (<FormItem><FormLabel>Meal</FormLabel><FormControl><Input placeholder="e.g., Standard Meal" {...field} /></FormControl></FormItem>)} />
-            <FormField control={form.control} name="includedAncillaries.flexibility" render={({ field }) => (<FormItem><FormLabel>Flexibility</FormLabel><FormControl><Input placeholder="e.g., Fee-based change" {...field} /></FormControl></FormItem>)} />
-          </div>
-
 
         <Separator />
 
@@ -203,7 +305,7 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
             <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
             </Button>
-            <Button type="submit">{product ? 'Save Changes' : 'Create Product'}</Button>
+            <Button type="submit">{product ? 'Save Changes' : 'Create Branded Fare'}</Button>
         </div>
       </form>
     </Form>
