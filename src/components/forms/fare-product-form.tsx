@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '../ui/separator';
 import { Checkbox } from '../ui/checkbox';
+import { MultiSelect } from '../ui/multi-select';
 
 const ancillaryOptions = [
     { id: 'seat_selection', label: 'Seat Selection' },
@@ -34,13 +35,31 @@ const ancillaryOptions = [
     { id: 'flexibility', label: 'Flexibility (Change/Cancel)' },
 ] as const;
 
+const airportOptions = [
+    { value: 'JFK', label: 'JFK - New York' },
+    { value: 'LAX', label: 'LAX - Los Angeles' },
+    { value: 'LHR', label: 'LHR - London Heathrow' },
+    { value: 'DXB', label: 'DXB - Dubai' },
+    { value: 'SIN', label: 'SIN - Singapore' },
+    { value: 'HKG', label: 'HKG - Hong Kong' },
+    { value: 'CDG', label: 'CDG - Paris' },
+    { value: 'FRA', label: 'FRA - Frankfurt' },
+    { value: 'MUC', label: 'MUC - Munich' },
+    { value: 'DEL', label: 'DEL - Delhi' },
+    { value: 'BOM', label: 'BOM - Mumbai' },
+];
+
 const fareProductSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(3, 'Product name must be at least 3 characters.'),
   description: z.string().min(10, 'Description must be at least 10 characters.'),
   status: z.enum(['Active', 'Draft']),
   version: z.number().optional(),
-  route: z.string().min(1, 'Route is required. Use * for all routes.'),
+  
+  scopeType: z.enum(['route', 'source', 'destination']).default('route'),
+  route: z.string().optional(), // Keep for backward compatibility/display
+  source: z.array(z.string()).optional(),
+  destination: z.array(z.string()).optional(),
   
   priceModificationType: z.enum(['PERCENTAGE', 'ABSOLUTE']),
   priceModificationValue: z.coerce.number(),
@@ -60,6 +79,18 @@ interface FareProductFormProps {
   onCancel: () => void;
 }
 
+const getRouteString = (data: Partial<FareProduct>): string => {
+    switch (data.scopeType) {
+        case 'source':
+            return `From: ${data.source?.join(', ') || 'N/A'}`;
+        case 'destination':
+            return `To: ${data.destination?.join(', ') || 'N/A'}`;
+        case 'route':
+        default:
+            return `${data.source?.[0] || 'ANY'}-${data.destination?.[0] || 'ANY'}`;
+    }
+}
+
 export function FareProductForm({ product, onSubmit, onCancel }: FareProductFormProps) {
   const form = useForm<FareProduct>({
     resolver: zodResolver(fareProductSchema),
@@ -70,7 +101,9 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
       name: '',
       description: '',
       status: 'Draft',
-      route: '*',
+      scopeType: 'route',
+      source: [],
+      destination: [],
       priceModificationType: 'PERCENTAGE',
       priceModificationValue: 10,
       refundability: 'Allowed with Penalty',
@@ -80,9 +113,16 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
     },
   });
 
+  const scopeType = form.watch('scopeType');
+
+  const handleFormSubmit = (data: FareProduct) => {
+    const routeString = getRouteString(data);
+    onSubmit({ ...data, route: routeString });
+  }
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-h-[70vh] overflow-y-auto pr-4">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6 max-h-[70vh] overflow-y-auto pr-4">
         <FormField
           control={form.control}
           name="name"
@@ -112,19 +152,97 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
         <Separator />
         
         <h4 className="text-md font-semibold">Scope & Pricing</h4>
-        <FormField
-          control={form.control}
-          name="route"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Route</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., JFK-LAX or * for all routes" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+             <FormField
+                control={form.control}
+                name="scopeType"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Scope Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl><SelectTrigger><SelectValue placeholder="Select scope type" /></SelectTrigger></FormControl>
+                        <SelectContent>
+                            <SelectItem value="route">Route (OD Pair)</SelectItem>
+                            <SelectItem value="source">Source (Origin)</SelectItem>
+                            <SelectItem value="destination">Destination</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+            {scopeType === 'route' && (
+                <div className="grid grid-cols-2 gap-2">
+                    <FormField
+                        control={form.control}
+                        name="source"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Origin</FormLabel>
+                                <Select onValueChange={(value) => field.onChange([value])} defaultValue={field.value?.[0]}>
+                                    <FormControl><SelectTrigger><SelectValue placeholder="Select Origin" /></SelectTrigger></FormControl>
+                                    <SelectContent>{airportOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                     <FormField
+                        control={form.control}
+                        name="destination"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Destination</FormLabel>
+                                <Select onValueChange={(value) => field.onChange([value])} defaultValue={field.value?.[0]}>
+                                    <FormControl><SelectTrigger><SelectValue placeholder="Select Destination" /></SelectTrigger></FormControl>
+                                    <SelectContent>{airportOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
+            )}
+             {scopeType === 'source' && (
+                <FormField
+                    control={form.control}
+                    name="source"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Source Airports</FormLabel>
+                             <MultiSelect
+                                options={airportOptions}
+                                selected={field.value || []}
+                                onChange={field.onChange}
+                                placeholder="Select source airports..."
+                            />
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            )}
+             {scopeType === 'destination' && (
+                 <FormField
+                    control={form.control}
+                    name="destination"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Destination Airports</FormLabel>
+                             <MultiSelect
+                                options={airportOptions}
+                                selected={field.value || []}
+                                onChange={field.onChange}
+                                placeholder="Select destination airports..."
+                            />
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            )}
+        </div>
+
+
         <div className="grid grid-cols-2 gap-4">
             <FormField
                 control={form.control}
