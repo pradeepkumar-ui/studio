@@ -1101,7 +1101,7 @@ export default function OfferComposerPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div>
-                        <h4 className="font-semibold text-md mb-2">Automatically Applied Dynamic Rules</h4>
+                        <h4 className="font-semibold text-md mb-2">Dynamic Offers</h4>
                         {appliedRules.length > 0 ? (
                              <div className="space-y-1 text-sm text-muted-foreground">
                                 {appliedRules.map((rule, index) => (
@@ -1117,7 +1117,6 @@ export default function OfferComposerPage() {
                     </div>
                     {availablePromotions.length > 0 && (
                         <div>
-                            <h4 className="font-semibold text-md mb-3">Available Promotions</h4>
                             <RadioGroup onValueChange={handleSelectPromotion} value={selectedPromotion?.id}>
                                 <div className="space-y-2">
                                     {availablePromotions.map(promo => (
