@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,7 +23,8 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '../ui/separator';
 import { Card, CardContent } from '../ui/card';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { PlusCircle, Trash2, Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const mockOffers = [
     { id: 'BUN-001', name: 'Business Saver+'},
@@ -116,6 +118,22 @@ const formatForDisplay = (data: CapacityPolicy): { caps: string, quotas: string,
     };
 };
 
+const FormLabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }) => (
+    <div className="flex items-center gap-1.5">
+        <FormLabel>{label}</FormLabel>
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p className="max-w-xs">{tooltip}</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    </div>
+);
+
 export function CapacityPolicyForm({ policy, onSubmit, onCancel }: CapacityPolicyFormProps) {
   const form = useForm<CapacityPolicy>({
     resolver: zodResolver(capacityPolicySchema),
@@ -159,7 +177,7 @@ export function CapacityPolicyForm({ policy, onSubmit, onCancel }: CapacityPolic
           name="offerId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Target Offer</FormLabel>
+              <FormLabelWithTooltip label="Target Offer" tooltip="Select the specific offer this capacity policy will apply to." />
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -191,7 +209,7 @@ export function CapacityPolicyForm({ policy, onSubmit, onCancel }: CapacityPolic
                         name="caps.maxOffers"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel>Max Offers Created</FormLabel>
+                            <FormLabelWithTooltip label="Max Offers Created" tooltip="Total number of times this offer can be generated and displayed to users." />
                             <FormControl>
                                 <Input type="number" placeholder="e.g., 5000" {...field} />
                             </FormControl>
@@ -204,7 +222,7 @@ export function CapacityPolicyForm({ policy, onSubmit, onCancel }: CapacityPolic
                         name="caps.maxAccepted"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel>Max Offers Accepted</FormLabel>
+                            <FormLabelWithTooltip label="Max Offers Accepted" tooltip="Total number of times this offer can be successfully converted into an order." />
                             <FormControl>
                                 <Input type="number" placeholder="e.g., 1000" {...field} />
                             </FormControl>
@@ -217,7 +235,7 @@ export function CapacityPolicyForm({ policy, onSubmit, onCancel }: CapacityPolic
         </Card>
         
         <Card className="p-4 bg-muted/30">
-            <FormLabel className="text-base">Quotas</FormLabel>
+            <FormLabelWithTooltip label="Quotas" tooltip="Distribute the total offer capacity across different sales channels. The sum of all quotas should not exceed 100%." />
             <CardContent className="p-0 pt-4 space-y-2">
                 {fields.map((field, index) => (
                     <div key={field.id} className="flex items-center gap-2">
@@ -264,7 +282,7 @@ export function CapacityPolicyForm({ policy, onSubmit, onCancel }: CapacityPolic
         </Card>
 
          <Card className="p-4 bg-muted/30">
-            <FormLabel className="text-base">Pacing</FormLabel>
+            <FormLabelWithTooltip label="Pacing" tooltip="Control the rate at which the offer is made available to prevent sudden spikes and manage system load." />
             <CardContent className="p-0 pt-4">
                  <div className="grid grid-cols-2 gap-4">
                     <FormField
@@ -314,7 +332,7 @@ export function CapacityPolicyForm({ policy, onSubmit, onCancel }: CapacityPolic
           name="status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Status</FormLabel>
+              <FormLabelWithTooltip label="Status" tooltip="'Draft' policies are saved but not active. 'Published' policies are live and enforcing capacity rules." />
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
