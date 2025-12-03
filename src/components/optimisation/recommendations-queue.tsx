@@ -205,10 +205,10 @@ export function RecommendationsQueue() {
                         <X className="mr-2 h-4 w-4"/> Reject
                     </Button>
                     <Button variant="outline" onClick={() => toast({ title: "Edit not implemented", description: "This would open the offer creation/edit form."})}>
-                        <Pencil className="mr-2 h-4 w-4"/> Edit & Approve
+                        <Pencil className="mr-2 h-4 w-4"/> Edit &amp; Approve
                     </Button>
                     <Button onClick={() => handleDecision(selectedRec.id, 'approved')}>
-                        <Check className="mr-2 h-4 w-4"/> Approve & Publish
+                        <Check className="mr-2 h-4 w-4"/> Approve &amp; Publish
                     </Button>
                 </DialogFooter>
                 </>
