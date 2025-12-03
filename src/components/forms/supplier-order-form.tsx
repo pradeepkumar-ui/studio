@@ -44,7 +44,7 @@ export function SupplierOrderForm({ onSubmit, onCancel }: SupplierOrderFormProps
   const form = useForm<SupplierOrder>({
     resolver: zodResolver(supplierOrderSchema),
     defaultValues: {
-      supplierName: '',
+      supplierName: 'ABC Hotels',
       offerId: '',
       masterOrderId: '',
       passengerName: '',
@@ -56,16 +56,26 @@ export function SupplierOrderForm({ onSubmit, onCancel }: SupplierOrderFormProps
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto pr-4">
         <FormField
             control={form.control}
             name="supplierName"
             render={({ field }) => (
                 <FormItem>
                 <FormLabel>Supplier Name</FormLabel>
-                <FormControl>
-                    <Input placeholder="e.g., ABC Hotels" {...field} />
-                </FormControl>
+                 <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                        <SelectTrigger>
+                        <SelectValue placeholder="Select a supplier" />
+                        </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        <SelectItem value="ABC Hotels">ABC Hotels</SelectItem>
+                        <SelectItem value="City Transfers">City Transfers</SelectItem>
+                        <SelectItem value="Global Insurance">Global Insurance</SelectItem>
+                        <SelectItem value="Tour Group Inc.">Tour Group Inc.</SelectItem>
+                    </SelectContent>
+                </Select>
                 <FormMessage />
                 </FormItem>
             )}
@@ -166,7 +176,7 @@ export function SupplierOrderForm({ onSubmit, onCancel }: SupplierOrderFormProps
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit">Create Order</Button>
+          <Button type="submit">Create Supplier Order</Button>
         </div>
       </form>
     </Form>

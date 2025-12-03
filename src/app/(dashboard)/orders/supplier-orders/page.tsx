@@ -174,7 +174,7 @@ export default function SupplierOrdersPage() {
           <DialogHeader>
             <DialogTitle>Manual Supplier Order Builder</DialogTitle>
             <DialogDescription>
-              Manually create a supplier order from an Offer ID and link it to a Master Order.
+              Manually create a supplier order and link it to a Master Order.
             </DialogDescription>
           </DialogHeader>
           <SupplierOrderForm

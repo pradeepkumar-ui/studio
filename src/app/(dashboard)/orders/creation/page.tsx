@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -81,7 +82,7 @@ export default function OrderCreationPage() {
           </Button>
           <Button onClick={() => setIsDialogOpen(true)}>
             <PlusCircle className="mr-2" />
-            Create Order
+            Create Order Manually
           </Button>
         </div>
       </div>

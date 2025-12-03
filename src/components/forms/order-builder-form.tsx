@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,13 +23,14 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '../ui/textarea';
 import { Checkbox } from '../ui/checkbox';
+import { MultiSelect } from '../ui/multi-select';
 
 const manualOrderSchema = z.object({
   offerId: z.string().min(3, 'Offer ID is required.'),
   passengerName: z.string().min(3, 'Passenger Name is required.'),
-  channel: z.enum(['Web', 'API', 'Agent']),
+  channel: z.enum(['Web', 'API', 'Agent', 'GDS', 'TMC']),
   paymentReference: z.string().min(3, 'Payment reference is required.'),
-  fareClass: z.enum(['Y', 'J', 'F']),
+  fareClass: z.enum(['Y', 'J', 'F', 'W']),
   ancillaries: z.array(z.string()).optional(),
   autoValidate: z.boolean().default(true),
   notes: z.string().optional(),
@@ -42,10 +44,12 @@ interface OrderBuilderFormProps {
 }
 
 const ancillaryOptions = [
-    { id: 'seat', label: 'Seat' },
-    { id: 'meal', label: 'Meal' },
-    { id: 'bag', label: 'Baggage' },
-    { id: 'insurance', label: 'Insurance' },
+    { value: 'seat', label: 'Seat' },
+    { value: 'meal', label: 'Meal' },
+    { value: 'bag', label: 'Baggage' },
+    { value: 'insurance', label: 'Insurance' },
+    { value: 'wifi', label: 'Wi-Fi' },
+    { value: 'lounge', label: 'Lounge Access' },
 ]
 
 export function OrderBuilderForm({ onSubmit, onCancel }: OrderBuilderFormProps) {
@@ -124,6 +128,8 @@ export function OrderBuilderForm({ onSubmit, onCancel }: OrderBuilderFormProps) 
                     <SelectItem value="Web">Web</SelectItem>
                     <SelectItem value="API">API</SelectItem>
                     <SelectItem value="Agent">Agent Portal</SelectItem>
+                    <SelectItem value="GDS">GDS</SelectItem>
+                    <SelectItem value="TMC">TMC</SelectItem>
                     </SelectContent>
                 </Select>
                 <FormMessage />
@@ -144,6 +150,7 @@ export function OrderBuilderForm({ onSubmit, onCancel }: OrderBuilderFormProps) 
                     </FormControl>
                     <SelectContent>
                     <SelectItem value="Y">Y (Economy)</SelectItem>
+                    <SelectItem value="W">W (Premium Economy)</SelectItem>
                     <SelectItem value="J">J (Business)</SelectItem>
                     <SelectItem value="F">F (First)</SelectItem>
                     </SelectContent>
@@ -156,46 +163,17 @@ export function OrderBuilderForm({ onSubmit, onCancel }: OrderBuilderFormProps) 
          <FormField
             control={form.control}
             name="ancillaries"
-            render={() => (
+            render={({ field }) => (
                 <FormItem>
-                    <div className="mb-4">
-                        <FormLabel className="text-base">Ancillaries</FormLabel>
+                    <div className="mb-2">
+                        <FormLabel>Ancillaries</FormLabel>
                     </div>
-                     <div className="flex flex-wrap gap-4">
-                        {ancillaryOptions.map((item) => (
-                        <FormField
-                            key={item.id}
-                            control={form.control}
-                            name="ancillaries"
-                            render={({ field }) => {
-                            return (
-                                <FormItem
-                                key={item.id}
-                                className="flex flex-row items-start space-x-3 space-y-0"
-                                >
-                                <FormControl>
-                                    <Checkbox
-                                    checked={field.value?.includes(item.id)}
-                                    onCheckedChange={(checked) => {
-                                        return checked
-                                        ? field.onChange([...(field.value || []), item.id])
-                                        : field.onChange(
-                                            field.value?.filter(
-                                                (value) => value !== item.id
-                                            )
-                                            )
-                                    }}
-                                    />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                    {item.label}
-                                </FormLabel>
-                                </FormItem>
-                            )
-                            }}
-                        />
-                        ))}
-                    </div>
+                     <MultiSelect 
+                        options={ancillaryOptions}
+                        selected={field.value || []}
+                        onChange={field.onChange}
+                        placeholder="Select ancillaries..."
+                     />
                     <FormMessage />
                 </FormItem>
             )}
