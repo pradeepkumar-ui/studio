@@ -58,18 +58,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 const mockRecentOrders: Order[] = [
-    { id: 'ORD-073', customer: 'Voyage Travel Co.', email: 'contact@voyagetravel.com', status: 'Fulfilled', date: '2024-07-15', amount: 12500, originDestination: 'JFK-LHR', channel: 'TMC' },
-    { id: 'ORD-072', customer: 'Globex Corporation', email: 'accounts@globex.corp', status: 'Fulfilled', date: '2024-07-15', amount: 8400, originDestination: 'SFO-HND', channel: 'Corporate' },
-    { id: 'ORD-071', customer: 'Jane Smith', email: 'jane.smith@example.com', status: 'Pending', date: '2024-07-14', amount: 450, originDestination: 'MIA-CUN', channel: 'Web' },
-    { id: 'ORD-070', customer: 'InnoTech Solutions', email: 'procurement@innotech.com', status: 'Fulfilled', date: '2024-07-13', amount: 22000, originDestination: 'SIN-DXB', channel: 'API' },
-    { id: 'ORD-069', customer: 'Adventure Seekers', email: 'bookings@adventureseekers.io', status: 'Canceled', date: '2024-07-12', amount: 1800, originDestination: 'LAX-SYD', channel: 'OTA' },
-    { id: 'ORD-068', customer: 'Stark Industries', email: 'tony@stark.com', status: 'Fulfilled', date: '2024-07-12', amount: 45000, originDestination: 'JFK-ZRH', channel: 'Corporate' },
-    { id: 'ORD-067', customer: 'Wayne Enterprises', email: 'bruce@wayne.com', status: 'Pending', date: '2024-07-11', amount: 1100, originDestination: 'ORD-LGA', channel: 'Web' },
-    { id: 'ORD-066', customer: 'Cyberdyne Systems', email: 'miles@cyberdyne.com', status: 'Fulfilled', date: '2024-07-11', amount: 950, originDestination: 'LAX-DFW', channel: 'API' },
-    { id: 'ORD-065', customer: 'Hooli', email: 'gavin@hooli.com', status: 'Canceled', date: '2024-07-10', amount: 250, originDestination: 'SJC-SEA', channel: 'Web' },
-    { id: 'ORD-064', customer: 'Acme Corporation', email: 'wile@acme.com', status: 'Fulfilled', date: '2024-07-10', amount: 600, originDestination: 'PHX-DEN', channel: 'TMC' },
+    { id: 'ORD-073', customer: 'Voyage Travel Co.', email: 'contact@voyagetravel.com', status: 'Fulfilled', date: '2024-07-15', amount: 12500, originDestination: 'JFK-LHR', channel: 'TMC', paymentStatus: 'Paid' },
+    { id: 'ORD-072', customer: 'Globex Corporation', email: 'accounts@globex.corp', status: 'Fulfilled', date: '2024-07-15', amount: 8400, originDestination: 'SFO-HND', channel: 'Corporate', paymentStatus: 'Paid' },
+    { id: 'ORD-071', customer: 'Jane Smith', email: 'jane.smith@example.com', status: 'Pending', date: '2024-07-14', amount: 450, originDestination: 'MIA-CUN', channel: 'Web', paymentStatus: 'Pending' },
+    { id: 'ORD-070', customer: 'InnoTech Solutions', email: 'procurement@innotech.com', status: 'Fulfilled', date: '2024-07-13', amount: 22000, originDestination: 'SIN-DXB', channel: 'API', paymentStatus: 'Paid' },
+    { id: 'ORD-069', customer: 'Adventure Seekers', email: 'bookings@adventureseekers.io', status: 'Canceled', date: '2024-07-12', amount: 1800, originDestination: 'LAX-SYD', channel: 'OTA', paymentStatus: 'Refunded' },
+    { id: 'ORD-068', customer: 'Stark Industries', email: 'tony@stark.com', status: 'Fulfilled', date: '2024-07-12', amount: 45000, originDestination: 'JFK-ZRH', channel: 'Corporate', paymentStatus: 'Paid' },
+    { id: 'ORD-067', customer: 'Wayne Enterprises', email: 'bruce@wayne.com', status: 'Pending', date: '2024-07-11', amount: 1100, originDestination: 'ORD-LGA', channel: 'Web', paymentStatus: 'Pending' },
+    { id: 'ORD-066', customer: 'Cyberdyne Systems', email: 'miles@cyberdyne.com', status: 'Fulfilled', date: '2024-07-11', amount: 950, originDestination: 'LAX-DFW', channel: 'API', paymentStatus: 'Failed' },
+    { id: 'ORD-065', customer: 'Hooli', email: 'gavin@hooli.com', status: 'Canceled', date: '2024-07-10', amount: 250, originDestination: 'SJC-SEA', channel: 'Web', paymentStatus: 'Refunded' },
+    { id: 'ORD-064', customer: 'Acme Corporation', email: 'wile@acme.com', status: 'Fulfilled', date: '2024-07-10', amount: 600, originDestination: 'PHX-DEN', channel: 'TMC', paymentStatus: 'Paid' },
   ];
 
 export type Order = {
@@ -81,6 +82,7 @@ export type Order = {
   amount: number;
   originDestination: string;
   channel: string;
+  paymentStatus: 'Paid' | 'Pending' | 'Failed' | 'Refunded';
 };
 
 const getStatusBadgeVariant = (status: Order['status']) => {
@@ -96,11 +98,21 @@ const getStatusBadgeVariant = (status: Order['status']) => {
   }
 };
 
+const getPaymentStatusBadgeVariant = (status: Order['paymentStatus']) => {
+  switch (status) {
+    case 'Paid': return 'default';
+    case 'Pending': return 'secondary';
+    case 'Failed': return 'destructive';
+    case 'Refunded': return 'outline';
+    default: return 'outline';
+  }
+};
+
 const kpiData = [
-  { title: 'Total Orders', value: '4,320', icon: ShoppingCart },
-  { title: 'Active Orders', value: '3,980', icon: ReceiptText },
-  { title: 'Open Refunds', value: '55', icon: AlertCircle },
-  { title: 'Services Attached', value: '12,600', icon: FileBox },
+  { title: 'Total Orders', value: '4,320', icon: ShoppingCart, filterColumn: 'status', filterValue: null },
+  { title: 'Active Orders', value: '3,980', icon: ReceiptText, filterColumn: 'status', filterValue: 'Pending' },
+  { title: 'Open Refunds', value: '55', icon: AlertCircle, filterColumn: 'paymentStatus', filterValue: 'Refunded' },
+  { title: 'Services Attached', value: '12,600', icon: FileBox, filterColumn: 'status', filterValue: null }, // No filter for this one
 ];
 
 export const columns: ColumnDef<Order>[] = [
@@ -129,21 +141,20 @@ export const columns: ColumnDef<Order>[] = [
     cell: ({ row }) => <div>{row.getValue('customer')}</div>,
   },
   {
-    accessorKey: 'originDestination',
-    header: 'Route',
-    cell: ({ row }) => <div>{row.getValue('originDestination')}</div>,
-  },
-  {
-    accessorKey: 'channel',
-    header: 'Channel',
-    cell: ({ row }) => <Badge variant="outline">{row.getValue('channel')}</Badge>,
-  },
-  {
     accessorKey: 'status',
-    header: 'Status',
+    header: 'Order Status',
     cell: ({ row }) => (
       <Badge variant={getStatusBadgeVariant(row.getValue('status'))}>
         {row.getValue('status')}
+      </Badge>
+    ),
+  },
+  {
+    accessorKey: 'paymentStatus',
+    header: 'Payment Status',
+    cell: ({ row }) => (
+      <Badge variant={getPaymentStatusBadgeVariant(row.getValue('paymentStatus'))}>
+        {row.getValue('paymentStatus')}
       </Badge>
     ),
   },
@@ -204,14 +215,25 @@ export default function OrdersPage() {
   React.useEffect(() => {
     const newOrderString = sessionStorage.getItem('newly_created_order');
     if (newOrderString) {
-      const newOrder: Omit<Order, 'originDestination' | 'channel'> = JSON.parse(newOrderString);
-      const completeNewOrder: Order = {
-        ...newOrder,
-        originDestination: 'JFK-LAX', // Mock data for new order
-        channel: 'Web', // Mock data for new order
-      };
-      setData(prevData => [completeNewOrder, ...prevData]);
-      sessionStorage.removeItem('newly_created_order');
+      try {
+        const newOrderData: Partial<Order> = JSON.parse(newOrderString);
+        const completeNewOrder: Order = {
+          id: newOrderData.id || `ORD-${Math.floor(Math.random() * 1000)}`,
+          customer: newOrderData.customer || 'New Customer',
+          email: newOrderData.email || 'N/A',
+          status: newOrderData.status || 'Pending',
+          date: newOrderData.date || new Date().toISOString().split('T')[0],
+          amount: newOrderData.amount || 0,
+          originDestination: 'N/A', 
+          channel: 'Web',
+          paymentStatus: 'Pending',
+        };
+        setData(prevData => [completeNewOrder, ...prevData]);
+      } catch (e) {
+        console.error("Failed to parse new order from session storage", e);
+      } finally {
+        sessionStorage.removeItem('newly_created_order');
+      }
     }
   }, []);
 
@@ -230,6 +252,16 @@ export default function OrdersPage() {
     },
   });
 
+  const handleKpiClick = (columnId: string, value: string | null) => {
+    if (value === null) {
+      // Clear all filters to show total orders
+      setColumnFilters([]);
+    } else {
+      table.getColumn(columnId)?.setFilterValue(value);
+    }
+  };
+
+
   return (
     <div className="flex flex-col gap-6">
        <div className="flex items-center justify-between">
@@ -244,7 +276,11 @@ export default function OrdersPage() {
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {kpiData.map((kpi) => (
-          <Card key={kpi.title}>
+          <Card 
+            key={kpi.title} 
+            className={cn("cursor-pointer hover:bg-muted/50", kpi.filterValue && columnFilters.some(f => f.id === kpi.filterColumn && f.value === kpi.filterValue) && "ring-2 ring-primary")}
+            onClick={() => handleKpiClick(kpi.filterColumn, kpi.filterValue)}
+          >
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
                 {kpi.title}
@@ -272,9 +308,7 @@ export default function OrdersPage() {
                 placeholder="Search by ID, Customer..."
                 value={(table.getColumn('customer')?.getFilterValue() as string) ?? ''}
                 onChange={(event) => {
-                    const value = event.target.value;
-                    table.getColumn('customer')?.setFilterValue(value);
-                    table.getColumn('id')?.setFilterValue(value);
+                    table.getColumn('customer')?.setFilterValue(event.target.value)
                 }}
                 className="max-w-sm pl-9"
               />
@@ -287,26 +321,25 @@ export default function OrdersPage() {
                 <SelectValue placeholder="Filter by Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="all">All Order Statuses</SelectItem>
                 <SelectItem value="Fulfilled">Fulfilled</SelectItem>
                 <SelectItem value="Pending">Pending</SelectItem>
                 <SelectItem value="Canceled">Canceled</SelectItem>
               </SelectContent>
             </Select>
             <Select
-              value={(table.getColumn('channel')?.getFilterValue() as string) ?? 'all'}
-              onValueChange={(value) => table.getColumn('channel')?.setFilterValue(value === 'all' ? null : value)}
+              value={(table.getColumn('paymentStatus')?.getFilterValue() as string) ?? 'all'}
+              onValueChange={(value) => table.getColumn('paymentStatus')?.setFilterValue(value === 'all' ? null : value)}
             >
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by Channel" />
+                <SelectValue placeholder="Filter by Payment" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Channels</SelectItem>
-                <SelectItem value="Web">Web</SelectItem>
-                <SelectItem value="TMC">TMC</SelectItem>
-                <SelectItem value="OTA">OTA</SelectItem>
-                <SelectItem value="Corporate">Corporate</SelectItem>
-                <SelectItem value="API">API</SelectItem>
+                <SelectItem value="all">All Payment Statuses</SelectItem>
+                <SelectItem value="Paid">Paid</SelectItem>
+                <SelectItem value="Pending">Pending</SelectItem>
+                <SelectItem value="Failed">Failed</SelectItem>
+                <SelectItem value="Refunded">Refunded</SelectItem>
               </SelectContent>
             </Select>
           </div>
