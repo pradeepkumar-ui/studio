@@ -38,12 +38,12 @@ import { CapacityPolicyForm, type CapacityPolicy } from '@/components/forms/capa
 import { Progress } from '@/components/ui/progress';
 
 
-const initialPolicies: (CapacityPolicy & { utilization: number, state: 'Active' | 'Soft-Stop' | 'Stop-Sell' })[] = [
+const initialPolicies: (CapacityPolicy & { utilization: number, state: 'Active' | 'Soft-Stop' | 'Stop-Sell', caps: string, quotas: string, pacing: string })[] = [
   { 
     id: 'CP-001',
     offerId: 'BUN-006',
     offerName: 'Flexi Traveler',
-    caps: '1,200 Offers', 
+    caps: '1,200 Offers, 400 Accepted', 
     quotas: 'Direct 60% / OTA 40%', 
     pacing: '60/min', 
     status: 'Published',
@@ -88,10 +88,10 @@ const initialPolicies: (CapacityPolicy & { utilization: number, state: 'Active' 
 export function CapacityPolicies() {
   const [policies, setPolicies] = useState(initialPolicies);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingPolicy, setEditingPolicy] = useState<CapacityPolicy | null>(null);
+  const [editingPolicy, setEditingPolicy] = useState<typeof initialPolicies[0] | null>(null);
   const { toast } = useToast();
 
-  const handleOpenDialog = (policy: CapacityPolicy | null = null) => {
+  const handleOpenDialog = (policy: typeof initialPolicies[0] | null = null) => {
     setEditingPolicy(policy);
     setIsDialogOpen(true);
   };
@@ -101,14 +101,17 @@ export function CapacityPolicies() {
     setEditingPolicy(null);
   };
   
-  const handleFormSubmit = (data: CapacityPolicy) => {
+  const handleFormSubmit = (data: any) => {
     let state: 'Active' | 'Soft-Stop' | 'Stop-Sell' = 'Active';
-    if (data.caps.includes('100%')) {
-        state = 'Stop-Sell';
+    const utilization = Math.floor(Math.random() * 101);
+    if(utilization > 95) {
+      state = 'Stop-Sell';
+    } else if (utilization > 85) {
+      state = 'Soft-Stop';
     }
 
     if (editingPolicy) {
-      setPolicies(policies.map((p) => (p.id === editingPolicy.id ? { ...p, ...data, state, utilization: p.utilization } : p)));
+      setPolicies(policies.map((p) => (p.id === editingPolicy.id ? { ...editingPolicy, ...data, state, utilization: p.utilization } : p)));
       toast({ title: 'Policy Updated' });
     } else {
       const newPolicy = { ...data, id: `CP-00${policies.length + 1}`, state: 'Active' as const, utilization: 0 };
