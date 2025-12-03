@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -37,7 +38,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { StockItemForm, type StockItem } from '@/components/forms/stock-item-form';
-
+import { StockReplenishmentAI } from '@/components/stock-keeper/stock-replenishment-ai';
+import { cn } from '@/lib/utils';
 
 const initialStockItems: StockItem[] = [
   { sku: 'MEAL_VG_01', category: 'Meals', supplier: 'SkyCaterers', available: 125, reserved: 20, threshold: 50, status: 'In Stock' },
@@ -59,13 +61,7 @@ const mockHistory = [
     { type: 'Initial', change: '500', reason: 'Initial Stocking', user: 'System', timestamp: '2025-10-25 12:00 UTC' },
 ];
 
-
-const kpiData = [
-    { title: 'Active SKUs', value: '420' },
-    { title: 'Low Stock Items', value: '14' },
-    { title: 'Pending Restocks', value: '6' },
-    { title: 'Last Sync', value: '2 mins ago' },
-];
+type StockFilter = 'all' | 'Low Stock' | 'Out of Stock' | 'pending_restock';
 
 const getStatus = (item: Omit<StockItem, 'status'>): StockItem['status'] => {
     if (item.available <= 0) return 'Out of Stock';
@@ -89,6 +85,7 @@ export default function StockKeeperPage() {
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<StockItem | null>(null);
   const [selectedItemForHistory, setSelectedItemForHistory] = useState<StockItem | null>(null);
+  const [activeFilter, setActiveFilter] = useState<StockFilter>('all');
   const { toast } = useToast();
 
   const handleOpenDialog = (item: StockItem | null = null) => {
@@ -121,6 +118,20 @@ export default function StockKeeperPage() {
     setIsHistoryDialogOpen(true);
   };
 
+  const filteredItems = stockItems.filter(item => {
+    if (activeFilter === 'all') return true;
+    const status = getStatus(item);
+    if (activeFilter === 'pending_restock') return status === 'Low Stock' || status === 'Out of Stock';
+    return status === activeFilter;
+  });
+  
+  const kpiData = [
+    { title: 'Active SKUs', value: stockItems.length, filter: 'all' as StockFilter },
+    { title: 'Low Stock Items', value: stockItems.filter(i => getStatus(i) === 'Low Stock').length, filter: 'Low Stock' as StockFilter },
+    { title: 'Out of Stock', value: stockItems.filter(i => getStatus(i) === 'Out of Stock').length, filter: 'Out of Stock' as StockFilter },
+    { title: 'Pending Restock', value: stockItems.filter(i => getStatus(i) === 'Low Stock' || getStatus(i) === 'Out of Stock').length, filter: 'pending_restock' as StockFilter },
+  ];
+
 
   return (
     <div className="flex flex-col gap-6">
@@ -140,7 +151,7 @@ export default function StockKeeperPage() {
 
        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {kpiData.map((kpi) => (
-          <Card key={kpi.title}>
+          <Card key={kpi.title} className={cn("cursor-pointer hover:bg-muted/50", activeFilter === kpi.filter && "ring-2 ring-primary")} onClick={() => setActiveFilter(kpi.filter)}>
             <CardHeader>
               <CardTitle className="text-sm font-medium">
                 {kpi.title}
@@ -153,77 +164,83 @@ export default function StockKeeperPage() {
         ))}
       </div>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Stock Levels</CardTitle>
-          <CardDescription>
-            Live view of all tracked stock-keeping units (SKUs).
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>SKU</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Available / Reserved</TableHead>
-                <TableHead>Threshold</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {stockItems.map((item) => {
-                const status = getStatus(item);
-                return (
-                    <TableRow key={item.sku}>
-                        <TableCell className="font-medium font-mono">{item.sku}</TableCell>
-                        <TableCell>{item.category}</TableCell>
-                        <TableCell>
-                            <div className="flex items-center gap-2">
-                                <Progress value={(item.available / (item.available + item.reserved + item.threshold)) * 100} className="h-2 w-24"/>
-                                <span>{item.available} / <span className="text-muted-foreground">{item.reserved}</span></span>
-                            </div>
-                        </TableCell>
-                        <TableCell>{item.threshold}</TableCell>
-                        <TableCell>
-                            <Badge variant={getStatusBadgeVariant(status)}>
-                            {status}
-                            </Badge>
-                        </TableCell>
-                        <TableCell>
-                            <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                aria-haspopup="true"
-                                size="icon"
-                                variant="ghost"
-                                >
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Toggle menu</span>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => handleOpenDialog({...item, status})}>Edit</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleViewHistory(item)}>View History</DropdownMenuItem>
-                                <DropdownMenuItem>Adjust Stock</DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-destructive">
-                                Archive SKU
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                            </DropdownMenu>
-                        </TableCell>
-                    </TableRow>
-                )
-            })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Stock Levels</CardTitle>
+              <CardDescription>
+                Live view of all tracked stock-keeping units (SKUs). 
+                {activeFilter !== 'all' && <span className="font-semibold"> Filtering by: {activeFilter}</span>}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>SKU</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Available / Reserved</TableHead>
+                    <TableHead>Threshold</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredItems.map((item) => {
+                    const status = getStatus(item);
+                    return (
+                        <TableRow key={item.sku}>
+                            <TableCell className="font-medium font-mono">{item.sku}</TableCell>
+                            <TableCell>{item.category}</TableCell>
+                            <TableCell>
+                                <div className="flex items-center gap-2">
+                                    <Progress value={(item.available / (item.available + item.reserved + item.threshold)) * 100} className="h-2 w-24"/>
+                                    <span>{item.available} / <span className="text-muted-foreground">{item.reserved}</span></span>
+                                </div>
+                            </TableCell>
+                            <TableCell>{item.threshold}</TableCell>
+                            <TableCell>
+                                <Badge variant={getStatusBadgeVariant(status)}>
+                                {status}
+                                </Badge>
+                            </TableCell>
+                            <TableCell>
+                                <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                    aria-haspopup="true"
+                                    size="icon"
+                                    variant="ghost"
+                                    >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                    <span className="sr-only">Toggle menu</span>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                    <DropdownMenuItem onClick={() => handleOpenDialog({...item, status})}>Edit</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleViewHistory(item)}>View History</DropdownMenuItem>
+                                    <DropdownMenuItem>Adjust Stock</DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem className="text-destructive">
+                                    Archive SKU
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                                </DropdownMenu>
+                            </TableCell>
+                        </TableRow>
+                    )
+                })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
+        <StockReplenishmentAI />
+      </div>
 
        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
