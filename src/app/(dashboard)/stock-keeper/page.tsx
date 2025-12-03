@@ -33,7 +33,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, PlusCircle, History } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, History, Upload, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
@@ -144,9 +144,17 @@ export default function StockKeeperPage() {
             Manage inventory for ancillary products, vouchers, and other offerable items.
           </p>
         </div>
-        <Button onClick={() => handleOpenDialog()}>
-            <PlusCircle className="mr-2"/> Add Stock Item
-        </Button>
+        <div className="flex gap-2">
+            <Button variant="outline">
+                <Upload className="mr-2 h-4 w-4" /> Upload Stock
+            </Button>
+            <Button variant="outline">
+                <RefreshCw className="mr-2 h-4 w-4" /> Sync with API
+            </Button>
+            <Button onClick={() => handleOpenDialog()}>
+                <PlusCircle className="mr-2"/> Add Stock Item
+            </Button>
+        </div>
       </div>
 
        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
