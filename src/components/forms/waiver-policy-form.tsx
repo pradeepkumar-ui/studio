@@ -40,6 +40,7 @@ const waiverPolicySchema = z.object({
   routes: z.string().min(3, 'Route is required.'),
   rulesWaived: z.array(z.string()).min(1, 'At least one rule must be selected.'),
   fareDifferencePolicy: z.enum(fareDiffPolicies),
+  priority: z.enum(['Waiver First', 'Standard Rules']),
   status: z.enum(['Draft', 'Approved', 'Published', 'Archived']),
 });
 
@@ -60,6 +61,7 @@ export function WaiverPolicyForm({ policy, onSubmit, onCancel }: WaiverPolicyFor
       routes: '',
       rulesWaived: ['change_fee'],
       fareDifferencePolicy: 'Match or Lower',
+      priority: 'Waiver First',
       status: 'Draft',
     },
   });
@@ -140,7 +142,7 @@ export function WaiverPolicyForm({ policy, onSubmit, onCancel }: WaiverPolicyFor
                                     checked={field.value?.includes(item.id)}
                                     onCheckedChange={(checked) => {
                                     return checked
-                                        ? field.onChange([...field.value, item.id])
+                                        ? field.onChange([...(field.value || []), item.id])
                                         : field.onChange(
                                             field.value?.filter(
                                             (value) => value !== item.id
@@ -176,6 +178,27 @@ export function WaiverPolicyForm({ policy, onSubmit, onCancel }: WaiverPolicyFor
                 </FormControl>
                 <SelectContent>
                   {fareDiffPolicies.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+         <FormField
+          control={form.control}
+          name="priority"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Priority</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select offer precedence" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                    <SelectItem value="Waiver First">Waiver Takes Priority</SelectItem>
+                    <SelectItem value="Standard Rules">Standard Precedence</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

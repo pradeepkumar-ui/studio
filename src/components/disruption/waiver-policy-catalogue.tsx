@@ -43,8 +43,9 @@ const initialPolicies: WaiverPolicy[] = [
     name: 'General Weather Waiver',
     eventType: 'Weather',
     routes: 'All',
-    rulesWaived: 'change_fee, no_show_penalty',
+    rulesWaived: ['change_fee', 'no_show_penalty'],
     fareDifferencePolicy: 'Match or Lower',
+    priority: 'Waiver First',
     status: 'Published',
   },
   {
@@ -52,8 +53,9 @@ const initialPolicies: WaiverPolicy[] = [
     name: 'Major Schedule Change (>4h)',
     eventType: 'Schedule Change',
     routes: 'All',
-    rulesWaived: 'change_fee, refund_penalty',
+    rulesWaived: ['change_fee', 'refund_penalty'],
     fareDifferencePolicy: 'None',
+    priority: 'Waiver First',
     status: 'Published',
   },
   {
@@ -61,8 +63,9 @@ const initialPolicies: WaiverPolicy[] = [
     name: 'Domestic Cancellation',
     eventType: 'Cancellation',
     routes: 'Domestic',
-    rulesWaived: 'change_fee',
+    rulesWaived: ['change_fee'],
     fareDifferencePolicy: 'Cap at 100 USD',
+    priority: 'Standard Rules',
     status: 'Approved',
   },
   {
@@ -70,8 +73,9 @@ const initialPolicies: WaiverPolicy[] = [
     name: 'International Overbooking',
     eventType: 'Overbooking',
     routes: 'International',
-    rulesWaived: 'change_fee',
+    rulesWaived: ['change_fee'],
     fareDifferencePolicy: 'None',
+    priority: 'Standard Rules',
     status: 'Draft',
   },
 ];
@@ -135,7 +139,7 @@ export function WaiverPolicyCatalogue() {
                 <TableHead>Policy Name</TableHead>
                 <TableHead>Event Type</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Fare Difference</TableHead>
+                <TableHead>Priority</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -153,7 +157,11 @@ export function WaiverPolicyCatalogue() {
                       {policy.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>{policy.fareDifferencePolicy}</TableCell>
+                  <TableCell>
+                    <Badge variant={policy.priority === 'Waiver First' ? 'default' : 'outline'}>
+                        {policy.priority === 'Waiver First' ? 'Waiver First' : 'Standard'}
+                    </Badge>
+                  </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
