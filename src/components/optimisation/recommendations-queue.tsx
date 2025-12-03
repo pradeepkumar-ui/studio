@@ -129,12 +129,15 @@ export function RecommendationsQueue() {
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
                             {rec.type === 'CREATE_NEW' ? <PlusCircle className="h-5 w-5 text-primary" /> : <Wand2 className="h-5 w-5 text-primary" />}
-                            <h4 className="font-semibold text-lg">{rec.strategy}</h4>
+                             <h4 className="font-semibold text-lg">{rec.strategy}</h4>
                         </div>
                          <Badge variant={rec.mode === 'auto' ? 'secondary' : 'default'}>{rec.mode === 'auto' ? 'Auto-Applied' : 'Approval Required'}</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                        <span className="font-medium text-foreground">Target:</span> {rec.targetName} <span className="font-mono text-xs">({rec.targetId})</span>
+                        <span className="font-medium text-foreground">
+                             {rec.type === 'CREATE_NEW' ? 'New Offer:' : 'Target:'}
+                        </span> {rec.targetName} 
+                        {rec.type === 'OPTIMIZE_EXISTING' && <span className="font-mono text-xs"> ({rec.targetId})</span>}
                     </p>
                     <p className="text-sm text-muted-foreground">
                         <span className="font-medium text-foreground">Est. Impact:</span> <span className="font-medium text-green-600">{rec.expected_uplift}</span>
@@ -163,7 +166,10 @@ export function RecommendationsQueue() {
                 <DialogHeader>
                     <DialogTitle>{selectedRec.strategy}</DialogTitle>
                     <DialogDescription>
-                        Reviewing proposal for: {selectedRec.targetName} ({selectedRec.targetId})
+                        {selectedRec.type === 'CREATE_NEW' 
+                            ? `Proposal to create new offer: ${selectedRec.targetName}`
+                            : `Reviewing proposal for: ${selectedRec.targetName} (${selectedRec.targetId})`
+                        }
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-6 py-4">
@@ -205,10 +211,10 @@ export function RecommendationsQueue() {
                         <X className="mr-2 h-4 w-4"/> Reject
                     </Button>
                     <Button variant="outline" onClick={() => toast({ title: "Edit not implemented", description: "This would open the offer creation/edit form."})}>
-                        <Pencil className="mr-2 h-4 w-4"/> Edit &amp; Approve
+                        <Pencil className="mr-2 h-4 w-4"/> Edit & Approve
                     </Button>
                     <Button onClick={() => handleDecision(selectedRec.id, 'approved')}>
-                        <Check className="mr-2 h-4 w-4"/> Approve &amp; Publish
+                        <Check className="mr-2 h-4 w-4"/> Approve & Publish
                     </Button>
                 </DialogFooter>
                 </>
