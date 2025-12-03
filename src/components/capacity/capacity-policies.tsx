@@ -40,8 +40,9 @@ import { Progress } from '@/components/ui/progress';
 
 const initialPolicies: (CapacityPolicy & { utilization: number, state: 'Active' | 'Soft-Stop' | 'Stop-Sell' })[] = [
   { 
-    id: 'CP-001', 
-    scope: 'MAA-DXB | Flex | Direct', 
+    id: 'CP-001',
+    offerId: 'BUN-006',
+    offerName: 'Flexi Traveler',
     caps: '1,200 Offers', 
     quotas: 'Direct 60% / OTA 40%', 
     pacing: '60/min', 
@@ -50,18 +51,20 @@ const initialPolicies: (CapacityPolicy & { utilization: number, state: 'Active' 
     state: 'Soft-Stop'
   },
   { 
-    id: 'CP-002', 
-    scope: 'LHR-JFK | Business | All', 
+    id: 'CP-002',
+    offerId: 'BUN-001',
+    offerName: 'Business Saver+',
     caps: '500 Offers', 
     quotas: 'N/A', 
     pacing: '100/min', 
     status: 'Published',
-    utilization: 96,
+    utilization: 100,
     state: 'Stop-Sell'
   },
   { 
-    id: 'CP-003', 
-    scope: 'SIN-HKG | All | Mobile', 
+    id: 'CP-003',
+    offerId: 'BUN-007',
+    offerName: 'Holiday Special',
     caps: '5,000 Offers', 
     quotas: 'N/A', 
     pacing: '300/min', 
@@ -71,7 +74,8 @@ const initialPolicies: (CapacityPolicy & { utilization: number, state: 'Active' 
   },
    { 
     id: 'CP-004', 
-    scope: 'US-DOM | Economy | OTA', 
+    offerId: 'BUN-002',
+    offerName: 'Family Pack',
     caps: '10,000 Offers', 
     quotas: 'N/A', 
     pacing: 'N/A', 
@@ -98,8 +102,13 @@ export function CapacityPolicies() {
   };
   
   const handleFormSubmit = (data: CapacityPolicy) => {
+    let state: 'Active' | 'Soft-Stop' | 'Stop-Sell' = 'Active';
+    if (data.caps.includes('100%')) {
+        state = 'Stop-Sell';
+    }
+
     if (editingPolicy) {
-      setPolicies(policies.map((p) => (p.id === editingPolicy.id ? { ...p, ...data, state: 'Active', utilization: 0 } : p)));
+      setPolicies(policies.map((p) => (p.id === editingPolicy.id ? { ...p, ...data, state, utilization: p.utilization } : p)));
       toast({ title: 'Policy Updated' });
     } else {
       const newPolicy = { ...data, id: `CP-00${policies.length + 1}`, state: 'Active' as const, utilization: 0 };
@@ -137,7 +146,7 @@ export function CapacityPolicies() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[25%]">Scope</TableHead>
+                <TableHead className="w-[25%]">Target Offer</TableHead>
                 <TableHead>Caps</TableHead>
                 <TableHead>Utilization</TableHead>
                 <TableHead>State</TableHead>
@@ -149,7 +158,7 @@ export function CapacityPolicies() {
             <TableBody>
               {policies.map((policy) => (
                 <TableRow key={policy.id}>
-                  <TableCell className="font-medium">{policy.scope}</TableCell>
+                  <TableCell className="font-medium">{policy.offerName}</TableCell>
                   <TableCell>{policy.caps}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">

@@ -22,9 +22,19 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '../ui/separator';
 
+const mockOffers = [
+    { id: 'BUN-001', name: 'Business Saver+'},
+    { id: 'BUN-002', name: 'Family Pack'},
+    { id: 'BUN-004', name: 'Long Haul Comfort'},
+    { id: 'BUN-006', name: 'Flexi Traveler'},
+    { id: 'BUN-007', name: 'Holiday Special'},
+];
+
+
 const capacityPolicySchema = z.object({
   id: z.string().optional(),
-  scope: z.string().min(5, 'Scope is required.'),
+  offerId: z.string({ required_error: 'Please select an offer to apply this policy to.'}),
+  offerName: z.string().optional(),
   caps: z.string().min(3, 'Caps are required.'),
   quotas: z.string(),
   pacing: z.string(),
@@ -43,28 +53,47 @@ export function CapacityPolicyForm({ policy, onSubmit, onCancel }: CapacityPolic
   const form = useForm<CapacityPolicy>({
     resolver: zodResolver(capacityPolicySchema),
     defaultValues: policy || {
-      scope: '',
+      offerId: '',
       caps: '',
       quotas: '',
       pacing: '',
       status: 'Draft',
     },
   });
+  
+  const handleFormSubmit = (data: CapacityPolicy) => {
+    const selectedOffer = mockOffers.find(o => o.id === data.offerId);
+    onSubmit({
+      ...data,
+      offerName: selectedOffer?.name,
+    })
+  }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto pr-4">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto pr-4">
         
         <h4 className="text-md font-semibold">Scope</h4>
         <FormField
           control={form.control}
-          name="scope"
+          name="offerId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Scope Description</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., MAA-DXB | Flex | Direct" {...field} />
-              </FormControl>
+              <FormLabel>Target Offer</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select an offer" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {mockOffers.map(offer => (
+                    <SelectItem key={offer.id} value={offer.id}>
+                      {offer.name} ({offer.id})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
