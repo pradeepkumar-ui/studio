@@ -3,23 +3,13 @@
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
   ArrowLeft,
-  User,
-  CreditCard,
-  History,
   FilePenLine,
   XCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { OrderDetailsView as OrderDetailsClientView, type OrderDetails } from '@/components/orders/order-details-view';
+import { OrderDetailsView, type OrderDetails } from '@/components/orders/order-details-view';
 import { Suspense } from 'react';
 
 const mockOrder: OrderDetails = {
@@ -99,7 +89,7 @@ export default function OrderDetailsPage() {
                     </div>
                 </div>
                 
-                <OrderDetailsClientView order={{...order, id: orderId}} />
+                <OrderDetailsView order={{...order, id: orderId}} />
             </div>
         </Suspense>
     );
