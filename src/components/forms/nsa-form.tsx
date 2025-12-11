@@ -47,9 +47,9 @@ const nsaSchema = z.object({
     issue: z.string().min(3, 'Ticketing deadline is required.'),
   }),
   finance: z.object({
-    deposit: z.string().min(3, 'Deposit details are required.'),
-    finalPayment: z.string().min(3, 'Final payment details are required.'),
-    penalties: z.string().min(3, 'Penalty details are required.'),
+    deposit: z.string().min(3, 'Deposit terms are required.'),
+    finalPayment: z.string().min(3, 'Final payment terms are required.'),
+    penalties: z.string().min(3, 'Penalty terms are required.'),
   }),
   status: z.enum(['Draft', 'Approved', 'Published', 'Amended', 'Expired']),
 });
@@ -97,7 +97,7 @@ export function NsaForm({ nsa, onSubmit, onCancel }: NsaFormProps) {
         issue: 'D-7',
       },
       finance: {
-        deposit: '10% at contract signature',
+        deposit: '10% of total group cost or $50/pp',
         finalPayment: 'D-30',
         penalties: 'Attrition penalties apply.',
       },
