@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -43,10 +44,11 @@ const nsaSchema = z.object({
   deadlines: z.object({
     release: z.string().min(3, 'Release deadline is required.'),
     name: z.string().min(3, 'Name deadline is required.'),
-    issue: z.string().min(3, 'Issue deadline is required.'),
+    issue: z.string().min(3, 'Ticketing deadline is required.'),
   }),
   finance: z.object({
     deposit: z.string().min(3, 'Deposit details are required.'),
+    finalPayment: z.string().min(3, 'Final payment details are required.'),
     penalties: z.string().min(3, 'Penalty details are required.'),
   }),
   status: z.enum(['Draft', 'Approved', 'Published', 'Amended', 'Expired']),
@@ -95,7 +97,8 @@ export function NsaForm({ nsa, onSubmit, onCancel }: NsaFormProps) {
         issue: 'D-7',
       },
       finance: {
-        deposit: '10% at contract, 20% at D-45',
+        deposit: '10% at contract signature',
+        finalPayment: 'D-30',
         penalties: 'Attrition penalties apply.',
       },
       status: 'Draft',
@@ -298,7 +301,7 @@ export function NsaForm({ nsa, onSubmit, onCancel }: NsaFormProps) {
 
         <Separator />
         
-        <h4 className="text-md font-semibold pt-2">Rules & Deadlines</h4>
+        <h4 className="text-md font-semibold pt-2">Revenue Integrity: Deadlines & Terms</h4>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             <FormField
@@ -306,7 +309,7 @@ export function NsaForm({ nsa, onSubmit, onCancel }: NsaFormProps) {
             name="deadlines.release"
             render={({ field }) => (
                 <FormItem>
-                <FormLabel>Release</FormLabel>
+                <FormLabel>Inventory Release</FormLabel>
                 <FormControl>
                     <Input placeholder="e.g., D-30, D-14" {...field} />
                 </FormControl>
@@ -319,7 +322,7 @@ export function NsaForm({ nsa, onSubmit, onCancel }: NsaFormProps) {
             name="deadlines.name"
             render={({ field }) => (
                 <FormItem>
-                <FormLabel>Name</FormLabel>
+                <FormLabel>Names Due</FormLabel>
                 <FormControl>
                     <Input placeholder="e.g., D-14" {...field} />
                 </FormControl>
@@ -332,7 +335,7 @@ export function NsaForm({ nsa, onSubmit, onCancel }: NsaFormProps) {
             name="deadlines.issue"
             render={({ field }) => (
                 <FormItem>
-                <FormLabel>Issue</FormLabel>
+                <FormLabel>Ticketing Deadline</FormLabel>
                 <FormControl>
                     <Input placeholder="e.g., D-7" {...field} />
                 </FormControl>
@@ -342,15 +345,28 @@ export function NsaForm({ nsa, onSubmit, onCancel }: NsaFormProps) {
             />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
              <FormField
             control={form.control}
             name="finance.deposit"
             render={({ field }) => (
                 <FormItem>
-                <FormLabel>Deposits</FormLabel>
+                <FormLabel>Deposit Terms</FormLabel>
                 <FormControl>
                     <Input placeholder="e.g., 10% at contract" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+             <FormField
+            control={form.control}
+            name="finance.finalPayment"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Final Payment Due</FormLabel>
+                <FormControl>
+                    <Input placeholder="e.g., D-30" {...field} />
                 </FormControl>
                 <FormMessage />
                 </FormItem>
@@ -408,3 +424,5 @@ export function NsaForm({ nsa, onSubmit, onCancel }: NsaFormProps) {
     </Form>
   );
 }
+
+    

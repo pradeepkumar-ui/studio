@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "order": {
@@ -258,7 +259,8 @@
             "route": { "type": "string" },
             "season": { "type": "string" },
             "dow": { "type": "string" }
-          }
+          },
+          "required": ["route", "season", "dow"]
         },
         "capacity": { "type": "number" },
         "rbd": { "type": "array", "items": { "type": "string" } },
@@ -269,7 +271,8 @@
             "currency": { "type": "string" },
             "baseFareRange": { "type": "string" },
             "commission": { "type": "string" }
-          }
+          },
+          "required": ["currency", "baseFareRange", "commission"]
         },
         "deadlines": {
           "type": "object",
@@ -277,14 +280,17 @@
             "release": { "type": "string" },
             "name": { "type": "string" },
             "issue": { "type": "string" }
-          }
+          },
+          "required": ["release", "name", "issue"]
         },
         "finance": {
           "type": "object",
           "properties": {
             "deposit": { "type": "string" },
+            "finalPayment": { "type": "string" },
             "penalties": { "type": "string" }
-          }
+          },
+          "required": ["deposit", "finalPayment", "penalties"]
         },
         "status": { "type": "string", "enum": ["Draft", "Approved", "Published", "Amended", "Expired"] }
       },
@@ -430,3 +436,5 @@
     }
   }
 }
+
+    
