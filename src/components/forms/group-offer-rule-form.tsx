@@ -189,4 +189,3 @@ export function GroupOfferRuleForm({ rule, onSubmit, onCancel }: GroupOfferRuleF
     </Form>
   );
 }
-
