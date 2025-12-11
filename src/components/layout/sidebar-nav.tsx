@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -120,6 +121,7 @@ const menuItems: MenuItem[] = [
           { href: '/group-offer-rules', label: 'Group Offer Rules', icon: Users },
           { href: '/nsa', label: 'Negotiated Space', icon: Handshake },
           { href: '/offer-composer', label: 'Composer', icon: Layers },
+          { href: '/group-composer', label: 'Group Composer', icon: Users },
           { href: '/offers/automated-creation', label: 'AI Offer Configuration', icon: Wand2 },
           { href: '/optimisation', label: 'Offer Optimisation', icon: Wand2 },
           { href: '/disruption-waivers', label: 'Disruption Waivers', icon: Waves },
