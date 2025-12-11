@@ -47,7 +47,6 @@ const groupOfferRuleSchema = z.object({
   }),
   travelDates: z.object({ from: z.date().optional(), to: z.date().optional() }).optional(),
   
-  // New section for travel solution selection
   travelSolution: z.object({
     connectionPreference: z.enum(['Allow Connections', 'Non-stop Only', 'Prefer Non-stop']).default('Allow Connections'),
     codesharePolicy: z.enum(['Allow All', 'Exclude Specific', 'Include Specific']).default('Allow All'),
