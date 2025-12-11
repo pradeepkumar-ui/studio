@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -46,6 +45,15 @@ const groupOfferRuleSchema = z.object({
     max: z.coerce.number().min(10, 'Maximum passengers must be at least 10.'),
   }),
   travelDates: z.object({ from: z.date().optional(), to: z.date().optional() }).optional(),
+  
+  // New section for travel solution selection
+  travelSolution: z.object({
+    connectionPreference: z.enum(['Allow Connections', 'Non-stop Only', 'Prefer Non-stop']).default('Allow Connections'),
+    codesharePolicy: z.enum(['Allow All', 'Exclude Specific', 'Include Specific']).default('Allow All'),
+    partnerAirlines: z.string().optional(),
+    coTerminals: z.string().optional(),
+  }).optional(),
+
   priceAdjustment: z.coerce.number(),
   discountTiers: z.array(discountTierSchema).optional(),
   terms: z.string().min(10, 'Terms and conditions must be defined.'),
@@ -68,6 +76,12 @@ export function GroupOfferRuleForm({ rule, onSubmit, onCancel }: GroupOfferRuleF
       market: 'ALL',
       passengerCount: { min: 10, max: 100 },
       travelDates: { from: new Date(), to: addDays(new Date(), 365) },
+      travelSolution: {
+        connectionPreference: 'Allow Connections',
+        codesharePolicy: 'Allow All',
+        partnerAirlines: '',
+        coTerminals: '',
+      },
       priceAdjustment: 0,
       discountTiers: [{ minPassengers: 10, maxPassengers: 25, discount: 5 }],
       terms: 'Standard group travel terms apply. 10% deposit required within 14 days.',
@@ -78,6 +92,8 @@ export function GroupOfferRuleForm({ rule, onSubmit, onCancel }: GroupOfferRuleF
     control: form.control,
     name: "discountTiers",
   });
+  
+  const codesharePolicy = form.watch('travelSolution.codesharePolicy');
 
   return (
     <Form {...form}>
@@ -132,6 +148,56 @@ export function GroupOfferRuleForm({ rule, onSubmit, onCancel }: GroupOfferRuleF
             )}
         />
         
+        <Separator />
+        <h4 className="text-md font-semibold">Travel Solution Selection</h4>
+
+        <FormField control={form.control} name="travelSolution.connectionPreference" render={({ field }) => (
+            <FormItem>
+                <FormLabel>Connection Preference</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl><SelectTrigger><SelectValue placeholder="Select connection preference" /></SelectTrigger></FormControl>
+                    <SelectContent>
+                        <SelectItem value="Allow Connections">Allow Connections</SelectItem>
+                        <SelectItem value="Non-stop Only">Non-stop Only</SelectItem>
+                        <SelectItem value="Prefer Non-stop">Prefer Non-stop</SelectItem>
+                    </SelectContent>
+                </Select>
+            </FormItem>
+        )}/>
+
+        <div className="grid grid-cols-2 gap-4">
+            <FormField control={form.control} name="travelSolution.codesharePolicy" render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Codeshare/Interline Policy</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl><SelectTrigger><SelectValue placeholder="Select partner policy" /></SelectTrigger></FormControl>
+                        <SelectContent>
+                            <SelectItem value="Allow All">Allow All Partners</SelectItem>
+                            <SelectItem value="Exclude Specific">Exclude Specific Partners</SelectItem>
+                            <SelectItem value="Include Specific">Include Only Specific Partners</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </FormItem>
+            )}/>
+            {(codesharePolicy === 'Exclude Specific' || codesharePolicy === 'Include Specific') && (
+                <FormField control={form.control} name="travelSolution.partnerAirlines" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Partner Airline Codes</FormLabel>
+                        <FormControl><Input placeholder="e.g., AA, DL, UA" {...field} /></FormControl>
+                    </FormItem>
+                )}/>
+            )}
+        </div>
+
+        <FormField control={form.control} name="travelSolution.coTerminals" render={({ field }) => (
+            <FormItem>
+                <FormLabel>Co-terminal Airports (Optional)</FormLabel>
+                <FormControl><Input placeholder="e.g., JFK, EWR, LGA; LHR, LGW" {...field} /></FormControl>
+                <FormMessage />
+            </FormItem>
+        )}/>
+
+
         <Separator />
         <h4 className="text-md font-semibold">Pricing</h4>
 
