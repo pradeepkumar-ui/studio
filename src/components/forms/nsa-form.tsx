@@ -353,7 +353,7 @@ export function NsaForm({ nsa, onSubmit, onCancel }: NsaFormProps) {
                 <FormItem>
                 <FormLabel>Deposit Terms</FormLabel>
                 <FormControl>
-                    <Input placeholder="e.g., 10% at contract" {...field} />
+                    <Input placeholder="e.g., 10% of total or $50/pax" {...field} />
                 </FormControl>
                 <FormMessage />
                 </FormItem>
@@ -424,5 +424,3 @@ export function NsaForm({ nsa, onSubmit, onCancel }: NsaFormProps) {
     </Form>
   );
 }
-
-    
