@@ -23,6 +23,10 @@ import {
   Calendar,
   Contact,
   Wrench,
+  Ticket,
+  Luggage,
+  Utensils,
+  Building,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -53,12 +57,21 @@ import {
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 
+type Service = {
+    id: string;
+    type: string;
+    description: string;
+    status: string;
+    price: number;
+};
+
 export type GroupOrderDetails = {
     id: string;
     offerId: string;
     groupName: string;
     totalPassengers: number;
     status: 'Pending Approval' | 'Active' | 'Fulfilled' | 'Cancelled';
+    services: Service[];
     itinerary: {
         origin: string;
         destination: string;
@@ -109,6 +122,17 @@ const getPaymentStatusBadgeVariant = (status: 'Paid' | 'Pending' | 'Overdue') =>
   }
 };
 
+const getServiceIcon = (type: string) => {
+    switch (type) {
+        case 'Flight': return <Plane className="h-4 w-4 text-muted-foreground" />;
+        case 'Baggage': return <Luggage className="h-4 w-4 text-muted-foreground" />;
+        case 'Seat': return <Ticket className="h-4 w-4 text-muted-foreground" />;
+        case 'Meal': return <Utensils className="h-4 w-4 text-muted-foreground" />;
+        case 'Supplier Service': return <Building className="h-4 w-4 text-muted-foreground" />;
+        default: return <PlusCircle className="h-4 w-4 text-muted-foreground" />;
+    }
+}
+
 
 export function GroupOrderDetailsView({ order, setOrder, onRosterLoad }: GroupOrderDetailsViewProps) {
     const { toast } = useToast();
@@ -129,17 +153,19 @@ export function GroupOrderDetailsView({ order, setOrder, onRosterLoad }: GroupOr
         setOrder(prev => ({
             ...prev,
             manifest: prev.manifest.filter(p => p.id !== passengerId),
-            totalPassengers: prev.totalPassengers -1,
+            totalPassengers: prev.totalPassengers > 0 ? prev.totalPassengers - 1 : 0,
         }));
         toast({ title: 'Passenger Removed', variant: 'destructive' });
     }
 
     const handleFormSubmit = (data: PassengerDetails) => {
         setOrder(prev => {
-            const newManifest = editingPassenger
+            const isEditing = !!editingPassenger;
+            const newManifest = isEditing
                 ? prev.manifest.map(p => p.id === data.id ? data : p)
                 : [...prev.manifest, { ...data, id: `PAX-${Date.now()}` }];
-            return { ...prev, manifest: newManifest };
+            const newTotalPassengers = isEditing ? prev.totalPassengers : prev.totalPassengers + 1;
+            return { ...prev, manifest: newManifest, totalPassengers: newTotalPassengers };
         });
         toast({ title: editingPassenger ? 'Passenger Updated' : 'Passenger Added' });
         setIsFormOpen(false);
@@ -182,6 +208,35 @@ export function GroupOrderDetailsView({ order, setOrder, onRosterLoad }: GroupOr
     <>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 flex flex-col gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Services ({order.services.length})</CardTitle>
+                <Button variant="outline" size="sm"><PlusCircle className="mr-2 h-4 w-4"/>Add Service</Button>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Service</TableHead>
+                            <TableHead>Details</TableHead>
+                            <TableHead>Status</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {order.services.map(service => (
+                            <TableRow key={service.id}>
+                                <TableCell className="font-medium flex items-center gap-2">
+                                    {getServiceIcon(service.type)}
+                                    {service.type}
+                                </TableCell>
+                                <TableCell>{service.description}</TableCell>
+                                <TableCell><Badge variant="secondary">{service.status}</Badge></TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+          </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Passenger Manifest ({order.manifest.length}/{order.totalPassengers})</CardTitle>

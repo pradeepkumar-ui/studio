@@ -41,6 +41,10 @@ const initialMockOrder: GroupOrderDetails = {
         returnDate: '2025-06-20',
         isInternational: true,
     },
+    services: [
+        { id: 'FL-GRP-01', type: 'Flight', description: 'Group Fare, JFK-FCO', status: 'Confirmed', price: 24000 },
+        { id: 'BG-GRP-01', type: 'Baggage', description: '20x Checked Bags (23kg)', status: 'Pending', price: 1000 },
+    ],
     deadlines: {
         depositDue: '2025-03-15',
         namesDue: '2025-04-30',
