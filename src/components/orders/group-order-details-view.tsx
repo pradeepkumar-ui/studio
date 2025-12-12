@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -20,11 +19,13 @@ import {
   Download,
   FileSpreadsheet,
   Edit,
-  Trash2
+  Trash2,
+  Calendar,
+  Contact,
+  Wrench,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import {
   Table,
   TableBody,
@@ -49,6 +50,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
 
 export type GroupOrderDetails = {
     id: string;
@@ -77,6 +80,8 @@ export type GroupOrderDetails = {
     };
     manifest: PassengerDetails[];
     rosters: { name: string; passengers: number }[];
+    specialServices?: string;
+    notes?: string;
 };
 
 interface GroupOrderDetailsViewProps {
@@ -119,6 +124,15 @@ export function GroupOrderDetailsView({ order, setOrder, onRosterLoad }: GroupOr
         setEditingPassenger(passenger);
         setIsFormOpen(true);
     }
+    
+     const handleRemovePassenger = (passengerId: string) => {
+        setOrder(prev => ({
+            ...prev,
+            manifest: prev.manifest.filter(p => p.id !== passengerId),
+            totalPassengers: prev.totalPassengers -1,
+        }));
+        toast({ title: 'Passenger Removed', variant: 'destructive' });
+    }
 
     const handleFormSubmit = (data: PassengerDetails) => {
         setOrder(prev => {
@@ -137,6 +151,31 @@ export function GroupOrderDetailsView({ order, setOrder, onRosterLoad }: GroupOr
     
     const handleDownloadTemplate = () => {
          toast({ title: 'Template Downloaded', description: 'A CSV template for passenger details has been downloaded.'});
+    }
+
+    const handlePayment = (type: 'deposit' | 'final') => {
+        setOrder(prev => ({
+            ...prev,
+            payment: {
+                ...prev.payment,
+                [`${type}Status`]: 'Paid',
+            }
+        }));
+        toast({ title: `${type.charAt(0).toUpperCase() + type.slice(1)} Payment Successful`, description: 'Payment status has been updated.'});
+    };
+    
+    const handleGroupSizeChange = (change: number) => {
+        const newSize = order.totalPassengers + change;
+        if (newSize < 10) {
+            toast({ title: "Invalid Group Size", description: "Group must have at least 10 passengers.", variant: 'destructive' });
+            return;
+        }
+        setOrder(prev => ({ ...prev, totalPassengers: newSize }));
+        toast({ title: "Group Size Updated", description: `New group size is ${newSize}.` });
+    }
+    
+    const handleFlightModification = (action: string) => {
+        toast({ title: "Flight Modification", description: `The '${action}' action has been initiated. This would typically trigger a reshop workflow.` });
     }
 
   return (
@@ -173,6 +212,9 @@ export function GroupOrderDetailsView({ order, setOrder, onRosterLoad }: GroupOr
                                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditPassenger(pax)}>
                                             <Edit className="h-4 w-4" />
                                         </Button>
+                                         <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleRemovePassenger(pax.id!)}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -185,6 +227,32 @@ export function GroupOrderDetailsView({ order, setOrder, onRosterLoad }: GroupOr
                 )}
             </CardContent>
           </Card>
+           <Card>
+             <CardHeader>
+                <div className="flex items-center gap-2">
+                    <Wrench className="h-5 w-5" />
+                    <CardTitle>Special Services & Event Schedules</CardTitle>
+                </div>
+            </CardHeader>
+             <CardContent className="space-y-4">
+                <div>
+                    <label className="text-sm font-medium">Special Service Requests (SSRs)</label>
+                    <Input 
+                        placeholder="e.g., Add 1x VGML, 2x WCHR" 
+                        value={order.specialServices || ''} 
+                        onChange={(e) => setOrder(prev => ({...prev, specialServices: e.target.value}))}
+                    />
+                </div>
+                <div>
+                    <label className="text-sm font-medium">Notes / Event Schedule</label>
+                    <Textarea 
+                        placeholder="e.g., Conference schedule, special instructions for the group."
+                        value={order.notes || ''} 
+                        onChange={(e) => setOrder(prev => ({...prev, notes: e.target.value}))}
+                    />
+                </div>
+             </CardContent>
+           </Card>
         </div>
         <div className="flex flex-col gap-6">
             <Card>
@@ -199,8 +267,8 @@ export function GroupOrderDetailsView({ order, setOrder, onRosterLoad }: GroupOr
                         <span className="text-muted-foreground">Group Name</span>
                         <span className="font-semibold text-right">{order.groupName}</span>
                     </div>
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Status</span>
+                     <div className="flex justify-between">
+                        <span className="text-muted-foreground">PNR Status</span>
                         <Badge variant={getStatusBadgeVariant(order.status)}>{order.status}</Badge>
                     </div>
                     {order.itinerary.isInternational && (
@@ -211,7 +279,7 @@ export function GroupOrderDetailsView({ order, setOrder, onRosterLoad }: GroupOr
                     )}
                 </CardContent>
             </Card>
-             <Card>
+            <Card>
                 <CardHeader>
                     <div className="flex items-center gap-2">
                         <AlertTriangle className="h-5 w-5 text-destructive" />
@@ -231,6 +299,55 @@ export function GroupOrderDetailsView({ order, setOrder, onRosterLoad }: GroupOr
                         <span className="font-semibold text-yellow-700">Final Payment Due</span>
                         <span className="font-semibold text-yellow-700">{order.deadlines.finalPaymentDue}</span>
                     </div>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center gap-2">
+                        <CreditCard className="h-5 w-5" />
+                        <CardTitle>Payment</CardTitle>
+                    </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                     <div className="flex justify-between text-sm">
+                        <span>Total Amount:</span>
+                        <span className="font-semibold">{new Intl.NumberFormat('en-US', { style: 'currency', currency: order.payment.currency }).format(order.payment.totalAmount)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                        <span>Deposit:</span>
+                        <div>
+                            <span className="font-semibold mr-2">{new Intl.NumberFormat('en-US', { style: 'currency', currency: order.payment.currency }).format(order.payment.depositAmount)}</span>
+                            <Badge variant={getPaymentStatusBadgeVariant(order.payment.depositStatus)}>{order.payment.depositStatus}</Badge>
+                        </div>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                        <span>Final Payment:</span>
+                        <Badge variant={getPaymentStatusBadgeVariant(order.payment.finalPaymentStatus)}>{order.payment.finalPaymentStatus}</Badge>
+                    </div>
+                     <div className="flex flex-col gap-2 pt-2">
+                        <Button variant="outline" size="sm" disabled={order.payment.depositStatus === 'Paid'} onClick={() => handlePayment('deposit')}>Pay Deposit</Button>
+                        <Button size="sm" disabled={order.payment.finalPaymentStatus === 'Paid'} onClick={() => handlePayment('final')}>Make Final Payment</Button>
+                    </div>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                     <div className="flex items-center gap-2">
+                        <Plane className="h-5 w-5" />
+                        <CardTitle>Group Actions</CardTitle>
+                    </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    <div>
+                        <label className="text-sm font-medium">Group Size</label>
+                        <div className="flex items-center gap-2">
+                            <Button size="sm" variant="outline" onClick={() => handleGroupSizeChange(-1)}>-</Button>
+                            <Input readOnly value={`${order.totalPassengers} Passengers`} className="text-center" />
+                            <Button size="sm" variant="outline" onClick={() => handleGroupSizeChange(1)}>+</Button>
+                        </div>
+                    </div>
+                    <Button variant="outline" className="w-full" onClick={() => handleFlightModification('Change Dates')}><Calendar className="mr-2 h-4 w-4"/>Change Dates</Button>
+                    <Button variant="destructive" className="w-full" onClick={() => handleFlightModification('Cancel Leg')}>Cancel One Bound</Button>
                 </CardContent>
             </Card>
             <Card>

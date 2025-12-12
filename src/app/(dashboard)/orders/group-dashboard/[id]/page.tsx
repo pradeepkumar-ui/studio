@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {
@@ -11,7 +10,25 @@ import { Button } from '@/components/ui/button';
 import { GroupOrderDetailsView, type GroupOrderDetails } from '@/components/orders/group-order-details-view';
 import { PassengerDetails } from '@/components/forms/passenger-details-form';
 
-const mockOrder: GroupOrderDetails = {
+const CrisCarter: PassengerDetails = {
+    id: `PAX-100`,
+    name: `Cris Carter`,
+    type: 'Adult',
+    dob: '1965-11-25',
+    gender: 'Male',
+    nationality: 'USA',
+};
+
+const CeedeeLamb: PassengerDetails = {
+    id: `PAX-100`,
+    name: `Ceedee Lamb`,
+    type: 'Adult',
+    dob: '1999-04-08',
+    gender: 'Male',
+    nationality: 'USA',
+};
+
+const initialMockOrder: GroupOrderDetails = {
     id: 'GRP_92347',
     offerId: 'OFFER_GRP_123',
     groupName: 'Leisure Tour - Italy',
@@ -36,7 +53,7 @@ const mockOrder: GroupOrderDetails = {
         depositStatus: 'Pending',
         finalPaymentStatus: 'Pending',
     },
-    manifest: [],
+    manifest: [CrisCarter],
     rosters: [
         { name: 'Varsity Soccer Team', passengers: 18 },
         { name: 'JV Soccer Team', passengers: 22 },
@@ -44,7 +61,7 @@ const mockOrder: GroupOrderDetails = {
 };
 
 const mockRosterPassengers: PassengerDetails[] = Array.from({ length: 18 }, (_, i) => ({
-    id: `PAX-${100 + i}`,
+    id: `PAX-${101 + i}`,
     name: `Player ${i + 1}`,
     type: 'Adult',
     dob: '2006-05-15',
@@ -65,8 +82,15 @@ function GroupOrderDetailsPageContent() {
     const orderId = params.id as string;
     
     // In a real app, you'd fetch this based on the ID
-    const [order, setOrder] = React.useState<GroupOrderDetails>(mockOrder);
+    const [order, setOrder] = useState<GroupOrderDetails>(initialMockOrder);
     
+    useEffect(() => {
+        // If the manifest is empty, add Cris Carter
+        if (order.manifest.length === 0) {
+            setOrder(prev => ({...prev, manifest: [CrisCarter]}));
+        }
+    }, [order.manifest]);
+
     const handleRosterLoad = (rosterName: string) => {
         if (rosterName === 'Varsity Soccer Team') {
             setOrder(prev => ({ ...prev, manifest: mockRosterPassengers }));
