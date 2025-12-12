@@ -161,6 +161,7 @@ const menuItems: MenuItem[] = [
         icon: ShoppingCart,
         subItems: [
           { href: '/orders', label: 'Order Dashboard', icon: LayoutDashboard },
+          { href: '/orders/group-dashboard', label: 'Group Dashboard', icon: Users },
           { href: '/orders/creation', label: 'Creation', icon: PlusSquare },
           { href: '/orders/servicing', label: 'Servicing', icon: Wrench },
           { href: '/orders/supplier-orders', label: 'Supplier Orders', icon: Building },
