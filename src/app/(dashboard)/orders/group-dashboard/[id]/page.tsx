@@ -118,7 +118,6 @@ function GroupOrderDetailsPageContent() {
                         <h1 className="text-2xl font-bold tracking-tight">Group Booking Details</h1>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span className="font-mono">Order ID: {orderId}</span>
-                            <span className="font-mono">Offer ID: {order.offerId}</span>
                         </div>
                     </div>
                 </div>
