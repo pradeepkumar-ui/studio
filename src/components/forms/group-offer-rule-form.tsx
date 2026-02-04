@@ -12,6 +12,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
@@ -36,6 +37,11 @@ const discountTierSchema = z.object({
   discount: z.coerce.number(),
 });
 
+const ancillaryAttachmentTierSchema = z.object({
+  minAttachmentRate: z.coerce.number().min(0, "Rate must be between 0 and 100.").max(100, "Rate must be between 0 and 100."),
+  discount: z.coerce.number().min(0, "Discount must be a positive number."),
+});
+
 const groupOfferRuleSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(5, 'Rule name must be at least 5 characters long.'),
@@ -56,6 +62,7 @@ const groupOfferRuleSchema = z.object({
 
   priceAdjustment: z.coerce.number(),
   discountTiers: z.array(discountTierSchema).optional(),
+  ancillaryAttachmentTiers: z.array(ancillaryAttachmentTierSchema).optional(),
   terms: z.string().min(10, 'Terms and conditions must be defined.'),
 });
 
@@ -84,13 +91,19 @@ export function GroupOfferRuleForm({ rule, onSubmit, onCancel }: GroupOfferRuleF
       },
       priceAdjustment: 0,
       discountTiers: [{ minPassengers: 10, maxPassengers: 25, discount: 5 }],
+      ancillaryAttachmentTiers: [],
       terms: 'Standard group travel terms apply. 10% deposit required within 14 days.',
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields: discountFields, append: appendDiscount, remove: removeDiscount } = useFieldArray({
     control: form.control,
     name: "discountTiers",
+  });
+  
+  const { fields: ancillaryFields, append: appendAncillary, remove: removeAncillary } = useFieldArray({
+    control: form.control,
+    name: "ancillaryAttachmentTiers",
   });
   
   const codesharePolicy = form.watch('travelSolution.codesharePolicy');
@@ -201,20 +214,37 @@ export function GroupOfferRuleForm({ rule, onSubmit, onCancel }: GroupOfferRuleF
         <Separator />
         <h4 className="text-md font-semibold">Pricing</h4>
 
-        <FormField control={form.control} name="priceAdjustment" render={({ field }) => (<FormItem><FormLabel>Base Price Adjustment (%)</FormLabel><FormControl><Input type="number" placeholder="e.g., -15 for 15% discount" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+        <FormField control={form.control} name="priceAdjustment" render={({ field }) => (<FormItem><FormLabel>Base Fare Price Adjustment (%)</FormLabel><FormControl><Input type="number" placeholder="e.g., -15 for 15% discount" {...field} /></FormControl><FormMessage /></FormItem>)}/>
         
         <div>
-            <FormLabel>Tiered Discounts (Optional)</FormLabel>
+            <FormLabel>Tiered Fare Discounts (Optional)</FormLabel>
             <div className="space-y-2 mt-2">
-                 {fields.map((field, index) => (
+                 {discountFields.map((field, index) => (
                     <div key={field.id} className="grid grid-cols-4 gap-2 items-center">
                         <FormField control={form.control} name={`discountTiers.${index}.minPassengers`} render={({ field }) => (<FormItem><FormLabel className="text-xs">Min Pax</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)}/>
                         <FormField control={form.control} name={`discountTiers.${index}.maxPassengers`} render={({ field }) => (<FormItem><FormLabel className="text-xs">Max Pax</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)}/>
-                        <FormField control={form.control} name={`discountTiers.${index}.discount`} render={({ field }) => (<FormItem><FormLabel className="text-xs">Discount (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)}/>
-                        <Button type="button" variant="ghost" size="icon" className="self-end" onClick={() => remove(index)}><Trash2 className="h-4 w-4" /></Button>
+                        <FormField control={form.control} name={`discountTiers.${index}.discount`} render={({ field }) => (<FormItem><FormLabel className="text-xs">Fare Discount (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)}/>
+                        <Button type="button" variant="ghost" size="icon" className="self-end" onClick={() => removeDiscount(index)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
                 ))}
-                <Button type="button" variant="outline" size="sm" onClick={() => append({ minPassengers: 0, maxPassengers: 0, discount: 0 })}><PlusCircle className="mr-2 h-4 w-4" /> Add Tier</Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => appendDiscount({ minPassengers: 0, maxPassengers: 0, discount: 0 })}><PlusCircle className="mr-2 h-4 w-4" /> Add Fare Tier</Button>
+            </div>
+        </div>
+
+        <div className="pt-2">
+            <FormLabel>Ancillary Attachment Discounts (Optional)</FormLabel>
+            <FormDescription className="text-xs">
+                Offer a discount on ancillaries based on the percentage of passengers in the group who purchase them.
+            </FormDescription>
+            <div className="space-y-2 mt-2">
+                 {ancillaryFields.map((field, index) => (
+                    <div key={field.id} className="grid grid-cols-3 gap-2 items-center">
+                        <FormField control={form.control} name={`ancillaryAttachmentTiers.${index}.minAttachmentRate`} render={({ field }) => (<FormItem><FormLabel className="text-xs">Min Attachment Rate (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)}/>
+                        <FormField control={form.control} name={`ancillaryAttachmentTiers.${index}.discount`} render={({ field }) => (<FormItem><FormLabel className="text-xs">Ancillary Discount (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)}/>
+                        <Button type="button" variant="ghost" size="icon" className="self-end" onClick={() => removeAncillary(index)}><Trash2 className="h-4 w-4" /></Button>
+                    </div>
+                ))}
+                <Button type="button" variant="outline" size="sm" onClick={() => appendAncillary({ minAttachmentRate: 50, discount: 30 })}><PlusCircle className="mr-2 h-4 w-4" /> Add Attachment Tier</Button>
             </div>
         </div>
 
