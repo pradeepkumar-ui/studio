@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -37,6 +38,7 @@ const discountTierSchema = z.object({
 });
 
 const ancillaryAttachmentTierSchema = z.object({
+  ancillaryId: z.string().min(1, "Please select an ancillary."),
   minAttachmentRate: z.coerce.number().min(0, "Rate must be between 0 and 100."),
   maxAttachmentRate: z.coerce.number().min(0, "Rate must be between 0 and 100."),
   discount: z.coerce.number().min(0, "Discount must be a positive number."),
@@ -76,6 +78,14 @@ interface GroupOfferRuleFormProps {
   onSubmit: (data: GroupOfferRule) => void;
   onCancel: () => void;
 }
+
+const ancillaryOptions = [
+    { id: 'ANC-001', name: '1st Checked Bag (23kg)' },
+    { id: 'ANC-002', name: 'Extra Legroom Seat' },
+    { id: 'ANC-003', name: 'In-flight Wi-Fi' },
+    { id: 'ANC-006', name: 'Lounge Access' },
+    { id: 'ANC-010', name: 'Premium Meal' },
+];
 
 export function GroupOfferRuleForm({ rule, onSubmit, onCancel }: GroupOfferRuleFormProps) {
   const form = useForm<GroupOfferRule>({
@@ -241,14 +251,24 @@ export function GroupOfferRuleForm({ rule, onSubmit, onCancel }: GroupOfferRuleF
             </FormDescription>
             <div className="space-y-2 mt-2">
                  {ancillaryFields.map((field, index) => (
-                    <div key={field.id} className="grid grid-cols-4 gap-2 items-center">
+                    <div key={field.id} className="grid grid-cols-5 gap-2 items-center">
+                        <FormField control={form.control} name={`ancillaryAttachmentTiers.${index}.ancillaryId`} render={({ field }) => (
+                            <FormItem><FormLabel className="text-xs">Ancillary</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl><SelectTrigger><SelectValue placeholder="Select..."/></SelectTrigger></FormControl>
+                                <SelectContent>
+                                    {ancillaryOptions.map(opt => <SelectItem key={opt.id} value={opt.id}>{opt.name}</SelectItem>)}
+                                </SelectContent>
+                                </Select>
+                            <FormMessage /></FormItem>
+                        )}/>
                         <FormField control={form.control} name={`ancillaryAttachmentTiers.${index}.minAttachmentRate`} render={({ field }) => (<FormItem><FormLabel className="text-xs">Min Rate (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)}/>
                         <FormField control={form.control} name={`ancillaryAttachmentTiers.${index}.maxAttachmentRate`} render={({ field }) => (<FormItem><FormLabel className="text-xs">Max Rate (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)}/>
                         <FormField control={form.control} name={`ancillaryAttachmentTiers.${index}.discount`} render={({ field }) => (<FormItem><FormLabel className="text-xs">Discount (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)}/>
                         <Button type="button" variant="ghost" size="icon" className="self-end" onClick={() => removeAncillary(index)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
                 ))}
-                <Button type="button" variant="outline" size="sm" onClick={() => appendAncillary({ minAttachmentRate: 50, maxAttachmentRate: 70, discount: 30 })}><PlusCircle className="mr-2 h-4 w-4" /> Add Attachment Tier</Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => appendAncillary({ ancillaryId: '', minAttachmentRate: 50, maxAttachmentRate: 70, discount: 30 })}><PlusCircle className="mr-2 h-4 w-4" /> Add Attachment Tier</Button>
             </div>
         </div>
 
@@ -289,3 +309,5 @@ export function GroupOfferRuleForm({ rule, onSubmit, onCancel }: GroupOfferRuleF
     </Form>
   );
 }
+
+    
