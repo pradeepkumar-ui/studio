@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -38,8 +37,12 @@ const discountTierSchema = z.object({
 });
 
 const ancillaryAttachmentTierSchema = z.object({
-  minAttachmentRate: z.coerce.number().min(0, "Rate must be between 0 and 100.").max(100, "Rate must be between 0 and 100."),
+  minAttachmentRate: z.coerce.number().min(0, "Rate must be between 0 and 100."),
+  maxAttachmentRate: z.coerce.number().min(0, "Rate must be between 0 and 100."),
   discount: z.coerce.number().min(0, "Discount must be a positive number."),
+}).refine((data) => data.maxAttachmentRate > data.minAttachmentRate, {
+    message: "Max rate must be greater than min rate.",
+    path: ["maxAttachmentRate"],
 });
 
 const groupOfferRuleSchema = z.object({
@@ -238,13 +241,14 @@ export function GroupOfferRuleForm({ rule, onSubmit, onCancel }: GroupOfferRuleF
             </FormDescription>
             <div className="space-y-2 mt-2">
                  {ancillaryFields.map((field, index) => (
-                    <div key={field.id} className="grid grid-cols-3 gap-2 items-center">
-                        <FormField control={form.control} name={`ancillaryAttachmentTiers.${index}.minAttachmentRate`} render={({ field }) => (<FormItem><FormLabel className="text-xs">Min Attachment Rate (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)}/>
-                        <FormField control={form.control} name={`ancillaryAttachmentTiers.${index}.discount`} render={({ field }) => (<FormItem><FormLabel className="text-xs">Ancillary Discount (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)}/>
+                    <div key={field.id} className="grid grid-cols-4 gap-2 items-center">
+                        <FormField control={form.control} name={`ancillaryAttachmentTiers.${index}.minAttachmentRate`} render={({ field }) => (<FormItem><FormLabel className="text-xs">Min Rate (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                        <FormField control={form.control} name={`ancillaryAttachmentTiers.${index}.maxAttachmentRate`} render={({ field }) => (<FormItem><FormLabel className="text-xs">Max Rate (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                        <FormField control={form.control} name={`ancillaryAttachmentTiers.${index}.discount`} render={({ field }) => (<FormItem><FormLabel className="text-xs">Discount (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)}/>
                         <Button type="button" variant="ghost" size="icon" className="self-end" onClick={() => removeAncillary(index)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
                 ))}
-                <Button type="button" variant="outline" size="sm" onClick={() => appendAncillary({ minAttachmentRate: 50, discount: 30 })}><PlusCircle className="mr-2 h-4 w-4" /> Add Attachment Tier</Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => appendAncillary({ minAttachmentRate: 50, maxAttachmentRate: 70, discount: 30 })}><PlusCircle className="mr-2 h-4 w-4" /> Add Attachment Tier</Button>
             </div>
         </div>
 
