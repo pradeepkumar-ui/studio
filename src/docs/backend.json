@@ -3,44 +3,23 @@
   "entities": {
     "order": {
       "title": "Order",
-      "description": "Represents a customer order containing flights, ancillaries, and payment details.",
+      "description": "Represents a customer order containing flights, ancillaries, and airport services.",
       "type": "object",
       "properties": {
-        "customer": {
-          "type": "string",
-          "description": "Name of the customer or corporate entity."
-        },
-        "email": {
-          "type": "string",
-          "format": "email",
-          "description": "Contact email for the order."
-        },
-        "status": {
-          "type": "string",
-          "enum": ["Pending", "Fulfilled", "Canceled", "Partially Fulfilled"],
-          "description": "The current lifecycle status of the order."
-        },
-        "date": {
-          "type": "string",
-          "format": "date",
-          "description": "The creation date of the order."
-        },
-        "amount": {
-          "type": "number",
-          "description": "The total amount of the order."
-        },
-        "currency": {
-          "type": "string",
-          "description": "The currency of the order amount."
-        },
+        "customer": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "status": { "type": "string", "enum": ["Pending", "Fulfilled", "Canceled", "Partially Fulfilled"] },
+        "date": { "type": "string", "format": "date" },
+        "amount": { "type": "number" },
+        "currency": { "type": "string" },
+        "source": { "type": "string", "enum": ["Web", "Mobile", "CUSS", "CUTE", "CUPPS"], "description": "The airport touchpoint that generated the order." },
+        "airportCode": { "type": "string", "description": "IATA code of the airport where the order was fulfilled." },
         "payment": {
           "type": "object",
           "properties": {
             "method": { "type": "string" },
-            "last4": { "type": "string" },
             "status": { "type": "string" }
-          },
-          "required": ["method", "status"]
+          }
         },
         "services": {
           "type": "array",
@@ -48,393 +27,73 @@
             "type": "object",
             "properties": {
               "id": { "type": "string" },
-              "type": { "type": "string" },
-              "description": { "type": "string" },
+              "type": { "type": "string", "enum": ["Flight", "Baggage", "Seat", "Lounge", "Parking", "FastTrack", "Retail"] },
+              "provider": { "type": "string", "description": "The airline or airport vendor providing the service." },
               "status": { "type": "string" },
               "price": { "type": "number" }
-            },
-            "required": ["id", "type", "description", "status", "price"]
+            }
           }
         },
-        "auditTrail": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "version": { "type": "number" },
-              "actor": { "type": "string" },
-              "event": { "type": "string" },
-              "timestamp": { "type": "string", "format": "date-time" }
-            },
-            "required": ["version", "actor", "event", "timestamp"]
-          }
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time"
-        }
-      },
-      "required": ["customer", "email", "status", "date", "amount", "currency", "payment", "services", "auditTrail"]
+        "auditTrail": { "type": "array", "items": { "type": "object", "properties": { "event": { "type": "string" }, "timestamp": { "type": "string", "format": "date-time" } } } }
+      }
     },
-    "fare": {
-      "title": "Fare",
-      "description": "Represents a fare for a specific route and class.",
+    "airport": {
+      "title": "Airport",
+      "description": "An airport node in the Offersense ecosystem.",
       "type": "object",
       "properties": {
-        "route": {
-          "type": "string",
-          "description": "The route for the fare, e.g., JFK-LAX."
-        },
-        "class": {
-          "type": "string",
-          "description": "The class of the fare, e.g., Economy, Business."
-        },
-        "price": {
-          "type": "number",
-          "description": "The price of the fare."
-        },
-        "currency": {
-          "type": "string",
-          "description": "The currency of the price."
-        },
-        "status": {
-          "type": "string",
-          "description": "The status of the fare (e.g., Active, Draft, Inactive)."
-        },
-        "version": {
-          "type": "number",
-          "description": "The version number of the fare record."
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time",
-          "description": "The timestamp when the fare was created."
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time",
-          "description": "The timestamp when the fare was last updated."
-        }
+        "name": { "type": "string" },
+        "iataCode": { "type": "string" },
+        "location": { "type": "string" },
+        "sitaEnabled": { "type": "boolean" },
+        "terminals": { "type": "array", "items": { "type": "string" } },
+        "status": { "type": "string", "enum": ["Active", "Onboarding", "Inactive"] }
       },
-      "required": ["route", "class", "price", "currency", "status", "version"]
+      "required": ["name", "iataCode", "status"]
+    },
+    "partner": {
+      "title": "Airport Partner",
+      "description": "An airport vendor providing non-air services (e.g., Retail, Parking).",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "airportCode": { "type": "string" },
+        "category": { "type": "string", "enum": ["F&B", "Retail", "Services", "Transport"] },
+        "contactEmail": { "type": "string", "format": "email" },
+        "status": { "type": "string", "enum": ["Active", "Inactive"] }
+      }
+    },
+    "airline": {
+        "title": "Airline Participant",
+        "description": "An airline integrated with Offersense for PSS syncing.",
+        "type": "object",
+        "properties": {
+            "name": { "type": "string" },
+            "icaoCode": { "type": "string" },
+            "pssType": { "type": "string", "enum": ["Amadeus", "Sabre", "Navitaire", "Custom"] },
+            "status": { "type": "string", "enum": ["Active", "Onboarding", "Inactive"] }
+        }
     },
     "offer": {
       "title": "Offer",
-      "description": "Represents a retail offer or promotion.",
-      "type": "object",
       "properties": {
         "name": { "type": "string" },
-        "targetProduct": { "type": "string", "enum": ["Air", "Ancillary"] },
-        "targetAncillaries": { "type": "string" },
-        "scope": { "type": "string", "enum": ["Airline", "Brand", "Market", "Channel"] },
-        "offerType": { "type": "string", "enum": ["Discount", "Fixed", "Step"] },
-        "currency": { "type": "string" },
-        "rounding": { "type": "string", "enum": ["None", "Round Half-Up", "Round Down"] },
-        "criteria": { "type": "string" },
-        "cohorts": { "type": "array", "items": { "type": "string" } },
-        "effectiveDate": { "type": "string", "format": "date-time" },
-        "expiryDate": { "type": "string", "format": "date-time" },
-        "notes": { "type": "string" },
-        "status": { "type": "string", "enum": ["Active", "Inactive", "Draft", "Expired"] },
-        "version": { "type": "number" },
-        "ttl": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "updatedAt": { "type": "string", "format": "date-time" },
-        "includedAncillaries": { "type": "array", "items": { "type": "string" } }
-      },
-      "required": ["name", "targetProduct", "scope", "offerType", "currency", "rounding", "criteria", "effectiveDate", "expiryDate", "status", "version"]
-    },
-    "promotion": {
-      "title": "Promotion",
-      "description": "Represents a promotional code pool.",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "description": { "type": "string" },
-        "prefix": { "type": "string" },
-        "poolSize": { "type": "number" },
-        "usageType": { "type": "string", "enum": ["single", "multi", "unlimited"] },
-        "expiryDate": { "type": "string", "format": "date-time" },
-        "status": { "type": "string", "enum": ["Active", "Draft", "Expired"] }
-      },
-      "required": ["name", "description", "prefix", "poolSize", "usageType", "expiryDate", "status"]
-    },
-    "fareProduct": {
-      "title": "Fare Product",
-      "description": "Represents a fare product or brand.",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "description": { "type": "string" },
-        "status": { "type": "string", "enum": ["Active", "Draft"] },
-        "version": { "type": "number" },
-        "refundability": { "type": "string", "enum": ["Allowed", "Allowed with Penalty", "Not Allowed"] },
-        "exchangeability": { "type": "string", "enum": ["Allowed", "Allowed with Penalty", "Not Allowed"] },
-        "transferability": { "type": "string", "enum": ["Allowed", "Not Allowed"] },
-        "includedAncillaries": { "type": "array", "items": { "type": "string" } }
-      },
-      "required": ["name", "description", "status", "version", "refundability", "exchangeability", "transferability"]
-    },
-    "bundle": {
-      "title": "Ancillary Bundle",
-      "description": "Represents a bundle of ancillary products.",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "description": { "type": "string" },
-        "status": { "type": "string", "enum": ["Draft", "Published", "Archived"] },
-        "scope": {
-          "type": "object",
-          "properties": {
-            "brand": { "type": "array", "items": { "type": "string" } },
-            "channel": { "type": "array", "items": { "type": "string" } },
-            "route": { "type": "array", "items": { "type": "string" } }
-          }
-        },
-        "components": {
-          "type": "object",
-          "properties": {
-            "seat": { "type": "string" },
-            "baggage": { "type": "string" },
-            "meal": { "type": "string" },
-            "other": { "type": "string" }
-          }
-        },
-        "pricingStrategy": { "type": "string" },
-        "discount": { "type": "number" },
-        "itemCount": { "type": "number" }
-      },
-      "required": ["name", "description", "status", "scope", "itemCount", "components", "pricingStrategy", "discount"]
-    },
-    "corporateContract": {
-      "title": "Corporate Contract",
-      "description": "Represents a corporate contract agreement.",
-      "type": "object",
-      "properties": {
-        "companyName": { "type": "string" },
-        "contractId": { "type": "string" },
-        "status": { "type": "string", "enum": ["Active", "Expired", "Negotiation"] },
-        "activeFares": { "type": "number" },
-        "administrator": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "updatedAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["companyName", "contractId", "status", "activeFares", "administrator"]
-    },
-    "channel": {
-      "title": "Sales Channel",
-      "description": "Represents a sales channel and its configuration.",
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "status": {
-          "type": "string",
-          "enum": ["Active", "Inactive"]
-        },
-        "fareBrand": {
-          "type": "string"
-        },
-        "campaigns": {
-          "type": "number"
+        "category": { "type": "string", "enum": ["Air", "Airport", "Combined"] },
+        "sitaConfig": {
+            "type": "object",
+            "properties": {
+                "displayOnKiosk": { "type": "boolean" },
+                "qrPayloadType": { "type": "string", "enum": ["DeepLink", "VoucherCode"] }
+            }
         }
-      },
-      "required": ["name", "status", "fareBrand"]
-    },
-    "negotiatedSpaceAgreement": {
-      "title": "Negotiated Space Agreement",
-      "description": "Represents a negotiated space agreement with a partner.",
-      "type": "object",
-      "properties": {
-        "code": { "type": "string" },
-        "partnerId": { "type": "string" },
-        "scope": {
-          "type": "object",
-          "properties": {
-            "route": { "type": "string" },
-            "season": { "type": "string" },
-            "dow": { "type": "string" }
-          },
-          "required": ["route", "season", "dow"]
-        },
-        "capacity": { "type": "number" },
-        "rbd": { "type": "array", "items": { "type": "string" } },
-        "brand": { "type": "array", "items": { "type": "string" } },
-        "pricing": {
-          "type": "object",
-          "properties": {
-            "currency": { "type": "string" },
-            "baseFareRange": { "type": "string" },
-            "commission": { "type": "string" }
-          },
-          "required": ["currency", "baseFareRange", "commission"]
-        },
-        "deadlines": {
-          "type": "object",
-          "properties": {
-            "release": { "type": "string" },
-            "name": { "type": "string" },
-            "issue": { "type": "string" }
-          },
-          "required": ["release", "name", "issue"]
-        },
-        "finance": {
-          "type": "object",
-          "properties": {
-            "deposit": { "type": "string" },
-            "finalPayment": { "type": "string" },
-            "penalties": { "type": "string" }
-          },
-          "required": ["deposit", "finalPayment", "penalties"]
-        },
-        "status": { "type": "string", "enum": ["Draft", "Approved", "Published", "Amended", "Expired"] }
-      },
-      "required": ["code", "partnerId", "scope", "capacity", "rbd", "brand", "pricing", "deadlines", "finance", "status"]
-    },
-    "changeRequest": {
-        "title": "Change Request",
-        "description": "Represents a change request for a service configuration.",
-        "type": "object",
-        "properties": {
-            "module": { "type": "string" },
-            "description": { "type": "string" },
-            "requestedBy": { "type": "string" },
-            "status": { "type": "string", "enum": ["Draft", "Under Review", "Approved", "Published", "Rolled Back"] },
-            "notes": { "type": "string" },
-            "createdAt": { "type": "string", "format": "date-time" },
-            "updatedAt": { "type": "string", "format": "date-time" }
-        },
-        "required": ["module", "description", "requestedBy", "status"]
-    },
-     "waiverPolicy": {
-      "title": "Waiver Policy",
-      "description": "A template for disruption waivers.",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "eventType": { "type": "string" },
-        "routes": { "type": "string" },
-        "rulesWaived": { "type": "array", "items": { "type": "string" } },
-        "fareDifferencePolicy": { "type": "string" },
-        "status": { "type": "string", "enum": ["Draft", "Approved", "Published", "Archived"] }
-      },
-      "required": ["name", "eventType", "routes", "rulesWaived", "fareDifferencePolicy", "status"]
-    },
-    "fareBrandMap": {
-      "title": "Fare Brand Mapping",
-      "description": "Maps a fare brand to a set of booking classes.",
-      "type": "object",
-      "properties": {
-        "brandName": { "type": "string" },
-        "mappedClasses": { "type": "array", "items": { "type": "string" } },
-        "channel": { "type": "string" }
-      },
-      "required": ["brandName", "mappedClasses", "channel"]
-    },
-    "cohort": {
-      "title": "Customer Cohort",
-      "description": "Represents a defined customer segment for personalization.",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "cohortId": { "type": "string" },
-        "description": { "type": "string" },
-        "status": { "type": "string", "enum": ["Active", "Inactive"] },
-        "definition": {
-          "type": "object",
-          "properties": {
-            "device": { "type": "string", "enum": ["All", "Mobile", "Desktop"] },
-            "pos": { "type": "string" },
-            "purchaseCount": { "type": "number" },
-            "totalSpend": { "type": "number" }
-          }
-        },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "updatedAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["name", "cohortId", "description", "status", "definition"]
+      }
     }
   },
-  "auth": {
-    "providers": []
-  },
+  "auth": { "providers": [] },
   "firestore": {
-    "/orders/{orderId}": {
-      "schema": {
-        "$ref": "#/entities/order"
-      },
-      "description": "Stores individual order documents."
-    },
-    "/fares/{fareId}": {
-      "schema": {
-        "$ref": "#/entities/fare"
-      },
-      "description": "Stores individual fare documents."
-    },
-    "/offers/{offerId}": {
-      "schema": {
-        "$ref": "#/entities/offer"
-      },
-      "description": "Stores offer configuration documents."
-    },
-    "/promotions/{promoId}": {
-      "schema": {
-        "$ref": "#/entities/promotion"
-      },
-      "description": "Stores promotional code pools and their configurations."
-    },
-    "/fareProducts/{productId}": {
-      "schema": {
-        "$ref": "#/entities/fareProduct"
-      },
-      "description": "Stores fare product (brand) documents."
-    },
-    "/bundles/{bundleId}": {
-      "schema": {
-        "$ref": "#/entities/bundle"
-      },
-      "description": "Stores ancillary bundle documents."
-    },
-    "/corporateContracts/{contractId}": {
-      "schema": {
-        "$ref": "#/entities/corporateContract"
-      },
-      "description": "Stores corporate contract documents."
-    },
-    "/channels/{channelId}": {
-      "schema": {
-        "$ref": "#/entities/channel"
-      },
-      "description": "Stores sales channel documents."
-    },
-    "/negotiatedSpaceAgreements/{nsaId}": {
-      "schema": {
-        "$ref": "#/entities/negotiatedSpaceAgreement"
-      },
-      "description": "Stores negotiated space agreement documents."
-    },
-    "/changeRequests/{changeRequestId}": {
-        "schema": { "$ref": "#/entities/changeRequest" },
-        "description": "Stores change request documents."
-    },
-     "/waiverPolicies/{policyId}": {
-      "schema": { "$ref": "#/entities/waiverPolicy" },
-      "description": "Stores waiver policy documents."
-    },
-    "/fareBrandMappings/{mappingId}": {
-      "schema": { "$ref": "#/entities/fareBrandMap" },
-      "description": "Stores fare brand to booking class mappings."
-    },
-    "/cohorts/{cohortId}": {
-      "schema": { "$ref": "#/entities/cohort" },
-      "description": "Stores customer cohort definitions."
-    }
+    "/airports/{airportId}": { "schema": { "$ref": "#/entities/airport" }, "description": "Onboarded airports." },
+    "/partners/{partnerId}": { "schema": { "$ref": "#/entities/partner" }, "description": "Airport retail and service partners." },
+    "/airlines/{airlineId}": { "schema": { "$ref": "#/entities/airline" }, "description": "Participating airlines." },
+    "/orders/{orderId}": { "schema": { "$ref": "#/entities/order" }, "description": "Orders including airport touchpoint metadata." }
   }
 }
-
-    

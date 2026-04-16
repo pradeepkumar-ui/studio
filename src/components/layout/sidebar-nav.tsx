@@ -23,47 +23,31 @@ import {
   DollarSign,
   BarChart3,
   RadioTower,
-  FileJson,
   Plane,
-  BookOpen,
   Settings,
   Briefcase,
   Layers,
-  Container,
-  Shield,
-  Gift,
-  Handshake,
-  Waves,
   ChevronRight,
   Package,
   Database,
   BrainCircuit,
   Wand2,
   Signal,
-  Award,
-  Armchair,
-  ClipboardCheck,
-  Wrench,
-  PlusSquare,
-  BadgeCheck,
-  Building,
+  Building2,
   Users,
   CreditCard,
-  ReceiptText,
-  BarChartHorizontal,
-  FileText,
-  MessageSquare,
-  Send,
-  Archive,
   Landmark,
   GitCompare,
   KeyRound,
-  UserCheck,
   PlaneTakeoff,
   Truck,
   Target,
   Megaphone,
   Luggage,
+  MapPin,
+  QrCode,
+  Store,
+  MonitorDot,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -79,129 +63,73 @@ type MenuItem = {
 const menuItems: MenuItem[] = [
   {
     href: '/offers',
-    label: 'Offers',
+    label: 'Offers & Retailing',
     icon: Ticket,
     subItems: [
-      { href: '/offers/dashboard', label: 'Offers Dashboard', icon: LayoutDashboard },
-      {
-        href: '/catalog',
-        label: 'Catalogue',
-        icon: BookOpen,
-        subItems: [
-          {
-            href: '/promotions',
-            label: 'Product Hub',
-            icon: Briefcase,
-            subItems: [
-              { href: '/promotions', label: 'Promotions', icon: Gift },
-              { href: '/ancillary-products', label: 'Ancillary Products', icon: Layers },
-            ],
-          },
-          {
-            href: '/pricing',
-            label: 'Pricing',
-            icon: DollarSign,
-            subItems: [
-              { href: '/fares', label: 'Fares', icon: DollarSign },
-              { href: '/catalog', label: 'Branded Fares', icon: Package },
-              { href: '/pricing/filing', label: 'Fare Filing', icon: FileJson },
-              { href: '/pricing/seat', label: 'Seats', icon: Armchair },
-              { href: '/pricing/rules', label: 'Dynamic Pricing', icon: Target },
-            ],
-          },
-        ],
-      },
-      {
-        href: '/offers',
-        label: 'Offer Management',
-        icon: Ticket,
-        subItems: [
-          { href: '/offers/cohorts', label: 'Cohorts', icon: Users },
-          { href: '/bundles', label: 'Bundle Studio and Offer Creation', icon: Package },
-          { href: '/group-offer-rules', label: 'Group Offer Rules', icon: Users },
-          { href: '/nsa', label: 'Negotiated Space', icon: Handshake },
-          { href: '/offer-composer', label: 'Composer', icon: Layers },
-          { href: '/group-composer', label: 'Group Composer', icon: Users },
-          { href: '/offers/automated-creation', label: 'AI Offer Configuration', icon: Wand2 },
-          { href: '/optimisation', label: 'Offer Optimisation', icon: Wand2 },
-          { href: '/disruption-waivers', label: 'Disruption Waivers', icon: Waves },
-        ],
-      },
-      {
-        href: '/inventory',
-        label: 'Stock Keeping',
-        icon: Plane,
-        subItems: [
-          { href: '/inventory', label: 'Flight & Inventory', icon: Plane },
-          { href: '/atpco', label: 'ATPCO', icon: Database },
-          { href: '/capacity', label: 'Capacity', icon: Signal },
-          { href: '/stock-keeper', label: 'Stock Keeper', icon: Package },
-        ],
-      },
-       {
-        href: '/analytics',
-        label: 'Analytics & AI',
-        icon: BarChart3,
-        subItems: [
-          { href: '/analytics', label: 'Offer Performance', icon: BarChart3 },
-          { href: '/fare-change-forecast', label: 'Fare Change Forecast', icon: BrainCircuit },
-        ],
-      },
-      { href: '/campaigns', label: 'Campaign Management', icon: Megaphone },
+      { href: '/offers/dashboard', label: 'Retailing Dashboard', icon: LayoutDashboard },
+      { href: '/offer-composer', label: 'Airport Offer Composer', icon: QrCode },
+      { href: '/bundles', label: 'Offer Bundles Studio', icon: Package },
+      { href: '/offers/cohorts', label: 'Retailing Cohorts', icon: Target },
+      { href: '/promotions', label: 'Campaigns & Promos', icon: Megaphone },
+    ],
+  },
+  {
+    href: '/ecosystem',
+    label: 'Ecosystem Onboarding',
+    icon: Building2,
+    subItems: [
+      { href: '/onboarding/airports', label: 'Manage Airports', icon: MapPin },
+      { href: '/onboarding/airlines', label: 'Manage Airlines', icon: Plane },
+      { href: '/onboarding/partners', label: 'Manage Vendors', icon: Store },
+    ],
+  },
+  {
+    href: '/catalog',
+    label: 'Product Catalogue',
+    icon: Database,
+    subItems: [
+      { href: '/fares', label: 'Base Fares', icon: DollarSign },
+      { href: '/catalog', label: 'Branded Fares', icon: Layers },
+      { href: '/ancillary-products', label: 'Airport Services (Non-Air)', icon: Store },
+      { href: '/stock-keeper', label: 'Inventory / Stock', icon: Package },
     ],
   },
   {
     href: '/orders',
-    label: 'Orders',
+    label: 'Orders & Fulfillment',
     icon: ShoppingCart,
     subItems: [
-      {
-        href: '/orders',
-        label: 'Order Management',
-        icon: ShoppingCart,
-        subItems: [
-          { href: '/orders', label: 'Order Dashboard', icon: LayoutDashboard },
-          { href: '/orders/group-dashboard', label: 'Group Dashboard', icon: Users },
-          { href: '/orders/creation', label: 'Creation', icon: PlusSquare },
-          { href: '/orders/servicing', label: 'Servicing', icon: Wrench },
-          { href: '/orders/supplier-orders', label: 'Supplier Orders', icon: Building },
-          { href: '/orders/large-party', label: 'Large Party Orders', icon: Users },
-          { href: '/loyalty', label: 'Loyalty Orders', icon: Award },
-        ],
-      },
-      {
-        href: '/delivery-fulfilment',
-        label: 'Delivery &amp; Fulfilment',
-        icon: Truck,
-        subItems: [
-          { href: '/orders/delivery', label: 'Delivery Queue', icon: Send },
-          { href: '/check-in', label: 'Check-in', icon: UserCheck },
-          { href: '/boarding', label: 'Boarding Gate', icon: PlaneTakeoff },
-          { href: '/orders/ground-handling', label: 'Ground Handling', icon: Truck },
-          { href: '/service-consumption', label: 'Service Consumption', icon: ClipboardCheck },
-          { href: '/communication', label: 'Communication', icon: MessageSquare },
-          { href: '/baggage', label: 'Baggage Reconciliation & Tracking', icon: Luggage },
-        ],
-      },
-      {
-        href: '/accounting',
-        label: 'Accounting',
-        icon: BookOpen,
-        subItems: [
-          { href: '/orders/finalisation', label: 'Finalisation &amp; Closure', icon: BadgeCheck },
-          { href: '/payments', label: 'Payments', icon: CreditCard },
-          { href: '/accounting', label: 'Reconciliation', icon: GitCompare },
-          { href: '/airline-revenue', label: 'Airline Revenue', icon: Landmark },
-        ],
-      },
+      { href: '/orders', label: 'Order Dashboard', icon: LayoutDashboard },
+      { href: '/orders/servicing', label: 'Order Servicing', icon: Settings },
+      { href: '/orders/delivery', label: 'Fulfillment Queue', icon: Truck },
+      { href: '/service-consumption', label: 'Service Consumption', icon: Signal },
+    ],
+  },
+  {
+    href: '/sita-ops',
+    label: 'SITA Infrastructure',
+    icon: MonitorDot,
+    subItems: [
+      { href: '/broker', label: 'SITA CUSS/CUTE Integration', icon: RadioTower },
+      { href: '/compliance', label: 'CUPPS Compliance', icon: Database },
+      { href: '/orchestration', label: 'Change Management', icon: GitCompare },
+    ],
+  },
+  {
+    href: '/analytics',
+    label: 'Analytics & AI',
+    icon: BarChart3,
+    subItems: [
+      { href: '/analytics', label: 'Ecosystem Performance', icon: BarChart3 },
+      { href: '/optimisation', label: 'AI Offer Optimisation', icon: Wand2 },
+      { href: '/fare-change-forecast', label: 'Forecasting', icon: BrainCircuit },
     ],
   },
 ];
 
 const settingsItems: MenuItem[] = [
-  { href: '/broker', label: 'Broker', icon: RadioTower },
   { href: '/settings/user-management', label: 'User Management', icon: KeyRound },
-  { href: '/settings', label: 'General', icon: Settings },
+  { href: '/settings', label: 'System Settings', icon: Settings },
 ];
 
 export default function SidebarNav() {
@@ -266,7 +194,7 @@ export default function SidebarNav() {
       <SidebarHeader>
         <div className="flex items-center gap-2">
           <div className="bg-primary rounded-md p-1.5 flex items-center justify-center">
-            <Shield className="text-primary-foreground size-5" />
+            <MonitorDot className="text-primary-foreground size-5" />
           </div>
           <span className="font-semibold text-lg text-sidebar-foreground group-data-[collapsible=icon]:hidden">
             Offersense
@@ -279,16 +207,16 @@ export default function SidebarNav() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem asChild>
-            <SidebarMenuCollapsible defaultOpen={pathname.startsWith('/settings') || pathname === '/broker'}>
+            <SidebarMenuCollapsible defaultOpen={pathname.startsWith('/settings')}>
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton
                   className="group/c-trigger"
-                  isActive={pathname.startsWith('/settings') || pathname === '/broker'}
+                  isActive={pathname.startsWith('/settings')}
                   tooltip={{ children: 'Settings', side: 'right' }}
                 >
                   <Settings />
                   <span>Settings</span>
-                  <ChevronRight className="ml-auto size-4-4 shrink-0 transition-transform duration-200 group-data-[state=open]/c-trigger:rotate-90 group-data-[collapsible=icon]:hidden" />
+                  <ChevronRight className="ml-auto size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/c-trigger:rotate-90 group-data-[collapsible=icon]:hidden" />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
               <SidebarMenuCollapsibleContent>
