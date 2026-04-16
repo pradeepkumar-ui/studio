@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -25,7 +24,6 @@ import {
   RadioTower,
   Plane,
   Settings,
-  Briefcase,
   Layers,
   ChevronRight,
   Package,
@@ -34,20 +32,14 @@ import {
   Wand2,
   Signal,
   Building2,
-  Users,
-  CreditCard,
-  Landmark,
-  GitCompare,
-  KeyRound,
-  PlaneTakeoff,
-  Truck,
-  Target,
-  Megaphone,
-  Luggage,
   MapPin,
   QrCode,
   Store,
   MonitorDot,
+  Truck,
+  Target,
+  Megaphone,
+  KeyRound,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -112,7 +104,7 @@ const menuItems: MenuItem[] = [
     subItems: [
       { href: '/broker', label: 'SITA CUSS/CUTE Integration', icon: RadioTower },
       { href: '/compliance', label: 'CUPPS Compliance', icon: Database },
-      { href: '/orchestration', label: 'Change Management', icon: GitCompare },
+      { href: '/orchestration', label: 'Change Management', icon: Signal },
     ],
   },
   {
