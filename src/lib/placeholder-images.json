@@ -5,6 +5,60 @@
       "description": "User avatar for header",
       "imageUrl": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwZXJzb24lMjBwb3J0cmFpdHxlbnwwfHx8fDE3NjIzNzk2MTR8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "person portrait"
+    },
+    {
+      "id": "luxury-lounge",
+      "description": "Luxury airport lounge",
+      "imageUrl": "https://picsum.photos/seed/lounge/600/400",
+      "imageHint": "luxury lounge"
+    },
+    {
+      "id": "concierge",
+      "description": "Airport concierge services",
+      "imageUrl": "https://picsum.photos/seed/concierge/600/400",
+      "imageHint": "concierge"
+    },
+    {
+      "id": "fast-line",
+      "description": "Fast track security line",
+      "imageUrl": "https://picsum.photos/seed/fastline/600/400",
+      "imageHint": "fast line"
+    },
+    {
+      "id": "luxury-car",
+      "description": "Luxury car transfer",
+      "imageUrl": "https://picsum.photos/seed/luxurycar/600/400",
+      "imageHint": "luxury car"
+    },
+    {
+      "id": "parking-valet",
+      "description": "Airport valet parking",
+      "imageUrl": "https://picsum.photos/seed/valet/600/400",
+      "imageHint": "parking valet"
+    },
+    {
+      "id": "duty-free",
+      "description": "Duty free shopping",
+      "imageUrl": "https://picsum.photos/seed/dutyfree/600/400",
+      "imageHint": "duty free"
+    },
+    {
+      "id": "gourmet-food",
+      "description": "Gourmet pre-ordered meal",
+      "imageUrl": "https://picsum.photos/seed/gourmet/600/400",
+      "imageHint": "gourmet food"
+    },
+    {
+      "id": "airplane-interior",
+      "description": "Business class airplane interior",
+      "imageUrl": "https://picsum.photos/seed/cabin/600/400",
+      "imageHint": "airplane interior"
+    },
+    {
+      "id": "qr-code",
+      "description": "Simulated QR code",
+      "imageUrl": "https://picsum.photos/seed/sita-qr/200/200",
+      "imageHint": "qr code"
     }
   ]
 }

@@ -19,7 +19,14 @@ import {
   Check, 
   AlertCircle,
   ArrowRight,
-  ShieldCheck
+  ShieldCheck,
+  Coffee,
+  Car,
+  Zap,
+  ShoppingBag,
+  UserCheck,
+  MapPin,
+  Clock
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -33,6 +40,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type OfferStatus = 'EcosystemDiscovery' | 'Retailled' | 'TerminalSelected' | 'QRGenerated' | 'PushingToHardware' | 'PSSSyncPending' | 'Completed';
 
@@ -43,6 +51,89 @@ const sitaSearchSchema = z.object({
   pnr: z.string().min(6).max(6).toUpperCase().optional(),
   passengerName: z.string().optional(),
 });
+
+const mockOffers = [
+  { 
+    id: 'O-1', 
+    title: 'Executive Lounge Access', 
+    provider: 'LHR Partners', 
+    type: 'Airport Service', 
+    price: 45, 
+    items: ['Complimentary Food', 'Quiet Zone', 'Premium Wifi'], 
+    hint: 'luxury lounge',
+    icon: Coffee
+  },
+  { 
+    id: 'O-2', 
+    title: 'Meet & Assist VIP', 
+    provider: 'Airport Concierge', 
+    type: 'Airport Service', 
+    price: 120, 
+    items: ['Personal Escort', 'Buggy Service', 'Porter Service'], 
+    hint: 'concierge',
+    icon: UserCheck
+  },
+  { 
+    id: 'O-3', 
+    title: 'Fast Track Security', 
+    provider: 'LHR Operations', 
+    type: 'Airport Service', 
+    price: 15, 
+    items: ['Skip Lines', 'Dedicated Lane'], 
+    hint: 'fast line',
+    icon: Zap
+  },
+  { 
+    id: 'O-4', 
+    title: 'Luxury Car Transfer', 
+    provider: 'CityLimo', 
+    type: 'Partner', 
+    price: 85, 
+    items: ['Mercedes S-Class', 'Meet at Arrivals', 'Wifi Onboard'], 
+    hint: 'luxury car',
+    icon: Car
+  },
+  { 
+    id: 'O-5', 
+    title: 'Valet Parking Upgrade', 
+    provider: 'Airport Parking', 
+    type: 'Airport Service', 
+    price: 30, 
+    items: ['Covered Parking', 'Car Wash Included'], 
+    hint: 'parking valet',
+    icon: MapPin
+  },
+  { 
+    id: 'O-6', 
+    title: 'Duty-Free Shopping Credit', 
+    provider: 'WorldDutyFree', 
+    type: 'Retail', 
+    price: 40, 
+    items: ['$50 Shopping Voucher', 'All Categories'], 
+    hint: 'duty free',
+    icon: ShoppingBag
+  },
+  { 
+    id: 'O-7', 
+    title: 'Gourmet Bento Pre-order', 
+    provider: 'SkyCaterers', 
+    type: 'F&B', 
+    price: 25, 
+    items: ['Chef Selected Menu', 'Drink Included'], 
+    hint: 'gourmet food',
+    icon: Coffee
+  },
+  { 
+    id: 'O-8', 
+    title: 'Business Cabin Upgrade', 
+    provider: 'Airline PSS', 
+    type: 'Air', 
+    price: 250, 
+    items: ['Flat Bed', 'Priority Bag', 'Premium Meal'], 
+    hint: 'airplane interior',
+    icon: Zap
+  },
+];
 
 export default function AirportOfferComposerPage() {
   const [status, setStatus] = useState<OfferStatus | null>(null);
@@ -71,7 +162,7 @@ export default function AirportOfferComposerPage() {
       setStatus('Retailled');
       toast({
         title: "Ecosystem Discovery Complete",
-        description: "Retrieved 2 PSS Air offers and 3 Airport Service offers.",
+        description: `Retrieved 1 Airline offer and ${mockOffers.length - 1} Airport ecosystem offers.`,
       });
     }, 2000);
   };
@@ -190,61 +281,72 @@ export default function AirportOfferComposerPage() {
             </CardContent>
           </Card>
 
-          {status === 'Retailled' || status === 'TerminalSelected' || status === 'QRGenerated' || status === 'PSSSyncPending' ? (
+          {status && status !== 'EcosystemDiscovery' ? (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <Store className="h-5 w-5" /> Available Real-time Offers
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[
-                  { id: 'O-1', title: 'Smart Transit Bundle', provider: 'LHR Partners', type: 'Combined', price: 85, items: ['Fast Track', 'Lounge', 'Wifi'], hint: 'lounge' },
-                  { id: 'O-2', title: 'Business Cabin Upgrade', provider: 'Airline PSS', type: 'Air', price: 250, items: ['Flat Bed', 'Priority Bag', 'Premium Meal'], hint: 'airplane' },
-                  { id: 'O-3', title: 'Duty Free Voucher', provider: 'WorldDutyFree', type: 'Retail', price: 40, items: ['$50 Shopping Credit'], hint: 'shopping' },
-                  { id: 'O-4', title: 'Flexi-Return Add-on', provider: 'Airline PSS', type: 'Air', price: 60, items: ['Free Date Change'], hint: 'time' },
-                ].map((offer) => (
-                  <Card 
-                    key={offer.id} 
-                    className={cn(
-                      "cursor-pointer hover:border-primary transition-all",
-                      selectedOffer?.id === offer.id && "ring-2 ring-primary border-primary"
-                    )}
-                    onClick={() => handleSelectOffer(offer)}
-                  >
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-md">{offer.title}</CardTitle>
-                          <CardDescription>{offer.provider}</CardDescription>
+              <ScrollArea className="h-[600px] pr-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4">
+                  {mockOffers.map((offer) => (
+                    <Card 
+                      key={offer.id} 
+                      className={cn(
+                        "cursor-pointer hover:border-primary transition-all",
+                        selectedOffer?.id === offer.id && "ring-2 ring-primary border-primary"
+                      )}
+                      onClick={() => handleSelectOffer(offer)}
+                    >
+                      <CardHeader className="pb-2">
+                        <div className="flex justify-between items-start">
+                          <div className="flex gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                              <offer.icon className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <CardTitle className="text-md">{offer.title}</CardTitle>
+                              <CardDescription>{offer.provider}</CardDescription>
+                            </div>
+                          </div>
+                          <Badge variant="outline">{offer.type}</Badge>
                         </div>
-                        <Badge variant="outline">{offer.type}</Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pb-2">
-                      <div className="relative w-full h-24 mb-3 rounded overflow-hidden">
-                        <Image 
-                          src={`https://picsum.photos/seed/${offer.id}/400/200`} 
-                          alt={offer.title} 
-                          fill 
-                          className="object-cover"
-                          data-ai-hint={offer.hint}
-                        />
-                      </div>
-                      <ul className="text-xs text-muted-foreground space-y-1">
-                        {offer.items.map(i => <li key={i} className="flex items-center gap-1"><Check className="h-3 w-3 text-green-500" /> {i}</li>)}
-                      </ul>
-                    </CardContent>
-                    <CardFooter className="flex justify-between items-baseline pt-0">
-                      <span className="text-xl font-bold">${offer.price}</span>
-                      <Button variant="ghost" size="sm" className="text-primary p-0">Details</Button>
-                    </CardFooter>
-                  </Card>
-                ))}
-              </div>
+                      </CardHeader>
+                      <CardContent className="pb-2">
+                        <div className="relative w-full h-24 mb-3 rounded overflow-hidden">
+                          <Image 
+                            src={`https://picsum.photos/seed/${offer.id}/400/200`} 
+                            alt={offer.title} 
+                            fill 
+                            className="object-cover"
+                            data-ai-hint={offer.hint}
+                          />
+                        </div>
+                        <ul className="text-xs text-muted-foreground space-y-1">
+                          {offer.items.map(i => <li key={i} className="flex items-center gap-1"><Check className="h-3 w-3 text-green-500" /> {i}</li>)}
+                        </ul>
+                      </CardContent>
+                      <CardFooter className="flex justify-between items-baseline pt-0">
+                        <span className="text-xl font-bold">${offer.price}</span>
+                        <Button variant="ghost" size="sm" className="text-primary p-0">Details</Button>
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </div>
+              </ScrollArea>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-20 text-muted-foreground bg-muted/20 border-2 border-dashed rounded-lg">
-              <Workflow className="h-12 w-12 mb-4 opacity-20" />
-              <p>Set retailing context and click discover to simulate ecosystem offers.</p>
+              {isLoading ? (
+                <div className="text-center">
+                  <Loader2 className="h-12 w-12 mb-4 animate-spin mx-auto opacity-20" />
+                  <p>Discovering ecosystem assets...</p>
+                </div>
+              ) : (
+                <>
+                  <Workflow className="h-12 w-12 mb-4 opacity-20" />
+                  <p>Set retailing context and click discover to simulate ecosystem offers.</p>
+                </>
+              )}
             </div>
           )}
         </div>
