@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -33,6 +32,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 type OfferStatus = 'EcosystemDiscovery' | 'Retailled' | 'TerminalSelected' | 'QRGenerated' | 'PushingToHardware' | 'PSSSyncPending' | 'Completed';
 
@@ -263,7 +263,7 @@ export default function AirportOfferComposerPage() {
                 <div className="relative">
                   <div className="absolute left-2.5 top-0 bottom-0 w-0.5 bg-border" />
                   {offerLifecycleSteps.map((step, index) => {
-                    const isCompleted = index < currentStepIndex || status === 'PSSSyncPending' && index <= currentStepIndex;
+                    const isCompleted = index < currentStepIndex || (status === 'PSSSyncPending' && index <= currentStepIndex);
                     const isCurrent = index === currentStepIndex && status !== 'PSSSyncPending';
                     return (
                       <div key={step.id} className="flex items-start gap-4 relative pb-6 last:pb-0">
