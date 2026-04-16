@@ -68,7 +68,6 @@ const menuItems: MenuItem[] = [
     subItems: [
       { href: '/offers/dashboard', label: 'Retailing Dashboard', icon: LayoutDashboard },
       { href: '/offer-composer', label: 'Airport Offer Composer', icon: QrCode },
-      { href: '/group-composer', label: 'Group Composer', icon: Users },
       { href: '/bundles', label: 'Offer Bundles Studio', icon: Package },
       { href: '/offers/cohorts', label: 'Retailing Cohorts', icon: Target },
       { href: '/promotions', label: 'Campaigns & Promos', icon: Megaphone },
@@ -101,7 +100,6 @@ const menuItems: MenuItem[] = [
     icon: ShoppingCart,
     subItems: [
       { href: '/orders', label: 'Order Dashboard', icon: LayoutDashboard },
-      { href: '/orders/group-dashboard', label: 'Group Dashboard', icon: Users },
       { href: '/orders/servicing', label: 'Order Servicing', icon: Settings },
       { href: '/orders/delivery', label: 'Fulfillment Queue', icon: Truck },
       { href: '/service-consumption', label: 'Service Consumption', icon: Signal },
