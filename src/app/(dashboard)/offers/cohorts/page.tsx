@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -55,7 +54,9 @@ const mockCohorts: Cohort[] = [
             location: 'Airport_Departure', 
             securityWaitTime: 20, 
             loyaltyTiers: ['Gold', 'Platinum'],
-            aircraftTypes: ['A350', 'B787']
+            aircraftTypes: ['A350', 'B787'],
+            transitStatus: 'Any',
+            travelGroup: ['Solo']
         } 
     },
     { 
@@ -70,20 +71,27 @@ const mockCohorts: Cohort[] = [
             routes: 'JFK-LHR',
             cabinClasses: ['Business', 'First'],
             location: 'Anywhere',
-            loyaltyTiers: ['Silver', 'Gold']
+            loyaltyTiers: ['Silver', 'Gold'],
+            transitStatus: 'Any',
+            travelGroup: ['Couple', 'Family']
         } 
     },
     { 
         id: 'COH-003', 
-        name: 'Economy Lounge Prospects', 
-        cohortId: 'ECO_LOUNGE', 
+        name: 'SIN Transit Loungers', 
+        cohortId: 'SIN_TRANSIT_LOUNGE', 
         status: 'Active', 
-        description: 'Economy passengers in terminals with lounge capacity.', 
+        description: 'Transiting pax at SIN with 4-8 hour connections.', 
         definition: { 
             channels: ['CUSS', 'CUTE'], 
+            airports: ['SIN'],
             cabinClasses: ['Economy'],
+            transitStatus: 'Transit',
+            minConnectionTime: 240,
+            maxConnectionTime: 480,
             location: 'Airport_Departure',
-            loyaltyTiers: ['Bronze']
+            loyaltyTiers: ['Bronze'],
+            travelGroup: ['Solo', 'Couple']
         } 
     },
 ];
@@ -93,11 +101,11 @@ const getDefinitionString = (definition: Cohort['definition']) => {
     const parts: string[] = [];
     if (definition.channels?.length > 0) parts.push(`Ch: ${definition.channels.join(', ')}`);
     if (definition.airports?.length > 0) parts.push(`Apt: ${definition.airports.join(', ')}`);
-    if (definition.airlines?.length > 0) parts.push(`Air: ${definition.airlines.join(', ')}`);
-    if (definition.routes) parts.push(`Rt: ${definition.routes}`);
+    if (definition.transitStatus && definition.transitStatus !== 'Any') parts.push(`Pax: ${definition.transitStatus}`);
     if (definition.cabinClasses?.length > 0) parts.push(`Cab: ${definition.cabinClasses.join(', ')}`);
+    if (definition.fareBrands?.length > 0) parts.push(`Brand: ${definition.fareBrands.join(', ')}`);
     if (definition.securityWaitTime && definition.securityWaitTime > 0) parts.push(`Wait > ${definition.securityWaitTime}m`);
-    if (definition.loyaltyTiers?.length > 0) parts.push(`Tiers: ${definition.loyaltyTiers.join(', ')}`);
+    if (definition.travelGroup?.length > 0) parts.push(`Group: ${definition.travelGroup.join(', ')}`);
     return parts.join(' | ') || 'All Passengers';
 }
 
@@ -173,22 +181,22 @@ export default function CohortsPage() {
         <div className="flex items-center justify-between">
           <div className="flex flex-col gap-2">
             <h1 className="text-3xl font-bold tracking-tight">
-              Cohort Management
+              Ecosystem Cohort Management
             </h1>
             <p className="text-muted-foreground">
-              Define complex customer segments using SITA channels, airport signals, and flight context.
+              Define exhaustive customer segments using SITA channels, airport signals, and deep airline host metadata.
             </p>
           </div>
           <Button onClick={() => handleOpenDialog()}>
             <PlusCircle className="mr-2" />
-            Create Cohort
+            Create Advanced Cohort
           </Button>
         </div>
         <Card>
           <CardHeader>
             <CardTitle>Customer Cohorts</CardTitle>
             <CardDescription>
-              Manage rules for personalized airport ecosystem offers.
+              Manage complex targeting rules for personalized airport ecosystem retailing.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -203,7 +211,7 @@ export default function CohortsPage() {
                   <TableRow>
                     <TableHead>Cohort Name</TableHead>
                     <TableHead>Cohort ID</TableHead>
-                    <TableHead className="max-w-[400px]">Definition</TableHead>
+                    <TableHead className="max-w-[400px]">Definition Logic</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>
                       <span className="sr-only">Actions</span>
@@ -241,7 +249,8 @@ export default function CohortsPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuItem onClick={() => handleOpenDialog(cohort)}>Edit Cohort</DropdownMenuItem>
-                            <DropdownMenuItem>Simulate Reach</DropdownMenuItem>
+                            <DropdownMenuItem>Simulate Audience Reach</DropdownMenuItem>
+                            <DropdownMenuItem>View Conversion Trends</DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(cohort.id!)}>Delete</DropdownMenuItem>
                           </DropdownMenuContent>
@@ -260,9 +269,9 @@ export default function CohortsPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle>{editingCohort ? 'Edit Cohort' : 'Create New Cohort'}</DialogTitle>
+            <DialogTitle>{editingCohort ? 'Edit Advanced Cohort' : 'Create Exhaustive Ecosystem Cohort'}</DialogTitle>
             <DialogDescription>
-              {editingCohort ? `Editing cohort "${editingCohort.name}".` : 'Define ecosystem targeting rules for this segment.'}
+              {editingCohort ? `Editing cohort "${editingCohort.name}".` : 'Define precise ecosystem targeting rules across all stakeholder dimensions.'}
             </DialogDescription>
           </DialogHeader>
           <CohortForm

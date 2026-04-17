@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "order": {
@@ -74,6 +73,30 @@
             "status": { "type": "string", "enum": ["Active", "Onboarding", "Inactive"] }
         }
     },
+    "cohort": {
+        "title": "Customer Cohort",
+        "description": "A dynamic segment of passengers targeted for specific offers based on exhaustive ecosystem context.",
+        "type": "object",
+        "properties": {
+            "name": { "type": "string" },
+            "cohortId": { "type": "string" },
+            "description": { "type": "string" },
+            "status": { "type": "string", "enum": ["Active", "Inactive"] },
+            "definition": {
+                "type": "object",
+                "properties": {
+                    "channels": { "type": "array", "items": { "type": "string" } },
+                    "airports": { "type": "array", "items": { "type": "string" } },
+                    "airlines": { "type": "array", "items": { "type": "string" } },
+                    "cabinClasses": { "type": "array", "items": { "type": "string" } },
+                    "fareBrands": { "type": "array", "items": { "type": "string" } },
+                    "travelGroup": { "type": "array", "items": { "type": "string" } },
+                    "transitStatus": { "type": "string", "enum": ["Any", "Origin", "Transit", "Destination"] },
+                    "connectionWindow": { "type": "object", "properties": { "min": { "type": "number" }, "max": { "type": "number" } } }
+                }
+            }
+        }
+    },
     "offer": {
       "title": "Offer",
       "properties": {
@@ -94,6 +117,7 @@
     "/airports/{airportId}": { "schema": { "$ref": "#/entities/airport" }, "description": "Onboarded airports." },
     "/partners/{partnerId}": { "schema": { "$ref": "#/entities/partner" }, "description": "Airport retail and service partners." },
     "/airlines/{airlineId}": { "schema": { "$ref": "#/entities/airline" }, "description": "Participating airlines." },
-    "/orders/{orderId}": { "schema": { "$ref": "#/entities/order" }, "description": "Orders including airport touchpoint metadata." }
+    "/orders/{orderId}": { "schema": { "$ref": "#/entities/order" }, "description": "Orders including airport touchpoint metadata." },
+    "/cohorts/{cohortId}": { "schema": { "$ref": "#/entities/cohort" }, "description": "Advanced ecosystem targeting cohorts." }
   }
 }
