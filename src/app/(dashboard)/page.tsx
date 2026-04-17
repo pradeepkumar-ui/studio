@@ -134,7 +134,7 @@ export default function OffersenseMainDashboard() {
               <CardContent>
                 <AreaChart
                   className="h-72 mt-4"
-                  data={airlineData} // Using airline data for trend simulation
+                  data={airlineData}
                   index="date"
                   categories={['Fares', 'Ancillaries']}
                   colors={['blue', 'indigo']}
