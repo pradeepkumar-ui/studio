@@ -1,22 +1,89 @@
-
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Search, MonitorDot, MapPin } from 'lucide-react';
+import { PlusCircle, Search, MonitorDot, MoreHorizontal, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
+import { AirportOnboardingForm, type AirportOnboarding } from '@/components/forms/airport-onboarding-form';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
-const mockAirports = [
-    { id: '1', name: 'Heathrow Airport', code: 'LHR', city: 'London', status: 'Active', sitaEnabled: true },
-    { id: '2', name: 'John F. Kennedy', code: 'JFK', city: 'New York', status: 'Active', sitaEnabled: true },
-    { id: '3', name: 'Changi Airport', code: 'SIN', city: 'Singapore', status: 'Onboarding', sitaEnabled: true },
-    { id: '4', name: 'Dubai International', code: 'DXB', city: 'Dubai', status: 'Active', sitaEnabled: true },
+const mockAirports: AirportOnboarding[] = [
+    { id: '1', name: 'Heathrow Airport', iataCode: 'LHR', location: 'London', status: 'Active', sitaEnabled: true, terminals: 'T2, T3, T4, T5' },
+    { id: '2', name: 'John F. Kennedy', iataCode: 'JFK', location: 'New York', status: 'Active', sitaEnabled: true, terminals: 'T1, T4, T5, T8' },
+    { id: '3', name: 'Changi Airport', iataCode: 'SIN', location: 'Singapore', status: 'Onboarding', sitaEnabled: true, terminals: 'T1, T2, T3, T4' },
+    { id: '4', name: 'Dubai International', iataCode: 'DXB', location: 'Dubai', status: 'Active', sitaEnabled: true, terminals: 'T1, T3' },
 ];
 
 export default function AirportOnboardingPage() {
+    const firestore = useFirestore();
+    const airportsQuery = useMemo(() => firestore ? collection(firestore, 'airports') : undefined, [firestore]);
+    const { data: airportsCollection, loading, error } = useCollection(airportsQuery);
+    
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [editingAirport, setEditingAirport] = useState<AirportOnboarding | null>(null);
+    const { toast } = useToast();
+
+    const displayAirports = useMemo(() => {
+        const sourceData = (airportsCollection && airportsCollection.length > 0) ? airportsCollection as AirportOnboarding[] : mockAirports;
+        return sourceData.filter(a => 
+            a.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+            a.iataCode.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [airportsCollection, searchTerm]);
+
+    const handleOpenDialog = (airport: AirportOnboarding | null = null) => {
+        setEditingAirport(airport);
+        setIsDialogOpen(true);
+    };
+
+    const handleFormSubmit = async (data: AirportOnboarding) => {
+        if (!firestore) return;
+        try {
+            if (editingAirport?.id) {
+                const airportRef = doc(firestore, 'airports', editingAirport.id);
+                await setDoc(airportRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
+                toast({ title: 'Airport Updated', description: `Configuration for ${data.iataCode} has been saved.` });
+            } else {
+                await addDoc(collection(firestore, 'airports'), { ...data, createdAt: serverTimestamp() });
+                toast({ title: 'Airport Onboarded', description: `${data.name} is now registered in the ecosystem.` });
+            }
+        } catch (e: any) {
+            toast({ variant: 'destructive', title: 'Error', description: e.message });
+        }
+        setIsDialogOpen(false);
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!firestore) return;
+        try {
+            await deleteDoc(doc(firestore, 'airports', id));
+            toast({ title: 'Airport Removed', variant: 'destructive' });
+        } catch (e: any) {
+            toast({ variant: 'destructive', title: 'Error', description: e.message });
+        }
+    };
+
     return (
         <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
@@ -24,7 +91,7 @@ export default function AirportOnboardingPage() {
                     <h1 className="text-3xl font-bold tracking-tight">Airport Onboarding</h1>
                     <p className="text-muted-foreground">Manage participating airports and SITA terminal integration status.</p>
                 </div>
-                <Button><PlusCircle className="mr-2 h-4 w-4" /> Onboard Airport</Button>
+                <Button onClick={() => handleOpenDialog()}><PlusCircle className="mr-2 h-4 w-4" /> Onboard Airport</Button>
             </div>
 
             <Card>
@@ -36,45 +103,79 @@ export default function AirportOnboardingPage() {
                     <div className="flex items-center gap-2 mb-4">
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder="Search by name or IATA code..." className="pl-9" />
+                            <Input 
+                                placeholder="Search by name or IATA code..." 
+                                className="pl-9" 
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
                         </div>
                     </div>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Airport Name</TableHead>
-                                <TableHead>Code</TableHead>
-                                <TableHead>City</TableHead>
-                                <TableHead>SITA Enabled</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {mockAirports.map((airport) => (
-                                <TableRow key={airport.id}>
-                                    <TableCell className="font-medium">{airport.name}</TableCell>
-                                    <TableCell className="font-mono">{airport.code}</TableCell>
-                                    <TableCell>{airport.city}</TableCell>
-                                    <TableCell>
-                                        {airport.sitaEnabled ? (
-                                            <Badge variant="default" className="bg-blue-500"><MonitorDot className="mr-1 h-3 w-3" /> CUSS/CUTE</Badge>
-                                        ) : (
-                                            <Badge variant="outline">Web Only</Badge>
-                                        )}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge variant={airport.status === 'Active' ? 'default' : 'secondary'}>{airport.status}</Badge>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <Button variant="ghost" size="sm">Manage</Button>
-                                    </TableCell>
+                    {loading ? (
+                        <div className="flex justify-center py-10"><Loader2 className="h-8 w-8 animate-spin" /></div>
+                    ) : (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Airport Name</TableHead>
+                                    <TableHead>Code</TableHead>
+                                    <TableHead>City</TableHead>
+                                    <TableHead>SITA Enabled</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {displayAirports.map((airport) => (
+                                    <TableRow key={airport.id}>
+                                        <TableCell className="font-medium">{airport.name}</TableCell>
+                                        <TableCell className="font-mono">{airport.iataCode}</TableCell>
+                                        <TableCell>{airport.location}</TableCell>
+                                        <TableCell>
+                                            {airport.sitaEnabled ? (
+                                                <Badge variant="default" className="bg-blue-500"><MonitorDot className="mr-1 h-3 w-3" /> CUSS/CUTE</Badge>
+                                            ) : (
+                                                <Badge variant="outline">Web Only</Badge>
+                                            )}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge variant={airport.status === 'Active' ? 'default' : 'secondary'}>{airport.status}</Badge>
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                    <DropdownMenuItem onClick={() => handleOpenDialog(airport)}>Edit Details</DropdownMenuItem>
+                                                    <DropdownMenuItem>Manage Terminals</DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(airport.id!)}>Offboard</DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    )}
                 </CardContent>
             </Card>
+
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{editingAirport ? 'Edit Airport' : 'Onboard New Airport'}</DialogTitle>
+                        <DialogDescription>Enter the primary details for the airport node.</DialogDescription>
+                    </DialogHeader>
+                    <AirportOnboardingForm 
+                        airport={editingAirport} 
+                        onSubmit={handleFormSubmit} 
+                        onCancel={() => setIsDialogOpen(false)} 
+                    />
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
