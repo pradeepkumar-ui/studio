@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -19,6 +20,9 @@ import {
   Flex,
   ProgressBar,
   BadgeDelta,
+  BarList,
+  Tracker,
+  type Color,
 } from '@tremor/react';
 import { KpiCard } from '@/components/analytics/kpi-card';
 import { 
@@ -29,15 +33,22 @@ import {
   TrendingUp, 
   QrCode, 
   Clock, 
-  ShoppingBag 
+  ShoppingBag,
+  Zap,
+  Activity,
+  AlertCircle
 } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 
 const chartFormatter = (number: number) =>
   `$${Intl.NumberFormat('us').format(number).toString()}`;
 
-const percentFormatter = (number: number) => `${number}%`;
+const valueFormatter = (number: number) =>
+  `${Intl.NumberFormat('us').format(number).toString()}`;
 
-// --- GLOBAL ADMIN DATA ---
+// --- MOCK DATA ---
+
 const globalKpis = [
   { title: 'Total Ecosystem Revenue', metric: '$4.2M', progress: 12.5, target: '$3.8M', deltaType: 'moderateIncrease' },
   { title: 'Global Conversion Rate', metric: '18.4%', progress: 4.2, target: '15%', deltaType: 'moderateIncrease' },
@@ -51,35 +62,42 @@ const revenueByStakeholder = [
   { name: 'Retail Partners', value: 450000 },
 ];
 
-// --- AIRLINE DATA ---
-const airlineData = [
-  { date: 'Oct 01', Fares: 4500, Ancillaries: 1200 },
-  { date: 'Oct 02', Fares: 4200, Ancillaries: 1350 },
-  { date: 'Oct 03', Fares: 5100, Ancillaries: 1800 },
-  { date: 'Oct 04', Fares: 4800, Ancillaries: 1600 },
-  { date: 'Oct 05', Fares: 5500, Ancillaries: 2100 },
+const topPerformers = [
+  { name: 'LHR - Heathrow', type: 'Airport', revenue: '$1.1M', conversion: '22%' },
+  { name: 'Air Canada', type: 'Airline', revenue: '$850k', conversion: '19%' },
+  { name: 'SIN - Changi', type: 'Airport', revenue: '$720k', conversion: '25%' },
+  { name: 'Lufthansa', type: 'Airline', revenue: '$640k', conversion: '16%' },
 ];
 
-// --- SITA DATA ---
-const sitaMetrics = [
-  { name: 'CUSS Kiosks', value: 85 },
-  { name: 'CUTE Desktops', value: 12 },
-  { name: 'Mobile App', value: 3 },
+const ecosystemHealth: { color: Color; tooltip: string }[] = [
+  { color: 'emerald', tooltip: 'Operational' },
+  { color: 'emerald', tooltip: 'Operational' },
+  { color: 'emerald', tooltip: 'Operational' },
+  { color: 'emerald', tooltip: 'Operational' },
+  { color: 'emerald', tooltip: 'Operational' },
+  { color: 'emerald', tooltip: 'Operational' },
+  { color: 'emerald', tooltip: 'Operational' },
+  { color: 'emerald', tooltip: 'Operational' },
+  { color: 'yellow', tooltip: 'Degraded - SITA API Latency' },
+  { color: 'emerald', tooltip: 'Operational' },
+  { color: 'emerald', tooltip: 'Operational' },
+  { color: 'emerald', tooltip: 'Operational' },
+  { color: 'emerald', tooltip: 'Operational' },
+  { color: 'emerald', tooltip: 'Operational' },
+  { color: 'emerald', tooltip: 'Operational' },
 ];
 
-const sitaHealth = [
-  { label: 'CUPPS Compliance', value: 99.8, color: 'emerald' },
-  { label: 'QR Scan Success', value: 94.2, color: 'blue' },
-  { label: 'API Uptime', value: 99.99, color: 'emerald' },
+const airlineAncillaryYield = [
+  { name: 'Seat Selection', value: 340000 },
+  { name: 'Priority Baggage', value: 180000 },
+  { name: 'Cabin Upgrades', value: 450000 },
+  { name: 'Flexibility Waivers', value: 120000 },
 ];
 
-// --- AIRPORT DATA ---
-const airportServicesPerformance = [
-  { name: 'Lounge Access', value: 1240 },
-  { name: 'Fast Track', value: 890 },
-  { name: 'Parking', value: 450 },
-  { name: 'F&B Pre-order', value: 320 },
-  { name: 'Retail Vouchers', value: 210 },
+const sitaAlerts = [
+  { terminal: 'LHR-T5', device: 'CUSS-042', issue: 'Paper Out', severity: 'low' },
+  { terminal: 'DXB-T3', device: 'CUTE-881', issue: 'Auth Failure', severity: 'high' },
+  { terminal: 'JFK-T4', device: 'CUPPS-GateB', issue: 'High Latency', severity: 'medium' },
 ];
 
 export default function OffersenseMainDashboard() {
@@ -88,7 +106,7 @@ export default function OffersenseMainDashboard() {
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">Offersense Admin Console</h1>
         <p className="text-muted-foreground">
-          Global oversight of airline retailing, airport ecosystem performance, and SITA infrastructure integration.
+          Real-time global oversight of airport retailing, SITA infrastructure, and airline conversion performance.
         </p>
       </div>
 
@@ -108,37 +126,99 @@ export default function OffersenseMainDashboard() {
             ))}
           </Grid>
 
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>Global Ecosystem Health</CardTitle>
+                <CardDescription>System-wide API and service availability across all partners.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="flex items-center gap-2"><Activity className="h-4 w-4 text-emerald-500" /> Uptime: 99.98%</span>
+                    <span className="text-muted-foreground">Last 15 minutes</span>
+                  </div>
+                  <Tracker data={ecosystemHealth} className="mt-2" />
+                  <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+                    <div>
+                      <Text className="text-xs">SITA Broker</Text>
+                      <Metric className="text-sm font-bold text-emerald-600">ACTIVE</Metric>
+                    </div>
+                    <div>
+                      <Text className="text-xs">Airline PSS Gateway</Text>
+                      <Metric className="text-sm font-bold text-emerald-600">ACTIVE</Metric>
+                    </div>
+                    <div>
+                      <Text className="text-xs">Payment PSP</Text>
+                      <Metric className="text-sm font-bold text-yellow-600">DEGRADED</Metric>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="lg:col-span-1">
+              <CardHeader>
+                <CardTitle>Top Revenue Contributors</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableBody>
+                    {topPerformers.map((item) => (
+                      <TableRow key={item.name}>
+                        <TableCell className="py-3">
+                          <div className="font-medium text-sm">{item.name}</div>
+                          <div className="text-[10px] text-muted-foreground uppercase">{item.type}</div>
+                        </TableCell>
+                        <TableCell className="text-right py-3">
+                          <div className="font-bold text-sm">{item.revenue}</div>
+                          <div className="text-[10px] text-emerald-600 font-bold">{item.conversion} Conv.</div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Revenue Distribution</CardTitle>
-                <CardDescription>Split of ecosystem revenue by stakeholder type.</CardDescription>
+                <CardTitle>Ecosystem Revenue Split</CardTitle>
               </CardHeader>
-              <CardContent className="flex items-center justify-center h-80">
+              <CardContent className="h-72">
                 <DonutChart
                   data={revenueByStakeholder}
                   category="value"
                   index="name"
                   valueFormatter={chartFormatter}
                   colors={['blue', 'cyan', 'indigo']}
-                  className="h-64"
+                  className="h-full"
                 />
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Retailing Growth</CardTitle>
-                <CardDescription>Total offer volume vs converted orders.</CardDescription>
+                <CardTitle>Retailing Growth (24h)</CardTitle>
+                <CardDescription>Volume of offers pushed through SITA vs converted to orders.</CardDescription>
               </CardHeader>
               <CardContent>
-                <AreaChart
-                  className="h-72 mt-4"
-                  data={airlineData}
-                  index="date"
-                  categories={['Fares', 'Ancillaries']}
-                  colors={['blue', 'indigo']}
-                  valueFormatter={chartFormatter}
+                 <BarChart
+                    className="h-72 mt-4"
+                    data={[
+                      { time: '00:00', Offers: 1200, Orders: 210 },
+                      { time: '04:00', Offers: 800, Orders: 150 },
+                      { time: '08:00', Offers: 3200, Orders: 640 },
+                      { time: '12:00', Offers: 4500, Orders: 920 },
+                      { time: '16:00', Offers: 3800, Orders: 780 },
+                      { time: '20:00', Offers: 2100, Orders: 410 },
+                    ]}
+                    index="time"
+                    categories={['Offers', 'Orders']}
+                    colors={['slate', 'blue']}
+                    valueFormatter={valueFormatter}
                 />
               </CardContent>
             </Card>
@@ -151,22 +231,12 @@ export default function OffersenseMainDashboard() {
             <Card>
               <Flex alignItems="start">
                 <div>
-                  <Text>Seat Attach Rate</Text>
-                  <Metric>32.4%</Metric>
+                  <Text>Upsell Yield per Pax</Text>
+                  <Metric>$42.50</Metric>
                 </div>
-                <BadgeDelta deltaType="moderateIncrease">12%</BadgeDelta>
+                <BadgeDelta deltaType="moderateIncrease">15%</BadgeDelta>
               </Flex>
-              <ProgressBar value={32.4} color="blue" className="mt-3" />
-            </Card>
-            <Card>
-              <Flex alignItems="start">
-                <div>
-                  <Text>Baggage Upsell</Text>
-                  <Metric>24.1%</Metric>
-                </div>
-                <BadgeDelta deltaType="moderateDecrease">2%</BadgeDelta>
-              </Flex>
-              <ProgressBar value={24.1} color="indigo" className="mt-3" />
+              <Text className="mt-2 text-xs text-muted-foreground">Incremental revenue purely from Offersense ancillaries.</Text>
             </Card>
             <Card>
               <Flex alignItems="start">
@@ -177,86 +247,147 @@ export default function OffersenseMainDashboard() {
                 <BadgeDelta deltaType="unchanged">0%</BadgeDelta>
               </Flex>
               <ProgressBar value={99.9} color="emerald" className="mt-3" />
+              <Text className="mt-2 text-xs text-muted-foreground">Successful real-time updates to Host PSS systems.</Text>
+            </Card>
+             <Card>
+              <Flex alignItems="start">
+                <div>
+                  <Text>Seat Map Monetization</Text>
+                  <Metric>32.4%</Metric>
+                </div>
+                <BadgeDelta deltaType="moderateIncrease">8%</BadgeDelta>
+              </Flex>
+              <ProgressBar value={32.4} color="blue" className="mt-3" />
+              <Text className="mt-2 text-xs text-muted-foreground">Ratio of paid vs. free seat selections via CUSS.</Text>
             </Card>
           </Grid>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Plane className="h-5 w-5 text-primary" />
-                Fare vs Ancillary Conversion Trend
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <BarChart
-                className="h-72 mt-4"
-                data={airlineData}
-                index="date"
-                categories={['Fares', 'Ancillaries']}
-                colors={['blue', 'cyan']}
-                valueFormatter={chartFormatter}
-              />
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+             <Card>
+              <CardHeader>
+                <CardTitle>Ancillary Revenue Breakdown</CardTitle>
+                <CardDescription>Value distribution across offer types.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <BarList data={airlineAncillaryYield} valueFormatter={chartFormatter} className="mt-4" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Conversion by Booking Window</CardTitle>
+                <CardDescription>How offer uptake varies based on hours to departure.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AreaChart
+                  className="h-72 mt-4"
+                  data={[
+                    { htd: '48h', Conv: 5 },
+                    { htd: '24h', Conv: 12 },
+                    { htd: '12h', Conv: 18 },
+                    { htd: '4h (Terminal)', Conv: 28 },
+                    { htd: '1h (Gate)', Conv: 35 },
+                  ]}
+                  index="htd"
+                  categories={['Conv']}
+                  colors={['indigo']}
+                  valueFormatter={(v) => `${v}%`}
+                />
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* --- SITA TAB --- */}
         <TabsContent value="sita" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="lg:col-span-1">
+            <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MonitorDot className="h-5 w-5 text-primary" />
-                  Touchpoint Usage
-                </CardTitle>
+                <CardTitle>Hardware Connectivity Tracker</CardTitle>
               </CardHeader>
-              <CardContent>
-                <DonutChart
-                  data={sitaMetrics}
-                  category="value"
-                  index="name"
-                  colors={['blue', 'indigo', 'slate']}
-                  className="h-48 mt-4"
-                />
-                <div className="space-y-4 mt-6">
-                  {sitaHealth.map((item) => (
-                    <div key={item.label} className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span>{item.label}</span>
-                        <span className="font-semibold">{item.value}%</span>
-                      </div>
-                      <ProgressBar value={item.value} color={item.color as any} />
-                    </div>
-                  ))}
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span>CUSS Kiosks (Operational)</span>
+                    <span>142 / 150</span>
+                  </div>
+                  <ProgressBar value={94.6} color="blue" />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span>CUTE Agent Desktops</span>
+                    <span>45 / 45</span>
+                  </div>
+                  <ProgressBar value={100} color="emerald" />
+                </div>
+                <div className="space-y-2">
+                   <div className="flex justify-between text-xs">
+                    <span>CUPPS Core Link</span>
+                    <span>Operational</span>
+                  </div>
+                  <Tracker data={Array(20).fill({ color: 'emerald', tooltip: 'Healthy' })} className="mt-1" />
                 </div>
               </CardContent>
             </Card>
 
             <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <QrCode className="h-5 w-5 text-primary" />
-                  Terminal Offer Uptake (QR Scans)
-                </CardTitle>
-                <CardDescription>Number of offers pushed to CUSS kiosks vs actually scanned by passengers.</CardDescription>
+               <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Live SITA Infrastructure Alerts</CardTitle>
+                  <CardDescription>Critical and informational events from airport terminals.</CardDescription>
+                </div>
+                <Badge variant="outline" className="flex gap-1"><Activity className="h-3 w-3" /> Monitor Active</Badge>
               </CardHeader>
               <CardContent>
-                 <AreaChart
-                    className="h-80 mt-4"
-                    data={[
-                      { time: '08:00', Pushed: 120, Scanned: 45 },
-                      { time: '10:00', Pushed: 180, Scanned: 88 },
-                      { time: '12:00', Pushed: 250, Scanned: 110 },
-                      { time: '14:00', Pushed: 210, Scanned: 95 },
-                      { time: '16:00', Pushed: 300, Scanned: 155 },
-                    ]}
-                    index="time"
-                    categories={['Pushed', 'Scanned']}
-                    colors={['slate', 'blue']}
-                />
+                 <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Device</TableHead>
+                        <TableHead>Issue</TableHead>
+                        <TableHead>Severity</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {sitaAlerts.map((alert, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="font-bold text-xs">{alert.terminal}</TableCell>
+                          <TableCell className="font-mono text-xs">{alert.device}</TableCell>
+                          <TableCell className="text-xs">{alert.issue}</TableCell>
+                          <TableCell>
+                            <Badge variant={alert.severity === 'high' ? 'destructive' : 'secondary'} className="text-[10px]">
+                              {alert.severity.toUpperCase()}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                 </Table>
               </CardContent>
             </Card>
           </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>SITA Activation Flow Performance</CardTitle>
+              <CardDescription>Latency breakdown of the "Offer -> QR -> Scan -> Fulfil" cycle.</CardDescription>
+            </CardHeader>
+            <CardContent>
+               <BarChart
+                className="h-72 mt-4"
+                data={[
+                  { step: 'Offer Gen', ms: 240 },
+                  { step: 'QR Sync', ms: 110 },
+                  { step: 'Kiosk Push', ms: 450 },
+                  { step: 'Scan Auth', ms: 320 },
+                  { step: 'PSS Update', ms: 890 },
+                ]}
+                index="step"
+                categories={['ms']}
+                colors={['slate']}
+                valueFormatter={(v) => `${v}ms`}
+              />
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* --- AIRPORT TAB --- */}
@@ -264,67 +395,93 @@ export default function OffersenseMainDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card className="lg:col-span-2">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5 text-primary" />
-                  Airport Service Performance
-                </CardTitle>
-                <CardDescription>Volume of non-air services sold through the platform.</CardDescription>
+                <CardTitle>Wait-Time Impact Analysis</CardTitle>
+                <CardDescription>Correlation between security wait times and "Fast Track" offer uptake.</CardDescription>
               </CardHeader>
               <CardContent>
-                 <BarChart
+                 <AreaChart
                     className="h-80 mt-4"
-                    data={airportServicesPerformance}
-                    index="name"
-                    categories={['value']}
-                    colors={['indigo']}
-                    showLegend={false}
+                    data={[
+                      { time: '08:00', Wait: 12, Sales: 45 },
+                      { time: '10:00', Wait: 25, Sales: 180 },
+                      { time: '12:00', Wait: 35, Sales: 310 },
+                      { time: '14:00', Wait: 15, Sales: 90 },
+                      { time: '16:00', Wait: 22, Sales: 145 },
+                    ]}
+                    index="time"
+                    categories={['Wait', 'Sales']}
+                    colors={['orange', 'emerald']}
+                    valueFormatter={(v) => `${v}`}
                 />
+                <Text className="mt-4 text-xs italic text-muted-foreground text-center">
+                  Insight: Every 5-minute increase in wait time {'>'} 20m generates +22% uplift in Fast-Track offers.
+                </Text>
               </CardContent>
             </Card>
 
-            <div className="space-y-6">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-orange-500" />
-                    Security Wait Threshold
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Metric>22 Mins</Metric>
-                  <Text className="mt-1">Correlation: +15% Uptake in Fast-Track offers when wait {'>'} 20m.</Text>
-                </CardContent>
-              </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Vendor Performance</CardTitle>
+                <CardDescription>Conversion volume by partner category.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <BarList 
+                  data={[
+                    { name: 'Duty Free (Vouchers)', value: 1240 },
+                    { name: 'Lounge Access', value: 890 },
+                    { name: 'VIP Meet & Assist', value: 450 },
+                    { name: 'F&B Pre-orders', value: 320 },
+                    { name: 'Parking Valet', value: 210 },
+                  ]} 
+                  className="mt-6" 
+                />
+              </CardContent>
+            </Card>
+          </div>
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <ShoppingBag className="h-4 w-4 text-primary" />
-                    Top Partner
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Metric>WorldDutyFree</Metric>
-                  <Text className="mt-1">$45k revenue generated via QR vouchers this week.</Text>
-                </CardContent>
-              </Card>
-
-               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-blue-500" />
-                    Lounge Utilization
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Metric>88% Peak</Metric>
-                  <ProgressBar value={88} color="blue" className="mt-3" />
-                </CardContent>
-              </Card>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+             <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-emerald-500" />
+                  Terminal Asset Yield
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Metric>$18.40</Metric>
+                <Text className="mt-1 text-xs">Revenue per departing passenger from non-air services.</Text>
+              </CardContent>
+            </Card>
+             <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <MonitorDot className="h-4 w-4 text-blue-500" />
+                  Self-Service Penetration
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Metric>68%</Metric>
+                <ProgressBar value={68} color="blue" className="mt-3" />
+                <Text className="mt-1 text-xs">Offers accepted via CUSS Kiosks vs. Mobile/Web.</Text>
+              </CardContent>
+            </Card>
+             <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-orange-500" />
+                  Lounge Capacity Risk
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Metric>88% Peak</Metric>
+                <ProgressBar value={88} color="orange" className="mt-3" />
+                <Text className="mt-1 text-xs">3 Lounge offers automatically paused due to capacity caps.</Text>
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
       </Tabs>
     </div>
   );
 }
+
