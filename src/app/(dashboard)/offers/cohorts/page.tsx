@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -40,20 +41,64 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
 const mockCohorts: Cohort[] = [
-    { id: 'COH-001', name: 'Frequent Mobile Users UAE', cohortId: 'FrequentMobile_UAE', status: 'Active', description: 'Users in UAE with > 10 purchases via mobile app.', definition: { device: 'Mobile', pos: 'AE', purchaseCount: 10, totalSpend: 0 } },
-    { id: 'COH-002', name: 'Business Travelers India', cohortId: 'BusinessLoyal_IN', status: 'Active', description: 'Users with a corporate email from India who booked business class.', definition: { device: 'All', pos: 'IN', purchaseCount: 1, totalSpend: 1000 } },
-    { id: 'COH-003', name: 'Leisure Summer Bookers EU', cohortId: 'LeisureSummer_EU', status: 'Inactive', description: 'Users from EU countries booking for travel in July/August.', definition: { device: 'All', pos: 'EU', purchaseCount: 0, totalSpend: 0 } },
-    { id: 'COH-004', name: 'New Users', cohortId: 'NewUsers', status: 'Active', description: 'Users who have made their first booking in the last 30 days.', definition: { device: 'All', pos: '', purchaseCount: 1, totalSpend: 0 } },
+    { 
+        id: 'COH-001', 
+        name: 'LHR High-Wait Business', 
+        cohortId: 'LHR_BIZ_WAIT', 
+        status: 'Active', 
+        description: 'Business class at LHR T5 facing > 20m security wait.', 
+        definition: { 
+            channels: ['CUSS', 'Mobile'], 
+            airports: ['LHR'], 
+            airlines: ['BA'], 
+            cabinClasses: ['Business'],
+            location: 'Airport_Departure', 
+            securityWaitTime: 20, 
+            loyaltyTiers: ['Gold', 'Platinum'],
+            aircraftTypes: ['A350', 'B787']
+        } 
+    },
+    { 
+        id: 'COH-002', 
+        name: 'JFK Premium Leisure', 
+        cohortId: 'JFK_PREM_LSR', 
+        status: 'Active', 
+        description: 'Premium cabins on JFK-LHR routes using Mobile app.', 
+        definition: { 
+            channels: ['Mobile'], 
+            airports: ['JFK'], 
+            routes: 'JFK-LHR',
+            cabinClasses: ['Business', 'First'],
+            location: 'Anywhere',
+            loyaltyTiers: ['Silver', 'Gold']
+        } 
+    },
+    { 
+        id: 'COH-003', 
+        name: 'Economy Lounge Prospects', 
+        cohortId: 'ECO_LOUNGE', 
+        status: 'Active', 
+        description: 'Economy passengers in terminals with lounge capacity.', 
+        definition: { 
+            channels: ['CUSS', 'CUTE'], 
+            cabinClasses: ['Economy'],
+            location: 'Airport_Departure',
+            loyaltyTiers: ['Bronze']
+        } 
+    },
 ];
 
 const getDefinitionString = (definition: Cohort['definition']) => {
     if (!definition) return '';
     const parts: string[] = [];
-    if (definition.pos) parts.push(`POS: ${definition.pos}`);
-    if (definition.device && definition.device !== 'All') parts.push(`Device: ${definition.device}`);
-    if (definition.purchaseCount > 0) parts.push(`Purchases > ${definition.purchaseCount}`);
-    if (definition.totalSpend > 0) parts.push(`Spend > $${definition.totalSpend}`);
-    return parts.join(', ');
+    if (definition.channels?.length > 0) parts.push(`Ch: ${definition.channels.join(', ')}`);
+    if (definition.airports?.length > 0) parts.push(`Apt: ${definition.airports.join(', ')}`);
+    if (definition.airlines?.length > 0) parts.push(`Air: ${definition.airlines.join(', ')}`);
+    if (definition.routes) parts.push(`Rt: ${definition.routes}`);
+    if (definition.cabinClasses?.length > 0) parts.push(`Cab: ${definition.cabinClasses.join(', ')}`);
+    if (definition.securityWaitTime && definition.securityWaitTime > 0) parts.push(`Wait > ${definition.securityWaitTime}m`);
+    if (definition.loyaltyTiers?.length > 0) parts.push(`Tiers: ${definition.loyaltyTiers.join(', ')}`);
+    return parts.join(' | ') || 'All Passengers';
 }
 
 export default function CohortsPage() {
@@ -131,7 +176,7 @@ export default function CohortsPage() {
               Cohort Management
             </h1>
             <p className="text-muted-foreground">
-              Define and manage customer cohorts for personalized offers and pricing.
+              Define complex customer segments using SITA channels, airport signals, and flight context.
             </p>
           </div>
           <Button onClick={() => handleOpenDialog()}>
@@ -143,7 +188,7 @@ export default function CohortsPage() {
           <CardHeader>
             <CardTitle>Customer Cohorts</CardTitle>
             <CardDescription>
-              Manage all active and inactive customer segments.
+              Manage rules for personalized airport ecosystem offers.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -158,7 +203,7 @@ export default function CohortsPage() {
                   <TableRow>
                     <TableHead>Cohort Name</TableHead>
                     <TableHead>Cohort ID</TableHead>
-                    <TableHead>Definition</TableHead>
+                    <TableHead className="max-w-[400px]">Definition</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>
                       <span className="sr-only">Actions</span>
@@ -172,8 +217,10 @@ export default function CohortsPage() {
                         <div>{cohort.name}</div>
                         <div className="text-xs text-muted-foreground">{cohort.description}</div>
                       </TableCell>
-                      <TableCell className="font-mono">{cohort.cohortId}</TableCell>
-                      <TableCell className="text-xs">{getDefinitionString(cohort.definition)}</TableCell>
+                      <TableCell className="font-mono text-xs">{cohort.cohortId}</TableCell>
+                      <TableCell className="text-[10px] font-mono leading-relaxed">
+                          {getDefinitionString(cohort.definition)}
+                      </TableCell>
                       <TableCell>
                         <Badge variant={getStatusBadgeVariant(cohort.status)}>
                           {cohort.status}
@@ -194,7 +241,7 @@ export default function CohortsPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuItem onClick={() => handleOpenDialog(cohort)}>Edit Cohort</DropdownMenuItem>
-                            <DropdownMenuItem>View Performance</DropdownMenuItem>
+                            <DropdownMenuItem>Simulate Reach</DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(cohort.id!)}>Delete</DropdownMenuItem>
                           </DropdownMenuContent>
@@ -211,11 +258,11 @@ export default function CohortsPage() {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle>{editingCohort ? 'Edit Cohort' : 'Create New Cohort'}</DialogTitle>
             <DialogDescription>
-              {editingCohort ? `Editing cohort "${editingCohort.name}".` : 'Define a new customer segment for targeting.'}
+              {editingCohort ? `Editing cohort "${editingCohort.name}".` : 'Define ecosystem targeting rules for this segment.'}
             </DialogDescription>
           </DialogHeader>
           <CohortForm
