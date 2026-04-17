@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -62,9 +63,10 @@ const marketOptions = [
 ];
 
 const cohortOptions = [
-  { value: 'BusinessLoyal_IN', label: 'Business Travelers India' },
+  { value: 'LHR_BIZ_WAIT', label: 'LHR High-Wait Business' },
+  { value: 'JFK_PREM_LSR', label: 'JFK Premium Leisure' },
+  { value: 'SIN_TRANSIT_LOUNGE', label: 'SIN Transit Loungers' },
   { value: 'Family_Leisure', label: 'Family Leisure' },
-  { value: 'Short_Connection_Pax', label: 'Short Connection' },
 ];
 
 const bundleSchema = z.object({
@@ -254,8 +256,8 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
               )} />
               <FormField control={form.control} name="scope.cohorts" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Target Cohorts</FormLabel>
-                  <MultiSelect options={cohortOptions} selected={field.value || []} onChange={field.onChange} placeholder="Broad Audience" />
+                  <FormLabel>Target Cohorts (Ecosystem Targeting)</FormLabel>
+                  <MultiSelect options={cohortOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select segments..." />
                 </FormItem>
               )} />
             </section>
@@ -326,15 +328,15 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
         {showPreview && (
           <div className="space-y-4 bg-muted/30 p-6 rounded-xl border-2 border-dashed">
             <h4 className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-2">
-              <Eye className="h-3 w-3" /> Live Customer View Preview
+              <Eye className="h-3 w-3" /> Customer Preview
             </h4>
             <div className="max-w-md mx-auto">
               <Card className="overflow-hidden border-0 shadow-xl">
                 <div className="relative h-40 bg-primary">
-                  <Image src={`https://picsum.photos/seed/${form.getValues('name') || 'default'}/600/400`} alt="Bundle" fill className="object-cover opacity-80" data-ai-hint="airport lounge" />
+                  <Image src={`https://picsum.photos/seed/${form.getValues('name') || 'default'}/600/400`} alt="Bundle" fill className="object-cover opacity-80" data-ai-hint="lounge airport" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                   <div className="absolute bottom-4 left-4 text-white">
-                    <Badge variant="secondary" className="mb-2 bg-white/20 text-white border-0 backdrop-blur-sm">Limited Time Offer</Badge>
+                    <Badge variant="secondary" className="mb-2 bg-white/20 text-white border-0 backdrop-blur-sm">Ecosystem Offer</Badge>
                     <h3 className="text-xl font-bold leading-tight">{form.getValues('name') || 'Your Bundle Name'}</h3>
                   </div>
                 </div>
@@ -354,7 +356,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                     <span className="text-[10px] text-muted-foreground line-through">${totalComponentValue.toFixed(2)}</span>
                     <span className="text-2xl font-black text-primary">${finalPrice.toFixed(2)}</span>
                   </div>
-                  <Button size="sm" className="rounded-full px-6" type="button">Select Offer</Button>
+                  <Button size="sm" className="rounded-full px-6" type="button">Add to Trip</Button>
                 </CardFooter>
               </Card>
             </div>
@@ -363,11 +365,11 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
         <div className="flex justify-between items-center pt-4 sticky bottom-0 bg-background py-4 border-t">
           <Button type="button" variant="ghost" onClick={() => setShowPreview(!showPreview)}>
             <Eye className="mr-2 h-4 w-4" />
-            {showPreview ? 'Hide Preview' : 'Preview Offer Card'}
+            {showPreview ? 'Hide Preview' : 'Show Preview'}
           </Button>
           <div className="flex gap-4">
             <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-            <Button type="submit" className="px-8">{bundle ? 'Update Bundle' : 'Create Bundle'}</Button>
+            <Button type="submit" className="px-8">{bundle ? 'Update' : 'Create'} Bundle</Button>
           </div>
         </div>
       </form>

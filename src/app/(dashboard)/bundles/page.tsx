@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -32,7 +33,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, PlusCircle, Loader2, Bot, User, Search, Package, Ticket, MapPin } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2, Bot, User, Search, Package, Ticket, MapPin, Target } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { BundleForm, type Bundle } from '@/components/forms/bundle-form';
@@ -43,12 +44,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { TooltipProvider } from '@/components/ui/tooltip';
 
 const mockOffers: (Bundle & { usage: number })[] = [
-    { id: 'BUN-001', name: 'Executive Gateway', category: 'Normal', description: 'Priority Fast Track, Premium Lounge Access, and Unlimited Wi-Fi.', status: 'Published', scope: { brand: 'Business, Premium', route: 'LHR, JFK, SIN', channel: 'Direct, CUSS' }, components: { other: 'Fast Track, Lounge, Wi-Fi' }, promotions: [], pricingStrategy: 'Absolute Price', discount: 85, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 1240 },
-    { id: 'BUN-002', name: 'Arrivals Comfort', category: 'Normal', description: 'Meet & Assist VIP greeting and luxury chauffeur transfer.', status: 'Published', scope: { channel: 'Web, Mobile', market: 'EU, US' }, components: { other: 'Meet & Assist, Chauffeur' }, promotions: [], pricingStrategy: 'Percent Discount', discount: 15, itemCount: 2, source: 'Manual', priority: 'Manual Override', usage: 520 },
-    { id: 'BUN-003', name: 'Quick Turnaround', category: 'Promotional', description: 'Fast track security and priority boarding for tight connections.', status: 'Draft', scope: { cohorts: 'Short_Connection_Pax' }, components: { other: 'Fast Track, Priority Boarding' }, promotions: [], pricingStrategy: 'Fixed Discount', discount: 10, itemCount: 2, source: 'AI', priority: 'AI Override', usage: 0 },
-    { id: 'BUN-004', name: 'Family Holiday Pack', category: 'Promotional', description: 'Lounge access for 4, 2 extra bags, and kid meals.', status: 'Published', scope: { cohorts: 'Family_Leisure' }, components: { other: 'Lounge(Family), Baggage(Extra), Meal(Kid)' }, promotions: ['PROMO-01'], pricingStrategy: 'Absolute Price', discount: 120, itemCount: 4, source: 'Manual', priority: 'Manual Override', usage: 890 },
-    { id: 'BUN-005', name: 'Business Saver Bundle', category: 'Normal', description: 'Front cabin seat and extra 23kg bag.', status: 'Published', scope: { brand: 'Economy Flex' }, components: { seat: 'Front', baggage: '23kg' }, promotions: [], pricingStrategy: 'Percent Discount', discount: 10, itemCount: 2, source: 'Manual', priority: 'Manual Override', usage: 2105 },
-    { id: 'BUN-006', name: 'Digital Nomad Pack', category: 'Promotional', description: 'Unlimited High-Speed Wi-Fi and Lounge Access.', status: 'Published', scope: { channel: 'Mobile' }, components: { other: 'Wi-Fi, Lounge' }, promotions: [], pricingStrategy: 'Absolute Price', discount: 49, itemCount: 2, source: 'AI', priority: 'AI Override', usage: 730 },
+    { id: 'BUN-001', name: 'Executive Gateway', category: 'Normal', description: 'Priority Fast Track, Premium Lounge Access, and Unlimited Wi-Fi.', status: 'Published', scope: { brand: 'Business, Premium', route: 'LHR, JFK, SIN', channel: 'Direct, CUSS', cohorts: 'LHR_BIZ_WAIT' }, components: { other: 'Fast Track, Lounge, Wi-Fi' }, pricingStrategy: 'Absolute Price', discount: 85, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 1240 },
+    { id: 'BUN-002', name: 'Arrivals Comfort', category: 'Normal', description: 'Meet & Assist VIP greeting and luxury chauffeur transfer.', status: 'Published', scope: { channel: 'Web, Mobile', market: 'EU, US', cohorts: 'JFK_PREM_LSR' }, components: { other: 'Meet & Assist, Chauffeur' }, pricingStrategy: 'Percent Discount', discount: 15, itemCount: 2, source: 'Manual', priority: 'Manual Override', usage: 520 },
+    { id: 'BUN-003', name: 'Quick Turnaround', category: 'Promotional', description: 'Fast track security and priority boarding for tight connections.', status: 'Draft', scope: { cohorts: 'SIN_TRANSIT_LOUNGE' }, components: { other: 'Fast Track, Priority Boarding' }, pricingStrategy: 'Fixed Discount', discount: 10, itemCount: 2, source: 'AI', priority: 'AI Override', usage: 0 },
+    { id: 'BUN-004', name: 'Family Holiday Pack', category: 'Promotional', description: 'Lounge access for 4, 2 extra bags, and kid meals.', status: 'Published', scope: { cohorts: 'Family_Leisure' }, components: { other: 'Lounge, Baggage, Meal' }, pricingStrategy: 'Absolute Price', discount: 120, itemCount: 4, source: 'Manual', priority: 'Manual Override', usage: 890 },
 ];
 
 
@@ -99,18 +98,13 @@ export default function BundlesPage() {
       if (editingBundle?.id) {
         const bundleRef = doc(firestore, 'bundles', editingBundle.id);
         await setDoc(bundleRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
-        toast({ title: 'Offer Updated', description: `Offer "${data.name}" has been updated.` });
+        toast({ title: 'Bundle Updated', description: `Offer "${data.name}" updated successfully.` });
       } else {
         await addDoc(collection(firestore, 'bundles'), { ...data, createdAt: serverTimestamp(), source: 'Manual' });
-        toast({ title: 'Offer Created', description: `Offer "${data.name}" has been created.` });
+        toast({ title: 'Bundle Created', description: `New bundle "${data.name}" added to studio.` });
       }
     } catch (e: any) {
-        console.error(e);
-        toast({
-            variant: "destructive",
-            title: "Uh oh! Something went wrong.",
-            description: e.message || "There was a problem with your request.",
-        });
+        toast({ variant: "destructive", title: "Error", description: e.message });
     }
     handleDialogClose();
   };
@@ -119,7 +113,7 @@ export default function BundlesPage() {
     if (!firestore) return;
     try {
         await deleteDoc(doc(firestore, 'bundles', id));
-        toast({ title: 'Offer Deleted', variant: 'destructive' });
+        toast({ title: 'Bundle Deleted', variant: 'destructive' });
     } catch (e: any) {
         toast({ variant: 'destructive', title: 'Error', description: e.message });
     }
@@ -131,27 +125,11 @@ export default function BundlesPage() {
 
   const getStatusBadgeVariant = (status: Bundle['status']) => {
     switch (status) {
-      case 'Published':
-        return 'default';
-      case 'Draft':
-        return 'secondary';
-      case 'Archived':
-        return 'outline';
+      case 'Published': return 'default';
+      case 'Draft': return 'secondary';
+      case 'Archived': return 'outline';
     }
   };
-
-  const formatPricing = (offer: Bundle) => {
-    switch (offer.pricingStrategy) {
-      case 'Absolute Price':
-        return `$${offer.discount.toFixed(2)}`;
-      case 'Fixed Discount':
-        return `-$${offer.discount.toFixed(2)}`;
-      case 'Percent Discount':
-        return `${offer.discount}% Off`;
-      default:
-        return 'N/A';
-    }
-  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -159,7 +137,7 @@ export default function BundlesPage() {
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold tracking-tight">Offer Bundles Studio</h1>
           <p className="text-muted-foreground">
-            Create, manage, and price ancillary bundles and ecosystem offers.
+            Combine exhaustive airline and airport services into targeted retailing bundles.
           </p>
         </div>
         <Button onClick={() => handleOpenDialog()}>
@@ -172,7 +150,7 @@ export default function BundlesPage() {
         <CardHeader>
           <CardTitle>Bundle Catalogue</CardTitle>
           <CardDescription>
-            Manage your airline and airport service bundles.
+            Manage multi-service offers targeted by customer cohorts and touchpoints.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -205,17 +183,6 @@ export default function BundlesPage() {
                   <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="Draft">Draft</SelectItem>
                   <SelectItem value="Published">Published</SelectItem>
-                  <SelectItem value="Archived">Archived</SelectItem>
-                </SelectContent>
-              </Select>
-               <Select value={filters.source} onValueChange={(value) => handleFilterChange('source', value)}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Source" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sources</SelectItem>
-                  <SelectItem value="Manual">Manual</SelectItem>
-                  <SelectItem value="AI">AI</SelectItem>
                 </SelectContent>
               </Select>
           </div>
@@ -232,13 +199,11 @@ export default function BundlesPage() {
                   <TableHead>Bundle Details</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Scope Overview</TableHead>
+                  <TableHead>Targeting (Cohorts)</TableHead>
                   <TableHead>Pricing</TableHead>
                   <TableHead>Usage</TableHead>
                   <TableHead>Source</TableHead>
-                  <TableHead>
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
+                  <TableHead><span className="sr-only">Actions</span></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -266,21 +231,21 @@ export default function BundlesPage() {
                     <TableCell>
                         <div className="flex flex-col gap-1">
                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <Ticket className="h-3 w-3" />
-                                <span className="truncate max-w-[150px]">{bundle.scope?.brand || 'All Brands'}</span>
+                                <Target className="h-3 w-3" />
+                                <span className="truncate max-w-[150px]">{bundle.scope?.cohorts || 'All Passengers'}</span>
                              </div>
-                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <MapPin className="h-3 w-3" />
-                                <span className="truncate max-w-[150px]">{bundle.scope?.route || 'All Routes'}</span>
+                             <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                <MapPin className="h-2 w-2" />
+                                <span className="truncate max-w-[150px]">{bundle.scope?.market || 'Global'}</span>
                              </div>
                         </div>
                     </TableCell>
                     <TableCell>
-                        <Badge variant="secondary" className="font-mono">
-                            {formatPricing(bundle)}
+                        <Badge variant="secondary" className="font-mono text-[10px]">
+                            {bundle.pricingStrategy === 'Absolute Price' ? `$${bundle.discount}` : (bundle.pricingStrategy === 'Percent Discount' ? `${bundle.discount}% Off` : `-$${bundle.discount}`)}
                         </Badge>
                     </TableCell>
-                    <TableCell className="text-xs">{(bundle as any).usage?.toLocaleString() || '0'}</TableCell>
+                    <TableCell className="text-xs">{bundle.usage?.toLocaleString() || '0'}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2 text-[10px] font-medium text-muted-foreground">
                         {bundle.source === 'AI' ? <Bot className="h-3 w-3" /> : <User className="h-3 w-3" />}
@@ -290,26 +255,16 @@ export default function BundlesPage() {
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button
-                            aria-haspopup="true"
-                            size="icon"
-                            variant="ghost"
-                          >
+                          <Button aria-haspopup="true" size="icon" variant="ghost">
                             <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => handleOpenDialog(bundle)}>
-                            Edit Configuration
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>Duplicate Bundle</DropdownMenuItem>
-                          <DropdownMenuItem>Performance Analytics</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleOpenDialog(bundle)}>Edit Config</DropdownMenuItem>
+                          <DropdownMenuItem>Simulate Audience</DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive" onClick={() => bundle.id && handleDelete(bundle.id)}>
-                            Archive
-                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => bundle.id && handleDelete(bundle.id)}>Archive</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -325,9 +280,9 @@ export default function BundlesPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle>{editingBundle ? 'Edit Ecosystem Bundle' : 'Create New Offer Bundle'}</DialogTitle>
+            <DialogTitle>{editingBundle ? 'Edit Ecosystem Bundle' : 'Create Targeted Bundle'}</DialogTitle>
             <DialogDescription>
-              {editingBundle ? `Modifying "${editingBundle.name}".` : 'Combine multiple airline and airport services into a single sellable offer.'}
+              Orchestrate multiple products into a single offer based on deep ecosystem targeting.
             </DialogDescription>
           </DialogHeader>
           <BundleForm

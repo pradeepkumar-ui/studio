@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -26,7 +27,10 @@ import {
   ShoppingBag,
   UserCheck,
   MapPin,
-  Clock
+  Clock,
+  Ticket,
+  Luggage,
+  CloudSun
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -55,52 +59,52 @@ const sitaSearchSchema = z.object({
 const mockOffers = [
   { 
     id: 'O-1', 
-    title: 'Executive Lounge Access', 
-    provider: 'LHR Partners', 
-    type: 'Airport Service', 
+    title: 'LHR Executive Lounge', 
+    provider: 'LHR T5 Partners', 
+    type: 'Lounge', 
     price: 45, 
-    items: ['Complimentary Food', 'Quiet Zone', 'Premium Wifi'], 
-    hint: 'luxury lounge',
+    items: ['Quiet Zone', 'Premium Dining', 'Shower Suites'], 
+    hint: 'airport lounge',
     icon: Coffee
   },
   { 
     id: 'O-2', 
-    title: 'Meet & Assist VIP', 
-    provider: 'Airport Concierge', 
-    type: 'Airport Service', 
+    title: 'SITA VIP Meet & Assist', 
+    provider: 'LHR Ops', 
+    type: 'Concierge', 
     price: 120, 
-    items: ['Personal Escort', 'Buggy Service', 'Porter Service'], 
-    hint: 'concierge',
+    items: ['Fast Track Security', 'Gate Escort', 'Porter Service'], 
+    hint: 'vip concierge',
     icon: UserCheck
   },
   { 
     id: 'O-3', 
     title: 'Fast Track Security', 
-    provider: 'LHR Operations', 
-    type: 'Airport Service', 
+    provider: 'Airport Ops', 
+    type: 'Priority', 
     price: 15, 
-    items: ['Skip Lines', 'Dedicated Lane'], 
-    hint: 'fast line',
+    items: ['Bypass Main Queues', 'Priority Lane Access'], 
+    hint: 'fast security',
     icon: Zap
   },
   { 
     id: 'O-4', 
-    title: 'Luxury Car Transfer', 
-    provider: 'CityLimo', 
-    type: 'Partner', 
-    price: 85, 
-    items: ['Mercedes S-Class', 'Meet at Arrivals', 'Wifi Onboard'], 
-    hint: 'luxury car',
-    icon: Car
+    title: 'Carbon Offset Voucher', 
+    provider: 'EcoPartner', 
+    type: 'Sustainability', 
+    price: 10, 
+    items: ['Verified Credits', 'Project Details Included'], 
+    hint: 'nature sun',
+    icon: CloudSun
   },
   { 
     id: 'O-5', 
-    title: 'Valet Parking Upgrade', 
-    provider: 'Airport Parking', 
-    type: 'Airport Service', 
-    price: 30, 
-    items: ['Covered Parking', 'Car Wash Included'], 
-    hint: 'parking valet',
+    title: 'Valet Parking + Wash', 
+    provider: 'Terminal Parking', 
+    type: 'Transport', 
+    price: 55, 
+    items: ['Covered Bay', 'Premium Wash', 'Fast Collection'], 
+    hint: 'valet car',
     icon: MapPin
   },
   { 
@@ -109,19 +113,9 @@ const mockOffers = [
     provider: 'WorldDutyFree', 
     type: 'Retail', 
     price: 40, 
-    items: ['$50 Shopping Voucher', 'All Categories'], 
-    hint: 'duty free',
+    items: ['$50 Shopping Value', 'Participating Brands'], 
+    hint: 'duty shopping',
     icon: ShoppingBag
-  },
-  { 
-    id: 'O-7', 
-    title: 'Gourmet Bento Pre-order', 
-    provider: 'SkyCaterers', 
-    type: 'F&B', 
-    price: 25, 
-    items: ['Chef Selected Menu', 'Drink Included'], 
-    hint: 'gourmet food',
-    icon: Coffee
   },
   { 
     id: 'O-8', 
@@ -129,9 +123,19 @@ const mockOffers = [
     provider: 'Airline PSS', 
     type: 'Air', 
     price: 250, 
-    items: ['Flat Bed', 'Priority Bag', 'Premium Meal'], 
-    hint: 'airplane interior',
+    items: ['Flat Bed Seat', 'Priority Baggage', 'Fine Dining'], 
+    hint: 'business cabin',
     icon: Zap
+  },
+  { 
+    id: 'O-9', 
+    title: 'Extra Legroom (Row 12)', 
+    provider: 'Airline PSS', 
+    type: 'Seat', 
+    price: 35, 
+    items: ['More Space', 'Early Deplaning'], 
+    hint: 'airplane seat',
+    icon: Ticket
   },
 ];
 
@@ -156,13 +160,12 @@ export default function AirportOfferComposerPage() {
     setStatus('EcosystemDiscovery');
     setSelectedOffer(null);
     
-    // Simulate multi-source discovery (PSS + Local Vendor Cache)
     setTimeout(() => {
       setIsLoading(false);
       setStatus('Retailled');
       toast({
         title: "Ecosystem Discovery Complete",
-        description: `Retrieved 1 Airline offer and ${mockOffers.length - 1} Airport ecosystem offers.`,
+        description: `Found ${mockOffers.length} personalized offers across Airline PSS and Airport vendors.`,
       });
     }, 2000);
   };
@@ -175,8 +178,8 @@ export default function AirportOfferComposerPage() {
   const handleGenerateQr = () => {
     setStatus('QRGenerated');
     toast({
-      title: "SITA QR Generated",
-      description: "Encoded payload ready for CUPPS terminal scanning.",
+      title: "Activation QR Ready",
+      description: "Scan this at any CUSS/CUTE terminal to fulfill your service.",
     });
   };
 
@@ -187,17 +190,17 @@ export default function AirportOfferComposerPage() {
       setIsLoading(false);
       setStatus('PSSSyncPending');
       toast({
-        title: "Pushed to Kiosk",
-        description: "Offer payload sent to Kiosk ID: K-LHR-5521",
+        title: "Kiosk Sync Active",
+        description: "Offer payload transmitted to Hardware ID: K-LHR-5521",
       });
     }, 1500);
   };
 
   const offerLifecycleSteps = [
-    { id: 'EcosystemDiscovery', label: 'Ecosystem Discovery', desc: 'Querying PSS & Airport Cache' },
-    { id: 'Retailled', label: 'Offer Retailled', desc: 'Dynamic pricing & rules applied' },
-    { id: 'TerminalSelected', label: 'Touchpoint Ready', desc: 'Offer mapped to SITA device' },
-    { id: 'PSSSyncPending', label: 'PSS Sync', desc: 'Awaiting payment confirmation' },
+    { id: 'EcosystemDiscovery', label: 'Ecosystem Discovery', desc: 'Querying Host PSS & Airport Cache' },
+    { id: 'Retailled', label: 'Offer Retailled', desc: 'Retailing rules & cohorts applied' },
+    { id: 'TerminalSelected', label: 'Hardware Mapping', desc: 'Offer bound to SITA touchpoint' },
+    { id: 'PSSSyncPending', label: 'Settlement Sync', desc: 'Confirming PNR update' },
   ];
 
   const currentStepIndex = offerLifecycleSteps.findIndex(s => s.id === status);
@@ -205,17 +208,16 @@ export default function AirportOfferComposerPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Airport Ecosystem Offer Composer</h1>
-        <p className="text-muted-foreground">Simulate real-time offer generation and SITA CUSS/CUTE integration.</p>
+        <h1 className="text-3xl font-bold tracking-tight">Airport Offer Composer</h1>
+        <p className="text-muted-foreground">Simulate SITA CUSS/CUTE integration and discover exhaustive ecosystem services.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Context & Results */}
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>1. Retailing Context</CardTitle>
-              <CardDescription>Define the airport touchpoint and passenger metadata.</CardDescription>
+              <CardTitle>1. Touchpoint Context</CardTitle>
+              <CardDescription>Define where and who is interacting with the platform.</CardDescription>
             </CardHeader>
             <CardContent>
               <Form {...form}>
@@ -226,14 +228,14 @@ export default function AirportOfferComposerPage() {
                       name="touchpoint"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>SITA Touchpoint</FormLabel>
+                          <FormLabel>SITA Channel</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                             <SelectContent>
-                              <SelectItem value="Web">Web Portal</SelectItem>
-                              <SelectItem value="Mobile">Mobile App (Geo-fenced)</SelectItem>
                               <SelectItem value="CUSS_Kiosk">SITA CUSS Kiosk</SelectItem>
-                              <SelectItem value="CUTE_Desktop">Agent Desktop (CUTE)</SelectItem>
+                              <SelectItem value="CUTE_Desktop">Agent CUTE Desktop</SelectItem>
+                              <SelectItem value="Mobile">Mobile App (Geo-fenced)</SelectItem>
+                              <SelectItem value="Web">Web Portal</SelectItem>
                             </SelectContent>
                           </Select>
                         </FormItem>
@@ -274,7 +276,7 @@ export default function AirportOfferComposerPage() {
                   </div>
                   <Button type="button" onClick={handleDiscover} disabled={isLoading} className="w-full">
                     {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MonitorDot className="mr-2 h-4 w-4" />}
-                    Discover Ecosystem Offers
+                    Discover Contextual Offers
                   </Button>
                 </form>
               </Form>
@@ -284,7 +286,7 @@ export default function AirportOfferComposerPage() {
           {status && status !== 'EcosystemDiscovery' ? (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Store className="h-5 w-5" /> Available Real-time Offers
+                <Store className="h-5 w-5" /> Discovered Ecosystem Services
               </h3>
               <ScrollArea className="h-[600px] pr-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4">
@@ -327,7 +329,7 @@ export default function AirportOfferComposerPage() {
                       </CardContent>
                       <CardFooter className="flex justify-between items-baseline pt-0">
                         <span className="text-xl font-bold">${offer.price}</span>
-                        <Button variant="ghost" size="sm" className="text-primary p-0">Details</Button>
+                        <Button variant="ghost" size="sm" className="text-primary p-0">View Product</Button>
                       </CardFooter>
                     </Card>
                   ))}
@@ -339,26 +341,24 @@ export default function AirportOfferComposerPage() {
               {isLoading ? (
                 <div className="text-center">
                   <Loader2 className="h-12 w-12 mb-4 animate-spin mx-auto opacity-20" />
-                  <p>Discovering ecosystem assets...</p>
+                  <p>Initializing SITA Discovery Broker...</p>
                 </div>
               ) : (
                 <>
                   <Workflow className="h-12 w-12 mb-4 opacity-20" />
-                  <p>Set retailing context and click discover to simulate ecosystem offers.</p>
+                  <p>Set touchpoint context and discover retailing ecosystem.</p>
                 </>
               )}
             </div>
           )}
         </div>
 
-        {/* Right Column: SITA Integration & Lifecycle */}
         <div className="space-y-6">
-          {/* Lifecycle Status */}
           {status && (
             <Card>
               <CardHeader className="pb-4">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Workflow className="h-4 w-4" /> Retailing Lifecycle
+                  <Workflow className="h-4 w-4" /> Journey Orchestration
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -388,12 +388,11 @@ export default function AirportOfferComposerPage() {
             </Card>
           )}
 
-          {/* Terminal Interaction */}
           {selectedOffer && (
             <Card className="border-primary shadow-lg overflow-hidden">
               <CardHeader className="bg-primary/5 pb-4">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <QrCode className="h-4 w-4" /> Terminal Activation
+                  <QrCode className="h-4 w-4" /> SITA Activation
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6 space-y-6">
@@ -402,31 +401,31 @@ export default function AirportOfferComposerPage() {
                     <div className="text-center p-4">
                       <Image 
                         src="https://picsum.photos/seed/sita-qr/200/200" 
-                        alt="SITA QR" 
+                        alt="Activation QR" 
                         width={160} 
                         height={160} 
                         className="mx-auto rounded border p-1 bg-white"
                         data-ai-hint="qr code"
                       />
                       <p className="text-[10px] mt-4 font-mono text-muted-foreground uppercase">
-                        SITA_CUPPS_OFF_{selectedOffer.id}_LHR
+                        SITA_{selectedOffer.id}_LHR_T5
                       </p>
                     </div>
                   ) : (
                     <div className="text-center px-6">
                       <Smartphone className="h-10 w-10 mx-auto mb-2 text-muted-foreground opacity-50" />
-                      <p className="text-xs text-muted-foreground">Ready to generate activation token for CUSS hardware.</p>
+                      <p className="text-xs text-muted-foreground">Ready to generate SITA activation token.</p>
                     </div>
                   )}
                 </div>
 
                 <div className="space-y-2">
                   <Button className="w-full" onClick={handleGenerateQr} disabled={status === 'QRGenerated' || status === 'PSSSyncPending'}>
-                    Generate Activation QR
+                    Generate Token
                   </Button>
                   <Button variant="outline" className="w-full" onClick={handlePushToHardware} disabled={status === 'PSSSyncPending'}>
                     {status === 'PushingToHardware' ? <Loader2 className="h-4 w-4 animate-spin" /> : <MonitorDot className="mr-2 h-4 w-4" />}
-                    Push to CUSS Kiosk
+                    Push to Kiosk
                   </Button>
                 </div>
 
@@ -434,13 +433,13 @@ export default function AirportOfferComposerPage() {
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-muted-foreground flex items-center gap-1"><ShieldCheck className="h-3 w-3" /> SITA AE Compliance</span>
-                    <span className="text-green-600 font-bold">CERTIFIED</span>
+                    <span className="text-muted-foreground flex items-center gap-1"><ShieldCheck className="h-3 w-3" /> AE Compliance</span>
+                    <span className="text-green-600 font-bold">VERIFIED</span>
                   </div>
                   <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-muted-foreground flex items-center gap-1"><UserSquare2 className="h-3 w-3" /> PSS Sync Link</span>
+                    <span className="text-muted-foreground flex items-center gap-1"><UserSquare2 className="h-3 w-3" /> Sync Link</span>
                     <span className={cn("font-bold", status === 'PSSSyncPending' ? "text-amber-600" : "text-muted-foreground")}>
-                      {status === 'PSSSyncPending' ? 'PENDING PAYMENT' : 'READY'}
+                      {status === 'PSSSyncPending' ? 'UPDATING HOST' : 'READY'}
                     </span>
                   </div>
                 </div>
@@ -448,13 +447,12 @@ export default function AirportOfferComposerPage() {
             </Card>
           )}
 
-          {/* Compliance Alerts */}
           {status === 'Retailled' && (
             <Alert className="bg-amber-50 border-amber-200">
               <AlertCircle className="h-4 w-4 text-amber-600" />
-              <AlertTitle className="text-amber-800 text-xs font-bold uppercase tracking-tight">Compliance Note</AlertTitle>
+              <AlertTitle className="text-amber-800 text-xs font-bold uppercase tracking-tight">Ecosystem Intelligence</AlertTitle>
               <AlertDescription className="text-amber-700 text-[10px]">
-                One local offer (O-3) requires age verification at the terminal before fulfilment.
+                Targeting active: LHR-T5 connection window (2.5h) identified. Prioritizing Lounge and Fast-Track.
               </AlertDescription>
             </Alert>
           )}
