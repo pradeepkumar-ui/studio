@@ -54,6 +54,11 @@ type MenuItem = {
 
 const menuItems: MenuItem[] = [
   {
+    href: '/',
+    label: 'Main Dashboard',
+    icon: LayoutDashboard,
+  },
+  {
     href: '/offers',
     label: 'Offers & Retailing',
     icon: Ticket,
@@ -169,7 +174,7 @@ export default function SidebarNav() {
         <Comp key={item.href} asChild>
           <Link href={item.href}>
             <ButtonComp
-              isActive={pathname === item.href || (item.href === '/' && pathname !== '/') ? false : pathname.startsWith(item.href)}
+              isActive={pathname === item.href}
               tooltip={{ children: item.label, side: 'right' }}
             >
               <item.icon />
