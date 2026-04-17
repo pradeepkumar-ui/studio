@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -25,7 +24,7 @@ interface MultiSelectProps {
 
 export function MultiSelect({
   options,
-  selected,
+  selected = [], // Default to empty array to prevent 'includes' error on undefined
   onChange,
   placeholder = 'Select options...',
   className,

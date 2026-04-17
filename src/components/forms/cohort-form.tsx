@@ -130,28 +130,38 @@ interface CohortFormProps {
 }
 
 export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
+  const defaultDefinition = {
+    channels: [],
+    airports: [],
+    terminals: '',
+    gates: '',
+    airlines: [],
+    routes: '',
+    cabinClasses: [],
+    aircraftTypes: [],
+    fareBrands: [],
+    ssrs: [],
+    transitStatus: 'Any' as const,
+    location: 'Anywhere' as const,
+    loyaltyTiers: [],
+    travelGroup: [],
+    securityWaitTime: 0,
+  };
+
   const form = useForm<Cohort>({
     resolver: zodResolver(cohortSchema),
-    defaultValues: cohort || {
+    defaultValues: cohort ? {
+      ...cohort,
+      definition: {
+        ...defaultDefinition,
+        ...cohort.definition,
+      },
+    } : {
       name: '',
       cohortId: '',
       description: '',
       status: 'Active',
-      definition: {
-        channels: [],
-        airports: [],
-        airlines: [],
-        routes: '',
-        cabinClasses: [],
-        aircraftTypes: [],
-        fareBrands: [],
-        ssrs: [],
-        transitStatus: 'Any',
-        location: 'Anywhere',
-        loyaltyTiers: [],
-        travelGroup: [],
-        securityWaitTime: 0,
-      },
+      definition: defaultDefinition,
     },
   });
 
