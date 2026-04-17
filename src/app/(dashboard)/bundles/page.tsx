@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -33,32 +32,30 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, PlusCircle, Loader2, Bot, User, Search, Package, Ticket } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2, Bot, User, Search, Package, Ticket, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { BundleForm, type Bundle } from '@/components/forms/bundle-form';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, addDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, doc, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 const mockOffers: (Bundle & { usage: number })[] = [
-    { id: 'BUN-001', name: 'Business Saver+', category: 'Normal', description: 'Front seat, 1 checked bag, and a meal.', status: 'Published', scope: { brand: 'Flex, Premium', route: 'All', channel: 'Direct, TMC' }, components: { seat: 'Front', baggage: '23kg', meal: 'Any' }, promotions: [], pricingStrategy: 'Percent Discount', discount: 15, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 1520 },
-    { id: 'BUN-002', name: 'Family Pack', category: 'Normal', description: 'Adjacent seats, extra baggage, and child meals.', status: 'Published', scope: { brand: 'Economy Saver', route: 'JFK-MIA', channel: 'Web' }, components: { seat: 'Adjacent', baggage: '15kg, 2', meal: 'Child' }, promotions: [], pricingStrategy: 'Fixed Discount', discount: 50, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 890 },
-    { id: 'BUN-003', name: 'Weekend Getaway', category: 'Promotional', description: 'Late checkout, priority boarding.', status: 'Draft', scope: { route: 'JFK-MIA', channel: 'Direct' }, components: { other: 'Hotel(Late Checkout), Boarding(Priority)' }, promotions: ['PROMO-04'], pricingStrategy: 'Absolute Price', discount: 75, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 0 },
-    { id: 'BUN-004', name: 'Long Haul Comfort', category: 'Normal', description: 'Extra legroom seat, amenity kit, and Wi-Fi.', status: 'Published', scope: { route: 'Duration > 6h' }, components: { seat: 'Legroom', other: 'Amenity Kit, Wi-Fi(Unlimited)' }, promotions: [], pricingStrategy: 'Percent Discount', discount: 20, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 2105 },
-    { id: 'BUN-005', name: 'Disruption Recovery Pack', category: 'Disruption', description: 'Lounge access, meal voucher, and hotel credit.', status: 'Published', scope: { route: 'All' }, components: { other: 'Lounge, Meal Voucher, Hotel Credit' }, promotions: [], pricingStrategy: 'Absolute Price', discount: 0, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 450 },
-    { id: 'BUN-006', name: 'Flexi Traveler', category: 'Normal', description: 'Flight change waiver and seat selection.', status: 'Published', scope: { brand: 'Economy Flex' }, components: { other: 'Flexibility(Change)', seat: 'Any' }, promotions: [], pricingStrategy: 'Absolute Price', discount: 99, itemCount: 2, source: 'AI', priority: 'AI Override', usage: 730 },
-    { id: 'BUN-007', name: 'Holiday Special', category: 'Promotional', description: 'Extra bag and festive meal.', status: 'Published', scope: { route: 'All', channel: 'Web, Mobile' }, components: { baggage: '23kg', meal: 'Festive' }, promotions: ['PROMO-01'], pricingStrategy: 'Fixed Discount', discount: 25, itemCount: 3, source: 'AI', priority: 'Manual Override', usage: 1240 },
-    { id: 'BUN-008', name: 'TMC Recovery Bundle', category: 'Disruption', description: 'Lounge access, fast-track security, chauffeur.', status: 'Archived', scope: { channel: 'TMC' }, components: { other: 'Lounge, Security(Fast), Chauffeur' }, promotions: [], pricingStrategy: 'Absolute Price', discount: 0, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 120 },
+    { id: 'BUN-001', name: 'Executive Gateway', category: 'Normal', description: 'Priority Fast Track, Premium Lounge Access, and Unlimited Wi-Fi.', status: 'Published', scope: { brand: 'Business, Premium', route: 'LHR, JFK, SIN', channel: 'Direct, CUSS' }, components: { other: 'Fast Track, Lounge, Wi-Fi' }, promotions: [], pricingStrategy: 'Absolute Price', discount: 85, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 1240 },
+    { id: 'BUN-002', name: 'Arrivals Comfort', category: 'Normal', description: 'Meet & Assist VIP greeting and luxury chauffeur transfer.', status: 'Published', scope: { channel: 'Web, Mobile', market: 'EU, US' }, components: { other: 'Meet & Assist, Chauffeur' }, promotions: [], pricingStrategy: 'Percent Discount', discount: 15, itemCount: 2, source: 'Manual', priority: 'Manual Override', usage: 520 },
+    { id: 'BUN-003', name: 'Quick Turnaround', category: 'Promotional', description: 'Fast track security and priority boarding for tight connections.', status: 'Draft', scope: { cohorts: 'Short_Connection_Pax' }, components: { other: 'Fast Track, Priority Boarding' }, promotions: [], pricingStrategy: 'Fixed Discount', discount: 10, itemCount: 2, source: 'AI', priority: 'AI Override', usage: 0 },
+    { id: 'BUN-004', name: 'Family Holiday Pack', category: 'Promotional', description: 'Lounge access for 4, 2 extra bags, and kid meals.', status: 'Published', scope: { cohorts: 'Family_Leisure' }, components: { other: 'Lounge(Family), Baggage(Extra), Meal(Kid)' }, promotions: ['PROMO-01'], pricingStrategy: 'Absolute Price', discount: 120, itemCount: 4, source: 'Manual', priority: 'Manual Override', usage: 890 },
+    { id: 'BUN-005', name: 'Business Saver Bundle', category: 'Normal', description: 'Front cabin seat and extra 23kg bag.', status: 'Published', scope: { brand: 'Economy Flex' }, components: { seat: 'Front', baggage: '23kg' }, promotions: [], pricingStrategy: 'Percent Discount', discount: 10, itemCount: 2, source: 'Manual', priority: 'Manual Override', usage: 2105 },
+    { id: 'BUN-006', name: 'Digital Nomad Pack', category: 'Promotional', description: 'Unlimited High-Speed Wi-Fi and Lounge Access.', status: 'Published', scope: { channel: 'Mobile' }, components: { other: 'Wi-Fi, Lounge' }, promotions: [], pricingStrategy: 'Absolute Price', discount: 49, itemCount: 2, source: 'AI', priority: 'AI Override', usage: 730 },
 ];
 
 
 export default function BundlesPage() {
   const firestore = useFirestore();
   const bundlesQuery = useMemo(() => firestore ? collection(firestore, 'bundles') : undefined, [firestore]);
-  const { data: bundlesCollection, loading, error } = useCollection(bundlesQuery);
+  const { data: bundlesCollection, loading } = useCollection(bundlesQuery);
   const [filters, setFilters] = useState({ name: '', category: 'all', status: 'all', source: 'all' });
   
   const displayOffers = useMemo(() => {
@@ -67,14 +64,10 @@ export default function BundlesPage() {
     if (!firestore || bundlesCollection === null) {
       sourceData = mockOffers;
     } else {
-      sourceData = bundlesCollection.map(offer => ({
+      sourceData = bundlesCollection.length > 0 ? (bundlesCollection as any[]).map(offer => ({
         ...offer,
         usage: offer.usage ?? Math.floor(Math.random() * 2000),
-      }));
-    }
-
-    if (sourceData.length === 0 && !loading) {
-      sourceData = mockOffers;
+      })) : mockOffers;
     }
     
     return sourceData.filter(offer => {
@@ -84,7 +77,7 @@ export default function BundlesPage() {
       const sourceMatch = filters.source === 'all' || (offer.source || 'Manual') === filters.source;
       return nameMatch && categoryMatch && statusMatch && sourceMatch;
     });
-  }, [bundlesCollection, firestore, loading, filters]);
+  }, [bundlesCollection, firestore, filters]);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBundle, setEditingBundle] = useState<Bundle | null>(null);
@@ -103,21 +96,12 @@ export default function BundlesPage() {
   const handleFormSubmit = async (data: Bundle) => {
     if (!firestore) return;
     try {
-      const itemCount = (data.components ? Object.values(data.components).filter(Boolean).length : 0) + (data.promotions ? Object.values(data.promotions).filter(Boolean).length : 0);
-      
-      const bundleData = { 
-        ...data, 
-        itemCount,
-        source: data.source || 'Manual',
-        priority: data.priority || 'Manual Override',
-      };
-
       if (editingBundle?.id) {
         const bundleRef = doc(firestore, 'bundles', editingBundle.id);
-        await setDoc(bundleRef, { ...bundleData, updatedAt: serverTimestamp() }, { merge: true });
+        await setDoc(bundleRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
         toast({ title: 'Offer Updated', description: `Offer "${data.name}" has been updated.` });
       } else {
-        await addDoc(collection(firestore, 'bundles'), { ...bundleData, createdAt: serverTimestamp() });
+        await addDoc(collection(firestore, 'bundles'), { ...data, createdAt: serverTimestamp(), source: 'Manual' });
         toast({ title: 'Offer Created', description: `Offer "${data.name}" has been created.` });
       }
     } catch (e: any) {
@@ -130,6 +114,16 @@ export default function BundlesPage() {
     }
     handleDialogClose();
   };
+
+  const handleDelete = async (id: string) => {
+    if (!firestore) return;
+    try {
+        await deleteDoc(doc(firestore, 'bundles', id));
+        toast({ title: 'Offer Deleted', variant: 'destructive' });
+    } catch (e: any) {
+        toast({ variant: 'destructive', title: 'Error', description: e.message });
+    }
+  }
 
   const handleFilterChange = (key: keyof typeof filters, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -159,51 +153,42 @@ export default function BundlesPage() {
     }
   }
 
-  const getScopeString = (scope: Bundle['scope']) => {
-    if (!scope) return 'N/A';
-    const parts = [];
-    if (scope.brand) parts.push(`Brand: ${scope.brand}`);
-    if (scope.channel) parts.push(`Channel: ${scope.channel}`);
-    if (scope.route) parts.push(`Route: ${scope.route}`);
-    return parts.join('; ') || 'All';
-  }
-  
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight">Bundle Studio and Offer Creation</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Offer Bundles Studio</h1>
           <p className="text-muted-foreground">
-            Create, manage, and price ancillary bundles and offers.
+            Create, manage, and price ancillary bundles and ecosystem offers.
           </p>
         </div>
         <Button onClick={() => handleOpenDialog()}>
           <PlusCircle className="mr-2" />
-          Create Offer
+          Create New Bundle
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Offers</CardTitle>
+          <CardTitle>Bundle Catalogue</CardTitle>
           <CardDescription>
-            Manage all ancillary bundles and their rules.
+            Manage your airline and airport service bundles.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-2 mb-4">
-              <div className="relative flex-1">
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+              <div className="relative flex-1 min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by offer name..."
+                  placeholder="Search bundles..."
                   value={filters.name}
                   onChange={(e) => handleFilterChange('name', e.target.value)}
                   className="pl-9"
                 />
               </div>
               <Select value={filters.category} onValueChange={(value) => handleFilterChange('category', value)}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by Category" />
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
@@ -213,8 +198,8 @@ export default function BundlesPage() {
                 </SelectContent>
               </Select>
                <Select value={filters.status} onValueChange={(value) => handleFilterChange('status', value)}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by Status" />
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
@@ -224,8 +209,8 @@ export default function BundlesPage() {
                 </SelectContent>
               </Select>
                <Select value={filters.source} onValueChange={(value) => handleFilterChange('source', value)}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by Source" />
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Source" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Sources</SelectItem>
@@ -234,24 +219,23 @@ export default function BundlesPage() {
                 </SelectContent>
               </Select>
           </div>
-          {(loading && displayOffers.length === 0) && (
+          
+          {loading && displayOffers.length === 0 ? (
              <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
              </div>
-           )}
-           {(!loading && displayOffers.length > 0 && !error) && (
+           ) : (
             <TooltipProvider>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Offer Name</TableHead>
+                  <TableHead>Bundle Details</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Items</TableHead>
+                  <TableHead>Scope Overview</TableHead>
                   <TableHead>Pricing</TableHead>
                   <TableHead>Usage</TableHead>
                   <TableHead>Source</TableHead>
-                  <TableHead>Priority</TableHead>
                   <TableHead>
                     <span className="sr-only">Actions</span>
                   </TableHead>
@@ -261,52 +245,49 @@ export default function BundlesPage() {
                 {displayOffers.map((bundle) => (
                   <TableRow key={bundle.id}>
                     <TableCell className="font-medium">
-                      <div>{bundle.name}</div>
-                      <div className="font-mono text-xs text-muted-foreground">{bundle.id}</div>
+                      <div className="flex items-center gap-3">
+                         <div className="p-2 bg-primary/10 rounded-md">
+                            <Package className="h-4 w-4 text-primary" />
+                         </div>
+                         <div>
+                            <div>{bundle.name}</div>
+                            <div className="text-[10px] text-muted-foreground font-mono">{bundle.id}</div>
+                         </div>
+                      </div>
                     </TableCell>
                      <TableCell>
-                      <Badge variant="outline">{bundle.category}</Badge>
+                      <Badge variant="outline" className="text-[10px] uppercase tracking-wider">{bundle.category}</Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getStatusBadgeVariant(bundle.status)}>
+                      <Badge variant={getStatusBadgeVariant(bundle.status)} className="text-[10px]">
                         {bundle.status}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Tooltip>
-                        <TooltipTrigger>
-                            <div className="flex items-center gap-1">
-                                <Package className="h-4 w-4" />
-                                <span>{bundle.itemCount}</span>
-                            </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <div className="p-1 text-sm">
-                            <h4 className="font-semibold mb-2">Included Items</h4>
-                            <ul className="list-disc list-inside space-y-1">
-                              {bundle.components && Object.values(bundle.components).filter(Boolean).map((comp, i) => <li key={i} className="capitalize">{comp.toString().toLowerCase()}</li>)}
-                              {bundle.promotions && Array.isArray(bundle.promotions) && bundle.promotions.map((promo, i) => <li key={i}>Promotion: {promo}</li>)}
-                            </ul>
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
+                        <div className="flex flex-col gap-1">
+                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <Ticket className="h-3 w-3" />
+                                <span className="truncate max-w-[150px]">{bundle.scope?.brand || 'All Brands'}</span>
+                             </div>
+                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <MapPin className="h-3 w-3" />
+                                <span className="truncate max-w-[150px]">{bundle.scope?.route || 'All Routes'}</span>
+                             </div>
+                        </div>
                     </TableCell>
                     <TableCell>
-                        <Badge variant={bundle.pricingStrategy === 'Absolute Price' ? 'default' : 'secondary'}>
+                        <Badge variant="secondary" className="font-mono">
                             {formatPricing(bundle)}
                         </Badge>
                     </TableCell>
-                    <TableCell>{(bundle as any).usage?.toLocaleString() || 'N/A'}</TableCell>
+                    <TableCell className="text-xs">{(bundle as any).usage?.toLocaleString() || '0'}</TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        {bundle.source === 'AI' ? <Bot /> : <User />}
+                      <div className="flex items-center gap-2 text-[10px] font-medium text-muted-foreground">
+                        {bundle.source === 'AI' ? <Bot className="h-3 w-3" /> : <User className="h-3 w-3" />}
                         <span>{bundle.source || 'Manual'}</span>
                       </div>
                     </TableCell>
-                     <TableCell>
-                      <Badge variant="outline">{bundle.priority}</Badge>
-                    </TableCell>
-                    <TableCell>
+                    <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
@@ -321,12 +302,12 @@ export default function BundlesPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem onClick={() => handleOpenDialog(bundle)}>
-                            Edit
+                            Edit Configuration
                           </DropdownMenuItem>
-                          <DropdownMenuItem>Duplicate</DropdownMenuItem>
-                          <DropdownMenuItem>View Performance</DropdownMenuItem>
+                          <DropdownMenuItem>Duplicate Bundle</DropdownMenuItem>
+                          <DropdownMenuItem>Performance Analytics</DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive">
+                          <DropdownMenuItem className="text-destructive" onClick={() => bundle.id && handleDelete(bundle.id)}>
                             Archive
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -338,16 +319,15 @@ export default function BundlesPage() {
             </Table>
             </TooltipProvider>
            )}
-           {error && <p className="text-destructive">Error loading offers: {error.message}</p>}
         </CardContent>
       </Card>
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle>{editingBundle ? 'Edit Offer' : 'Create New Offer'}</DialogTitle>
+            <DialogTitle>{editingBundle ? 'Edit Ecosystem Bundle' : 'Create New Offer Bundle'}</DialogTitle>
             <DialogDescription>
-              {editingBundle ? `Editing offer "${editingBundle.name}".` : 'Define the components, rules, and pricing for a new offer.'}
+              {editingBundle ? `Modifying "${editingBundle.name}".` : 'Combine multiple airline and airport services into a single sellable offer.'}
             </DialogDescription>
           </DialogHeader>
           <BundleForm
