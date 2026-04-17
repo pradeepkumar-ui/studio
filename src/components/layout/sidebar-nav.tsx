@@ -63,7 +63,6 @@ const menuItems: MenuItem[] = [
     label: 'Offers & Retailing',
     icon: Ticket,
     subItems: [
-      { href: '/offers/dashboard', label: 'Retailing Dashboard', icon: LayoutDashboard },
       { href: '/offer-composer', label: 'Airport Offer Composer', icon: QrCode },
       { href: '/bundles', label: 'Offer Bundles Studio', icon: Package },
       { href: '/offers/cohorts', label: 'Retailing Cohorts', icon: Target },
@@ -117,7 +116,7 @@ const menuItems: MenuItem[] = [
     label: 'Analytics & AI',
     icon: BarChart3,
     subItems: [
-      { href: '/analytics', label: 'Ecosystem Performance', icon: BarChart3 },
+      { href: '/analytics', label: 'Retailing Analytics', icon: BarChart3 },
       { href: '/optimisation', label: 'AI Offer Optimisation', icon: Wand2 },
       { href: '/fare-change-forecast', label: 'Forecasting', icon: BrainCircuit },
     ],
