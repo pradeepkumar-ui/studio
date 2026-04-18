@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -49,7 +48,6 @@ const mockOffers: any[] = [
     { id: 'OFR-005', name: 'Premium Wi-Fi Access', category: 'Promotional', description: 'High-speed internet for your entire flight.', status: 'Published', priorityLevel: 50, validity: { from: new Date(), to: addDays(new Date(), 30) }, scope: { channel: 'Web, Mobile', cohorts: 'All' }, components: { other: 'In-flight Wi-Fi' }, pricingStrategy: 'Percent Discount', discount: 10, itemCount: 1, source: 'Manual', usage: 850 },
     { id: 'BUN-002', name: 'Arrivals Comfort', category: 'Normal', description: 'Meet & Assist VIP greeting and luxury chauffeur transfer.', status: 'Published', priorityLevel: 40, validity: { from: new Date(), to: addDays(new Date(), 90) }, scope: { channel: 'Web, Mobile', market: 'EU, US', cohorts: 'JFK_PREM_LSR' }, components: { other: 'Meet & Assist, Chauffeur' }, pricingStrategy: 'Percent Discount', discount: 15, itemCount: 2, source: 'Manual', usage: 520 },
 ];
-
 
 export default function BundlesPage() {
   const firestore = useFirestore();
@@ -153,7 +151,7 @@ export default function BundlesPage() {
           </p>
         </div>
         <Button onClick={() => handleOpenDialog()}>
-          <PlusCircle className="mr-2" />
+          <PlusCircle className="mr-2 h-4 w-4" />
           Create Retailing Offer
         </Button>
       </div>
@@ -258,10 +256,10 @@ export default function BundlesPage() {
                         <div className="flex flex-col gap-1">
                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                 <Target className="h-3 w-3" />
-                                <span className="truncate max-w-[120px]">{bundle.scope?.cohorts || bundle.scope?.cohorts?.join(', ') || 'All Passengers'}</span>
+                                <span className="truncate max-w-[120px]">{Array.isArray(bundle.scope?.cohorts) ? bundle.scope.cohorts.join(', ') : (bundle.scope?.cohorts || 'All Passengers')}</span>
                              </div>
                              <div className="text-[10px] text-muted-foreground pl-4">
-                                {bundle.scope?.channel || bundle.scope?.channel?.join(', ') || 'All Channels'}
+                                {Array.isArray(bundle.scope?.channel) ? bundle.scope.channel.join(', ') : (bundle.scope?.channel || 'All Channels')}
                              </div>
                         </div>
                     </TableCell>

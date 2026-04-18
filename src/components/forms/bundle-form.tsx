@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -28,7 +27,7 @@ import { Separator } from '../ui/separator';
 import { PlusCircle, Trash2, Eye, Package, Check, Calendar as CalendarIcon, Info, Percent, DollarSign, ListFilter, Target, Zap, Loader2 } from 'lucide-react';
 import { MultiSelect } from '../ui/multi-select';
 import { useState, useMemo } from 'react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/card';
+import { Card, CardContent, CardFooter } from '../ui/card';
 import Image from 'next/image';
 import { Badge } from '../ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
@@ -518,7 +517,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
           <div className="flex gap-4">
             <Button type="button" variant="outline" onClick={onCancel}>Discard</Button>
             <Button type="submit" className="px-10 font-bold" disabled={isLoadingDependencies}>
-              {bundle ? 'Update Retailing Item' : 'Publish to Ecosystem'}
+              {bundle?.id ? 'Update Retailing Item' : 'Publish to Ecosystem'}
             </Button>
           </div>
         </div>
