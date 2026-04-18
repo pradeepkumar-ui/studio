@@ -48,6 +48,21 @@
         "guardrails": { "type": "object" },
         "status": { "type": "string", "enum": ["Active", "Inactive", "Test"] }
       }
+    },
+    "stockItem": {
+      "title": "Stock Item",
+      "description": "Exhaustive inventory unit for air ancillaries or ecosystem services.",
+      "type": "object",
+      "properties": {
+        "sku": { "type": "string" },
+        "category": { "type": "string" },
+        "type": { "type": "string", "enum": ["Physical", "Digital", "Service_Capacity"] },
+        "supplier": { "type": "string" },
+        "available": { "type": "number" },
+        "reserved": { "type": "number", "description": "Units held in active retailing carts." },
+        "threshold": { "type": "number", "description": "Minimum stock level before alert." },
+        "status": { "type": "string", "enum": ["In Stock", "Low Stock", "Out of Stock"] }
+      }
     }
   },
   "auth": { "providers": [] },
@@ -58,6 +73,7 @@
     "/orders/{orderId}": { "schema": { "$ref": "#/entities/order" }, "description": "Orders including airport touchpoint metadata." },
     "/cohorts/{cohortId}": { "schema": { "$ref": "#/entities/cohort" }, "description": "Advanced ecosystem targeting cohorts." },
     "/bundles/{bundleId}": { "schema": { "$ref": "#/entities/bundle" }, "description": "Retailing offers and bundles." },
-    "/pricingRules/{ruleId}": { "schema": { "$ref": "#/entities/pricingRule" }, "description": "Dynamic pricing and continuous pricing policies." }
+    "/pricingRules/{ruleId}": { "schema": { "$ref": "#/entities/pricingRule" }, "description": "Dynamic pricing and continuous pricing policies." },
+    "/stock/{stockId}": { "schema": { "$ref": "#/entities/stockItem" }, "description": "Inventory and logistics matrix." }
   }
 }

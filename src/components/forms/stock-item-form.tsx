@@ -23,9 +23,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '../ui/separator';
+import { Package, ShieldCheck, Truck } from 'lucide-react';
 
 const stockItemSchema = z.object({
-  sku: z.string().min(3, 'SKU must be at least 3 characters.'),
+  id: z.string().optional(),
+  sku: z.string().min(3, 'SKU must be at least 3 characters.').toUpperCase(),
   category: z.string().min(3, 'Category is required.'),
   supplier: z.string().min(3, 'Supplier/Vendor is required.'),
   available: z.coerce.number().int().min(0, 'Available stock cannot be negative.'),
@@ -61,7 +63,9 @@ export function StockItemForm({ item, onSubmit, onCancel }: StockItemFormProps) 
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <section className="space-y-4">
-            <h4 className="text-sm font-bold uppercase tracking-tight text-primary">Identity & Fulfillment</h4>
+            <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-[0.2em]">
+                <Package className="h-3 w-3" /> Identity & Fulfillment
+            </div>
             <div className="grid grid-cols-2 gap-4">
                 <FormField
                 control={form.control}
@@ -70,7 +74,7 @@ export function StockItemForm({ item, onSubmit, onCancel }: StockItemFormProps) 
                     <FormItem>
                     <FormLabel>Inventory SKU</FormLabel>
                     <FormControl>
-                        <Input placeholder="e.g., LOU-LHR-T5-01" {...field} disabled={!!item} />
+                        <Input placeholder="e.g., LOU-LHR-T5-01" {...field} disabled={!!item} className="font-mono" />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -81,15 +85,15 @@ export function StockItemForm({ item, onSubmit, onCancel }: StockItemFormProps) 
                 name="type"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Item Type</FormLabel>
+                    <FormLabel>Fulfillment Protocol</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="font-medium"><SelectValue /></SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                            <SelectItem value="Physical">Physical (Amenity Kits, Merch)</SelectItem>
-                            <SelectItem value="Digital">Digital (Voucher, Wi-Fi Code)</SelectItem>
-                            <SelectItem value="Service_Capacity">Service Capacity (Lounge, Valet)</SelectItem>
+                            <SelectItem value="Physical">Physical Hand-over (Merch/Kits)</SelectItem>
+                            <SelectItem value="Digital">Digital Unlock (Voucher/QR)</SelectItem>
+                            <SelectItem value="Service_Capacity">Service Limit (Lounge/Valet)</SelectItem>
                         </SelectContent>
                     </Select>
                     </FormItem>
@@ -114,7 +118,7 @@ export function StockItemForm({ item, onSubmit, onCancel }: StockItemFormProps) 
                 name="supplier"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Vendor / Source</FormLabel>
+                    <FormLabel>Primary Vendor</FormLabel>
                     <FormControl>
                         <Input placeholder="e.g., SkyCaterers" {...field} />
                     </FormControl>
@@ -125,53 +129,60 @@ export function StockItemForm({ item, onSubmit, onCancel }: StockItemFormProps) 
         </section>
 
         <Separator />
-        <h4 className="text-sm font-bold uppercase tracking-tight text-primary">Balance Control</h4>
         
-        <div className="grid grid-cols-3 gap-4">
-            <FormField
-            control={form.control}
-            name="available"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>In-Stock (Available)</FormLabel>
-                <FormControl>
-                    <Input type="number" {...field} />
-                </FormControl>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
-            <FormField
-            control={form.control}
-            name="reserved"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Retailing Reservations</FormLabel>
-                <FormControl>
-                    <Input type="number" {...field} />
-                </FormControl>
-                <FormDescription className="text-[10px]">Held for unpaid carts.</FormDescription>
-                </FormItem>
-            )}
-            />
-            <FormField
-            control={form.control}
-            name="threshold"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Safety Threshold</FormLabel>
-                <FormControl>
-                    <Input type="number" {...field} />
-                </FormControl>
-                <FormDescription className="text-[10px]">Triggers low-stock alert.</FormDescription>
-                </FormItem>
-            )}
-            />
-        </div>
+        <section className="space-y-4">
+            <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-[0.2em]">
+                <ShieldCheck className="h-3 w-3" /> Balance Control & Thresholds
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+                <FormField
+                control={form.control}
+                name="available"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>In-Stock (Net)</FormLabel>
+                    <FormControl>
+                        <Input type="number" {...field} className="font-bold text-emerald-600" />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="reserved"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Reservations</FormLabel>
+                    <FormControl>
+                        <Input type="number" {...field} className="font-bold text-primary" />
+                    </FormControl>
+                    <FormDescription className="text-[9px] uppercase font-black tracking-tighter">Held in active carts.</FormDescription>
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="threshold"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Alert At</FormLabel>
+                    <FormControl>
+                        <Input type="number" {...field} className="font-bold text-destructive" />
+                    </FormControl>
+                    <FormDescription className="text-[9px] uppercase font-black tracking-tighter">Safety stock level.</FormDescription>
+                    </FormItem>
+                )}
+                />
+            </div>
+        </section>
         
-        <div className="flex justify-end gap-4 pt-4">
-            <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-            <Button type="submit">{item ? 'Synchronize Balance' : 'Register SKU'}</Button>
+        <div className="flex justify-end gap-4 pt-4 border-t sticky bottom-0 bg-background py-4">
+            <Button type="button" variant="outline" onClick={onCancel}>Discard Changes</Button>
+            <Button type="submit" className="font-bold px-8">
+                <Truck className="mr-2 h-4 w-4" />
+                {item ? 'Synchronize Balance' : 'Commit Registry Entry'}
+            </Button>
         </div>
       </form>
     </Form>
