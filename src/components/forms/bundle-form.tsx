@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,11 +20,13 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectGroup,
+  SelectLabel,
 } from '@/components/ui/select';
 import { Separator } from '../ui/separator';
-import { PlusCircle, Trash2, Eye, Package, Check, Calendar as CalendarIcon, Info, Percent, DollarSign, ListFilter, Target, Zap } from 'lucide-react';
+import { PlusCircle, Trash2, Eye, Package, Check, Calendar as CalendarIcon, Info, Percent, DollarSign, ListFilter, Target, Zap, Loader2 } from 'lucide-react';
 import { MultiSelect } from '../ui/multi-select';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import Image from 'next/image';
 import { Badge } from '../ui/badge';
@@ -35,52 +36,8 @@ import { cn } from '@/lib/utils';
 import { format, addDays } from 'date-fns';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Slider } from '../ui/slider';
-
-const ancillaryProducts = [
-  { id: 'ANC-001', name: '1st Checked Bag (23kg)', price: 35 },
-  { id: 'ANC-007', name: '2nd Checked Bag (23kg)', price: 50 },
-  { id: 'ANC-002', name: 'Extra Legroom Seat', price: 50 },
-  { id: 'ANC-003', name: 'In-flight Wi-Fi', price: 8 },
-  { id: 'ANC-006', name: 'Lounge Access', price: 45 },
-  { id: 'ANC-010', name: 'Premium Meal', price: 25 },
-  { id: 'ANC-FT-01', name: 'Fast Track Security', price: 15 },
-  { id: 'ANC-MA-01', name: 'Meet & Assist VIP', price: 120 },
-  { id: 'ANC-CH-01', name: 'Chauffeur Transfer', price: 85 },
-];
-
-const fareBrandOptions = [
-  { value: 'Economy Flex', label: 'Economy Flex' },
-  { value: 'Economy Saver', label: 'Economy Saver' },
-  { value: 'Business Flex', label: 'Business Flex' },
-  { value: 'Business Saver', label: 'Business Saver' },
-];
-
-const channelOptions = [
-  { value: 'Direct', label: 'Web/Mobile' },
-  { value: 'CUSS', label: 'SITA CUSS Kiosk' },
-  { value: 'CUTE', label: 'Agent Desktop' },
-  { value: 'TMC', label: 'TMC Portal' },
-];
-
-const marketOptions = [
-  { value: 'US', label: 'United States' },
-  { value: 'EU', label: 'Europe' },
-  { value: 'APAC', label: 'Asia-Pacific' },
-  { value: 'ME', label: 'Middle East' },
-];
-
-const cohortOptions = [
-  { value: 'LHR_BIZ_WAIT', label: 'LHR High-Wait Business' },
-  { value: 'JFK_PREM_LSR', label: 'JFK Premium Leisure' },
-  { value: 'SIN_TRANSIT_LOUNGE', label: 'SIN Transit Loungers' },
-  { value: 'Family_Leisure', label: 'Family Leisure' },
-];
-
-const promoOptions = [
-  { value: 'WINTER10', label: 'WINTER10 (10% Off)' },
-  { value: 'BIZ_UP', label: 'BIZ_UP (Business Upgrade)' },
-  { value: 'LOYAL_50', label: 'LOYAL_50 ($50 Credit)' },
-];
+import { useFirestore, useCollection } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 const bundleSchema = z.object({
   id: z.string().optional(),
@@ -114,6 +71,20 @@ const bundleSchema = z.object({
 
 export type Bundle = z.infer<typeof bundleSchema>;
 
+const channelOptions = [
+  { value: 'Direct', label: 'Web/Mobile' },
+  { value: 'CUSS', label: 'SITA CUSS Kiosk' },
+  { value: 'CUTE', label: 'Agent Desktop' },
+  { value: 'TMC', label: 'TMC Portal' },
+];
+
+const marketOptions = [
+  { value: 'US', label: 'United States' },
+  { value: 'EU', label: 'Europe' },
+  { value: 'APAC', label: 'Asia-Pacific' },
+  { value: 'ME', label: 'Middle East' },
+];
+
 interface BundleFormProps {
   bundle: any | null;
   onSubmit: (data: Bundle) => void;
@@ -137,6 +108,16 @@ const parseScope = (scope: any) => {
 
 export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
   const [showPreview, setShowPreview] = useState(false);
+  const firestore = useFirestore();
+
+  // Dependency Collections from Product Catalogue & Retailing Config
+  const { data: airlineAncillaries, loading: loadingAir } = useCollection(firestore ? collection(firestore, 'airlineAncillaries') : undefined);
+  const { data: airportServices, loading: loadingAirport } = useCollection(firestore ? collection(firestore, 'airportServices') : undefined);
+  const { data: fareProducts, loading: loadingFares } = useCollection(firestore ? collection(firestore, 'fareProducts') : undefined);
+  const { data: cohorts, loading: loadingCohorts } = useCollection(firestore ? collection(firestore, 'cohorts') : undefined);
+  const { data: promotions, loading: loadingPromos } = useCollection(firestore ? collection(firestore, 'promotions') : undefined);
+
+  const isLoadingDependencies = loadingAir || loadingAirport || loadingFares || loadingCohorts || loadingPromos;
 
   const form = useForm<Bundle>({
     resolver: zodResolver(bundleSchema),
@@ -155,8 +136,8 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
       discount: bundle.discount || 0,
       priorityLevel: bundle.priorityLevel || 50,
       constraints: bundle.constraints || { minPassengers: 1, maxPassengers: undefined, minCartValue: undefined },
-      associatedPromotions: Array.isArray(bundle.associatedPromotions) ? bundle.associatedPromotions : (bundle.promotions ? [bundle.promotions] : []),
-      imageHint: bundle.imageHint || '',
+      associatedPromotions: Array.isArray(bundle.associatedPromotions) ? bundle.associatedPromotions : [],
+      imageHint: bundle.imageHint || 'airport luxury',
     } : {
       name: '',
       description: '',
@@ -170,7 +151,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
       associatedPromotions: [],
       pricingStrategy: 'Percent Discount',
       discount: 10,
-      imageHint: 'airport lounge',
+      imageHint: 'airport luxury',
     },
   });
 
@@ -180,10 +161,19 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
   const pricingStrategy = form.watch('pricingStrategy');
   const discountValue = form.watch('discount') || 0;
 
-  const totalComponentValue = selectedComponents.reduce((total, current) => {
-    const product = ancillaryProducts.find(p => p.id === current.value);
-    return total + (product ? product.price : 0);
-  }, 0);
+  // Combine and stabilize products for selection
+  const allAvailableProducts = useMemo(() => {
+    const air = (airlineAncillaries || []).map(p => ({ id: p.id, name: p.name, price: p.defaultPrice || 0, type: 'Airline' }));
+    const port = (airportServices || []).map(p => ({ id: p.id, name: p.name, price: p.price || 0, type: 'Airport' }));
+    return [...air, ...port];
+  }, [airlineAncillaries, airportServices]);
+
+  const totalComponentValue = useMemo(() => {
+    return selectedComponents.reduce((total, current) => {
+      const product = allAvailableProducts.find(p => p.id === current.value);
+      return total + (product ? product.price : 0);
+    }, 0);
+  }, [selectedComponents, allAvailableProducts]);
 
   let finalPrice = 0;
   if (pricingStrategy === 'Absolute Price') {
@@ -192,6 +182,15 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
     finalPrice = Math.max(0, totalComponentValue - discountValue);
   } else if (pricingStrategy === 'Percent Discount') {
     finalPrice = totalComponentValue * (1 - discountValue / 100);
+  }
+
+  if (isLoadingDependencies) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <Loader2 className="h-10 w-10 animate-spin text-primary opacity-50" />
+        <p className="text-sm text-muted-foreground animate-pulse">Syncing dependencies from Product Catalogue...</p>
+      </div>
+    );
   }
 
   return (
@@ -305,8 +304,14 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
               </div>
               <FormField control={form.control} name="scope.cohorts" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Ecosystem Cohorts</FormLabel>
-                  <MultiSelect options={cohortOptions} selected={field.value} onChange={field.onChange} placeholder="Select segments..." />
+                  <FormLabel>Retailing Cohorts</FormLabel>
+                  <MultiSelect 
+                    options={(cohorts || []).map(c => ({ value: c.cohortId, label: c.name }))} 
+                    selected={field.value} 
+                    onChange={field.onChange} 
+                    placeholder="Select segments..." 
+                  />
+                  <FormDescription className="text-[10px]">Cohorts defined in Ecosystem Onboarding.</FormDescription>
                 </FormItem>
               )} />
               <div className="grid grid-cols-2 gap-4">
@@ -326,7 +331,13 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
               <FormField control={form.control} name="scope.brand" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Eligible Fare Brands</FormLabel>
-                  <MultiSelect options={fareBrandOptions} selected={field.value} onChange={field.onChange} placeholder="All brands" />
+                  <MultiSelect 
+                    options={(fareProducts || []).map(f => ({ value: f.name, label: f.name }))} 
+                    selected={field.value} 
+                    onChange={field.onChange} 
+                    placeholder="All brands" 
+                  />
+                  <FormDescription className="text-[10px]">Branded Fares from Product Catalogue.</FormDescription>
                 </FormItem>
               )} />
             </section>
@@ -340,15 +351,26 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                 Components & Constraints
               </div>
               <div className="space-y-2">
-                <FormLabel>Included Services</FormLabel>
+                <FormLabel>Catalogue Services</FormLabel>
                 {fields.map((field, index) => (
                   <div key={field.id} className="flex items-center gap-2">
                     <FormField control={form.control} name={`components.${index}.value`} render={({ field }) => (
                       <FormItem className="flex-1">
                         <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
-                          <FormControl><SelectTrigger><SelectValue placeholder="Select Service" /></SelectTrigger></FormControl>
+                          <FormControl><SelectTrigger><SelectValue placeholder="Select from Catalogue" /></SelectTrigger></FormControl>
                           <SelectContent>
-                            {ancillaryProducts.map(p => <SelectItem key={p.id} value={p.id}>{p.name} (${p.price})</SelectItem>)}
+                            <SelectGroup>
+                              <SelectLabel>Airline Ancillaries</SelectLabel>
+                              {allAvailableProducts.filter(p => p.type === 'Airline').map(p => (
+                                <SelectItem key={p.id} value={p.id!}>{p.name} (${p.price})</SelectItem>
+                              ))}
+                            </SelectGroup>
+                            <SelectGroup>
+                              <SelectLabel>Airport Services</SelectLabel>
+                              {allAvailableProducts.filter(p => p.type === 'Airport').map(p => (
+                                <SelectItem key={p.id} value={p.id!}>{p.name} (${p.price})</SelectItem>
+                              ))}
+                            </SelectGroup>
                           </SelectContent>
                         </Select>
                       </FormItem>
@@ -361,6 +383,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                 <Button type="button" variant="outline" size="sm" onClick={() => append({ value: "" })}>
                   <PlusCircle className="mr-2 h-4 w-4" /> Add Component
                 </Button>
+                <FormDescription className="text-[10px]">Only products configured in the Product Catalogue appear here.</FormDescription>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -440,7 +463,12 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
               <FormField control={form.control} name="associatedPromotions" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Stackable Promotions</FormLabel>
-                  <MultiSelect options={promoOptions} selected={field.value} onChange={field.onChange} placeholder="Link campaign codes..." />
+                  <MultiSelect 
+                    options={(promotions || []).map(p => ({ value: p.prefix, label: `${p.prefix} (${p.name})` }))} 
+                    selected={field.value} 
+                    onChange={field.onChange} 
+                    placeholder="Link campaign codes..." 
+                  />
                 </FormItem>
               )} />
             </section>
@@ -457,10 +485,10 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
             <div className="max-w-md mx-auto">
               <Card className="overflow-hidden border-0 shadow-2xl transition-transform hover:scale-[1.02]">
                 <div className="relative h-48 bg-primary">
-                  <Image src={`https://picsum.photos/seed/${form.getValues('name') || 'bundle'}/600/400`} alt="Bundle Preview" fill className="object-cover opacity-80" data-ai-hint="luxury airport" />
+                  <Image src={`https://picsum.photos/seed/${form.getValues('name') || 'bundle'}/600/400`} alt="Bundle Preview" fill className="object-cover opacity-80" data-ai-hint="airport luxury" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
                   <div className="absolute bottom-5 left-5 right-5 text-white">
-                    <Badge variant="secondary" className="mb-2 bg-primary text-white border-0 shadow-lg">EXCUSIVE OFFER</Badge>
+                    <Badge variant="secondary" className="mb-2 bg-primary text-white border-0 shadow-lg">EXCLUSIVE OFFER</Badge>
                     <h3 className="text-2xl font-black leading-none tracking-tight">{form.getValues('name') || 'Your Bundle Name'}</h3>
                   </div>
                 </div>
@@ -470,7 +498,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                     {(form.getValues('components') || []).filter(c => c.value).map(c => (
                       <div key={c.value} className="flex items-center gap-3 text-xs font-semibold p-2 bg-secondary/50 rounded-lg">
                         <div className="p-1 rounded-full bg-green-500 text-white"><Check className="h-3 w-3" /></div>
-                        {ancillaryProducts.find(p => p.id === c.value)?.name}
+                        {allAvailableProducts.find(p => p.id === c.value)?.name}
                       </div>
                     ))}
                   </div>
@@ -495,7 +523,9 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
           </Button>
           <div className="flex gap-4">
             <Button type="button" variant="outline" onClick={onCancel}>Discard</Button>
-            <Button type="submit" className="px-10 font-bold">{bundle ? 'Update Ecosystem Bundle' : 'Create Targeted Bundle'}</Button>
+            <Button type="submit" className="px-10 font-bold" disabled={isLoadingDependencies}>
+              {bundle ? 'Update Ecosystem Bundle' : 'Create Targeted Bundle'}
+            </Button>
           </div>
         </div>
       </form>
