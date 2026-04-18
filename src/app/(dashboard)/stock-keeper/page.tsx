@@ -146,7 +146,7 @@ export default function StockKeeperDashboardPage() {
         </div>
       </div>
 
-      {/* --- CRITICAL ALERTS --- */}
+      {/* --- CRITICAL ALERTS Center --- */}
       {criticalAlerts.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {criticalAlerts.slice(0, 3).map(alert => (
@@ -310,19 +310,21 @@ export default function StockKeeperDashboardPage() {
       </div>
 
        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0">
+          <DialogHeader className="p-6 pb-2">
             <DialogTitle className="flex items-center gap-2">
                 <Package className="h-5 w-5 text-primary" />
                 {editingItem ? 'Adjust Logistics Unit' : 'Register New Logistics Unit'}
             </DialogTitle>
             <DialogDescription>Define commercial logistics for physical goods, digital vouchers, or service capacity.</DialogDescription>
           </DialogHeader>
-          <StockItemForm
-            item={editingItem}
-            onSubmit={handleFormSubmit}
-            onCancel={() => setIsDialogOpen(false)}
-          />
+          <div className="flex-1 overflow-y-auto p-6 pt-2">
+            <StockItemForm
+              item={editingItem}
+              onSubmit={handleFormSubmit}
+              onCancel={() => setIsDialogOpen(false)}
+            />
+          </div>
         </DialogContent>
       </Dialog>
       
