@@ -33,21 +33,21 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, PlusCircle, Loader2, Bot, User, Search, Package, Ticket, MapPin, Target } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2, Bot, User, Search, Package, Target, Calendar as CalendarIcon, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { BundleForm, type Bundle } from '@/components/forms/bundle-form';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, addDoc, doc, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, setDoc, serverTimestamp, deleteDoc, Timestamp } from 'firebase/firestore';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { format } from 'date-fns';
 
-const mockOffers: (Bundle & { usage: number })[] = [
-    { id: 'BUN-001', name: 'Executive Gateway', category: 'Normal', description: 'Priority Fast Track, Premium Lounge Access, and Unlimited Wi-Fi.', status: 'Published', scope: { brand: 'Business, Premium', route: 'LHR, JFK, SIN', channel: 'Direct, CUSS', cohorts: 'LHR_BIZ_WAIT' }, components: { other: 'Fast Track, Lounge, Wi-Fi' }, pricingStrategy: 'Absolute Price', discount: 85, itemCount: 3, source: 'Manual', priority: 'Manual Override', usage: 1240 },
-    { id: 'BUN-002', name: 'Arrivals Comfort', category: 'Normal', description: 'Meet & Assist VIP greeting and luxury chauffeur transfer.', status: 'Published', scope: { channel: 'Web, Mobile', market: 'EU, US', cohorts: 'JFK_PREM_LSR' }, components: { other: 'Meet & Assist, Chauffeur' }, pricingStrategy: 'Percent Discount', discount: 15, itemCount: 2, source: 'Manual', priority: 'Manual Override', usage: 520 },
-    { id: 'BUN-003', name: 'Quick Turnaround', category: 'Promotional', description: 'Fast track security and priority boarding for tight connections.', status: 'Draft', scope: { cohorts: 'SIN_TRANSIT_LOUNGE' }, components: { other: 'Fast Track, Priority Boarding' }, pricingStrategy: 'Fixed Discount', discount: 10, itemCount: 2, source: 'AI', priority: 'AI Override', usage: 0 },
-    { id: 'BUN-004', name: 'Family Holiday Pack', category: 'Promotional', description: 'Lounge access for 4, 2 extra bags, and kid meals.', status: 'Published', scope: { cohorts: 'Family_Leisure' }, components: { other: 'Lounge, Baggage, Meal' }, pricingStrategy: 'Absolute Price', discount: 120, itemCount: 4, source: 'Manual', priority: 'Manual Override', usage: 890 },
+const mockOffers: any[] = [
+    { id: 'BUN-001', name: 'Executive Gateway', category: 'Normal', description: 'Priority Fast Track, Premium Lounge Access, and Unlimited Wi-Fi.', status: 'Published', priorityLevel: 80, validity: { from: new Date(), to: addDays(new Date(), 60) }, scope: { brand: 'Business, Premium', route: 'LHR, JFK, SIN', channel: 'Direct, CUSS', cohorts: 'LHR_BIZ_WAIT' }, components: { other: 'Fast Track, Lounge, Wi-Fi' }, pricingStrategy: 'Absolute Price', discount: 85, itemCount: 3, source: 'Manual', usage: 1240 },
+    { id: 'BUN-002', name: 'Arrivals Comfort', category: 'Normal', description: 'Meet & Assist VIP greeting and luxury chauffeur transfer.', status: 'Published', priorityLevel: 40, validity: { from: new Date(), to: addDays(new Date(), 90) }, scope: { channel: 'Web, Mobile', market: 'EU, US', cohorts: 'JFK_PREM_LSR' }, components: { other: 'Meet & Assist, Chauffeur' }, pricingStrategy: 'Percent Discount', discount: 15, itemCount: 2, source: 'Manual', usage: 520 },
+    { id: 'BUN-003', name: 'Quick Turnaround', category: 'Promotional', description: 'Fast track security and priority boarding for tight connections.', status: 'Draft', priorityLevel: 95, validity: { from: new Date(), to: addDays(new Date(), 15) }, scope: { cohorts: 'SIN_TRANSIT_LOUNGE' }, components: { other: 'Fast Track, Priority Boarding' }, pricingStrategy: 'Fixed Discount', discount: 10, itemCount: 2, source: 'AI', usage: 0 },
 ];
 
 
@@ -58,15 +58,12 @@ export default function BundlesPage() {
   const [filters, setFilters] = useState({ name: '', category: 'all', status: 'all', source: 'all' });
   
   const displayOffers = useMemo(() => {
-    let sourceData: (Bundle & { usage?: number })[];
+    let sourceData: any[];
     
     if (!firestore || bundlesCollection === null) {
       sourceData = mockOffers;
     } else {
-      sourceData = bundlesCollection.length > 0 ? (bundlesCollection as any[]).map(offer => ({
-        ...offer,
-        usage: offer.usage ?? Math.floor(Math.random() * 2000),
-      })) : mockOffers;
+      sourceData = bundlesCollection.length > 0 ? bundlesCollection : mockOffers;
     }
     
     return sourceData.filter(offer => {
@@ -79,10 +76,10 @@ export default function BundlesPage() {
   }, [bundlesCollection, firestore, filters]);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingBundle, setEditingBundle] = useState<Bundle | null>(null);
+  const [editingBundle, setEditingBundle] = useState<any | null>(null);
   const { toast } = useToast();
 
-  const handleOpenDialog = (bundle: Bundle | null = null) => {
+  const handleOpenDialog = (bundle: any | null = null) => {
     setEditingBundle(bundle);
     setIsDialogOpen(true);
   };
@@ -95,12 +92,20 @@ export default function BundlesPage() {
   const handleFormSubmit = async (data: Bundle) => {
     if (!firestore) return;
     try {
+      const bundleData = {
+        ...data,
+        validity: {
+          from: Timestamp.fromDate(data.validity.from),
+          to: Timestamp.fromDate(data.validity.to),
+        }
+      };
+
       if (editingBundle?.id) {
         const bundleRef = doc(firestore, 'bundles', editingBundle.id);
-        await setDoc(bundleRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
+        await setDoc(bundleRef, { ...bundleData, updatedAt: serverTimestamp() }, { merge: true });
         toast({ title: 'Bundle Updated', description: `Offer "${data.name}" updated successfully.` });
       } else {
-        await addDoc(collection(firestore, 'bundles'), { ...data, createdAt: serverTimestamp(), source: 'Manual' });
+        await addDoc(collection(firestore, 'bundles'), { ...bundleData, createdAt: serverTimestamp(), source: 'Manual' });
         toast({ title: 'Bundle Created', description: `New bundle "${data.name}" added to studio.` });
       }
     } catch (e: any) {
@@ -123,13 +128,20 @@ export default function BundlesPage() {
     setFilters(prev => ({ ...prev, [key]: value }));
   }
 
-  const getStatusBadgeVariant = (status: Bundle['status']) => {
+  const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'Published': return 'default';
       case 'Draft': return 'secondary';
       case 'Archived': return 'outline';
+      default: return 'outline';
     }
   };
+
+  const formatBundleDate = (date: any) => {
+    if (!date) return 'N/A';
+    const d = date instanceof Timestamp ? date.toDate() : new Date(date);
+    return format(d, 'dd MMM yy');
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -199,9 +211,9 @@ export default function BundlesPage() {
                   <TableHead>Bundle Details</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Validity</TableHead>
                   <TableHead>Targeting (Cohorts)</TableHead>
                   <TableHead>Pricing</TableHead>
-                  <TableHead>Usage</TableHead>
                   <TableHead>Source</TableHead>
                   <TableHead><span className="sr-only">Actions</span></TableHead>
                 </TableRow>
@@ -215,7 +227,10 @@ export default function BundlesPage() {
                             <Package className="h-4 w-4 text-primary" />
                          </div>
                          <div>
-                            <div>{bundle.name}</div>
+                            <div className="flex items-center gap-2">
+                                <span>{bundle.name}</span>
+                                {bundle.priorityLevel > 80 && <Zap className="h-3 w-3 text-amber-500 fill-amber-500" />}
+                            </div>
                             <div className="text-[10px] text-muted-foreground font-mono">{bundle.id}</div>
                          </div>
                       </div>
@@ -229,14 +244,24 @@ export default function BundlesPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
+                        <div className="flex flex-col gap-0.5 text-[10px] text-muted-foreground font-mono">
+                            <div className="flex items-center gap-1">
+                                <CalendarIcon className="h-2.5 w-2.5" />
+                                {formatBundleDate(bundle.validity?.from)}
+                            </div>
+                            <div className="pl-3.5">
+                                to {formatBundleDate(bundle.validity?.to)}
+                            </div>
+                        </div>
+                    </TableCell>
+                    <TableCell>
                         <div className="flex flex-col gap-1">
                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                 <Target className="h-3 w-3" />
-                                <span className="truncate max-w-[150px]">{bundle.scope?.cohorts || 'All Passengers'}</span>
+                                <span className="truncate max-w-[120px]">{bundle.scope?.cohorts || bundle.scope?.cohorts?.join(', ') || 'All Passengers'}</span>
                              </div>
-                             <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                                <MapPin className="h-2 w-2" />
-                                <span className="truncate max-w-[150px]">{bundle.scope?.market || 'Global'}</span>
+                             <div className="text-[10px] text-muted-foreground pl-4">
+                                {bundle.scope?.channel || bundle.scope?.channel?.join(', ') || 'All Channels'}
                              </div>
                         </div>
                     </TableCell>
@@ -245,7 +270,6 @@ export default function BundlesPage() {
                             {bundle.pricingStrategy === 'Absolute Price' ? `$${bundle.discount}` : (bundle.pricingStrategy === 'Percent Discount' ? `${bundle.discount}% Off` : `-$${bundle.discount}`)}
                         </Badge>
                     </TableCell>
-                    <TableCell className="text-xs">{bundle.usage?.toLocaleString() || '0'}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2 text-[10px] font-medium text-muted-foreground">
                         {bundle.source === 'AI' ? <Bot className="h-3 w-3" /> : <User className="h-3 w-3" />}
@@ -261,10 +285,10 @@ export default function BundlesPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => handleOpenDialog(bundle)}>Edit Config</DropdownMenuItem>
-                          <DropdownMenuItem>Simulate Audience</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleOpenDialog(bundle)}>Edit Detailed Config</DropdownMenuItem>
+                          <DropdownMenuItem>View Conversion Trends</DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive" onClick={() => bundle.id && handleDelete(bundle.id)}>Archive</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => bundle.id && handleDelete(bundle.id)}>Archive Bundle</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -278,11 +302,11 @@ export default function BundlesPage() {
       </Card>
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-5xl">
           <DialogHeader>
             <DialogTitle>{editingBundle ? 'Edit Ecosystem Bundle' : 'Create Targeted Bundle'}</DialogTitle>
             <DialogDescription>
-              Orchestrate multiple products into a single offer based on deep ecosystem targeting.
+              Orchestrate multiple products into a single offer based on deep ecosystem targeting and advanced business logic.
             </DialogDescription>
           </DialogHeader>
           <BundleForm
