@@ -41,7 +41,8 @@ import {
   Target,
   Megaphone,
   KeyRound,
-  LayoutList,
+  Boxes,
+  ClipboardList,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -72,16 +73,6 @@ const menuItems: MenuItem[] = [
     ],
   },
   {
-    href: '/ecosystem',
-    label: 'Ecosystem Onboarding',
-    icon: Building2,
-    subItems: [
-      { href: '/onboarding/airports', label: 'Manage Airports', icon: MapPin },
-      { href: '/onboarding/airlines', label: 'Manage Airlines', icon: Plane },
-      { href: '/onboarding/partners', label: 'Manage Vendors', icon: Store },
-    ],
-  },
-  {
     href: '/catalog',
     label: 'Product Catalogue',
     icon: Database,
@@ -90,7 +81,25 @@ const menuItems: MenuItem[] = [
       { href: '/catalog', label: 'Branded Fares', icon: Layers },
       { href: '/pricing/ancillary', label: 'Airline Ancillaries', icon: Plane },
       { href: '/ancillary-products', label: 'Airport Services', icon: Store },
-      { href: '/stock-keeper', label: 'Inventory / Stock', icon: Package },
+    ],
+  },
+  {
+    href: '/inventory-mgmt',
+    label: 'Inventory & Stock',
+    icon: Boxes,
+    subItems: [
+      { href: '/inventory', label: 'Flight Inventory', icon: Plane },
+      { href: '/stock-keeper', label: 'Stock Keeper', icon: ClipboardList },
+    ],
+  },
+  {
+    href: '/ecosystem',
+    label: 'Ecosystem Onboarding',
+    icon: Building2,
+    subItems: [
+      { href: '/onboarding/airports', label: 'Manage Airports', icon: MapPin },
+      { href: '/onboarding/airlines', label: 'Manage Airlines', icon: Plane },
+      { href: '/onboarding/partners', label: 'Manage Vendors', icon: Store },
     ],
   },
   {

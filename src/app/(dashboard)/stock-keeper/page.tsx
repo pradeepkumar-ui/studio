@@ -33,7 +33,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, PlusCircle, History, Upload, RefreshCw } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, History, Upload, RefreshCw, Archive } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
@@ -47,11 +47,6 @@ const initialStockItems: StockItem[] = [
   { sku: 'VOUCH_WIFI_24H', category: 'Vouchers', supplier: 'Internal', available: 980, reserved: 15, threshold: 200, status: 'In Stock' },
   { sku: 'LOUNGE_LHR_01', category: 'Lounge Access', supplier: 'Global Lounges', available: 18, reserved: 2, threshold: 20, status: 'Low Stock' },
   { sku: 'MERCH_MUG_01', category: 'Merchandise', supplier: 'AirShop', available: 0, reserved: 0, threshold: 10, status: 'Out of Stock' },
-  { sku: 'BAG_23KG_01', category: 'Baggage', supplier: 'Internal', available: 9999, reserved: 250, threshold: 0, status: 'In Stock' },
-  { sku: 'SEAT_XL_01', category: 'Seats', supplier: 'Internal', available: 80, reserved: 12, threshold: 10, status: 'In Stock' },
-  { sku: 'MEAL_KSML_01', category: 'Meals', supplier: 'KosherCaterers', available: 3, reserved: 1, threshold: 5, status: 'Low Stock' },
-  { sku: 'VOUCH_DRINK_01', category: 'Vouchers', supplier: 'Internal', available: 500, reserved: 30, threshold: 100, status: 'In Stock' },
-  { sku: 'MERCH_MODEL_A380', category: 'Merchandise', supplier: 'AirShop', available: 25, reserved: 2, threshold: 10, status: 'In Stock' },
 ];
 
 const mockHistory = [
@@ -101,14 +96,14 @@ export default function StockKeeperPage() {
   const handleFormSubmit = (data: StockItem) => {
     if (editingItem) {
         setStockItems(stockItems.map(item => item.sku === data.sku ? data : item));
-        toast({ title: 'Stock Item Updated', description: `SKU "${data.sku}" has been updated.`});
+        toast({ title: 'Inventory Synchronized', description: `SKU "${data.sku}" updated successfully.`});
     } else {
         if (stockItems.some(item => item.sku === data.sku)) {
-            toast({ variant: 'destructive', title: 'Error', description: 'An item with this SKU already exists.'});
+            toast({ variant: 'destructive', title: 'Error', description: 'This SKU already exists in the registry.'});
             return;
         }
         setStockItems([data, ...stockItems]);
-        toast({ title: 'Stock Item Created', description: `New SKU "${data.sku}" has been added.`});
+        toast({ title: 'New SKU Registered', description: `SKU "${data.sku}" is now live for retailing.`});
     }
     handleDialogClose();
   }
@@ -126,47 +121,34 @@ export default function StockKeeperPage() {
   });
   
   const kpiData = [
-    { title: 'Active SKUs', value: stockItems.length, filter: 'all' as StockFilter },
-    { title: 'Low Stock Items', value: stockItems.filter(i => getStatus(i) === 'Low Stock').length, filter: 'Low Stock' as StockFilter },
-    { title: 'Out of Stock', value: stockItems.filter(i => getStatus(i) === 'Out of Stock').length, filter: 'Out of Stock' as StockFilter },
-    { title: 'Pending Restock', value: stockItems.filter(i => getStatus(i) === 'Low Stock' || getStatus(i) === 'Out of Stock').length, filter: 'pending_restock' as StockFilter },
+    { title: 'Retailable SKUs', value: stockItems.length, filter: 'all' as StockFilter },
+    { title: 'Critical Low Stock', value: stockItems.filter(i => getStatus(i) === 'Low Stock').length, filter: 'Low Stock' as StockFilter },
+    { title: 'Stock-Out Incidents', value: stockItems.filter(i => getStatus(i) === 'Out of Stock').length, filter: 'Out of Stock' as StockFilter },
   ];
-
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight">
-            Stock Keeper
-          </h1>
-          <p className="text-muted-foreground">
-            Manage inventory for ancillary products, vouchers, and other offerable items.
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight text-primary">Ecosystem Stock Keeper</h1>
+          <p className="text-muted-foreground">Manage logistics for physical merchandise, digital vouchers, and service capacity.</p>
         </div>
         <div className="flex gap-2">
-            <Button variant="outline">
-                <Upload className="mr-2 h-4 w-4" /> Upload Stock
-            </Button>
-            <Button variant="outline">
-                <RefreshCw className="mr-2 h-4 w-4" /> Sync with API
-            </Button>
-            <Button onClick={() => handleOpenDialog()}>
-                <PlusCircle className="mr-2"/> Add Stock Item
-            </Button>
+            <Button variant="outline"><RefreshCw className="mr-2 h-4 w-4" /> API Sync</Button>
+            <Button onClick={() => handleOpenDialog()}><PlusCircle className="mr-2"/> Register New SKU</Button>
         </div>
       </div>
 
-       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {kpiData.map((kpi) => (
-          <Card key={kpi.title} className={cn("cursor-pointer hover:bg-muted/50", activeFilter === kpi.filter && "ring-2 ring-primary")} onClick={() => setActiveFilter(kpi.filter)}>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">
+          <Card key={kpi.title} className={cn("cursor-pointer hover:bg-muted/50 transition-all", activeFilter === kpi.filter && "ring-2 ring-primary")} onClick={() => setActiveFilter(kpi.filter)}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-tight">
                 {kpi.title}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{kpi.value}</div>
+              <div className="text-3xl font-black">{kpi.value}</div>
             </CardContent>
           </Card>
         ))}
@@ -176,24 +158,18 @@ export default function StockKeeperPage() {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>Stock Levels</CardTitle>
-              <CardDescription>
-                Live view of all tracked stock-keeping units (SKUs). 
-                {activeFilter !== 'all' && <span className="font-semibold"> Filtering by: {activeFilter}</span>}
-              </CardDescription>
+              <CardTitle>Inventory Matrix</CardTitle>
+              <CardDescription>Live balance of available vs. reserved units across the ecosystem.</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>SKU</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Available / Reserved</TableHead>
-                    <TableHead>Threshold</TableHead>
+                    <TableHead>SKU & Category</TableHead>
+                    <TableHead>Fulfillment Logic</TableHead>
+                    <TableHead>Avail / Reserved</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>
-                      <span className="sr-only">Actions</span>
-                    </TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -201,41 +177,39 @@ export default function StockKeeperPage() {
                     const status = getStatus(item);
                     return (
                         <TableRow key={item.sku}>
-                            <TableCell className="font-medium font-mono">{item.sku}</TableCell>
-                            <TableCell>{item.category}</TableCell>
                             <TableCell>
-                                <div className="flex items-center gap-2">
-                                    <Progress value={(item.available / (item.available + item.reserved + item.threshold)) * 100} className="h-2 w-24"/>
-                                    <span>{item.available} / <span className="text-muted-foreground">{item.reserved}</span></span>
+                                <div className="font-bold text-sm">{item.sku}</div>
+                                <div className="text-[10px] text-muted-foreground uppercase">{item.category}</div>
+                            </TableCell>
+                            <TableCell>
+                                <div className="text-xs">{item.supplier}</div>
+                                <div className="text-[10px] text-muted-foreground italic">Restock: {item.threshold} units</div>
+                            </TableCell>
+                            <TableCell>
+                                <div className="space-y-1">
+                                    <div className="flex justify-between text-[10px] font-mono">
+                                        <span>{item.available}</span>
+                                        <span className="text-muted-foreground">/ {item.reserved}</span>
+                                    </div>
+                                    <Progress value={(item.available / (item.available + item.reserved + 1)) * 100} className="h-1"/>
                                 </div>
                             </TableCell>
-                            <TableCell>{item.threshold}</TableCell>
                             <TableCell>
-                                <Badge variant={getStatusBadgeVariant(status)}>
-                                {status}
-                                </Badge>
+                                <Badge variant={getStatusBadgeVariant(status)} className="text-[10px]">{status}</Badge>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="text-right">
                                 <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button
-                                    aria-haspopup="true"
-                                    size="icon"
-                                    variant="ghost"
-                                    >
-                                    <MoreHorizontal className="h-4 w-4" />
-                                    <span className="sr-only">Toggle menu</span>
+                                    <Button aria-haspopup="true" size="icon" variant="ghost">
+                                        <MoreHorizontal className="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                    <DropdownMenuItem onClick={() => handleOpenDialog({...item, status})}>Edit</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleViewHistory(item)}>View History</DropdownMenuItem>
-                                    <DropdownMenuItem>Adjust Stock</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleOpenDialog({...item, status})}><RefreshCw className="mr-2 h-4 w-4"/>Adjust Balance</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleViewHistory(item)}><History className="mr-2 h-4 w-4"/>View Audit Log</DropdownMenuItem>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem className="text-destructive">
-                                    Archive SKU
-                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="text-destructive"><Archive className="mr-2 h-4 w-4"/>Decommission SKU</DropdownMenuItem>
                                 </DropdownMenuContent>
                                 </DropdownMenu>
                             </TableCell>
@@ -251,12 +225,10 @@ export default function StockKeeperPage() {
       </div>
 
        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{editingItem ? 'Edit Stock Item' : 'Create New Stock Item'}</DialogTitle>
-            <DialogDescription>
-              {editingItem ? `Editing SKU "${editingItem.sku}".` : 'Define a new stock-keeping unit.'}
-            </DialogDescription>
+            <DialogTitle>{editingItem ? 'Adjust Inventory Balance' : 'Register New Logistics Unit'}</DialogTitle>
+            <DialogDescription>Define commercial logistics for physical goods or digital service capacity.</DialogDescription>
           </DialogHeader>
           <StockItemForm
             item={editingItem}
@@ -267,19 +239,17 @@ export default function StockKeeperPage() {
       </Dialog>
       
       <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Stock History for "{selectedItemForHistory?.sku}"</DialogTitle>
-            <DialogDescription>
-                A log of all stock changes for this item.
-            </DialogDescription>
+            <DialogTitle>Audit Trail: {selectedItemForHistory?.sku}</DialogTitle>
+            <DialogDescription>Full chronological history of stock movements and retailing reservations.</DialogDescription>
           </DialogHeader>
            <Table>
                 <TableHeader>
                     <TableRow>
                         <TableHead>Type</TableHead>
-                        <TableHead>Change</TableHead>
-                        <TableHead>Reason</TableHead>
+                        <TableHead>Delta</TableHead>
+                        <TableHead>Reference / Reason</TableHead>
                         <TableHead>Timestamp</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -287,11 +257,14 @@ export default function StockKeeperPage() {
                     {mockHistory.map((entry, index) => (
                         <TableRow key={index}>
                             <TableCell>
-                                <Badge variant={entry.type === 'Credit' ? 'default' : 'secondary'}>{entry.type}</Badge>
+                                <Badge variant={entry.type === 'Credit' ? 'default' : 'secondary'} className="text-[10px]">{entry.type}</Badge>
                             </TableCell>
-                            <TableCell className="font-mono">{entry.change}</TableCell>
-                            <TableCell>{entry.reason}</TableCell>
-                            <TableCell>{entry.timestamp}</TableCell>
+                            <TableCell className="font-mono font-bold">{entry.change}</TableCell>
+                            <TableCell>
+                                <div className="text-xs">{entry.reason}</div>
+                                <div className="text-[10px] text-muted-foreground">Actor: {entry.user}</div>
+                            </TableCell>
+                            <TableCell className="text-xs font-mono">{entry.timestamp}</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
