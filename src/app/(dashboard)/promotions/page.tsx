@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import {
   Table,
@@ -51,10 +50,13 @@ const mockPromotions: Promotion[] = [
 
 export default function PromotionsPage() {
   const firestore = useFirestore();
-  const { data: promotionsCollection, loading, error } = useCollection(firestore ? collection(firestore, 'promotions') : undefined);
+  const promoQuery = useMemo(() => firestore ? collection(firestore, 'promotions') : undefined, [firestore]);
+  const { data: promotionsCollection, loading, error } = useCollection(promoQuery);
   
   const promotions = promotionsCollection ? promotionsCollection as Promotion[] : [];
-  const displayPromotions = promotions.length > 0 ? promotions : mockPromotions;
+  const displayPromotions = useMemo(() => {
+    return promotions.length > 0 ? promotions : mockPromotions;
+  }, [promotions]);
 
   const [isPromoDialogOpen, setIsPromoDialogOpen] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null);
@@ -66,7 +68,7 @@ export default function PromotionsPage() {
   };
   
   const handlePromoDialogClose = () => {
-    setIsPromoDialogOpen(false);
+    setIsDialogOpen(false);
     setEditingPromotion(null);
   };
 

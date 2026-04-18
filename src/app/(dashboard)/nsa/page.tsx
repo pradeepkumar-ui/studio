@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -53,7 +53,8 @@ const mockAgreements: NegotiatedSpaceAgreement[] = [
 
 export default function NsaPage() {
   const firestore = useFirestore();
-  const { data: agreementsCollection, loading, error } = useCollection(firestore ? collection(firestore, 'negotiatedSpaceAgreements') : undefined);
+  const nsaQuery = useMemo(() => firestore ? collection(firestore, 'negotiatedSpaceAgreements') : undefined, [firestore]);
+  const { data: agreementsCollection, loading, error } = useCollection(nsaQuery);
   
   const agreements = agreementsCollection ? agreementsCollection as NegotiatedSpaceAgreement[] : [];
   const displayAgreements = agreements.length > 0 ? agreements : mockAgreements;
@@ -120,12 +121,14 @@ export default function NsaPage() {
     setFilters(prev => ({...prev, [name]: value}));
   }
   
-  const filteredAgreements = displayAgreements.filter(agreement => {
-    return (
-        agreement.code.toLowerCase().includes(filters.code.toLowerCase()) &&
-        agreement.partnerId.toLowerCase().includes(filters.partnerId.toLowerCase())
-    );
-  });
+  const filteredAgreements = useMemo(() => {
+    return displayAgreements.filter(agreement => {
+      return (
+          agreement.code.toLowerCase().includes(filters.code.toLowerCase()) &&
+          agreement.partnerId.toLowerCase().includes(filters.partnerId.toLowerCase())
+      );
+    });
+  }, [displayAgreements, filters]);
   
    const getStatusBadgeVariant = (status: NegotiatedSpaceAgreement['status']) => {
     switch (status) {

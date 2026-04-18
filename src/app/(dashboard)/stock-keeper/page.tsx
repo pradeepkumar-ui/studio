@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -79,7 +78,8 @@ const getStatus = (item: any): StockItem['status'] => {
 
 export default function StockKeeperDashboardPage() {
   const firestore = useFirestore();
-  const { data: stockCollection, loading } = useCollection(firestore ? collection(firestore, 'stock') : undefined);
+  const stockQuery = useMemo(() => firestore ? collection(firestore, 'stock') : undefined, [firestore]);
+  const { data: stockCollection, loading } = useCollection(stockQuery);
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);

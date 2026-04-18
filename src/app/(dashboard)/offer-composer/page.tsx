@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -9,7 +8,6 @@ import {
   Search, 
   Loader2, 
   Workflow, 
-  QrCode, 
   MonitorDot, 
   Store, 
   Check, 
@@ -18,22 +16,16 @@ import {
   ShieldCheck,
   Coffee,
   Zap,
-  UserCheck,
   Activity,
   History,
   Clock,
-  Users,
-  ShieldAlert,
   CreditCard,
-  CheckCircle2,
-  ExternalLink,
-  ChevronRight,
   Sparkles
 } from 'lucide-react';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -42,7 +34,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
@@ -76,8 +67,11 @@ export default function AirportOfferComposerPage() {
   const firestore = useFirestore();
 
   // Pull active bundles and ancillaries from live ecosystem
-  const { data: liveBundles } = useCollection(firestore ? collection(firestore, 'bundles') : undefined);
-  const { data: liveAncillaries } = useCollection(firestore ? collection(firestore, 'airlineAncillaries') : undefined);
+  const bundlesQuery = useMemo(() => firestore ? collection(firestore, 'bundles') : undefined, [firestore]);
+  const ancillariesQuery = useMemo(() => firestore ? collection(firestore, 'airlineAncillaries') : undefined, [firestore]);
+  
+  const { data: liveBundles } = useCollection(bundlesQuery);
+  const { data: liveAncillaries } = useCollection(ancillariesQuery);
 
   const form = useForm<z.infer<typeof contextSchema>>({
     resolver: zodResolver(contextSchema),
@@ -96,6 +90,7 @@ export default function AirportOfferComposerPage() {
   const handleSimulate = async () => {
     setIsLoading(true);
     setStep('discovery');
+    setDiscoveryLog([]);
     
     // Simulate real-time logic processing
     const logs = [
@@ -215,7 +210,6 @@ export default function AirportOfferComposerPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* --- LEFT: CONTEXT INPUT --- */}
         <div className="lg:col-span-4 space-y-6">
           <Card className="border-primary/20 shadow-md">
             <CardHeader className="bg-primary/5 pb-4">
@@ -295,7 +289,6 @@ export default function AirportOfferComposerPage() {
           )}
         </div>
 
-        {/* --- RIGHT: SIMULATOR OUTPUT --- */}
         <div className="lg:col-span-8">
             {step === 'discovery' && (
                 <div className="flex flex-col items-center justify-center min-h-[500px] border-2 border-dashed rounded-xl bg-muted/20">
@@ -482,7 +475,7 @@ export default function AirportOfferComposerPage() {
 
                     <div className="flex gap-4">
                         <Button variant="outline" asChild>
-                            <a href="/orders"><History className="mr-2 h-4 w-4" /> View Order Dashboard</a>
+                            <Link href="/orders"><History className="mr-2 h-4 w-4" /> View Order Dashboard</Link>
                         </Button>
                         <Button onClick={() => setStep('discovery')} className="font-bold">
                             New Simulation <ArrowRight className="ml-2 h-4 w-4" />

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -54,7 +54,8 @@ const mockContracts: CorporateContract[] = [
 
 export default function CorporatePage() {
   const firestore = useFirestore();
-  const { data: contractsCollection, loading, error } = useCollection(firestore ? collection(firestore, 'corporateContracts') : undefined);
+  const contractsQuery = useMemo(() => firestore ? collection(firestore, 'corporateContracts') : undefined, [firestore]);
+  const { data: contractsCollection, loading, error } = useCollection(contractsQuery);
 
   const contracts = contractsCollection ? contractsCollection as CorporateContract[] : [];
   const displayContracts = contracts.length > 0 ? contracts : mockContracts;

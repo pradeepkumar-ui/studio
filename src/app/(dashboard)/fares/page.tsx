@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -56,7 +56,8 @@ const mockFares: Fare[] = [
 
 export default function FaresPage() {
   const firestore = useFirestore();
-  const { data: faresCollection, loading, error } = useCollection(firestore ? collection(firestore, 'fares') : undefined);
+  const faresQuery = useMemo(() => firestore ? collection(firestore, 'fares') : undefined, [firestore]);
+  const { data: faresCollection, loading, error } = useCollection(faresQuery);
   
   const fares = faresCollection ? faresCollection as Fare[] : [];
   const displayFares = (fares && fares.length > 0) ? fares : mockFares;

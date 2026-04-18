@@ -110,11 +110,17 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
   const [showPreview, setShowPreview] = useState(false);
   const firestore = useFirestore();
 
-  const { data: airlineAncillaries, loading: loadingAir } = useCollection(firestore ? collection(firestore, 'airlineAncillaries') : undefined);
-  const { data: airportServices, loading: loadingAirport } = useCollection(firestore ? collection(firestore, 'airportServices') : undefined);
-  const { data: fareProducts, loading: loadingFares } = useCollection(firestore ? collection(firestore, 'fareProducts') : undefined);
-  const { data: cohorts, loading: loadingCohorts } = useCollection(firestore ? collection(firestore, 'cohorts') : undefined);
-  const { data: promotions, loading: loadingPromos } = useCollection(firestore ? collection(firestore, 'promotions') : undefined);
+  const ancillariesQuery = useMemo(() => firestore ? collection(firestore, 'airlineAncillaries') : undefined, [firestore]);
+  const airportQuery = useMemo(() => firestore ? collection(firestore, 'airportServices') : undefined, [firestore]);
+  const faresQuery = useMemo(() => firestore ? collection(firestore, 'fareProducts') : undefined, [firestore]);
+  const cohortsQuery = useMemo(() => firestore ? collection(firestore, 'cohorts') : undefined, [firestore]);
+  const promotionsQuery = useMemo(() => firestore ? collection(firestore, 'promotions') : undefined, [firestore]);
+
+  const { data: airlineAncillaries, loading: loadingAir } = useCollection(ancillariesQuery);
+  const { data: airportServices, loading: loadingAirport } = useCollection(airportQuery);
+  const { data: fareProducts, loading: loadingFares } = useCollection(faresQuery);
+  const { data: cohorts, loading: loadingCohorts } = useCollection(cohortsQuery);
+  const { data: promotions, loading: loadingPromos } = useCollection(promotionsQuery);
 
   const form = useForm<Bundle>({
     resolver: zodResolver(bundleSchema),

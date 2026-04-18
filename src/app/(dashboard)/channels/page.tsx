@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -53,7 +53,8 @@ const mockChannels: Channel[] = [
 
 export default function ChannelsPage() {
   const firestore = useFirestore();
-  const { data: channelsCollection, loading, error } = useCollection(firestore ? collection(firestore, 'channels') : undefined);
+  const channelsQuery = useMemo(() => firestore ? collection(firestore, 'channels') : undefined, [firestore]);
+  const { data: channelsCollection, loading, error } = useCollection(channelsQuery);
   
   const channels = channelsCollection ? channelsCollection as Channel[] : [];
   const displayChannels = channels.length > 0 ? channels : mockChannels;

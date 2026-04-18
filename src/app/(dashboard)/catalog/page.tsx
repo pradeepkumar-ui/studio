@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -47,7 +47,8 @@ const mockFareProducts: FareProduct[] = [
 
 export default function CatalogPage() {
   const firestore = useFirestore();
-  const { data: fareProductsCollection, loading } = useCollection(firestore ? collection(firestore, 'fareProducts') : undefined);
+  const productsQuery = useMemo(() => firestore ? collection(firestore, 'fareProducts') : undefined, [firestore]);
+  const { data: fareProductsCollection, loading } = useCollection(productsQuery);
   
   const fareProducts = fareProductsCollection ? fareProductsCollection as FareProduct[] : [];
   const displayFareProducts = (fareProducts && fareProducts.length > 0) ? fareProducts : mockFareProducts;

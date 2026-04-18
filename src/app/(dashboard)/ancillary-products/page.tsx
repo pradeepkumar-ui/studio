@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -48,7 +47,8 @@ const initialAirportServices: AirportService[] = [
 
 export default function AirportServiceCataloguePage() {
   const firestore = useFirestore();
-  const { data: servicesCollection, loading } = useCollection(firestore ? collection(firestore, 'airportServices') : undefined);
+  const servicesQuery = useMemo(() => firestore ? collection(firestore, 'airportServices') : undefined, [firestore]);
+  const { data: servicesCollection, loading } = useCollection(servicesQuery);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState<AirportService | null>(null);
   const { toast } = useToast();
@@ -91,7 +91,7 @@ export default function AirportServiceCataloguePage() {
 
   return (
     <div className="flex flex-col gap-6">
-       <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold tracking-tight">Airport Service Catalogue</h1>
           <p className="text-muted-foreground">Manage ecosystem-wide non-air services, lounges, and physical inventory.</p>

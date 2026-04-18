@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -11,7 +10,8 @@ import {
   ReceiptText,
   AlertCircle,
   FileBox,
-  MonitorDot
+  MonitorDot,
+  Loader2
 } from 'lucide-react';
 import {
   ColumnDef,
@@ -171,7 +171,8 @@ export const columns: ColumnDef<Order>[] = [
 
 export default function OrdersPage() {
   const firestore = useFirestore();
-  const { data: liveOrders, loading } = useCollection(firestore ? collection(firestore, 'orders') : undefined);
+  const ordersQuery = React.useMemo(() => firestore ? collection(firestore, 'orders') : undefined, [firestore]);
+  const { data: liveOrders, loading } = useCollection(ordersQuery);
   
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
