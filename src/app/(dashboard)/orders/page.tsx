@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -11,7 +12,17 @@ import {
   AlertCircle,
   FileBox,
   MonitorDot,
-  Loader2
+  Loader2,
+  Globe,
+  Smartphone,
+  QrCode,
+  CreditCard,
+  Plane,
+  ArrowRightLeft,
+  CheckCircle2,
+  History,
+  Settings,
+  Truck
 } from 'lucide-react';
 import {
   ColumnDef,
@@ -61,24 +72,29 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 
 export type Order = {
   id: string;
   customer: string;
   email: string;
-  status: 'Pending' | 'Fulfilled' | 'Canceled';
+  status: 'Pending' | 'Fulfilled' | 'Canceled' | 'Partially Fulfilled';
   date: string;
   amount: number;
-  originDestination: string;
-  channel: string;
+  currency: string;
+  source: 'Web' | 'Mobile' | 'CUSS' | 'CUTE' | 'CUPPS';
+  airportCode?: string;
+  pnr?: string;
   paymentStatus: 'Paid' | 'Pending' | 'Failed' | 'Refunded';
   isSimulated?: boolean;
+  route?: string;
 };
 
 const mockRecentOrders: Order[] = [
-    { id: 'ORD-073', customer: 'John Smith', email: 'contact@voyagetravel.com', status: 'Fulfilled', date: '2024-07-15', amount: 12500, originDestination: 'JFK-LHR', channel: 'TMC', paymentStatus: 'Paid' },
-    { id: 'ORD-072', customer: 'Globex Corporation', email: 'accounts@globex.corp', status: 'Fulfilled', date: '2024-07-15', amount: 8400, originDestination: 'SFO-HND', channel: 'Corporate', paymentStatus: 'Paid' },
+    { id: 'ORD-073', customer: 'John Smith', email: 'john.smith@example.com', status: 'Fulfilled', date: '2024-10-28', amount: 12500, source: 'Web', pnr: 'L8Y2N3', route: 'JFK-LHR', paymentStatus: 'Paid' },
+    { id: 'ORD-072', customer: 'Sarah Chen', email: 's.chen@corporate.com', status: 'Fulfilled', date: '2024-10-28', amount: 8400, source: 'CUTE', pnr: 'P4X5T6', route: 'SFO-HND', paymentStatus: 'Paid' },
+    { id: 'ORD-071', customer: 'Michael Smith', email: 'm.smith@voyage.co', status: 'Pending', date: '2024-10-27', amount: 450, source: 'CUSS', pnr: 'GRP923', route: 'LHR-FCO', paymentStatus: 'Pending' },
+    { id: 'ORD-070', customer: 'Alice Johnson', email: 'alice.j@web.com', status: 'Canceled', date: '2024-10-27', amount: 120, source: 'Mobile', pnr: 'M9Z1M2', route: 'SIN-HKG', paymentStatus: 'Refunded' },
 ];
 
 const getStatusBadgeVariant = (status: Order['status']) => {
@@ -86,6 +102,7 @@ const getStatusBadgeVariant = (status: Order['status']) => {
     case 'Fulfilled': return 'default';
     case 'Pending': return 'secondary';
     case 'Canceled': return 'destructive';
+    case 'Partially Fulfilled': return 'outline';
     default: return 'outline';
   }
 };
@@ -100,52 +117,97 @@ const getPaymentStatusBadgeVariant = (status: Order['paymentStatus']) => {
   }
 };
 
+const getSourceIcon = (source: Order['source']) => {
+    switch (source) {
+        case 'Web': return <Globe className="h-3 w-3" />;
+        case 'Mobile': return <Smartphone className="h-3 w-3" />;
+        case 'CUSS':
+        case 'CUTE':
+        case 'CUPPS': return <QrCode className="h-3 w-3" />;
+        default: return <MonitorDot className="h-3 w-3" />;
+    }
+}
+
 export const columns: ColumnDef<Order>[] = [
   {
     accessorKey: 'id',
     header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          Order ID <ChevronsUpDown className="ml-2 h-4 w-4" />
+        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')} className="-ml-4">
+          Order Identity <ChevronsUpDown className="ml-2 h-4 w-4" />
         </Button>
     ),
     cell: ({ row }) => (
-      <div className="flex items-center gap-2 pl-4">
-        <Link href={`/orders/${row.original.id}`} className="font-medium text-primary hover:underline">
-            {row.original.id.slice(0, 8)}
-        </Link>
-        {row.original.isSimulated && <Badge variant="outline" className="text-[9px] h-4 bg-indigo-50 border-indigo-200 text-indigo-700">SIMULATED</Badge>}
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-2">
+            <Link href={`/orders/${row.original.id}`} className="font-bold text-primary hover:underline font-mono text-xs">
+                {row.original.id.slice(0, 8)}
+            </Link>
+            {row.original.isSimulated && <Badge variant="outline" className="text-[8px] h-3.5 bg-indigo-50 border-indigo-200 text-indigo-700 font-black">SIMULATED</Badge>}
+        </div>
+        <div className="text-[10px] text-muted-foreground flex items-center gap-1.5 font-mono">
+            <Plane className="h-2.5 w-2.5" /> {row.original.pnr || 'NO_PNR'}
+        </div>
       </div>
     ),
   },
   {
     accessorKey: 'customer',
-    header: 'Customer',
-    cell: ({ row }) => <div>{row.getValue('customer')}</div>,
-  },
-  {
-    accessorKey: 'status',
-    header: 'Order Status',
+    header: 'Customer Context',
     cell: ({ row }) => (
-      <Badge variant={getStatusBadgeVariant(row.getValue('status'))}>
-        {row.getValue('status')}
-      </Badge>
+        <div className="flex flex-col">
+            <span className="font-medium text-sm">{row.original.customer}</span>
+            <span className="text-[10px] text-muted-foreground">{row.original.email}</span>
+        </div>
     ),
   },
   {
-    accessorKey: 'paymentStatus',
-    header: 'Payment Status',
+    accessorKey: 'route',
+    header: 'Itinerary',
     cell: ({ row }) => (
-      <Badge variant={getPaymentStatusBadgeVariant(row.getValue('paymentStatus'))}>
-        {row.getValue('paymentStatus')}
-      </Badge>
+        <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="font-mono text-[10px]">{row.original.route || 'N/A'}</Badge>
+            {row.original.airportCode && <span className="text-[10px] text-muted-foreground">@{row.original.airportCode}</span>}
+        </div>
+    ),
+  },
+  {
+    accessorKey: 'source',
+    header: 'Touchpoint',
+    cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-muted rounded-md text-muted-foreground">
+                {getSourceIcon(row.original.source)}
+            </div>
+            <span className="text-xs font-semibold">{row.original.source}</span>
+        </div>
+    ),
+  },
+  {
+    accessorKey: 'status',
+    header: 'Lifecycle',
+    cell: ({ row }) => (
+      <div className="flex flex-col gap-1">
+        <Badge variant={getStatusBadgeVariant(row.getValue('status'))} className="w-fit text-[10px] uppercase">
+            {row.getValue('status')}
+        </Badge>
+        <div className="text-[9px] text-muted-foreground flex items-center gap-1">
+             {row.original.status === 'Fulfilled' ? <CheckCircle2 className="h-2.5 w-2.5 text-emerald-500" /> : <History className="h-2.5 w-2.5" />}
+             {row.original.date}
+        </div>
+      </div>
     ),
   },
   {
     accessorKey: 'amount',
-    header: () => <div className="text-right">Amount</div>,
+    header: () => <div className="text-right">Settlement</div>,
     cell: ({ row }) => (
-      <div className="text-right font-medium font-mono">
-        {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(parseFloat(row.getValue('amount')))}
+      <div className="flex flex-col items-end gap-1">
+        <div className="text-right font-black font-mono text-primary">
+            {new Intl.NumberFormat('en-US', { style: 'currency', currency: row.original.currency || 'USD' }).format(row.original.amount)}
+        </div>
+        <Badge variant={getPaymentStatusBadgeVariant(row.original.paymentStatus)} className="text-[8px] h-3.5">
+            {row.original.paymentStatus}
+        </Badge>
       </div>
     ),
   },
@@ -158,11 +220,20 @@ export const columns: ColumnDef<Order>[] = [
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem asChild><Link href={`/orders/${row.original.id}`}>View Details</Link></DropdownMenuItem>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>Order Operations</DropdownMenuLabel>
+            <DropdownMenuItem asChild>
+                <Link href={`/orders/${row.original.id}`}><ReceiptText className="mr-2 h-4 w-4" /> View Full Details</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+                <Link href={`/orders/${row.original.id}/lineage`}><ArrowRightLeft className="mr-2 h-4 w-4" /> Trace Lineage</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+                <Link href={`/orders/servicing?orderId=${row.original.id}`}><Settings className="mr-2 h-4 w-4" /> Modify / Reshop</Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(row.original.id)}>Copy ID</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(row.original.id)}>Copy Order ID</DropdownMenuItem>
+            {row.original.pnr && <DropdownMenuItem onClick={() => navigator.clipboard.writeText(row.original.pnr!)}>Copy PNR</DropdownMenuItem>}
           </DropdownMenuContent>
         </DropdownMenu>
     ),
@@ -171,16 +242,22 @@ export const columns: ColumnDef<Order>[] = [
 
 export default function OrdersPage() {
   const firestore = useFirestore();
-  const ordersQuery = React.useMemo(() => firestore ? collection(firestore, 'orders') : undefined, [firestore]);
+  
+  const ordersQuery = React.useMemo(() => {
+    if (!firestore) return undefined;
+    return query(collection(firestore, 'orders'), orderBy('createdAt', 'desc'));
+  }, [firestore]);
+
   const { data: liveOrders, loading } = useCollection(ordersQuery);
   
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
 
   const data = React.useMemo(() => {
-    if (!liveOrders || liveOrders.length === 0) return mockRecentOrders;
-    return (liveOrders as Order[]).sort((a, b) => b.id.localeCompare(a.id));
-  }, [liveOrders]);
+    const orders = liveOrders ? (liveOrders as Order[]) : [];
+    if (orders.length === 0 && !loading) return mockRecentOrders;
+    return orders;
+  }, [liveOrders, loading]);
 
   const table = useReactTable({
     data,
@@ -197,63 +274,71 @@ export default function OrdersPage() {
   return (
     <div className="flex flex-col gap-6">
        <div className="flex items-center justify-between">
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1">
           <h1 className="text-3xl font-bold tracking-tight text-primary">Order Management Console</h1>
-          <p className="text-muted-foreground">Monitor and manage the fulfillment lifecycle of all retailing transactions.</p>
+          <p className="text-muted-foreground font-medium">Unified oversight for ecosystem conversions, touchpoint attribution, and PSS fulfillment.</p>
+        </div>
+        <div className="flex gap-2">
+            <Button variant="outline" asChild><Link href="/orders/delivery"><Truck className="mr-2 h-4 w-4" /> Fulfillment Queue</Link></Button>
+            <Button asChild><Link href="/offer-composer"><MonitorDot className="mr-2 h-4 w-4" /> Simulated Touchpoint</Link></Button>
         </div>
       </div>
       
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <Card className="p-6">
+        <Card className="p-6 shadow-sm">
             <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-muted-foreground uppercase">Total Orders</p>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Global Volume</p>
                 <ShoppingCart className="h-4 w-4 text-primary" />
             </div>
-            <p className="text-2xl font-black mt-2">{data.length}</p>
+            <p className="text-3xl font-black mt-2">{data.length}</p>
+            <div className="mt-2 text-[10px] text-muted-foreground">Orders successfully converted.</div>
         </Card>
-        <Card className="p-6">
+        <Card className="p-6 shadow-sm">
             <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-muted-foreground uppercase">Fulfilled</p>
-                <ReceiptText className="h-4 w-4 text-emerald-500" />
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Fulfilled</p>
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
             </div>
-            <p className="text-2xl font-black mt-2">{data.filter(o => o.status === 'Fulfilled').length}</p>
+            <p className="text-3xl font-black mt-2">{data.filter(o => o.status === 'Fulfilled').length}</p>
+            <div className="mt-2 text-[10px] text-emerald-600 font-bold">Synchronized with Host PSS.</div>
         </Card>
-        <Card className="p-6 border-indigo-100 bg-indigo-50/10">
+        <Card className="p-6 border-indigo-100 bg-indigo-50/20">
             <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-indigo-700 uppercase">Simulated</p>
+                <p className="text-[10px] font-black text-indigo-700 uppercase tracking-widest">Simulated</p>
                 <MonitorDot className="h-4 w-4 text-indigo-600" />
             </div>
-            <p className="text-2xl font-black mt-2">{data.filter(o => o.isSimulated).length}</p>
+            <p className="text-3xl font-black mt-2 text-indigo-700">{data.filter(o => o.isSimulated).length}</p>
+            <div className="mt-2 text-[10px] text-indigo-600 font-bold">Generated via Offer Composer.</div>
         </Card>
-        <Card className="p-6">
+        <Card className="p-6 shadow-sm">
             <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-muted-foreground uppercase">Total Value</p>
-                <FileBox className="h-4 w-4 text-blue-500" />
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Pipeline Value</p>
+                <CreditCard className="h-4 w-4 text-blue-500" />
             </div>
-            <p className="text-2xl font-black mt-2">${data.reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()}</p>
+            <p className="text-3xl font-black mt-2">${data.reduce((acc, curr) => acc + (curr.amount || 0), 0).toLocaleString()}</p>
+            <div className="mt-2 text-[10px] text-muted-foreground font-medium">Gross retailing revenue.</div>
         </Card>
       </div>
 
-      <Card>
-         <CardHeader>
-          <CardTitle>Retailing Order Queue</CardTitle>
-          <CardDescription>Live log of conversions across all touchpoints (Web, Mobile, SITA CUSS).</CardDescription>
+      <Card className="shadow-md">
+         <CardHeader className="bg-muted/10">
+          <CardTitle>Retailing Conversion Queue</CardTitle>
+          <CardDescription>Live real-time trace of ecosystem transactions across Web, Mobile, and SITA touchpoints.</CardDescription>
         </CardHeader>
-        <CardContent className="pt-0">
+        <CardContent className="pt-4">
           <div className="flex items-center gap-4 py-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by ID, Customer..."
+                placeholder="Search by ID, Customer, or PNR..."
                 value={(table.getColumn('customer')?.getFilterValue() as string) ?? ''}
                 onChange={(event) => table.getColumn('customer')?.setFilterValue(event.target.value)}
                 className="max-w-sm pl-9"
               />
             </div>
             <Select onValueChange={(v) => table.getColumn('status')?.setFilterValue(v === 'all' ? null : v)}>
-              <SelectTrigger className="w-[180px]"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectTrigger className="w-[180px]"><SelectValue placeholder="Lifecycle State" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="all">All States</SelectItem>
                 <SelectItem value="Fulfilled">Fulfilled</SelectItem>
                 <SelectItem value="Pending">Pending</SelectItem>
                 <SelectItem value="Canceled">Canceled</SelectItem>
@@ -262,11 +347,11 @@ export default function OrdersPage() {
           </div>
           <div className="rounded-md border">
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-muted/30">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
-                        <TableHead key={header.id}>
+                        <TableHead key={header.id} className="text-[10px] uppercase font-black tracking-widest">
                           {flexRender(header.column.columnDef.header, header.getContext())}
                         </TableHead>
                     ))}
@@ -275,24 +360,29 @@ export default function OrdersPage() {
               </TableHeader>
               <TableBody>
                 {loading ? (
-                    <TableRow><TableCell colSpan={columns.length} className="h-24 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" /></TableCell></TableRow>
+                    <TableRow><TableCell colSpan={columns.length} className="h-64 text-center"><div className="flex flex-col items-center gap-2"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /><p className="text-xs text-muted-foreground">Streaming conversion data...</p></div></TableCell></TableRow>
                 ) : table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id}>
+                    <TableRow key={row.id} className="group cursor-default">
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                       ))}
                     </TableRow>
                   ))
                 ) : (
-                  <TableRow><TableCell colSpan={columns.length} className="h-24 text-center">No orders found.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={columns.length} className="h-64 text-center py-20"><div className="flex flex-col items-center gap-2 opacity-50"><AlertCircle className="h-12 w-12" /><p className="font-bold">No orders matched the current filters.</p></div></TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
           </div>
-          <div className="flex items-center justify-end space-x-2 py-4">
-              <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>Previous</Button>
-              <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>Next</Button>
+          <div className="flex items-center justify-between py-4">
+              <div className="text-xs text-muted-foreground font-medium">
+                  Showing {table.getRowModel().rows.length} of {data.length} transactions.
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>Previous</Button>
+                <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>Next</Button>
+              </div>
           </div>
         </CardContent>
       </Card>
