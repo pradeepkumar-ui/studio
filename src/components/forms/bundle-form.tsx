@@ -304,7 +304,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                   <FormLabel>Retailing Cohorts</FormLabel>
                   <MultiSelect 
                     options={(cohorts || []).map(c => ({ value: c.cohortId, label: c.name }))} 
-                    selected={field.value} 
+                    selected={field.value || []} 
                     onChange={field.onChange} 
                     placeholder="Select segments..." 
                   />
@@ -315,13 +315,13 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                  <FormField control={form.control} name="scope.channel" render={({ field }) => (
                   <FormItem>
                     <FormLabel>SITA Channels</FormLabel>
-                    <MultiSelect options={channelOptions} selected={field.value} onChange={field.onChange} placeholder="All channels" />
+                    <MultiSelect options={channelOptions} selected={field.value || []} onChange={field.onChange} placeholder="All channels" />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="scope.market" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Markets</FormLabel>
-                    <MultiSelect options={marketOptions} selected={field.value} onChange={field.onChange} placeholder="All markets" />
+                    <MultiSelect options={marketOptions} selected={field.value || []} onChange={field.onChange} placeholder="All markets" />
                   </FormItem>
                 )} />
               </div>
@@ -330,7 +330,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                   <FormLabel>Eligible Fare Brands</FormLabel>
                   <MultiSelect 
                     options={(fareProducts || []).map(f => ({ value: f.name, label: f.name }))} 
-                    selected={field.value} 
+                    selected={field.value || []} 
                     onChange={field.onChange} 
                     placeholder="All brands" 
                   />
@@ -347,7 +347,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                 Components & Constraints
               </div>
               <div className="space-y-2">
-                <FormLabel>Select Product(s) (Single Ancillary or Bundle)</FormLabel>
+                <FormLabel>Select Product(s)</FormLabel>
                 {fields.map((field, index) => (
                   <div key={field.id} className="flex items-center gap-2">
                     <FormField control={form.control} name={`components.${index}.value`} render={({ field }) => (
@@ -379,7 +379,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                 <Button type="button" variant="outline" size="sm" onClick={() => append({ value: "" })}>
                   <PlusCircle className="mr-2 h-4 w-4" /> Add Component
                 </Button>
-                <FormDescription className="text-[10px]">To create a single-ancillary offer, just add one component.</FormDescription>
+                <FormDescription className="text-[10px]">Create an individual offer by adding just one component.</FormDescription>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -414,7 +414,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                 <div className="grid grid-cols-2 gap-4">
                    <FormField control={form.control} name="pricingStrategy" render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Offer Pricing Logic</FormLabel>
+                      <FormLabel>Pricing Logic</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent>
@@ -449,7 +449,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                         <Info className="h-5 w-5 text-muted-foreground" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p className="max-w-[200px] text-xs">This price is dynamic and depends on the base prices of individual components at the time of construction.</p>
+                        <p className="max-w-[200px] text-xs">Dynamic price subject to base component rates at time of construction.</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -461,7 +461,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                   <FormLabel>Stackable Promotions</FormLabel>
                   <MultiSelect 
                     options={(promotions || []).map(p => ({ value: p.prefix, label: `${p.prefix} (${p.name})` }))} 
-                    selected={field.value} 
+                    selected={field.value || []} 
                     onChange={field.onChange} 
                     placeholder="Link campaign codes..." 
                   />
@@ -488,7 +488,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                   </div>
                 </div>
                 <CardContent className="pt-6 pb-2">
-                  <p className="text-sm text-muted-foreground mb-6 line-clamp-2">{form.getValues('description') || 'Define the compelling value proposition for your passengers.'}</p>
+                  <p className="text-sm text-muted-foreground mb-6 line-clamp-2">{form.getValues('description') || 'Compelling value proposition for your passengers.'}</p>
                   <div className="grid grid-cols-1 gap-2">
                     {(form.getValues('components') || []).filter(c => c.value).map(c => (
                       <div key={c.value} className="flex items-center gap-3 text-xs font-semibold p-2 bg-secondary/50 rounded-lg">
@@ -513,12 +513,12 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
         <div className="flex justify-between items-center pt-6 sticky bottom-0 bg-background/95 backdrop-blur-sm py-4 border-t z-20">
           <Button type="button" variant="ghost" onClick={() => setShowPreview(!showPreview)}>
             <Eye className="mr-2 h-4 w-4" />
-            {showPreview ? 'Close Preview' : 'Preview Offer'}
+            {showPreview ? 'Close Preview' : 'Preview Touchpoint'}
           </Button>
           <div className="flex gap-4">
             <Button type="button" variant="outline" onClick={onCancel}>Discard</Button>
             <Button type="submit" className="px-10 font-bold" disabled={isLoadingDependencies}>
-              {bundle ? 'Update Retailing Offer' : 'Create Retailing Offer'}
+              {bundle ? 'Update Retailing Item' : 'Publish to Ecosystem'}
             </Button>
           </div>
         </div>

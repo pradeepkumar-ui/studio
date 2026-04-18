@@ -164,8 +164,8 @@ export default function AirportOfferComposerPage() {
       setIsLoading(false);
       setStatus('Retailled');
       toast({
-        title: "Ecosystem Discovery Complete",
-        description: `Found ${mockOffers.length} personalized offers across Airline PSS and Airport vendors.`,
+        title: "Discovery Complete",
+        description: `Found ${mockOffers.length} context-aware offers across Airline PSS and Airport vendors.`,
       });
     }, 2000);
   };
@@ -179,7 +179,7 @@ export default function AirportOfferComposerPage() {
     setStatus('QRGenerated');
     toast({
       title: "Activation QR Ready",
-      description: "Scan this at any CUSS/CUTE terminal to fulfill your service.",
+      description: "Scan at any CUSS/CUTE terminal to fulfill your service.",
     });
   };
 
@@ -209,7 +209,7 @@ export default function AirportOfferComposerPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">Airport Offer Composer</h1>
-        <p className="text-muted-foreground">Simulate SITA CUSS/CUTE integration and discover exhaustive ecosystem services.</p>
+        <p className="text-muted-foreground">Simulate SITA CUSS/CUTE integration and discover contextually relevant ecosystem services.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -217,7 +217,7 @@ export default function AirportOfferComposerPage() {
           <Card>
             <CardHeader>
               <CardTitle>1. Touchpoint Context</CardTitle>
-              <CardDescription>Define where and who is interacting with the platform.</CardDescription>
+              <CardDescription>Define the device and passenger context for discovery.</CardDescription>
             </CardHeader>
             <CardContent>
               <Form {...form}>
@@ -276,7 +276,7 @@ export default function AirportOfferComposerPage() {
                   </div>
                   <Button type="button" onClick={handleDiscover} disabled={isLoading} className="w-full">
                     {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MonitorDot className="mr-2 h-4 w-4" />}
-                    Discover Contextual Offers
+                    Discover Ecosystem Offers
                   </Button>
                 </form>
               </Form>
@@ -286,7 +286,7 @@ export default function AirportOfferComposerPage() {
           {status && status !== 'EcosystemDiscovery' ? (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Store className="h-5 w-5" /> Discovered Ecosystem Services
+                <Store className="h-5 w-5" /> Retailing Results
               </h3>
               <ScrollArea className="h-[600px] pr-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4">
@@ -341,12 +341,12 @@ export default function AirportOfferComposerPage() {
               {isLoading ? (
                 <div className="text-center">
                   <Loader2 className="h-12 w-12 mb-4 animate-spin mx-auto opacity-20" />
-                  <p>Initializing SITA Discovery Broker...</p>
+                  <p>Resolving Intelligence Cohorts...</p>
                 </div>
               ) : (
                 <>
                   <Workflow className="h-12 w-12 mb-4 opacity-20" />
-                  <p>Set touchpoint context and discover retailing ecosystem.</p>
+                  <p>Initialize simulated touchpoint context to discover retailing ecosystem.</p>
                 </>
               )}
             </div>
@@ -358,7 +358,7 @@ export default function AirportOfferComposerPage() {
             <Card>
               <CardHeader className="pb-4">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Workflow className="h-4 w-4" /> Journey Orchestration
+                  <Workflow className="h-4 w-4" /> journey Intelligence
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -414,7 +414,7 @@ export default function AirportOfferComposerPage() {
                   ) : (
                     <div className="text-center px-6">
                       <Smartphone className="h-10 w-10 mx-auto mb-2 text-muted-foreground opacity-50" />
-                      <p className="text-xs text-muted-foreground">Ready to generate SITA activation token.</p>
+                      <p className="text-xs text-muted-foreground">Generating activation token...</p>
                     </div>
                   )}
                 </div>
@@ -437,9 +437,9 @@ export default function AirportOfferComposerPage() {
                     <span className="text-green-600 font-bold">VERIFIED</span>
                   </div>
                   <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-muted-foreground flex items-center gap-1"><UserSquare2 className="h-3 w-3" /> Sync Link</span>
+                    <span className="text-muted-foreground flex items-center gap-1"><UserSquare2 className="h-3 w-3" /> Host Sync</span>
                     <span className={cn("font-bold", status === 'PSSSyncPending' ? "text-amber-600" : "text-muted-foreground")}>
-                      {status === 'PSSSyncPending' ? 'UPDATING HOST' : 'READY'}
+                      {status === 'PSSSyncPending' ? 'UPDATING PNR' : 'READY'}
                     </span>
                   </div>
                 </div>
@@ -450,9 +450,9 @@ export default function AirportOfferComposerPage() {
           {status === 'Retailled' && (
             <Alert className="bg-amber-50 border-amber-200">
               <AlertCircle className="h-4 w-4 text-amber-600" />
-              <AlertTitle className="text-amber-800 text-xs font-bold uppercase tracking-tight">Ecosystem Intelligence</AlertTitle>
+              <AlertTitle className="text-amber-800 text-xs font-bold uppercase tracking-tight">Retailing Insight</AlertTitle>
               <AlertDescription className="text-amber-700 text-[10px]">
-                Targeting active: LHR-T5 connection window (2.5h) identified. Prioritizing Lounge and Fast-Track.
+                Passenger on LHR-T5 connection (2.5h) identified. Wait time > 20m detected. Prioritizing Lounge and Fast-Track.
               </AlertDescription>
             </Alert>
           )}

@@ -93,36 +93,34 @@
                     "fareBrands": { "type": "array", "items": { "type": "string" } },
                     "travelGroup": { "type": "array", "items": { "type": "string" } },
                     "transitStatus": { "type": "string", "enum": ["Any", "Origin", "Transit", "Destination"] },
-                    "connectionWindow": { "type": "object", "properties": { "min": { "type": "number" }, "max": { "type": "number" } } }
+                    "securityWaitTime": { "type": "number" },
+                    "minConnectionTime": { "type": "number" },
+                    "maxConnectionTime": { "type": "number" }
                 }
             }
         }
     },
-    "airlineAncillary": {
-      "title": "Airline Ancillary",
-      "description": "A flight-related upsell service (e.g. Baggage, Wi-Fi).",
+    "bundle": {
+      "title": "Retailing Offer / Bundle",
+      "description": "A single or multi-service retailing item targeted to specific cohorts.",
       "type": "object",
       "properties": {
         "name": { "type": "string" },
-        "category": { "type": "string", "enum": ["Baggage", "Seat", "On-board", "Flexibility"] },
-        "pssCode": { "type": "string" },
-        "defaultPrice": { "type": "number" },
-        "currency": { "type": "string" },
-        "cabinEligibility": { "type": "array", "items": { "type": "string" } }
-      }
-    },
-    "airportService": {
-      "title": "Airport Service",
-      "description": "A non-air ecosystem service provided by airport partners.",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "sku": { "type": "string" },
-        "providerId": { "type": "string" },
-        "airportCode": { "type": "string" },
-        "category": { "type": "string", "enum": ["Lounge", "Parking", "Retail", "Voucher", "Merchandise", "F&B"] },
-        "stockType": { "type": "string", "enum": ["Digital", "Physical"] },
-        "commissionRate": { "type": "number" }
+        "description": { "type": "string" },
+        "category": { "type": "string", "enum": ["Normal", "Disruption", "Promotional"] },
+        "status": { "type": "string", "enum": ["Draft", "Published", "Archived"] },
+        "priorityLevel": { "type": "number" },
+        "pricingStrategy": { "type": "string", "enum": ["Percent Discount", "Fixed Discount", "Absolute Price"] },
+        "discount": { "type": "number" },
+        "scope": {
+          "type": "object",
+          "properties": {
+            "cohorts": { "type": "array", "items": { "type": "string" } },
+            "channel": { "type": "array", "items": { "type": "string" } },
+            "brand": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "components": { "type": "array", "items": { "type": "string" } }
       }
     }
   },
@@ -133,7 +131,6 @@
     "/airlines/{airlineId}": { "schema": { "$ref": "#/entities/airline" }, "description": "Participating airlines." },
     "/orders/{orderId}": { "schema": { "$ref": "#/entities/order" }, "description": "Orders including airport touchpoint metadata." },
     "/cohorts/{cohortId}": { "schema": { "$ref": "#/entities/cohort" }, "description": "Advanced ecosystem targeting cohorts." },
-    "/airlineAncillaries/{ancillaryId}": { "schema": { "$ref": "#/entities/airlineAncillary" }, "description": "Flight-related service portfolio." },
-    "/airportServices/{serviceId}": { "schema": { "$ref": "#/entities/airportService" }, "description": "Non-air airport partner services." }
+    "/bundles/{bundleId}": { "schema": { "$ref": "#/entities/bundle" }, "description": "Retailing offers and bundles." }
   }
 }

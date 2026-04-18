@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -90,33 +91,24 @@ const cohortSchema = z.object({
   description: z.string().min(10, 'A clear description is required.'),
   status: z.enum(['Active', 'Inactive']),
   definition: z.object({
-    // Ecosystem
     channels: z.array(z.string()).default([]),
     airports: z.array(z.string()).default([]),
     terminals: z.string().optional(),
     gates: z.string().optional(),
-    
-    // Airline/Flight
     airlines: z.array(z.string()).default([]),
     routes: z.string().optional(),
     cabinClasses: z.array(z.string()).default([]),
     aircraftTypes: z.array(z.string()).default([]),
     fareBrands: z.array(z.string()).default([]),
     ssrs: z.array(z.string()).default([]),
-    
-    // Journey Status
     transitStatus: z.enum(['Any', 'Origin', 'Transit', 'Destination']).default('Any'),
-    minConnectionTime: z.coerce.number().optional(), // in minutes
-    maxConnectionTime: z.coerce.number().optional(), // in minutes
+    minConnectionTime: z.coerce.number().optional(),
+    maxConnectionTime: z.coerce.number().optional(),
     hoursToDeparture: z.coerce.number().optional(),
-    
-    // Passenger Profile
     location: z.enum(['Anywhere', 'Airport_Departure', 'Airport_Arrival', 'At_Gate', 'In_Lounge']).default('Anywhere'),
     loyaltyTiers: z.array(z.string()).default([]),
     travelGroup: z.array(z.string()).default([]),
-    bookingWindowDays: z.coerce.number().optional(), // Days before departure
-    
-    // Real-time Airport Signals
+    bookingWindowDays: z.coerce.number().optional(),
     securityWaitTime: z.coerce.number().optional(),
   }),
 });
@@ -155,6 +147,14 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
       definition: {
         ...defaultDefinition,
         ...cohort.definition,
+        channels: cohort.definition?.channels || [],
+        airports: cohort.definition?.airports || [],
+        airlines: cohort.definition?.airlines || [],
+        cabinClasses: cohort.definition?.cabinClasses || [],
+        fareBrands: cohort.definition?.fareBrands || [],
+        loyaltyTiers: cohort.definition?.loyaltyTiers || [],
+        travelGroup: cohort.definition?.travelGroup || [],
+        ssrs: cohort.definition?.ssrs || [],
       },
     } : {
       name: '',
@@ -198,23 +198,25 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl><Input placeholder="Describe the segment logic..." {...field} /></FormControl>
+              <FormLabel>Operational Description</FormLabel>
+              <FormControl><Input placeholder="Highlight why this cohort is being targeted..." {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         
         <Separator />
-        <h4 className="text-md font-semibold text-primary">Airport & Ecosystem Context</h4>
+        <h4 className="text-md font-bold text-primary uppercase tracking-tighter">1. Ecosystem & Touchpoint Signals</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
                 control={form.control}
                 name="definition.channels"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>SITA Retailing Channels</FormLabel>
-                    <MultiSelect options={channelOptions} selected={field.value} onChange={field.onChange} placeholder="Select channels..." />
+                    <FormLabel>SITA Channels</FormLabel>
+                    <FormControl>
+                        <MultiSelect options={channelOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select channels..." />
+                    </FormControl>
                 </FormItem>
                 )}
             />
@@ -223,45 +225,27 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
                 name="definition.airports"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Participating Airports</FormLabel>
-                    <MultiSelect options={airportOptions} selected={field.value} onChange={field.onChange} placeholder="Select airports..." />
-                </FormItem>
-                )}
-            />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField
-                control={form.control}
-                name="definition.terminals"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Terminals</FormLabel>
-                    <FormControl><Input placeholder="e.g., T2, T5" {...field} /></FormControl>
-                </FormItem>
-                )}
-            />
-             <FormField
-                control={form.control}
-                name="definition.gates"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Gate Areas</FormLabel>
-                    <FormControl><Input placeholder="e.g., B30-B48" {...field} /></FormControl>
+                    <FormLabel>Airport Nodes</FormLabel>
+                    <FormControl>
+                        <MultiSelect options={airportOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select airports..." />
+                    </FormControl>
                 </FormItem>
                 )}
             />
         </div>
 
         <Separator />
-        <h4 className="text-md font-semibold text-primary">Airline & Flight Context</h4>
+        <h4 className="text-md font-bold text-primary uppercase tracking-tighter">2. Airline Host & Flight Signals</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
                 control={form.control}
                 name="definition.airlines"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Airlines</FormLabel>
-                    <MultiSelect options={airlineOptions} selected={field.value} onChange={field.onChange} placeholder="Select airlines..." />
+                    <FormLabel>Carriers</FormLabel>
+                    <FormControl>
+                        <MultiSelect options={airlineOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select airlines..." />
+                    </FormControl>
                 </FormItem>
                 )}
             />
@@ -271,7 +255,9 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
                 render={({ field }) => (
                 <FormItem>
                     <FormLabel>Cabin Classes</FormLabel>
-                    <MultiSelect options={cabinOptions} selected={field.value} onChange={field.onChange} placeholder="Select cabins..." />
+                    <FormControl>
+                        <MultiSelect options={cabinOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select cabins..." />
+                    </FormControl>
                 </FormItem>
                 )}
             />
@@ -283,8 +269,10 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
                 name="definition.fareBrands"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Fare Brands / Families</FormLabel>
-                    <MultiSelect options={fareBrandOptions} selected={field.value} onChange={field.onChange} placeholder="Select brands..." />
+                    <FormLabel>Fare Brand Inclusion</FormLabel>
+                    <FormControl>
+                        <MultiSelect options={fareBrandOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select brands..." />
+                    </FormControl>
                 </FormItem>
                 )}
             />
@@ -293,29 +281,60 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
                 name="definition.ssrs"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Present SSRs in PNR</FormLabel>
-                    <MultiSelect options={ssrOptions} selected={field.value} onChange={field.onChange} placeholder="Select SSRs..." />
+                    <FormLabel>Passenger SSRs (PNR Sync)</FormLabel>
+                    <FormControl>
+                        <MultiSelect options={ssrOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select SSRs..." />
+                    </FormControl>
                 </FormItem>
                 )}
             />
         </div>
 
         <Separator />
-        <h4 className="text-md font-semibold text-primary">Journey & Timing Signals</h4>
+        <h4 className="text-md font-bold text-primary uppercase tracking-tighter">3. Passenger Behavior & Composition</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+                control={form.control}
+                name="definition.travelGroup"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Travel Group Type</FormLabel>
+                    <FormControl>
+                        <MultiSelect options={travelGroupOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select group types..." />
+                    </FormControl>
+                </FormItem>
+                )}
+            />
+             <FormField
+                control={form.control}
+                name="definition.loyaltyTiers"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Loyalty Tiers</FormLabel>
+                    <FormControl>
+                        <MultiSelect options={loyaltyOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select tiers..." />
+                    </FormControl>
+                </FormItem>
+                )}
+            />
+        </div>
+
+        <Separator />
+        <h4 className="text-md font-bold text-primary uppercase tracking-tighter">4. Real-time Operational Signals</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
                 control={form.control}
                 name="definition.transitStatus"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Passenger Status</FormLabel>
+                    <FormLabel>Journey Status</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                     <SelectContent>
                         <SelectItem value="Any">Any</SelectItem>
-                        <SelectItem value="Origin">Originating</SelectItem>
-                        <SelectItem value="Transit">Transiting</SelectItem>
-                        <SelectItem value="Destination">Arriving (Destination)</SelectItem>
+                        <SelectItem value="Origin">Originating (Checking-in)</SelectItem>
+                        <SelectItem value="Transit">In Transit (Airside)</SelectItem>
+                        <SelectItem value="Destination">Arriving (Baggage Claim)</SelectItem>
                     </SelectContent>
                     </Select>
                 </FormItem>
@@ -323,12 +342,12 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
             />
              <FormField
                 control={form.control}
-                name="definition.hoursToDeparture"
+                name="definition.securityWaitTime"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Hours to Departure</FormLabel>
-                    <FormControl><Input type="number" placeholder="e.g., 4" {...field} /></FormControl>
-                    <FormDescription>Target time-sensitive offers.</FormDescription>
+                    <FormLabel>Security Wait Signal (Mins)</FormLabel>
+                    <FormControl><Input type="number" placeholder="Trigger if > X mins" {...field} /></FormControl>
+                    <FormDescription className="text-[10px]">Use for Fast Track upselling.</FormDescription>
                 </FormItem>
                 )}
             />
@@ -340,7 +359,7 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
                 name="definition.minConnectionTime"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Min Connection Time (Mins)</FormLabel>
+                    <FormLabel>Min Connection (Mins)</FormLabel>
                     <FormControl><Input type="number" {...field} /></FormControl>
                 </FormItem>
                 )}
@@ -350,66 +369,8 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
                 name="definition.maxConnectionTime"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Max Connection Time (Mins)</FormLabel>
+                    <FormLabel>Max Connection (Mins)</FormLabel>
                     <FormControl><Input type="number" {...field} /></FormControl>
-                </FormItem>
-                )}
-            />
-        </div>
-
-        <Separator />
-        <h4 className="text-md font-semibold text-primary">Passenger Behavior & Profiling</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField
-                control={form.control}
-                name="definition.travelGroup"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Travel Group Composition</FormLabel>
-                    <MultiSelect options={travelGroupOptions} selected={field.value} onChange={field.onChange} placeholder="Select group types..." />
-                </FormItem>
-                )}
-            />
-             <FormField
-                control={form.control}
-                name="definition.loyaltyTiers"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Loyalty Tiers</FormLabel>
-                    <MultiSelect options={loyaltyOptions} selected={field.value} onChange={field.onChange} placeholder="Select tiers..." />
-                </FormItem>
-                )}
-            />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField
-                control={form.control}
-                name="definition.location"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Current Location Signal</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                    <SelectContent>
-                        <SelectItem value="Anywhere">Anywhere</SelectItem>
-                        <SelectItem value="Airport_Departure">At Departure Terminal</SelectItem>
-                        <SelectItem value="Airport_Arrival">At Arrival Terminal</SelectItem>
-                        <SelectItem value="At_Gate">In Gate Area</SelectItem>
-                        <SelectItem value="In_Lounge">In Lounge</SelectItem>
-                    </SelectContent>
-                    </Select>
-                </FormItem>
-                )}
-            />
-             <FormField
-                control={form.control}
-                name="definition.securityWaitTime"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Security Wait Time Signal (Mins)</FormLabel>
-                    <FormControl><Input type="number" {...field} /></FormControl>
-                    <FormDescription>Contextual fast-track upsells.</FormDescription>
                 </FormItem>
                 )}
             />
@@ -421,20 +382,20 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
           name="status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Status</FormLabel>
+              <FormLabel>Segment Status</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                 <SelectContent>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
+                  <SelectItem value="Active">Active (Discovery Active)</SelectItem>
+                  <SelectItem value="Inactive">Paused</SelectItem>
                 </SelectContent>
               </Select>
             </FormItem>
           )}
         />
-        <div className="flex justify-end gap-4 pt-4">
+        <div className="flex justify-end gap-4 pt-4 sticky bottom-0 bg-background py-4 border-t z-10">
           <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button type="submit">Save Cohort Definition</Button>
+          <Button type="submit" className="px-8">Save Retailing Segment</Button>
         </div>
       </form>
     </Form>
