@@ -33,94 +33,20 @@
               "price": { "type": "number" }
             }
           }
-        },
-        "auditTrail": { "type": "array", "items": { "type": "object", "properties": { "event": { "type": "string" }, "timestamp": { "type": "string", "format": "date-time" } } } }
+        }
       }
     },
-    "airport": {
-      "title": "Airport",
-      "description": "An airport node in the Offersense ecosystem.",
+    "pricingRule": {
+      "title": "Dynamic Pricing Rule",
+      "description": "A deterministic policy for continuous pricing adjustments and commercial guardrails.",
       "type": "object",
       "properties": {
         "name": { "type": "string" },
-        "iataCode": { "type": "string" },
-        "location": { "type": "string" },
-        "sitaEnabled": { "type": "boolean" },
-        "terminals": { "type": "array", "items": { "type": "string" } },
-        "status": { "type": "string", "enum": ["Active", "Onboarding", "Inactive"] }
-      },
-      "required": ["name", "iataCode", "status"]
-    },
-    "partner": {
-      "title": "Airport Partner",
-      "description": "An airport vendor providing non-air services (e.g., Retail, Parking).",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "airportCode": { "type": "string" },
-        "category": { "type": "string", "enum": ["F&B", "Retail", "Services", "Transport"] },
-        "contactEmail": { "type": "string", "format": "email" },
-        "status": { "type": "string", "enum": ["Active", "Inactive"] }
-      }
-    },
-    "airline": {
-        "title": "Airline Participant",
-        "description": "An airline integrated with Offersense for PSS syncing.",
-        "type": "object",
-        "properties": {
-            "name": { "type": "string" },
-            "icaoCode": { "type": "string" },
-            "pssType": { "type": "string", "enum": ["Amadeus", "Sabre", "Navitaire", "Custom"] },
-            "status": { "type": "string", "enum": ["Active", "Onboarding", "Inactive"] }
-        }
-    },
-    "cohort": {
-        "title": "Customer Cohort",
-        "description": "A dynamic segment of passengers targeted for specific offers based on exhaustive ecosystem context.",
-        "type": "object",
-        "properties": {
-            "name": { "type": "string" },
-            "cohortId": { "type": "string" },
-            "description": { "type": "string" },
-            "status": { "type": "string", "enum": ["Active", "Inactive"] },
-            "definition": {
-                "type": "object",
-                "properties": {
-                    "channels": { "type": "array", "items": { "type": "string" } },
-                    "airports": { "type": "array", "items": { "type": "string" } },
-                    "airlines": { "type": "array", "items": { "type": "string" } },
-                    "cabinClasses": { "type": "array", "items": { "type": "string" } },
-                    "fareBrands": { "type": "array", "items": { "type": "string" } },
-                    "travelGroup": { "type": "array", "items": { "type": "string" } },
-                    "transitStatus": { "type": "string", "enum": ["Any", "Origin", "Transit", "Destination"] },
-                    "securityWaitTime": { "type": "number" },
-                    "minConnectionTime": { "type": "number" },
-                    "maxConnectionTime": { "type": "number" }
-                }
-            }
-        }
-    },
-    "bundle": {
-      "title": "Retailing Offer / Bundle",
-      "description": "A single or multi-service retailing item targeted to specific cohorts.",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "description": { "type": "string" },
-        "category": { "type": "string", "enum": ["Normal", "Disruption", "Promotional"] },
-        "status": { "type": "string", "enum": ["Draft", "Published", "Archived"] },
-        "priorityLevel": { "type": "number" },
-        "pricingStrategy": { "type": "string", "enum": ["Percent Discount", "Fixed Discount", "Absolute Price"] },
-        "discount": { "type": "number" },
-        "scope": {
-          "type": "object",
-          "properties": {
-            "cohorts": { "type": "array", "items": { "type": "string" } },
-            "channel": { "type": "array", "items": { "type": "string" } },
-            "brand": { "type": "array", "items": { "type": "string" } }
-          }
-        },
-        "components": { "type": "array", "items": { "type": "string" } }
+        "trigger": { "type": "object" },
+        "conditions": { "type": "object" },
+        "action": { "type": "object" },
+        "guardrails": { "type": "object" },
+        "status": { "type": "string", "enum": ["Active", "Inactive", "Test"] }
       }
     }
   },
@@ -131,6 +57,7 @@
     "/airlines/{airlineId}": { "schema": { "$ref": "#/entities/airline" }, "description": "Participating airlines." },
     "/orders/{orderId}": { "schema": { "$ref": "#/entities/order" }, "description": "Orders including airport touchpoint metadata." },
     "/cohorts/{cohortId}": { "schema": { "$ref": "#/entities/cohort" }, "description": "Advanced ecosystem targeting cohorts." },
-    "/bundles/{bundleId}": { "schema": { "$ref": "#/entities/bundle" }, "description": "Retailing offers and bundles." }
+    "/bundles/{bundleId}": { "schema": { "$ref": "#/entities/bundle" }, "description": "Retailing offers and bundles." },
+    "/pricingRules/{ruleId}": { "schema": { "$ref": "#/entities/pricingRule" }, "description": "Dynamic pricing and continuous pricing policies." }
   }
 }
