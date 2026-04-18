@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Search, Store, MoreHorizontal, Loader2 } from 'lucide-react';
+import { PlusCircle, Search, Store, MoreHorizontal, Loader2, MapPin } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
@@ -27,17 +27,16 @@ import { PartnerOnboardingForm, type PartnerOnboarding } from '@/components/form
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
-const mockPartners: PartnerOnboarding[] = [
-    { id: '1', name: 'SkyCafe Gourmet', airportCode: 'LHR', category: 'F&B', status: 'Active', contactEmail: 'info@skycafe.co.uk' },
-    { id: '2', name: 'Global Duty Free', airportCode: 'JFK', category: 'Retail', status: 'Active', contactEmail: 'ops@gdf.com' },
-    { id: '3', name: 'Lounge Stars', airportCode: 'SIN', category: 'Services', status: 'Active', contactEmail: 'partner@loungestars.com' },
-    { id: '4', name: 'Elite Transfers', airportCode: 'DXB', category: 'Transport', status: 'Active', contactEmail: 'bookings@elitedxb.com' },
+const mockPartners: any[] = [
+    { id: '1', name: 'SkyCafe Gourmet', airportCode: 'LHR', terminal: 'T5', category: 'F&B', status: 'Active', contactEmail: 'info@skycafe.co.uk', commissionRate: 12 },
+    { id: '2', name: 'Global Duty Free', airportCode: 'JFK', terminal: 'T4', category: 'Retail', status: 'Active', contactEmail: 'ops@gdf.com', commissionRate: 15 },
+    { id: '3', name: 'Lounge Stars', airportCode: 'SIN', terminal: 'T2', category: 'Services', status: 'Active', contactEmail: 'partner@loungestars.com', commissionRate: 10 },
 ];
 
 export default function PartnerOnboardingPage() {
     const firestore = useFirestore();
     const partnersQuery = useMemo(() => firestore ? collection(firestore, 'partners') : undefined, [firestore]);
-    const { data: partnersCollection, loading, error } = useCollection(partnersQuery);
+    const { data: partnersCollection, loading } = useCollection(partnersQuery);
     
     const [searchTerm, setSearchTerm] = useState('');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -45,14 +44,14 @@ export default function PartnerOnboardingPage() {
     const { toast } = useToast();
 
     const displayPartners = useMemo(() => {
-        const sourceData = (partnersCollection && partnersCollection.length > 0) ? partnersCollection as PartnerOnboarding[] : mockPartners;
+        const sourceData = (partnersCollection && partnersCollection.length > 0) ? partnersCollection as any[] : mockPartners;
         return sourceData.filter(p => 
             p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
             p.airportCode.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [partnersCollection, searchTerm]);
 
-    const handleOpenDialog = (partner: PartnerOnboarding | null = null) => {
+    const handleOpenDialog = (partner: any | null = null) => {
         setEditingPartner(partner);
         setIsDialogOpen(true);
     };
@@ -89,22 +88,22 @@ export default function PartnerOnboardingPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Partner Onboarding</h1>
-                    <p className="text-muted-foreground">Manage airport vendors providing non-air services and retail offers.</p>
+                    <p className="text-muted-foreground">Manage authorized ecosystem vendors and their terminal deployments.</p>
                 </div>
                 <Button onClick={() => handleOpenDialog()}><PlusCircle className="mr-2 h-4 w-4" /> Onboard Partner</Button>
             </div>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Airport Ecosystem Partners</CardTitle>
-                    <CardDescription>Vendors and service providers across all participating airports.</CardDescription>
+                    <CardTitle>Vendor Directory</CardTitle>
+                    <CardDescription>Vendors providing non-air services across the ecosystem network.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center gap-2 mb-4">
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input 
-                                placeholder="Search by name or airport..." 
+                                placeholder="Search by vendor name or airport..." 
                                 className="pl-9" 
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -118,8 +117,9 @@ export default function PartnerOnboardingPage() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Vendor Name</TableHead>
-                                    <TableHead>Primary Airport</TableHead>
+                                    <TableHead>Location (Hub / Node)</TableHead>
                                     <TableHead>Category</TableHead>
+                                    <TableHead>Yield / Rate</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
@@ -133,8 +133,18 @@ export default function PartnerOnboardingPage() {
                                                 {partner.name}
                                             </div>
                                         </TableCell>
-                                        <TableCell className="font-mono">{partner.airportCode}</TableCell>
-                                        <TableCell>{partner.category}</TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center gap-1.5 font-mono text-[10px]">
+                                              <Badge variant="outline">{partner.airportCode}</Badge>
+                                              <span className="text-muted-foreground">({partner.terminal})</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                          <Badge variant="secondary" className="text-[10px]">{partner.category}</Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                          <div className="text-sm font-medium">{partner.commissionRate}%</div>
+                                        </TableCell>
                                         <TableCell>
                                             <Badge variant={partner.status === 'Active' ? 'default' : 'outline'}>{partner.status}</Badge>
                                         </TableCell>
@@ -145,8 +155,8 @@ export default function PartnerOnboardingPage() {
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                    <DropdownMenuItem onClick={() => handleOpenDialog(partner)}>Edit Details</DropdownMenuItem>
-                                                    <DropdownMenuItem>Manage Catalog</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleOpenDialog(partner)}>Edit Deployment</DropdownMenuItem>
+                                                    <DropdownMenuItem><MapPin className="mr-2 h-4 w-4"/>Relocate Vendor</DropdownMenuItem>
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(partner.id!)}>Offboard</DropdownMenuItem>
                                                 </DropdownMenuContent>
@@ -161,10 +171,10 @@ export default function PartnerOnboardingPage() {
             </Card>
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent>
+                <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                        <DialogTitle>{editingPartner ? 'Edit Partner' : 'Onboard New Partner'}</DialogTitle>
-                        <DialogDescription>Enter the primary details for the airport partner.</DialogDescription>
+                        <DialogTitle>{editingPartner ? 'Update Vendor Deployment' : 'Authorize New Vendor'}</DialogTitle>
+                        <DialogDescription>Map the vendor to an onboarded airport node and specify terminal placement.</DialogDescription>
                     </DialogHeader>
                     <PartnerOnboardingForm 
                         partner={editingPartner} 

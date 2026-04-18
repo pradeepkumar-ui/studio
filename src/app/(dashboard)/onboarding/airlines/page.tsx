@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Search, Plane, MoreHorizontal, Loader2 } from 'lucide-react';
+import { PlusCircle, Search, Plane, MoreHorizontal, Loader2, Network } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
@@ -27,17 +27,16 @@ import { AirlineOnboardingForm, type AirlineOnboarding } from '@/components/form
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
-const mockAirlines: AirlineOnboarding[] = [
-    { id: '1', name: 'Global Airways', icaoCode: 'GAB', pssType: 'Amadeus', status: 'Active', contactEmail: 'ops@global.com' },
-    { id: '2', name: 'SkyBridge Airlines', icaoCode: 'SBA', pssType: 'Sabre', status: 'Active', contactEmail: 'pss.tech@skybridge.com' },
-    { id: '3', name: 'MetroLink Air', icaoCode: 'MLN', pssType: 'Navitaire', status: 'Onboarding', contactEmail: 'metro@ops.net' },
-    { id: '4', name: 'Legacy Carriers', icaoCode: 'LGC', pssType: 'Custom', status: 'Inactive', contactEmail: 'admin@legacy.com' },
+const mockAirlines: any[] = [
+    { id: '1', name: 'Global Airways', icaoCode: 'GAB', pssType: 'Amadeus', status: 'Active', contactEmail: 'ops@global.com', operatingAirports: ['LHR', 'JFK', 'DXB'] },
+    { id: '2', name: 'SkyBridge Airlines', icaoCode: 'SBA', pssType: 'Sabre', status: 'Active', contactEmail: 'pss.tech@skybridge.com', operatingAirports: ['SIN', 'HKG'] },
+    { id: '3', name: 'MetroLink Air', icaoCode: 'MLN', pssType: 'Navitaire', status: 'Onboarding', contactEmail: 'metro@ops.net', operatingAirports: ['LHR'] },
 ];
 
 export default function AirlineOnboardingPage() {
     const firestore = useFirestore();
     const airlinesQuery = useMemo(() => firestore ? collection(firestore, 'airlines') : undefined, [firestore]);
-    const { data: airlinesCollection, loading, error } = useCollection(airlinesQuery);
+    const { data: airlinesCollection, loading } = useCollection(airlinesQuery);
     
     const [searchTerm, setSearchTerm] = useState('');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -45,14 +44,14 @@ export default function AirlineOnboardingPage() {
     const { toast } = useToast();
 
     const displayAirlines = useMemo(() => {
-        const sourceData = (airlinesCollection && airlinesCollection.length > 0) ? airlinesCollection as AirlineOnboarding[] : mockAirlines;
+        const sourceData = (airlinesCollection && airlinesCollection.length > 0) ? airlinesCollection as any[] : mockAirlines;
         return sourceData.filter(a => 
             a.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
             a.icaoCode.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [airlinesCollection, searchTerm]);
 
-    const handleOpenDialog = (airline: AirlineOnboarding | null = null) => {
+    const handleOpenDialog = (airline: any | null = null) => {
         setEditingAirline(airline);
         setIsDialogOpen(true);
     };
@@ -89,15 +88,15 @@ export default function AirlineOnboardingPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Airline Onboarding</h1>
-                    <p className="text-muted-foreground">Manage integrated airlines and their Host PSS sync configurations.</p>
+                    <p className="text-muted-foreground">Map carrier PSS systems to ecosystem airport nodes.</p>
                 </div>
                 <Button onClick={() => handleOpenDialog()}><PlusCircle className="mr-2 h-4 w-4" /> Onboard Airline</Button>
             </div>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Registered Airlines</CardTitle>
-                    <CardDescription>Airlines currently retailing via Offersense Ecosystem.</CardDescription>
+                    <CardTitle>Carrier Network</CardTitle>
+                    <CardDescription>Airlines with active retailing permissions and PSS synchronization.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center gap-2 mb-4">
@@ -117,9 +116,9 @@ export default function AirlineOnboardingPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Airline Name</TableHead>
-                                    <TableHead>ICAO Code</TableHead>
-                                    <TableHead>PSS System</TableHead>
+                                    <TableHead>Airline & Code</TableHead>
+                                    <TableHead>PSS / Protocol</TableHead>
+                                    <TableHead>Operating Hubs</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
@@ -127,14 +126,30 @@ export default function AirlineOnboardingPage() {
                             <TableBody>
                                 {displayAirlines.map((airline) => (
                                     <TableRow key={airline.id}>
-                                        <TableCell className="font-medium">
+                                        <TableCell>
                                             <div className="flex items-center gap-2">
-                                                <Plane className="h-4 w-4 text-muted-foreground" />
-                                                {airline.name}
+                                                <div className="p-2 bg-primary/10 rounded">
+                                                  <Plane className="h-4 w-4 text-primary" />
+                                                </div>
+                                                <div>
+                                                  <div className="font-bold text-sm">{airline.name}</div>
+                                                  <div className="font-mono text-[10px] text-muted-foreground uppercase">{airline.icaoCode}</div>
+                                                </div>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="font-mono">{airline.icaoCode}</TableCell>
-                                        <TableCell>{airline.pssType}</TableCell>
+                                        <TableCell>
+                                            <div className="flex flex-col">
+                                              <span className="text-sm font-medium">{airline.pssType}</span>
+                                              <span className="text-[10px] text-muted-foreground font-mono">{airline.pnrMessagingType || 'EDIFACT'}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex flex-wrap gap-1 max-w-[200px]">
+                                              {airline.operatingAirports?.map((hub: string) => (
+                                                <Badge key={hub} variant="secondary" className="text-[10px] font-mono">{hub}</Badge>
+                                              ))}
+                                            </div>
+                                        </TableCell>
                                         <TableCell>
                                             <Badge variant={airline.status === 'Active' ? 'default' : 'secondary'}>{airline.status}</Badge>
                                         </TableCell>
@@ -146,7 +161,7 @@ export default function AirlineOnboardingPage() {
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                     <DropdownMenuItem onClick={() => handleOpenDialog(airline)}>Edit Config</DropdownMenuItem>
-                                                    <DropdownMenuItem>Check Host Sync</DropdownMenuItem>
+                                                    <DropdownMenuItem><Network className="mr-2 h-4 w-4"/>Check PSS Sync</DropdownMenuItem>
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(airline.id!)}>Remove</DropdownMenuItem>
                                                 </DropdownMenuContent>
@@ -161,10 +176,10 @@ export default function AirlineOnboardingPage() {
             </Card>
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent>
+                <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                        <DialogTitle>{editingAirline ? 'Edit Airline' : 'Onboard New Airline'}</DialogTitle>
-                        <DialogDescription>Configure Host PSS connectivity for real-time retailing.</DialogDescription>
+                        <DialogTitle>{editingAirline ? 'Update Carrier Sync' : 'Onboard New Carrier'}</DialogTitle>
+                        <DialogDescription>Map airline host systems to the ecosystem airport nodes.</DialogDescription>
                     </DialogHeader>
                     <AirlineOnboardingForm 
                         airline={editingAirline} 

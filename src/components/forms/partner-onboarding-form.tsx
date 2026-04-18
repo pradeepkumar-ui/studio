@@ -11,6 +11,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
@@ -20,17 +21,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Separator } from '../ui/separator';
 
 const partnerOnboardingSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(3, 'Partner name is required.'),
-  airportCode: z.string().length(3, 'Airport code (IATA) is required.').toUpperCase(),
+  airportCode: z.string({ required_error: 'Primary airport node is required.' }),
+  terminal: z.string().min(2, 'Specific terminal/gate is required.'),
   category: z.enum(['F&B', 'Retail', 'Services', 'Transport']),
   status: z.enum(['Active', 'Inactive']),
   contactEmail: z.string().email('Valid contact email is required.'),
+  commissionRate: z.coerce.number().min(0).max(100, 'Invalid commission rate.'),
 });
 
 export type PartnerOnboarding = z.infer<typeof partnerOnboardingSchema>;
+
+const mockAirports = [
+  { id: 'LHR', name: 'London Heathrow (LHR)' },
+  { id: 'JFK', name: 'John F. Kennedy (JFK)' },
+  { id: 'SIN', name: 'Singapore Changi (SIN)' },
+  { id: 'DXB', label: 'Dubai International (DXB)' },
+];
 
 interface PartnerOnboardingFormProps {
   partner: PartnerOnboarding | null;
@@ -44,37 +55,128 @@ export function PartnerOnboardingForm({ partner, onSubmit, onCancel }: PartnerOn
     defaultValues: partner || {
       name: '',
       airportCode: '',
+      terminal: '',
       category: 'Retail',
       status: 'Active',
       contactEmail: '',
+      commissionRate: 15,
     },
   });
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Vendor Name</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., SkyCafe" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="grid grid-cols-2 gap-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[75vh] overflow-y-auto pr-4">
+        <section className="space-y-4">
+          <h4 className="text-sm font-bold uppercase tracking-tight text-primary">Vendor Identity</h4>
           <FormField
             control={form.control}
-            name="airportCode"
+            name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Primary Airport Node</FormLabel>
+                <FormLabel>Brand / Vendor Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., LHR" maxLength={3} {...field} />
+                  <Input placeholder="e.g., SkyCafe Gourmet" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Service Category</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="F&B">Food & Beverage</SelectItem>
+                      <SelectItem value="Retail">Retail / Duty-Free</SelectItem>
+                      <SelectItem value="Services">Airport Services</SelectItem>
+                      <SelectItem value="Transport">Ground Transport</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="commissionRate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Offersense Commission (%)</FormLabel>
+                  <FormControl>
+                    <Input type="number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </section>
+
+        <Separator />
+
+        <section className="space-y-4">
+          <h4 className="text-sm font-bold uppercase tracking-tight text-primary">Placement & Deployment</h4>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="airportCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Authorized Airport Node</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select airport..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {mockAirports.map(apt => (
+                        <SelectItem key={apt.id} value={apt.id}>{apt.id}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>Only registered nodes are selectable.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="terminal"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Terminal / Gate Location</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., T5 B-Gates" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </section>
+
+        <Separator />
+
+        <section className="space-y-4">
+          <h4 className="text-sm font-bold uppercase tracking-tight text-primary">Communication & Status</h4>
+          <FormField
+            control={form.control}
+            name="contactEmail"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Fulfillment Contact (API/Email)</FormLabel>
+                <FormControl>
+                  <Input placeholder="fulfillment@vendor.com" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -82,62 +184,27 @@ export function PartnerOnboardingForm({ partner, onSubmit, onCancel }: PartnerOn
           />
           <FormField
             control={form.control}
-            name="category"
+            name="status"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Service Category</FormLabel>
+                <FormLabel>Operational Status</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
+                      <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="F&B">Food & Beverage</SelectItem>
-                    <SelectItem value="Retail">Retail / Duty-Free</SelectItem>
-                    <SelectItem value="Services">Airport Services</SelectItem>
-                    <SelectItem value="Transport">Ground Transport</SelectItem>
+                    <SelectItem value="Active">Authorized / Selling</SelectItem>
+                    <SelectItem value="Inactive">Paused</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
               </FormItem>
             )}
           />
-        </div>
-        <FormField
-          control={form.control}
-          name="contactEmail"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Partner Contact Email</FormLabel>
-              <FormControl>
-                <Input placeholder="contact@vendor.com" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Operational Status</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        </section>
+
         <div className="flex justify-end gap-2 pt-4">
           <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
           <Button type="submit">{partner ? 'Save Changes' : 'Onboard Partner'}</Button>
