@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -30,6 +29,7 @@ import { MultiSelect } from '../ui/multi-select';
 import { Card, CardContent } from '../ui/card';
 import { Separator } from '../ui/separator';
 import { Checkbox } from '../ui/checkbox';
+import { Timestamp } from 'firebase/firestore';
 
 const scopeSchema = z.object({
     type: z.enum(['route-one-to-many', 'route-many-to-one', 'source', 'destination']).default('route-one-to-many'),
@@ -220,21 +220,21 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
         </div>
 
         <Separator />
-        <h4 className="text-md font-semibold">Scope</h4>
+        <h4 className="text-md font-semibold">Scope & Routing</h4>
         <div className="space-y-4">
             {fields.map((field, index) => {
                 const scopeType = form.watch(`scopes.${index}.type`);
                 return (
-                <Card key={field.id} className="p-4 relative bg-muted/50">
+                <Card key={field.id} className="p-4 relative bg-muted/50 border-dashed">
                      <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={() => remove(index)} disabled={fields.length <= 1} >
                         <Trash2 className="h-4 w-4" />
                     </Button>
                     <CardContent className="p-0 space-y-4">
                         <FormField control={form.control} name={`scopes.${index}.type`} render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Scope Type</FormLabel>
+                                <FormLabel>Routing Logic</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl><SelectTrigger><SelectValue placeholder="Select scope type" /></SelectTrigger></FormControl>
+                                    <FormControl><SelectTrigger><SelectValue placeholder="Select routing logic" /></SelectTrigger></FormControl>
                                     <SelectContent>
                                         <SelectItem value="route-one-to-many">Route (One Origin to Many Destinations)</SelectItem>
                                         <SelectItem value="route-many-to-one">Route (Many Origins to One Destination)</SelectItem>
@@ -249,7 +249,7 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
                             <div className="grid grid-cols-2 gap-4">
                                 <FormField control={form.control} name={`scopes.${index}.source`} render={({field}) => (
                                     <FormItem>
-                                        <FormLabel>Origin</FormLabel>
+                                        <FormLabel>Origin Node</FormLabel>
                                         <Select onValueChange={(value) => field.onChange([value])} defaultValue={field.value?.[0]}>
                                             <FormControl><SelectTrigger><SelectValue placeholder="Select origin..." /></SelectTrigger></FormControl>
                                             <SelectContent>
@@ -261,8 +261,8 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
                                 )} />
                                 <FormField control={form.control} name={`scopes.${index}.destination`} render={({field}) => (
                                     <FormItem>
-                                        <FormLabel>Destinations</FormLabel>
-                                        <MultiSelect options={airportOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select..."/>
+                                        <FormLabel>Target Destinations</FormLabel>
+                                        <MultiSelect options={airportOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select target nodes..."/>
                                         <FormMessage />
                                     </FormItem>
                                 )} />
@@ -272,14 +272,14 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
                              <div className="grid grid-cols-2 gap-4">
                                 <FormField control={form.control} name={`scopes.${index}.source`} render={({field}) => (
                                     <FormItem>
-                                        <FormLabel>Origins</FormLabel>
-                                        <MultiSelect options={airportOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select..."/>
+                                        <FormLabel>Origin Nodes</FormLabel>
+                                        <MultiSelect options={airportOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select origins..."/>
                                         <FormMessage />
                                     </FormItem>
                                 )} />
                                 <FormField control={form.control} name={`scopes.${index}.destination`} render={({field}) => (
                                     <FormItem>
-                                        <FormLabel>Destination</FormLabel>
+                                        <FormLabel>Target Destination</FormLabel>
                                         <Select onValueChange={(value) => field.onChange([value])} defaultValue={field.value?.[0]}>
                                             <FormControl><SelectTrigger><SelectValue placeholder="Select destination..." /></SelectTrigger></FormControl>
                                             <SelectContent>
@@ -294,8 +294,8 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
                          {scopeType === 'source' && (
                              <FormField control={form.control} name={`scopes.${index}.source`} render={({field}) => (
                                 <FormItem>
-                                    <FormLabel>Source Airports</FormLabel>
-                                    <MultiSelect options={airportOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select..."/>
+                                    <FormLabel>Source Airports (Any Destination)</FormLabel>
+                                    <MultiSelect options={airportOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select source nodes..."/>
                                     <FormMessage />
                                 </FormItem>
                             )} />
@@ -303,8 +303,8 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
                         {scopeType === 'destination' && (
                             <FormField control={form.control} name={`scopes.${index}.destination`} render={({field}) => (
                                 <FormItem>
-                                    <FormLabel>Destination Airports</FormLabel>
-                                    <MultiSelect options={airportOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select..."/>
+                                    <FormLabel>Destination Airports (Any Source)</FormLabel>
+                                    <MultiSelect options={airportOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select target nodes..."/>
                                     <FormMessage />
                                 </FormItem>
                             )} />
@@ -318,14 +318,14 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
         </div>
 
         <Separator />
-        <h4 className="text-md font-semibold">Conditions</h4>
+        <h4 className="text-md font-semibold">Eligibility Conditions</h4>
          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
              <FormField
                 control={form.control}
                 name="tripTypes"
                 render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Trip Type</FormLabel>
+                        <FormLabel>Trip Type Compatibility</FormLabel>
                         <MultiSelect options={tripTypeOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select trip types..."/>
                         <FormMessage />
                     </FormItem>
@@ -336,7 +336,7 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
                 name="passengerTypes"
                 render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Passenger Type</FormLabel>
+                        <FormLabel>Eligible Passenger Types</FormLabel>
                         <MultiSelect options={passengerTypeOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select passenger types..."/>
                         <FormMessage />
                     </FormItem>
@@ -348,20 +348,24 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
             name="pointOfSale"
             render={({ field }) => (
                 <FormItem>
-                <FormLabel>Point of Sale</FormLabel>
-                 <MultiSelect options={posOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select points of sale..."/>
+                <FormLabel>Market / Point of Sale (POS)</FormLabel>
+                 <MultiSelect options={posOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select markets..."/>
+                 <FormDescription>Restrict this fare to specific geographical markets.</FormDescription>
                 <FormMessage />
                 </FormItem>
             )}
         />
+        
+        <Separator />
+        <h4 className="text-md font-semibold">Temporal Constraints</h4>
         <div>
-            <FormLabel>Travel Dates</FormLabel>
+            <FormLabel>Travel Window</FormLabel>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                 <FormField control={form.control} name="travelDate" render={({ field }) => (
                     <FormItem>
                         <Popover>
                             <PopoverTrigger asChild>
-                                <FormControl><Button variant="outline" className={cn('w-full pl-3 text-left font-normal', !field.value?.from && 'text-muted-foreground')}><CalendarIcon className="mr-2 h-4 w-4" />{field.value?.from ? (field.value.to ? <>{format(field.value.from, "LLL dd, y")} - {format(field.value.to, "LLL dd, y")}</> : format(field.value.from, "LLL dd, y")) : <span>Pick a date range (optional)</span>}</Button></FormControl>
+                                <FormControl><Button variant="outline" className={cn('w-full pl-3 text-left font-normal', !field.value?.from && 'text-muted-foreground')}><CalendarIcon className="mr-2 h-4 w-4" />{field.value?.from ? (field.value.to ? <>{format(field.value.from, "LLL dd, y")} - {format(field.value.to, "LLL dd, y")}</> : format(field.value.from, "LLL dd, y")) : <span>Pick travel date range</span>}</Button></FormControl>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start"><Calendar initialFocus mode="range" defaultMonth={field.value?.from} selected={field.value as any} onSelect={field.onChange} numberOfMonths={2} /></PopoverContent>
                         </Popover>
@@ -377,13 +381,13 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
             </div>
         </div>
          <div>
-            <FormLabel>Booking Dates</FormLabel>
+            <FormLabel>Booking / Filing Window</FormLabel>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                 <FormField control={form.control} name="bookingDate" render={({ field }) => (
                     <FormItem>
                         <Popover>
                             <PopoverTrigger asChild>
-                                <FormControl><Button variant="outline" className={cn('w-full pl-3 text-left font-normal', !field.value?.from && 'text-muted-foreground')}><CalendarIcon className="mr-2 h-4 w-4" />{field.value?.from ? (field.value.to ? <>{format(field.value.from, "LLL dd, y")} - {format(field.value.to, "LLL dd, y")}</> : format(field.value.from, "LLL dd, y")) : <span>Pick a date range (optional)</span>}</Button></FormControl>
+                                <FormControl><Button variant="outline" className={cn('w-full pl-3 text-left font-normal', !field.value?.from && 'text-muted-foreground')}><CalendarIcon className="mr-2 h-4 w-4" />{field.value?.from ? (field.value.to ? <>{format(field.value.from, "LLL dd, y")} - {format(field.value.to, "LLL dd, y")}</> : format(field.value.from, "LLL dd, y")) : <span>Pick booking window</span>}</Button></FormControl>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start"><Calendar initialFocus mode="range" defaultMonth={field.value?.from} selected={field.value as any} onSelect={field.onChange} numberOfMonths={2} /></PopoverContent>
                         </Popover>
@@ -400,12 +404,12 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
         </div>
         
         <Separator />
-        <h4 className="text-md font-semibold">Pricing</h4>
+        <h4 className="text-md font-semibold">Commercial Pricing</h4>
 
         <div className="flex gap-4">
             <FormField control={form.control} name="price" render={({ field }) => (
                 <FormItem className="flex-1">
-                <FormLabel>Base Price</FormLabel>
+                <FormLabel>Base Price (excluding taxes)</FormLabel>
                 <div className="relative">
                     <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <FormControl>
@@ -417,9 +421,9 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
             )}/>
             <FormField control={form.control} name="currency" render={({ field }) => (
                 <FormItem>
-                <FormLabel>Currency</FormLabel>
+                <FormLabel>ISO Currency</FormLabel>
                 <FormControl>
-                    <Input placeholder="USD" {...field} className="w-24" />
+                    <Input placeholder="USD" {...field} className="w-24 uppercase" maxLength={3} />
                 </FormControl>
                 <FormMessage />
                 </FormItem>
@@ -427,14 +431,14 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
         </div>
         
         <Separator />
-        <h4 className="text-md font-semibold">Service Terms</h4>
+        <h4 className="text-md font-semibold">Fare Integrity: Service Rules</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <FormField
                 control={form.control}
                 name="refundability"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Refundability</FormLabel>
+                    <FormLabel>Refund Policy</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                         <SelectTrigger>
@@ -442,9 +446,9 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
                         </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                        <SelectItem value="Allowed">Allowed</SelectItem>
-                        <SelectItem value="Allowed with Penalty">Allowed with Penalty</SelectItem>
-                        <SelectItem value="Not Allowed">Not Allowed</SelectItem>
+                        <SelectItem value="Allowed">Fully Refundable</SelectItem>
+                        <SelectItem value="Allowed with Penalty">Refundable with Fee</SelectItem>
+                        <SelectItem value="Not Allowed">Non-Refundable</SelectItem>
                         </SelectContent>
                     </Select>
                     <FormMessage />
@@ -456,7 +460,7 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
                 name="exchangeability"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Exchangeability</FormLabel>
+                    <FormLabel>Change Policy</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                         <SelectTrigger>
@@ -464,9 +468,9 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
                         </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                        <SelectItem value="Allowed">Allowed</SelectItem>
-                        <SelectItem value="Allowed with Penalty">Allowed with Penalty</SelectItem>
-                        <SelectItem value="Not Allowed">Not Allowed</SelectItem>
+                        <SelectItem value="Allowed">Free Changes</SelectItem>
+                        <SelectItem value="Allowed with Penalty">Changes with Fee</SelectItem>
+                        <SelectItem value="Not Allowed">No Changes Permitted</SelectItem>
                         </SelectContent>
                     </Select>
                     <FormMessage />
@@ -478,7 +482,7 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
                 name="transferability"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Transferability</FormLabel>
+                    <FormLabel>Name Changes</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                         <SelectTrigger>
@@ -486,8 +490,8 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
                         </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                        <SelectItem value="Allowed">Allowed</SelectItem>
-                        <SelectItem value="Not Allowed">Not Allowed</SelectItem>
+                        <SelectItem value="Allowed">Name Transfer Allowed</SelectItem>
+                        <SelectItem value="Not Allowed">Name Change Forbidden</SelectItem>
                         </SelectContent>
                     </Select>
                     <FormMessage />
@@ -504,7 +508,7 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
           name="status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Status</FormLabel>
+              <FormLabel>Filing Status</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -512,20 +516,20 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
-                  <SelectItem value="Draft">Draft</SelectItem>
+                  <SelectItem value="Active">Live (Published)</SelectItem>
+                  <SelectItem value="Inactive">Deactivated</SelectItem>
+                  <SelectItem value="Draft">Draft (Internal)</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
             </FormItem>
           )}
         />
-        <div className="flex justify-end gap-4 pt-4">
+        <div className="flex justify-end gap-4 pt-4 sticky bottom-0 bg-background py-4 border-t">
             <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
             </Button>
-            <Button type="submit">{fare ? 'Save Changes' : 'Create Fare'}</Button>
+            <Button type="submit" className="px-8">{fare ? 'Save Changes' : 'Create Base Fare'}</Button>
         </div>
       </form>
     </Form>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,6 +11,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,8 +26,8 @@ import { Separator } from '../ui/separator';
 import { Checkbox } from '../ui/checkbox';
 import { MultiSelect } from '../ui/multi-select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { PlusCircle, Trash2 } from 'lucide-react';
-import { Card, CardContent } from '../ui/card';
+import { PlusCircle, Trash2, ShieldCheck, Layers, Percent, DollarSign, Target } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 
 const ancillaryOptions = [
     { id: 'ANC-001', label: '1st Checked Bag (23kg)', price: 35 },
@@ -42,7 +42,6 @@ const ancillaryOptions = [
     { id: 'ANC-005', label: 'Flight Change Fee', price: 75 },
     { id: 'ANC-011', label: 'Cancel for any reason', price: 40 },
 ] as const;
-
 
 const airportOptions = [
     { value: 'JFK', label: 'JFK - New York' },
@@ -66,12 +65,12 @@ const scopeSchema = z.object({
 
 const fareProductSchema = z.object({
   id: z.string().optional(),
-  name: z.string().min(3, 'Product name must be at least 3 characters.'),
-  description: z.string().min(10, 'Description must be at least 10 characters.'),
+  name: z.string().min(3, 'Brand Name is required.'),
+  description: z.string().min(10, 'A customer-facing description is required.'),
   status: z.enum(['Active', 'Draft']),
   version: z.number().optional(),
   
-  scopes: z.array(scopeSchema).min(1, 'At least one scope must be defined.'),
+  scopes: z.array(scopeSchema).min(1, 'At least one scope block is required.'),
 
   priceModificationType: z.enum(['PERCENTAGE', 'ABSOLUTE']),
   priceModificationValue: z.coerce.number(),
@@ -81,7 +80,7 @@ const fareProductSchema = z.object({
   transferability: z.enum(['Allowed', 'Not Allowed']),
 
   includedAncillaries: z.array(z.string()).optional(),
-  route: z.string().optional(), // For display only
+  route: z.string().optional(), 
 });
 
 export type FareProduct = z.infer<typeof fareProductSchema>;
@@ -94,16 +93,11 @@ interface FareProductFormProps {
 
 const getRouteStringFromScope = (scope: z.infer<typeof scopeSchema>): string => {
     switch (scope.type) {
-        case 'source':
-            return `From: ${scope.source?.join(', ') || 'N/A'}`;
-        case 'destination':
-            return `To: ${scope.destination?.join(', ') || 'N/A'}`;
-        case 'route-one-to-many':
-             return `${scope.source?.[0] || 'N/A'} -> ${scope.destination?.join(', ') || 'N/A'}`;
-        case 'route-many-to-one':
-             return `${scope.source?.join(', ') || 'N/A'} -> ${scope.destination?.[0] || 'N/A'}`;
-        default:
-            return 'Invalid Scope';
+        case 'source': return `From: ${scope.source?.join(', ')}`;
+        case 'destination': return `To: ${scope.destination?.join(', ')}`;
+        case 'route-one-to-many': return `${scope.source?.[0]} → ${scope.destination?.join(', ')}`;
+        case 'route-many-to-one': return `${scope.source?.join(', ')} → ${scope.destination?.[0]}`;
+        default: return 'Custom Scope';
     }
 }
 
@@ -114,11 +108,7 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
       name: '',
       description: '',
       status: 'Draft',
-      scopes: [{
-        type: 'route-one-to-many',
-        source: [],
-        destination: [],
-      }],
+      scopes: [{ type: 'route-one-to-many', source: [], destination: [] }],
       priceModificationType: 'PERCENTAGE',
       priceModificationValue: 10,
       refundability: 'Allowed with Penalty',
@@ -128,329 +118,229 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "scopes",
-  });
+  const { fields, append, remove } = useFieldArray({ control: form.control, name: "scopes" });
 
   const handleFormSubmit = (data: FareProduct) => {
     const routeString = data.scopes.map(getRouteStringFromScope).join('; ');
-    onSubmit({ 
-        ...data, 
-        route: routeString, 
-    });
+    onSubmit({ ...data, route: routeString });
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6 max-h-[70vh] overflow-y-auto pr-4">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Brand Name</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., Economy Flex" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea placeholder="Describe the product and its key features." {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8 max-h-[80vh] overflow-y-auto pr-4">
+        
+        <section className="space-y-4">
+            <div className="flex items-center gap-2 text-primary font-bold uppercase text-xs tracking-widest">
+                <Layers className="h-4 w-4" />
+                Identity & Positioning
+            </div>
+            <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Brand / Commercial Name</FormLabel>
+                <FormControl><Input placeholder="e.g., Economy Flex Plus" {...field} /></FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+            <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Commercial Description (Marketing)</FormLabel>
+                <FormControl><Textarea placeholder="Highlight the key benefits of this fare brand..." {...field} /></FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+        </section>
+
         <Separator />
         
-        <h4 className="text-md font-semibold">Scope</h4>
-        
-        <div className="space-y-4">
-            {fields.map((field, index) => {
-                const scopeType = form.watch(`scopes.${index}.type`);
-                return (
-                <Card key={field.id} className="p-4 relative bg-muted/50">
-                     <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="icon" 
-                        className="absolute top-2 right-2 h-6 w-6" 
-                        onClick={() => remove(index)}
-                        disabled={fields.length <= 1}
-                    >
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                    <CardContent className="p-0 space-y-4">
-                        <FormField
-                            control={form.control}
-                            name={`scopes.${index}.type`}
-                            render={({ field }) => (
+        <section className="space-y-4">
+            <div className="flex items-center gap-2 text-primary font-bold uppercase text-xs tracking-widest">
+                <Target className="h-4 w-4" />
+                Network Scope
+            </div>
+            <div className="space-y-4">
+                {fields.map((field, index) => {
+                    const scopeType = form.watch(`scopes.${index}.type`);
+                    return (
+                    <Card key={field.id} className="relative bg-muted/30 border-dashed">
+                        <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={() => remove(index)} disabled={fields.length <= 1}><Trash2 className="h-4 w-4" /></Button>
+                        <CardContent className="p-4 space-y-4">
+                            <FormField control={form.control} name={`scopes.${index}.type`} render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Scope Type</FormLabel>
+                                    <FormLabel>Applicable Markets</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                         <FormControl><SelectTrigger><SelectValue placeholder="Select scope type" /></SelectTrigger></FormControl>
                                         <SelectContent>
-                                            <SelectItem value="route-one-to-many">Route (One Origin to Many Destinations)</SelectItem>
-                                            <SelectItem value="route-many-to-one">Route (Many Origins to One Destination)</SelectItem>
-                                            <SelectItem value="source">Source (Any Destination)</SelectItem>
-                                            <SelectItem value="destination">Destination (Any Source)</SelectItem>
+                                            <SelectItem value="route-one-to-many">One Origin to Many Destinations</SelectItem>
+                                            <SelectItem value="route-many-to-one">Many Origins to One Destination</SelectItem>
+                                            <SelectItem value="source">Entire Hub (Source)</SelectItem>
+                                            <SelectItem value="destination">Entire Market (Destination)</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </FormItem>
-                            )}
-                        />
-                       
-                        {scopeType === 'route-one-to-many' && (
+                            )}/>
                             <div className="grid grid-cols-2 gap-4">
-                                <FormField control={form.control} name={`scopes.${index}.source`} render={({field}) => (
-                                    <FormItem>
-                                        <FormLabel>Origin</FormLabel>
-                                        <Select onValueChange={(value) => field.onChange([value])} defaultValue={field.value?.[0]}>
-                                            <FormControl><SelectTrigger><SelectValue placeholder="Select origin..." /></SelectTrigger></FormControl>
-                                            <SelectContent>
-                                                {airportOptions.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )} />
-                                <FormField control={form.control} name={`scopes.${index}.destination`} render={({field}) => (
-                                    <FormItem>
-                                        <FormLabel>Destinations</FormLabel>
-                                        <MultiSelect options={airportOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select..."/>
-                                        <FormMessage />
-                                    </FormItem>
-                                )} />
+                                {(scopeType === 'route-one-to-many' || scopeType === 'source' || scopeType === 'route-many-to-one') && (
+                                    <FormField control={form.control} name={`scopes.${index}.source`} render={({field}) => (
+                                        <FormItem>
+                                            <FormLabel>{scopeType === 'route-one-to-many' ? 'Origin' : 'Origins'}</FormLabel>
+                                            {scopeType === 'route-one-to-many' ? (
+                                                <Select onValueChange={(v) => field.onChange([v])} defaultValue={field.value?.[0]}>
+                                                    <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
+                                                    <SelectContent>{airportOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                                                </Select>
+                                            ) : <MultiSelect options={airportOptions} selected={field.value || []} onChange={field.onChange} placeholder="All Hubs"/>}
+                                        </FormItem>
+                                    )} />
+                                )}
+                                {(scopeType === 'route-one-to-many' || scopeType === 'destination' || scopeType === 'route-many-to-one') && (
+                                    <FormField control={form.control} name={`scopes.${index}.destination`} render={({field}) => (
+                                        <FormItem>
+                                            <FormLabel>{scopeType === 'route-many-to-one' ? 'Destination' : 'Destinations'}</FormLabel>
+                                            {scopeType === 'route-many-to-one' ? (
+                                                <Select onValueChange={(v) => field.onChange([v])} defaultValue={field.value?.[0]}>
+                                                    <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
+                                                    <SelectContent>{airportOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                                                </Select>
+                                            ) : <MultiSelect options={airportOptions} selected={field.value || []} onChange={field.onChange} placeholder="All Markets"/>}
+                                        </FormItem>
+                                    )} />
+                                )}
                             </div>
-                        )}
-                        {scopeType === 'route-many-to-one' && (
-                             <div className="grid grid-cols-2 gap-4">
-                                <FormField control={form.control} name={`scopes.${index}.source`} render={({field}) => (
-                                    <FormItem>
-                                        <FormLabel>Origins</FormLabel>
-                                        <MultiSelect options={airportOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select..."/>
-                                        <FormMessage />
-                                    </FormItem>
-                                )} />
-                                <FormField control={form.control} name={`scopes.${index}.destination`} render={({field}) => (
-                                    <FormItem>
-                                        <FormLabel>Destination</FormLabel>
-                                        <Select onValueChange={(value) => field.onChange([value])} defaultValue={field.value?.[0]}>
-                                            <FormControl><SelectTrigger><SelectValue placeholder="Select destination..." /></SelectTrigger></FormControl>
-                                            <SelectContent>
-                                                {airportOptions.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )} />
-                            </div>
-                        )}
-                         {scopeType === 'source' && (
-                             <FormField control={form.control} name={`scopes.${index}.source`} render={({field}) => (
-                                <FormItem>
-                                    <FormLabel>Source Airports</FormLabel>
-                                    <MultiSelect options={airportOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select..."/>
-                                    <FormMessage />
-                                </FormItem>
-                            )} />
-                        )}
-                        {scopeType === 'destination' && (
-                            <FormField control={form.control} name={`scopes.${index}.destination`} render={({field}) => (
-                                <FormItem>
-                                    <FormLabel>Destination Airports</FormLabel>
-                                    <MultiSelect options={airportOptions} selected={field.value || []} onChange={field.onChange} placeholder="Select..."/>
-                                    <FormMessage />
-                                </FormItem>
-                            )} />
-                        )}
-                    </CardContent>
-                </Card>
-            )})}
-            <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => append({ type: 'route-one-to-many', source: [], destination: [] })}
-            >
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Scope Block
-            </Button>
-        </div>
+                        </CardContent>
+                    </Card>
+                )})}
+                <Button type="button" variant="outline" size="sm" onClick={() => append({ type: 'route-one-to-many', source: [], destination: [] })}><PlusCircle className="mr-2 h-4 w-4" /> Add Scope block</Button>
+            </div>
+        </section>
 
         <Separator />
-        <h4 className="text-md font-semibold">Pricing</h4>
-
-        <div className="grid grid-cols-2 gap-4 pt-4">
-            <FormField
-                control={form.control}
-                name="priceModificationType"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Price Adjustment Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                        <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                        <SelectItem value="PERCENTAGE">Percentage (%)</SelectItem>
-                        <SelectItem value="ABSOLUTE">Absolute ($)</SelectItem>
-                    </SelectContent>
-                    </Select>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="priceModificationValue"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Adjustment Value</FormLabel>
-                    <FormControl>
-                    <Input type="number" placeholder="e.g., 10 or -25" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
-        </div>
-
-        <Separator />
-        <h4 className="text-md font-semibold">Included Ancillaries (Free of Charge)</h4>
-        <FormField
-            control={form.control}
-            name="includedAncillaries"
-            render={() => (
-                <FormItem>
-                     <div className="grid grid-cols-2 gap-4 pt-2">
-                        <TooltipProvider>
-                            {ancillaryOptions.map((item) => (
-                                <FormField
-                                    key={item.id}
-                                    control={form.control}
-                                    name="includedAncillaries"
-                                    render={({ field }) => {
-                                    return (
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <FormItem
-                                                key={item.id}
-                                                className="flex flex-row items-center space-x-3 space-y-0"
-                                                >
-                                                <FormControl>
-                                                    <Checkbox
-                                                    checked={field.value?.includes(item.id)}
-                                                    onCheckedChange={(checked) => {
-                                                        return checked
-                                                        ? field.onChange([...(field.value || []), item.id])
-                                                        : field.onChange(
-                                                            field.value?.filter(
-                                                                (value) => value !== item.id
-                                                            )
-                                                            )
-                                                    }}
-                                                    />
-                                                </FormControl>
-                                                <FormLabel className="font-normal cursor-pointer">
-                                                    {item.label}
-                                                </FormLabel>
-                                                </FormItem>
-                                            </TooltipTrigger>
-                                             <TooltipContent>
-                                                <p>Default Price: ${item.price}</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    )
-                                    }}
-                                />
-                            ))}
-                        </TooltipProvider>
-                    </div>
-                    <FormMessage />
-                </FormItem>
-            )}
-        />
-
-
-        <Separator />
-        <h4 className="text-md font-semibold">Service Terms</h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormField
-                control={form.control}
-                name="refundability"
-                render={({ field }) => (
+        
+        <section className="space-y-4">
+            <div className="flex items-center gap-2 text-primary font-bold uppercase text-xs tracking-widest">
+                <Percent className="h-4 w-4" />
+                Pricing Architecture
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+                <FormField
+                    control={form.control}
+                    name="priceModificationType"
+                    render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Refundability</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select a rule" />
-                        </SelectTrigger>
-                        </FormControl>
+                        <FormLabel>Adjustment Type</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
                         <SelectContent>
-                        <SelectItem value="Allowed">Allowed</SelectItem>
-                        <SelectItem value="Allowed with Penalty">Allowed with Penalty</SelectItem>
-                        <SelectItem value="Not Allowed">Not Allowed</SelectItem>
+                            <SelectItem value="PERCENTAGE">Percentage (%)</SelectItem>
+                            <SelectItem value="ABSOLUTE">Absolute ($)</SelectItem>
                         </SelectContent>
-                    </Select>
-                    <FormMessage />
+                        </Select>
+                        <FormDescription>Calculated on top of Base Fare.</FormDescription>
+                    </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="priceModificationValue"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Adjustment Value</FormLabel>
+                        <div className="relative">
+                            {form.watch('priceModificationType') === 'PERCENTAGE' ? <Percent className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /> : <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />}
+                            <FormControl><Input type="number" className="pl-9" {...field} /></FormControl>
+                        </div>
+                    </FormItem>
+                    )}
+                />
+            </div>
+        </section>
+
+        <Separator />
+        
+        <section className="space-y-4">
+            <div className="flex items-center gap-2 text-primary font-bold uppercase text-xs tracking-widest">
+                <Layers className="h-4 w-4" />
+                Included Ancillary Services
+            </div>
+            <FormField
+                control={form.control}
+                name="includedAncillaries"
+                render={() => (
+                    <FormItem>
+                         <div className="grid grid-cols-2 gap-4 pt-2">
+                            <TooltipProvider>
+                                {ancillaryOptions.map((item) => (
+                                    <FormField
+                                        key={item.id}
+                                        control={form.control}
+                                        name="includedAncillaries"
+                                        render={({ field }) => (
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 hover:bg-muted/50 cursor-pointer">
+                                                        <FormControl>
+                                                            <Checkbox checked={field.value?.includes(item.id)} onCheckedChange={(checked) => checked ? field.onChange([...(field.value || []), item.id]) : field.onChange(field.value?.filter((v) => v !== item.id))} />
+                                                        </FormControl>
+                                                        <FormLabel className="font-normal cursor-pointer flex-1">{item.label}</FormLabel>
+                                                    </FormItem>
+                                                </TooltipTrigger>
+                                                <TooltipContent><p>Current Market Value: ${item.price}</p></TooltipContent>
+                                            </Tooltip>
+                                        )}
+                                    />
+                                ))}
+                            </TooltipProvider>
+                        </div>
+                        <FormMessage />
                     </FormItem>
                 )}
             />
-            <FormField
-                control={form.control}
-                name="exchangeability"
-                render={({ field }) => (
+        </section>
+
+        <Separator />
+        
+        <section className="space-y-4">
+            <div className="flex items-center gap-2 text-primary font-bold uppercase text-xs tracking-widest">
+                <ShieldCheck className="h-4 w-4" />
+                Branded Service Rules
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField control={form.control} name="refundability" render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Exchangeability</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select a rule" />
-                        </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                        <SelectItem value="Allowed">Allowed</SelectItem>
-                        <SelectItem value="Allowed with Penalty">Allowed with Penalty</SelectItem>
-                        <SelectItem value="Not Allowed">Not Allowed</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <FormMessage />
+                        <FormLabel>Refunds</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                            <SelectContent><SelectItem value="Allowed">Allowed</SelectItem><SelectItem value="Allowed with Penalty">With Fee</SelectItem><SelectItem value="Not Allowed">Not Allowed</SelectItem></SelectContent>
+                        </Select>
                     </FormItem>
-                )}
-            />
-             <FormField
-                control={form.control}
-                name="transferability"
-                render={({ field }) => (
+                )} />
+                <FormField control={form.control} name="exchangeability" render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Transferability</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select a rule" />
-                        </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                        <SelectItem value="Allowed">Allowed</SelectItem>
-                        <SelectItem value="Not Allowed">Not Allowed</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <FormMessage />
+                        <FormLabel>Changes</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                            <SelectContent><SelectItem value="Allowed">Allowed</SelectItem><SelectItem value="Allowed with Penalty">With Fee</SelectItem><SelectItem value="Not Allowed">Not Allowed</SelectItem></SelectContent>
+                        </Select>
                     </FormItem>
-                )}
-            />
-        </div>
+                )} />
+                 <FormField control={form.control} name="transferability" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Transfer</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                            <SelectContent><SelectItem value="Allowed">Allowed</SelectItem><SelectItem value="Not Allowed">Not Allowed</SelectItem></SelectContent>
+                        </Select>
+                    </FormItem>
+                )} />
+            </div>
+        </section>
 
         <Separator />
 
@@ -459,27 +349,18 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
           name="status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Status</FormLabel>
+              <FormLabel>Catalogue Status</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a status" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Draft">Draft</SelectItem>
-                  <SelectItem value="Active">Active</SelectItem>
-                </SelectContent>
+                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                <SelectContent><SelectItem value="Draft">Draft (Internal)</SelectItem><SelectItem value="Active">Active (Retailable)</SelectItem></SelectContent>
               </Select>
-              <FormMessage />
             </FormItem>
           )}
         />
-        <div className="flex justify-end gap-4 pt-4">
-            <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-            </Button>
-            <Button type="submit">{product ? 'Save Changes' : 'Create Branded Fare'}</Button>
+
+        <div className="flex justify-end gap-4 pt-4 sticky bottom-0 bg-background py-4 border-t z-10">
+            <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+            <Button type="submit" className="px-10">{product ? 'Update Brand' : 'Publish Branded Fare'}</Button>
         </div>
       </form>
     </Form>
