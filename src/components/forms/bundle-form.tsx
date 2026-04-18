@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -110,7 +111,6 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
   const [showPreview, setShowPreview] = useState(false);
   const firestore = useFirestore();
 
-  // Dependency Collections from Product Catalogue & Retailing Config
   const { data: airlineAncillaries, loading: loadingAir } = useCollection(firestore ? collection(firestore, 'airlineAncillaries') : undefined);
   const { data: airportServices, loading: loadingAirport } = useCollection(firestore ? collection(firestore, 'airportServices') : undefined);
   const { data: fareProducts, loading: loadingFares } = useCollection(firestore ? collection(firestore, 'fareProducts') : undefined);
@@ -161,7 +161,6 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
   const pricingStrategy = form.watch('pricingStrategy');
   const discountValue = form.watch('discount') || 0;
 
-  // Combine and stabilize products for selection
   const allAvailableProducts = useMemo(() => {
     const air = (airlineAncillaries || []).map(p => ({ id: p.id, name: p.name, price: p.defaultPrice || 0, type: 'Airline' }));
     const port = (airportServices || []).map(p => ({ id: p.id, name: p.name, price: p.price || 0, type: 'Airport' }));
@@ -197,17 +196,15 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-h-[80vh] overflow-y-auto pr-4">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          
-          {/* LEFT COLUMN: IDENTITY & TARGETING */}
           <div className="space-y-8">
             <section className="space-y-4">
               <div className="flex items-center gap-2 text-primary font-bold uppercase text-xs tracking-widest">
                 <Package className="h-4 w-4" />
-                Bundle Identity
+                Offer Identity
               </div>
               <FormField control={form.control} name="name" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Bundle Name</FormLabel>
+                  <FormLabel>Offer/Bundle Name</FormLabel>
                   <FormControl><Input placeholder="e.g., Executive Gateway Pack" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
@@ -343,7 +340,6 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
             </section>
           </div>
 
-          {/* RIGHT COLUMN: COMPONENTS, CONSTRAINTS & PRICING */}
           <div className="space-y-8">
             <section className="space-y-4">
               <div className="flex items-center gap-2 text-primary font-bold uppercase text-xs tracking-widest">
@@ -351,7 +347,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                 Components & Constraints
               </div>
               <div className="space-y-2">
-                <FormLabel>Catalogue Services</FormLabel>
+                <FormLabel>Select Product(s) (Single Ancillary or Bundle)</FormLabel>
                 {fields.map((field, index) => (
                   <div key={field.id} className="flex items-center gap-2">
                     <FormField control={form.control} name={`components.${index}.value`} render={({ field }) => (
@@ -383,7 +379,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                 <Button type="button" variant="outline" size="sm" onClick={() => append({ value: "" })}>
                   <PlusCircle className="mr-2 h-4 w-4" /> Add Component
                 </Button>
-                <FormDescription className="text-[10px]">Only products configured in the Product Catalogue appear here.</FormDescription>
+                <FormDescription className="text-[10px]">To create a single-ancillary offer, just add one component.</FormDescription>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -411,14 +407,14 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
               </div>
               <div className="p-5 rounded-xl bg-primary/5 border border-primary/10 space-y-6 shadow-inner">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-muted-foreground uppercase tracking-tight">Ecosystem Value</span>
+                  <span className="text-sm font-medium text-muted-foreground uppercase tracking-tight">Standard Value</span>
                   <Badge variant="outline" className="font-mono text-lg">${totalComponentValue.toFixed(2)}</Badge>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                    <FormField control={form.control} name="pricingStrategy" render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Calculation Logic</FormLabel>
+                      <FormLabel>Offer Pricing Logic</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent>
@@ -431,7 +427,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                   )} />
                   <FormField control={form.control} name="discount" render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Adjustment Value</FormLabel>
+                      <FormLabel>Value</FormLabel>
                       <FormControl>
                         <div className="relative">
                            <Input type="number" {...field} className="pl-8" />
@@ -444,7 +440,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
 
                 <div className="pt-4 border-t border-primary/10 flex justify-between items-center">
                   <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-primary uppercase">Final Bundle Price</span>
+                    <span className="text-[10px] font-bold text-primary uppercase">Calculated Offer Price</span>
                     <span className="text-3xl font-black text-primary tabular-nums tracking-tighter">${finalPrice.toFixed(2)}</span>
                   </div>
                   <TooltipProvider>
@@ -475,7 +471,6 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
           </div>
         </div>
 
-        {/* CUSTOMER PREVIEW SECTION */}
         {showPreview && (
           <div className="space-y-4 bg-muted/40 p-8 rounded-2xl border-2 border-dashed border-muted-foreground/20">
             <div className="flex items-center justify-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4">
@@ -485,11 +480,11 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
             <div className="max-w-md mx-auto">
               <Card className="overflow-hidden border-0 shadow-2xl transition-transform hover:scale-[1.02]">
                 <div className="relative h-48 bg-primary">
-                  <Image src={`https://picsum.photos/seed/${form.getValues('name') || 'bundle'}/600/400`} alt="Bundle Preview" fill className="object-cover opacity-80" data-ai-hint="airport luxury" />
+                  <Image src={`https://picsum.photos/seed/${form.getValues('name') || 'bundle'}/600/400`} alt="Offer Preview" fill className="object-cover opacity-80" data-ai-hint="airport luxury" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
                   <div className="absolute bottom-5 left-5 right-5 text-white">
                     <Badge variant="secondary" className="mb-2 bg-primary text-white border-0 shadow-lg">EXCLUSIVE OFFER</Badge>
-                    <h3 className="text-2xl font-black leading-none tracking-tight">{form.getValues('name') || 'Your Bundle Name'}</h3>
+                    <h3 className="text-2xl font-black leading-none tracking-tight">{form.getValues('name') || 'Your Offer Name'}</h3>
                   </div>
                 </div>
                 <CardContent className="pt-6 pb-2">
@@ -515,7 +510,6 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
           </div>
         )}
 
-        {/* STICKY FOOTER ACTIONS */}
         <div className="flex justify-between items-center pt-6 sticky bottom-0 bg-background/95 backdrop-blur-sm py-4 border-t z-20">
           <Button type="button" variant="ghost" onClick={() => setShowPreview(!showPreview)}>
             <Eye className="mr-2 h-4 w-4" />
@@ -524,7 +518,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
           <div className="flex gap-4">
             <Button type="button" variant="outline" onClick={onCancel}>Discard</Button>
             <Button type="submit" className="px-10 font-bold" disabled={isLoadingDependencies}>
-              {bundle ? 'Update Ecosystem Bundle' : 'Create Targeted Bundle'}
+              {bundle ? 'Update Retailing Offer' : 'Create Retailing Offer'}
             </Button>
           </div>
         </div>

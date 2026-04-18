@@ -67,7 +67,7 @@ const menuItems: MenuItem[] = [
     icon: Ticket,
     subItems: [
       { href: '/offer-composer', label: 'Airport Offer Composer', icon: QrCode },
-      { href: '/bundles', label: 'Offer Bundles Studio', icon: Package },
+      { href: '/bundles', label: 'Offers & Bundles Studio', icon: Package },
       { href: '/offers/cohorts', label: 'Retailing Cohorts', icon: Target },
       { href: '/promotions', label: 'Campaigns & Promos', icon: Megaphone },
     ],

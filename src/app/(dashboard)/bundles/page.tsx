@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -45,8 +46,8 @@ import { format, addDays } from 'date-fns';
 
 const mockOffers: any[] = [
     { id: 'BUN-001', name: 'Executive Gateway', category: 'Normal', description: 'Priority Fast Track, Premium Lounge Access, and Unlimited Wi-Fi.', status: 'Published', priorityLevel: 80, validity: { from: new Date(), to: addDays(new Date(), 60) }, scope: { brand: 'Business, Premium', route: 'LHR, JFK, SIN', channel: 'Direct, CUSS', cohorts: 'LHR_BIZ_WAIT' }, components: { other: 'Fast Track, Lounge, Wi-Fi' }, pricingStrategy: 'Absolute Price', discount: 85, itemCount: 3, source: 'Manual', usage: 1240 },
+    { id: 'OFR-005', name: 'Premium Wi-Fi Access', category: 'Promotional', description: 'High-speed internet for your entire flight.', status: 'Published', priorityLevel: 50, validity: { from: new Date(), to: addDays(new Date(), 30) }, scope: { channel: 'Web, Mobile', cohorts: 'All' }, components: { other: 'In-flight Wi-Fi' }, pricingStrategy: 'Percent Discount', discount: 10, itemCount: 1, source: 'Manual', usage: 850 },
     { id: 'BUN-002', name: 'Arrivals Comfort', category: 'Normal', description: 'Meet & Assist VIP greeting and luxury chauffeur transfer.', status: 'Published', priorityLevel: 40, validity: { from: new Date(), to: addDays(new Date(), 90) }, scope: { channel: 'Web, Mobile', market: 'EU, US', cohorts: 'JFK_PREM_LSR' }, components: { other: 'Meet & Assist, Chauffeur' }, pricingStrategy: 'Percent Discount', discount: 15, itemCount: 2, source: 'Manual', usage: 520 },
-    { id: 'BUN-003', name: 'Quick Turnaround', category: 'Promotional', description: 'Fast track security and priority boarding for tight connections.', status: 'Draft', priorityLevel: 95, validity: { from: new Date(), to: addDays(new Date(), 15) }, scope: { cohorts: 'SIN_TRANSIT_LOUNGE' }, components: { other: 'Fast Track, Priority Boarding' }, pricingStrategy: 'Fixed Discount', discount: 10, itemCount: 2, source: 'AI', usage: 0 },
 ];
 
 
@@ -102,10 +103,10 @@ export default function BundlesPage() {
       if (editingBundle?.id) {
         const bundleRef = doc(firestore, 'bundles', editingBundle.id);
         await setDoc(bundleRef, { ...bundleData, updatedAt: serverTimestamp() }, { merge: true });
-        toast({ title: 'Bundle Updated', description: `Offer "${data.name}" updated successfully.` });
+        toast({ title: 'Offer Updated', description: `Retailing item "${data.name}" updated successfully.` });
       } else {
         await addDoc(collection(firestore, 'bundles'), { ...bundleData, createdAt: serverTimestamp(), source: 'Manual' });
-        toast({ title: 'Bundle Created', description: `New bundle "${data.name}" added to studio.` });
+        toast({ title: 'Offer Created', description: `New retailing item "${data.name}" added to studio.` });
       }
     } catch (e: any) {
         toast({ variant: "destructive", title: "Error", description: e.message });
@@ -117,7 +118,7 @@ export default function BundlesPage() {
     if (!firestore) return;
     try {
         await deleteDoc(doc(firestore, 'bundles', id));
-        toast({ title: 'Bundle Deleted', variant: 'destructive' });
+        toast({ title: 'Offer Deleted', variant: 'destructive' });
     } catch (e: any) {
         toast({ variant: 'destructive', title: 'Error', description: e.message });
     }
@@ -146,22 +147,22 @@ export default function BundlesPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight">Offer Bundles Studio</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Offers & Bundles Studio</h1>
           <p className="text-muted-foreground">
-            Combine exhaustive airline and airport services into targeted retailing bundles.
+            Manage single-ancillary offers or multi-service retailing bundles targeted by customer cohorts.
           </p>
         </div>
         <Button onClick={() => handleOpenDialog()}>
           <PlusCircle className="mr-2" />
-          Create New Bundle
+          Create Retailing Offer
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Bundle Catalogue</CardTitle>
+          <CardTitle>Offer Catalogue</CardTitle>
           <CardDescription>
-            Manage multi-service offers targeted by customer cohorts and touchpoints.
+            Configure commercial positioning for individual services or orchestrated bundles.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -169,7 +170,7 @@ export default function BundlesPage() {
               <div className="relative flex-1 min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search bundles..."
+                  placeholder="Search offers..."
                   value={filters.name}
                   onChange={(e) => handleFilterChange('name', e.target.value)}
                   className="pl-9"
@@ -207,7 +208,7 @@ export default function BundlesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Bundle Details</TableHead>
+                  <TableHead>Offer Details</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Validity</TableHead>
@@ -287,7 +288,7 @@ export default function BundlesPage() {
                           <DropdownMenuItem onClick={() => handleOpenDialog(bundle)}>Edit Detailed Config</DropdownMenuItem>
                           <DropdownMenuItem>View Conversion Trends</DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive" onClick={() => bundle.id && handleDelete(bundle.id)}>Archive Bundle</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => bundle.id && handleDelete(bundle.id)}>Archive Offer</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -303,9 +304,9 @@ export default function BundlesPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-5xl">
           <DialogHeader>
-            <DialogTitle>{editingBundle ? 'Edit Ecosystem Bundle' : 'Create Targeted Bundle'}</DialogTitle>
+            <DialogTitle>{editingBundle ? 'Edit Retailing Offer' : 'Create Retailing Offer'}</DialogTitle>
             <DialogDescription>
-              Orchestrate multiple products into a single offer based on deep ecosystem targeting and advanced business logic.
+              Orchestrate one or more products into a targeted retailing offer with custom pricing and cohort rules.
             </DialogDescription>
           </DialogHeader>
           <BundleForm
