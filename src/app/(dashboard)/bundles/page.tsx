@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -42,7 +41,7 @@ import { collection, addDoc, doc, setDoc, serverTimestamp, deleteDoc, Timestamp 
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
 
 const mockOffers: any[] = [
     { id: 'BUN-001', name: 'Executive Gateway', category: 'Normal', description: 'Priority Fast Track, Premium Lounge Access, and Unlimited Wi-Fi.', status: 'Published', priorityLevel: 80, validity: { from: new Date(), to: addDays(new Date(), 60) }, scope: { brand: 'Business, Premium', route: 'LHR, JFK, SIN', channel: 'Direct, CUSS', cohorts: 'LHR_BIZ_WAIT' }, components: { other: 'Fast Track, Lounge, Wi-Fi' }, pricingStrategy: 'Absolute Price', discount: 85, itemCount: 3, source: 'Manual', usage: 1240 },
