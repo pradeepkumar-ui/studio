@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { DollarSign, Plane } from 'lucide-react';
+import { DollarSign, Plane, Settings2 } from 'lucide-react';
 import { MultiSelect } from '../ui/multi-select';
 import { Separator } from '../ui/separator';
 
