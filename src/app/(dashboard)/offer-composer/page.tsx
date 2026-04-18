@@ -26,7 +26,8 @@ import {
   MapPin,
   Luggage,
   ExternalLink,
-  ReceiptText
+  ReceiptText,
+  QrCode
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -41,7 +42,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { useFirestore, useCollection } from '@/firebase';
+import { useFirestore } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 type ComposerStep = 'discovery' | 'results' | 'checkout' | 'confirmation';
