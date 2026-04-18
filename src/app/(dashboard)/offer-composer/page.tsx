@@ -20,9 +20,16 @@ import {
   History,
   Clock,
   CreditCard,
-  Sparkles
+  Sparkles,
+  Car,
+  Utensils,
+  MapPin,
+  Luggage,
+  ExternalLink,
+  ReceiptText
 } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
@@ -62,16 +69,10 @@ export default function AirportOfferComposerPage() {
   const [step, setStep] = useState<ComposerStep>('discovery');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState<any>(null);
+  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
   const [discoveryLog, setDiscoveryLog] = useState<string[]>([]);
   const { toast } = useToast();
   const firestore = useFirestore();
-
-  // Pull active bundles and ancillaries from live ecosystem
-  const bundlesQuery = useMemo(() => firestore ? collection(firestore, 'bundles') : undefined, [firestore]);
-  const ancillariesQuery = useMemo(() => firestore ? collection(firestore, 'airlineAncillaries') : undefined, [firestore]);
-  
-  const { data: liveBundles } = useCollection(bundlesQuery);
-  const { data: liveAncillaries } = useCollection(ancillariesQuery);
 
   const form = useForm<z.infer<typeof contextSchema>>({
     resolver: zodResolver(contextSchema),
@@ -92,18 +93,18 @@ export default function AirportOfferComposerPage() {
     setStep('discovery');
     setDiscoveryLog([]);
     
-    // Simulate real-time logic processing
     const logs = [
       "Querying Host PSS for PNR L8Y2N3...",
       "Analyzing Airport Node LHR operational signals...",
       `Detected ${form.getValues('waitTime')}m security wait at T5.`,
       "Applying Continuous Pricing rules...",
-      "Assembling dynamic bundles for 'Silver' tier..."
+      "Assembling dynamic bundles for 'Silver' tier...",
+      "Cross-referencing ecosystem partner availability..."
     ];
 
     for(let i = 0; i < logs.length; i++) {
         setDiscoveryLog(prev => [...prev, logs[i]]);
-        await new Promise(r => setTimeout(r, 600));
+        await new Promise(r => setTimeout(r, 400));
     }
     
     setIsLoading(false);
@@ -121,7 +122,9 @@ export default function AirportOfferComposerPage() {
     setIsLoading(true);
     
     try {
+        const orderId = `ORD-${Math.floor(Math.random() * 90000) + 10000}`;
         const orderData = {
+            id: orderId,
             customer: mockBaseOffer.passenger,
             email: 'john.smith@example.com',
             status: 'Fulfilled',
@@ -130,30 +133,33 @@ export default function AirportOfferComposerPage() {
             currency: 'USD',
             source: form.getValues('touchpoint').replace('_', ' '),
             airportCode: form.getValues('airportNode'),
+            pnr: form.getValues('pnr'),
+            route: mockBaseOffer.route,
+            paymentStatus: 'Paid',
             payment: { method: 'Credit Card', status: 'Paid' },
+            isSimulated: true,
             services: [
-                { id: 'FL-001', type: 'Flight', provider: 'Airline Host', status: 'Confirmed', price: mockBaseOffer.baseFare },
-                { id: selectedOffer.id, type: 'Lounge', provider: 'Offersense Ecosystem', status: 'Fulfilled', price: selectedOffer.price }
+                { id: 'FL-001', type: 'Flight', provider: 'Airline Host', status: 'Confirmed', price: mockBaseOffer.baseFare, description: `${mockBaseOffer.cabin}, ${mockBaseOffer.route}` },
+                { id: selectedOffer.id, type: selectedOffer.type, provider: 'Offersense Ecosystem', status: 'Fulfilled', price: selectedOffer.price, description: selectedOffer.title }
             ]
         };
 
         await addDoc(collection(firestore, 'orders'), {
             ...orderData,
             createdAt: serverTimestamp(),
-            pnr: form.getValues('pnr'),
-            isSimulated: true
         });
 
-        await new Promise(r => setTimeout(r, 1500)); // Simulate PSS sync latency
+        setCreatedOrderId(orderId);
+        await new Promise(r => setTimeout(r, 1200)); 
         setStep('confirmation');
+        toast({ title: "PSS Synchronized", description: "EMD issued and PNR updated in Host system." });
     } catch (e: any) {
-        toast({ variant: 'destructive', title: 'Order Sync Failed', description: e.message });
+        toast({ variant: 'destructive', title: 'Sync Failed', description: e.message });
     } finally {
         setIsLoading(false);
     }
   };
 
-  // Logic to simulate dynamic results based on form inputs
   const simulatedOffers = useMemo(() => {
     const context = form.getValues();
     const offers = [
@@ -165,7 +171,7 @@ export default function AirportOfferComposerPage() {
         adjustment: context.loyaltyTier === 'Gold' ? '-$30 (Loyalty)' : '-$10 (Channel)',
         items: ['Fast Wi-Fi', 'Hot Buffet', 'Showers'],
         icon: Coffee,
-        type: 'Service'
+        type: 'Lounge'
       },
       { 
         id: 'SIM-002', 
@@ -175,7 +181,27 @@ export default function AirportOfferComposerPage() {
         adjustment: context.waitTime > 20 ? '-$50 (Queue Relief)' : '-$25 (Promo)',
         items: ['Security Priority', 'Lounge Access', 'Porter'],
         icon: Sparkles,
-        type: 'Dynamic Bundle'
+        type: 'Bundle'
+      },
+      {
+        id: 'SIM-004',
+        title: 'Premium Valet Parking',
+        price: context.tripPurpose === 'Business' ? 65 : 85,
+        originalPrice: 95,
+        adjustment: context.tripPurpose === 'Business' ? '-$30 (Corp Rate)' : '-$10 (Web Only)',
+        items: ['Terminal T5 Pickup', 'Hand Wash', 'Fast Exit'],
+        icon: Car,
+        type: 'Parking'
+      },
+      {
+        id: 'SIM-005',
+        title: 'Sky-High Gourmet Meal',
+        price: 22,
+        originalPrice: 35,
+        adjustment: '-$13 (Pre-order)',
+        items: ['Three-Course Menu', 'Premium Beverage', 'Priority Service'],
+        icon: Utensils,
+        type: 'Meal'
       }
     ];
 
@@ -188,7 +214,20 @@ export default function AirportOfferComposerPage() {
             adjustment: '-$10 (Urgency)',
             items: ['Zone 1 Boarding', 'Personal Alert'],
             icon: Zap,
-            type: 'Service'
+            type: 'FastTrack'
+        });
+    }
+
+    if (context.paxCount > 2) {
+        offers.push({
+            id: 'SIM-006',
+            title: 'Family Concierge Service',
+            price: 45,
+            originalPrice: 75,
+            adjustment: '-$30 (Family Bundle)',
+            items: ['Stroller Handling', 'Bag Drop Assist', 'Play Area Access'],
+            icon: Luggage,
+            type: 'Retail'
         });
     }
 
@@ -252,7 +291,7 @@ export default function AirportOfferComposerPage() {
                          <FormField control={form.control} name="loyaltyTier" render={({ field }) => (
                             <FormItem><FormLabel className="text-xs">Loyalty</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-8"><SelectValue /></SelectTrigger></FormControl>
-                            <SelectContent><SelectItem value="None">None</SelectItem><SelectItem value="Bronze">Bronze</SelectItem><SelectItem value="Silver">Silver</SelectItem><SelectItem value="Gold">Gold</SelectItem></SelectContent></Select></FormItem>
+                            <SelectContent><SelectItem value="None">None</SelectItem><SelectItem value="Bronze">Bronze</SelectItem><SelectItem value="Silver">Silver</SelectItem><SelectItem value="Gold">Gold</SelectItem><SelectItem value="Platinum">Platinum</SelectItem></SelectContent></Select></FormItem>
                         )} />
                         <FormField control={form.control} name="tripPurpose" render={({ field }) => (
                             <FormItem><FormLabel className="text-xs">Purpose</FormLabel>
@@ -268,6 +307,9 @@ export default function AirportOfferComposerPage() {
                             <FormItem><FormLabel className="text-xs">Depart in (m)</FormLabel><FormControl><Input type="number" className="h-8" {...field} /></FormControl></FormItem>
                         )} />
                     </div>
+                    <FormField control={form.control} name="paxCount" render={({ field }) => (
+                        <FormItem><FormLabel className="text-xs">Pax Count</FormLabel><FormControl><Input type="number" className="h-8" {...field} /></FormControl></FormItem>
+                    )} />
                   </div>
                   <Button type="button" onClick={handleSimulate} disabled={isLoading} className="w-full mt-4 font-bold">
                     {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
@@ -328,11 +370,11 @@ export default function AirportOfferComposerPage() {
                         <h3 className="text-xl font-bold flex items-center gap-2"><Store className="h-5 w-5 text-primary" /> Available Retailing Stream</h3>
                         <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">Continuous Pricing Active</Badge>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-12">
                         {simulatedOffers.map((offer) => (
                             <Card 
                                 key={offer.id} 
-                                className="group cursor-pointer hover:ring-2 hover:ring-primary transition-all relative overflow-hidden flex flex-col"
+                                className="group cursor-pointer hover:ring-2 hover:ring-primary transition-all relative overflow-hidden flex flex-col shadow-sm"
                                 onClick={() => handleSelectOffer(offer)}
                             >
                                 <div className="absolute top-0 right-0 bg-primary text-white text-[9px] font-black px-3 py-1 rounded-bl-lg">
@@ -344,7 +386,7 @@ export default function AirportOfferComposerPage() {
                                             <offer.icon className="h-6 w-6" />
                                         </div>
                                         <div>
-                                            <CardTitle>{offer.title}</CardTitle>
+                                            <CardTitle className="text-lg">{offer.title}</CardTitle>
                                             <CardDescription className="text-xs">Provided by Offersense Ecosystem</CardDescription>
                                         </div>
                                     </div>
@@ -388,25 +430,25 @@ export default function AirportOfferComposerPage() {
                                 <div className="space-y-2 p-4 bg-muted rounded-lg border">
                                     <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase tracking-widest">
                                         <span>Current PNR</span>
-                                        <span className="text-primary">{form.getValues('pnr')}</span>
+                                        <span className="text-primary font-mono">{form.getValues('pnr')}</span>
                                     </div>
                                     <Separator className="my-2" />
                                     <div className="flex justify-between items-center">
                                         <span className="text-sm">{mockBaseOffer.cabin} (Base)</span>
-                                        <span className="font-mono">${mockBaseOffer.baseFare.toFixed(2)}</span>
+                                        <span className="font-mono text-sm">${mockBaseOffer.baseFare.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between items-center text-primary font-bold">
                                         <span className="text-sm">{selectedOffer.title}</span>
-                                        <span className="font-mono">+${selectedOffer.price.toFixed(2)}</span>
+                                        <span className="font-mono text-sm">+${selectedOffer.price.toFixed(2)}</span>
                                     </div>
                                     <Separator className="my-4" />
                                     <div className="flex justify-between items-center">
                                         <span className="text-lg font-black uppercase">Total Authorized</span>
-                                        <span className="text-2xl font-black text-primary">${(mockBaseOffer.baseFare + selectedOffer.price).toFixed(2)}</span>
+                                        <span className="text-2xl font-black text-primary tabular-nums">${(mockBaseOffer.baseFare + selectedOffer.price).toFixed(2)}</span>
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <p className="text-[10px] text-muted-foreground uppercase font-black">Settlement Logic</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Settlement Logic</p>
                                     <div className="flex items-center gap-3 p-3 border rounded-lg bg-emerald-50/50">
                                         <ShieldCheck className="h-5 w-5 text-emerald-600" />
                                         <p className="text-xs text-emerald-800 leading-tight">Proceeding will issue a <strong>SITA Virtual EMD</strong> and commit real-time updates to the Host PSS system.</p>
@@ -423,18 +465,21 @@ export default function AirportOfferComposerPage() {
 
                         <div className="space-y-6">
                             <Card>
-                                <CardHeader><CardTitle className="text-sm">Hardware Token Preview</CardTitle></CardHeader>
+                                <CardHeader><CardTitle className="text-sm">Activation Token Preview</CardTitle></CardHeader>
                                 <CardContent className="flex flex-col items-center">
-                                    <div className="p-4 bg-white rounded-xl shadow-inner border">
+                                    <div className="p-4 bg-white rounded-xl shadow-inner border relative group">
                                         <Image src="https://picsum.photos/seed/qr/200/200" alt="QR" width={180} height={180} className="opacity-80" data-ai-hint="qr code" />
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                             <QrCode className="h-10 w-10 text-primary" />
+                                        </div>
                                     </div>
-                                    <p className="mt-4 font-mono text-[10px] text-muted-foreground uppercase">TOKEN_{selectedOffer.id}</p>
+                                    <p className="mt-4 font-mono text-[10px] text-muted-foreground uppercase">SITA_EMD_{selectedOffer.id}</p>
                                 </CardContent>
                             </Card>
                             <Alert>
                                 <AlertCircle className="h-4 w-4" />
-                                <AlertTitle className="text-xs font-bold uppercase">Compliance Check</AlertTitle>
-                                <AlertDescription className="text-xs text-muted-foreground">Price is within ±15% band of fair-market value. Order is compliant with SITA CUPPS protocols.</AlertDescription>
+                                <AlertTitle className="text-xs font-bold uppercase tracking-wider">Compliance Status</AlertTitle>
+                                <AlertDescription className="text-xs text-muted-foreground">Price is within valid ±15% band of fair-market value. Order complies with SITA CUPPS and carrier host protocols.</AlertDescription>
                             </Alert>
                         </div>
                     </div>
@@ -442,44 +487,104 @@ export default function AirportOfferComposerPage() {
             )}
 
             {step === 'confirmation' && (
-                <div className="flex flex-col items-center justify-center min-h-[600px] text-center space-y-8 animate-in zoom-in-50 duration-700">
-                    <div className="relative">
-                         <div className="absolute inset-0 animate-ping rounded-full bg-emerald-500/20 scale-150"></div>
-                         <div className="h-24 w-24 bg-emerald-500 rounded-full flex items-center justify-center relative z-10 shadow-xl shadow-emerald-500/20">
-                            <Check className="h-12 w-12 text-white stroke-[4]" />
+                <div className="space-y-8 animate-in zoom-in-50 duration-700 pb-20">
+                    <div className="flex flex-col items-center justify-center text-center space-y-4">
+                        <div className="relative">
+                             <div className="absolute inset-0 animate-ping rounded-full bg-emerald-500/20 scale-150"></div>
+                             <div className="h-24 w-24 bg-emerald-500 rounded-full flex items-center justify-center relative z-10 shadow-xl shadow-emerald-500/20">
+                                <Check className="h-12 w-12 text-white stroke-[4]" />
+                            </div>
+                        </div>
+                        <div className="space-y-1">
+                            <h2 className="text-3xl font-black tracking-tight text-primary">Retailing Complete</h2>
+                            <p className="text-muted-foreground max-w-sm mx-auto">PNR successfully updated. Virtual EMD Issued. Synchronization with Host PSS confirmed via SITA Broker.</p>
                         </div>
                     </div>
-                    <div className="space-y-2">
-                        <h2 className="text-3xl font-black tracking-tight">Retailing Complete</h2>
-                        <p className="text-muted-foreground max-w-sm mx-auto">PNR successfully updated. EMD Issued. Synchronization with Host PSS confirmed.</p>
-                    </div>
                     
-                    <Card className="w-full max-w-lg border-emerald-100 bg-emerald-50/20">
-                        <CardContent className="p-6">
-                            <div className="grid grid-cols-3 gap-4 text-center">
-                                <div className="space-y-1">
-                                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Order ID</p>
-                                    <p className="font-mono text-sm">#{Math.floor(Math.random() * 90000) + 10000}</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Sync Hub</p>
-                                    <p className="font-mono text-sm">{form.getValues('airportNode')}</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Status</p>
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-8 max-w-5xl mx-auto">
+                        <Card className="md:col-span-8 shadow-md border-emerald-100 overflow-hidden">
+                            <CardHeader className="bg-emerald-50/50 border-b">
+                                <div className="flex justify-between items-center">
+                                    <CardTitle className="text-md flex items-center gap-2">
+                                        <ReceiptText className="h-5 w-5 text-emerald-600" />
+                                        Order Receipt: {createdOrderId}
+                                    </CardTitle>
                                     <Badge variant="default" className="bg-emerald-600">PSS_COMMITTED</Badge>
                                 </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                <div className="p-6 space-y-6">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                        <div><p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-1">Customer</p><p className="font-bold text-sm">{mockBaseOffer.passenger}</p></div>
+                                        <div><p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-1">PNR</p><p className="font-mono font-bold text-sm uppercase">{form.getValues('pnr')}</p></div>
+                                        <div><p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-1">Terminal</p><p className="font-bold text-sm">{form.getValues('airportNode')}</p></div>
+                                        <div><p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-1">Method</p><p className="font-bold text-sm">Credit Card</p></div>
+                                    </div>
+                                    <Separator />
+                                    <div className="space-y-4">
+                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Transaction Items</p>
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between items-center p-3 bg-muted/40 rounded-lg border">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 bg-background rounded border shadow-sm text-muted-foreground"><Activity className="h-4 w-4" /></div>
+                                                    <div><p className="font-bold text-sm">Air Transportation</p><p className="text-[10px] text-muted-foreground uppercase">{mockBaseOffer.cabin}, {mockBaseOffer.route}</p></div>
+                                                </div>
+                                                <p className="font-mono font-bold text-sm">${mockBaseOffer.baseFare.toFixed(2)}</p>
+                                            </div>
+                                            <div className="flex justify-between items-center p-3 bg-emerald-50/40 border border-emerald-100 rounded-lg">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 bg-background rounded border shadow-sm text-emerald-600"><selectedOffer.icon className="h-4 w-4" /></div>
+                                                    <div><p className="font-bold text-sm text-emerald-900">{selectedOffer.title}</p><p className="text-[10px] text-emerald-600 uppercase font-black">{selectedOffer.type}</p></div>
+                                                </div>
+                                                <p className="font-mono font-bold text-sm text-emerald-900">${selectedOffer.price.toFixed(2)}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-muted/30 p-6 flex justify-between items-center border-t">
+                                    <p className="text-xs font-black uppercase text-muted-foreground tracking-[0.2em]">Total Settled</p>
+                                    <p className="text-3xl font-black text-primary tabular-nums">${(mockBaseOffer.baseFare + selectedOffer.price).toFixed(2)}</p>
+                                </div>
+                            </CardContent>
+                        </Card>
 
-                    <div className="flex gap-4">
-                        <Button variant="outline" asChild>
-                            <Link href="/orders"><History className="mr-2 h-4 w-4" /> View Order Dashboard</Link>
-                        </Button>
-                        <Button onClick={() => setStep('discovery')} className="font-bold">
-                            New Simulation <ArrowRight className="ml-2 h-4 w-4" />
-                        </Button>
+                        <div className="md:col-span-4 space-y-6">
+                            <Card className="bg-indigo-50/30 border-indigo-100">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-xs font-black uppercase text-indigo-700 flex items-center gap-2 tracking-wider">
+                                        <MonitorDot className="h-4 w-4" /> Audit Trace
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="flex gap-3 relative">
+                                        <div className="absolute left-1.5 top-2 bottom-0 w-0.5 bg-indigo-200" />
+                                        <div className="h-3 w-3 rounded-full bg-indigo-500 relative z-10 mt-1" />
+                                        <div><p className="text-[10px] font-bold">14:02:11</p><p className="text-xs text-muted-foreground">Ecosystem Discovery Triggered</p></div>
+                                    </div>
+                                    <div className="flex gap-3 relative">
+                                        <div className="absolute left-1.5 top-2 bottom-0 w-0.5 bg-indigo-200" />
+                                        <div className="h-3 w-3 rounded-full bg-indigo-500 relative z-10 mt-1" />
+                                        <div><p className="text-[10px] font-bold">14:02:45</p><p className="text-xs text-muted-foreground">Continuous Pricing Applied</p></div>
+                                    </div>
+                                    <div className="flex gap-3 relative">
+                                        <div className="h-3 w-3 rounded-full bg-indigo-500 relative z-10 mt-1" />
+                                        <div><p className="text-[10px] font-bold">14:03:02</p><p className="text-xs text-muted-foreground font-bold text-indigo-700">Order Committed & PSS Synced</p></div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            <div className="flex flex-col gap-3">
+                                <Button className="w-full font-bold h-11" onClick={() => setStep('discovery')}>
+                                    New Simulation <ArrowRight className="ml-2 h-4 w-4" />
+                                </Button>
+                                <Button variant="outline" className="w-full h-11" asChild>
+                                    <Link href="/orders"><History className="mr-2 h-4 w-4" /> Order History</Link>
+                                </Button>
+                                <Button variant="secondary" className="w-full h-11" asChild>
+                                    <Link href={`/orders/${createdOrderId}`}><ExternalLink className="mr-2 h-4 w-4" /> View Full Receipt</Link>
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
