@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "order": {
@@ -97,18 +98,31 @@
             }
         }
     },
-    "offer": {
-      "title": "Offer",
+    "airlineAncillary": {
+      "title": "Airline Ancillary",
+      "description": "A flight-related upsell service (e.g. Baggage, Wi-Fi).",
+      "type": "object",
       "properties": {
         "name": { "type": "string" },
-        "category": { "type": "string", "enum": ["Air", "Airport", "Combined"] },
-        "sitaConfig": {
-            "type": "object",
-            "properties": {
-                "displayOnKiosk": { "type": "boolean" },
-                "qrPayloadType": { "type": "string", "enum": ["DeepLink", "VoucherCode"] }
-            }
-        }
+        "category": { "type": "string", "enum": ["Baggage", "Seat", "On-board", "Flexibility"] },
+        "pssCode": { "type": "string" },
+        "defaultPrice": { "type": "number" },
+        "currency": { "type": "string" },
+        "cabinEligibility": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "airportService": {
+      "title": "Airport Service",
+      "description": "A non-air ecosystem service provided by airport partners.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "sku": { "type": "string" },
+        "providerId": { "type": "string" },
+        "airportCode": { "type": "string" },
+        "category": { "type": "string", "enum": ["Lounge", "Parking", "Retail", "Voucher", "Merchandise", "F&B"] },
+        "stockType": { "type": "string", "enum": ["Digital", "Physical"] },
+        "commissionRate": { "type": "number" }
       }
     }
   },
@@ -118,6 +132,8 @@
     "/partners/{partnerId}": { "schema": { "$ref": "#/entities/partner" }, "description": "Airport retail and service partners." },
     "/airlines/{airlineId}": { "schema": { "$ref": "#/entities/airline" }, "description": "Participating airlines." },
     "/orders/{orderId}": { "schema": { "$ref": "#/entities/order" }, "description": "Orders including airport touchpoint metadata." },
-    "/cohorts/{cohortId}": { "schema": { "$ref": "#/entities/cohort" }, "description": "Advanced ecosystem targeting cohorts." }
+    "/cohorts/{cohortId}": { "schema": { "$ref": "#/entities/cohort" }, "description": "Advanced ecosystem targeting cohorts." },
+    "/airlineAncillaries/{ancillaryId}": { "schema": { "$ref": "#/entities/airlineAncillary" }, "description": "Flight-related service portfolio." },
+    "/airportServices/{serviceId}": { "schema": { "$ref": "#/entities/airportService" }, "description": "Non-air airport partner services." }
   }
 }

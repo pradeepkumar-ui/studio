@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -40,6 +41,7 @@ import {
   Target,
   Megaphone,
   KeyRound,
+  LayoutList,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { cn } from '@/lib/utils';
@@ -86,7 +88,8 @@ const menuItems: MenuItem[] = [
     subItems: [
       { href: '/fares', label: 'Base Fares', icon: DollarSign },
       { href: '/catalog', label: 'Branded Fares', icon: Layers },
-      { href: '/ancillary-products', label: 'Airport Services (Non-Air)', icon: Store },
+      { href: '/pricing/ancillary', label: 'Airline Ancillaries', icon: Plane },
+      { href: '/ancillary-products', label: 'Airport Services', icon: Store },
       { href: '/stock-keeper', label: 'Inventory / Stock', icon: Package },
     ],
   },
