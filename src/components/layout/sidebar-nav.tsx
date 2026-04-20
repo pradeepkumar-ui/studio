@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from 'next/navigation';
 import { usePathname } from 'next/navigation';
 import {
   SidebarHeader,
@@ -32,7 +32,6 @@ import {
   Store,
   Truck,
   Target,
-  Megaphone,
   KeyRound,
   Boxes,
 } from 'lucide-react';
@@ -88,7 +87,6 @@ const menuItems: MenuItem[] = [
       { href: '/offer-composer', label: 'Airport Offer Composer', icon: QrCode },
       { href: '/bundles', label: 'Offers & Bundles Studio', icon: Package },
       { href: '/offers/cohorts', label: 'Retailing Cohorts', icon: Target },
-      { href: '/promotions', label: 'Campaigns & Promos', icon: Megaphone },
     ],
   },
   {
