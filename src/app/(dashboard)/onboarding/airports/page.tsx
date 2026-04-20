@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -28,10 +29,9 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
 const mockAirports: AirportOnboarding[] = [
-    { id: '1', name: 'Heathrow Airport', iataCode: 'LHR', location: 'London', status: 'Active', sitaEnabled: true, terminals: 'T2, T3, T4, T5' },
-    { id: '2', name: 'John F. Kennedy', iataCode: 'JFK', location: 'New York', status: 'Active', sitaEnabled: true, terminals: 'T1, T4, T5, T8' },
-    { id: '3', name: 'Changi Airport', iataCode: 'SIN', location: 'Singapore', status: 'Onboarding', sitaEnabled: true, terminals: 'T1, T2, T3, T4' },
-    { id: '4', name: 'Dubai International', iataCode: 'DXB', location: 'Dubai', status: 'Active', sitaEnabled: true, terminals: 'T1, T3' },
+    { id: '1', name: 'Heathrow Airport', iataCode: 'LHR', location: 'London', status: 'Active', sitaEnabled: true, terminals: 'T2, T3, T4, T5', hardwarePrefix: 'K-LHR', timeZone: 'GMT', technicalContact: 'ops@heathrow.com' },
+    { id: '2', name: 'John F. Kennedy', iataCode: 'JFK', location: 'New York', status: 'Active', sitaEnabled: true, terminals: 'T1, T4, T5, T8', hardwarePrefix: 'K-JFK', timeZone: 'EST', technicalContact: 'it@panynj.gov' },
+    { id: '3', name: 'Changi Airport', iataCode: 'SIN', location: 'Singapore', status: 'Onboarding', sitaEnabled: true, terminals: 'T1, T2, T3, T4', hardwarePrefix: 'K-SIN', timeZone: 'SGT', technicalContact: 'support@changi.sg' },
 ];
 
 export default function AirportOnboardingPage() {
