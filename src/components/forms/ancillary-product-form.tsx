@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Store, MapPin, Package, DollarSign, Clock, Info } from 'lucide-react';
+import { Store, MapPin, Package, DollarSign, Clock, Info, Loader2 } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { useMemo } from 'react';
 import { useFirestore, useCollection } from '@/firebase';
@@ -69,8 +69,8 @@ export function AncillaryProductForm({ product, onSubmit, onCancel }: AirportAnc
   const airportsQuery = useMemo(() => firestore ? collection(firestore, 'airports') : undefined, [firestore]);
   const partnersQuery = useMemo(() => firestore ? collection(firestore, 'partners') : undefined, [firestore]);
 
-  const { data: airports } = useCollection(airportsQuery);
-  const { data: partners } = useCollection(partnersQuery);
+  const { data: airports, loading: loadingAirports } = useCollection(airportsQuery);
+  const { data: partners, loading: loadingPartners } = useCollection(partnersQuery);
 
   const form = useForm<AirportAncillary>({
     resolver: zodResolver(airportAncillarySchema),
@@ -117,7 +117,7 @@ export function AncillaryProductForm({ product, onSubmit, onCancel }: AirportAnc
                  <FormField control={form.control} name="category" render={({ field }) => (
                     <FormItem>
                     <FormLabel>Ecosystem Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent>
                             <SelectItem value="Lounge - Airport">Airport Operated Lounge</SelectItem>
@@ -146,23 +146,41 @@ export function AncillaryProductForm({ product, onSubmit, onCancel }: AirportAnc
                 <FormField control={form.control} name="airportId" render={({ field }) => (
                     <FormItem>
                     <FormLabel>Airport Hub</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl><SelectTrigger><SelectValue placeholder="Select Node..." /></SelectTrigger></FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={loadingAirports ? "Loading airports..." : "Select Hub..."} />
+                          </SelectTrigger>
+                        </FormControl>
                         <SelectContent>
-                            {(airports || []).map(a => <SelectItem key={a.id} value={a.id!}>{a.name} ({a.iataCode})</SelectItem>)}
+                            {airports && airports.length > 0 ? (
+                              airports.map(a => <SelectItem key={a.id} value={a.iataCode}>{a.name} ({a.iataCode})</SelectItem>)
+                            ) : (
+                              <SelectItem value="none" disabled>No airports onboarded</SelectItem>
+                            )}
                         </SelectContent>
                     </Select>
+                    <FormMessage />
                     </FormItem>
                 )} />
                 <FormField control={form.control} name="providerId" render={({ field }) => (
                     <FormItem>
                     <FormLabel>Authorized Vendor</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl><SelectTrigger><SelectValue placeholder="Select Partner..." /></SelectTrigger></FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={loadingPartners ? "Loading vendors..." : "Select Partner..."} />
+                          </SelectTrigger>
+                        </FormControl>
                         <SelectContent>
-                            {(partners || []).map(p => <SelectItem key={p.id} value={p.id!}>{p.name}</SelectItem>)}
+                            {partners && partners.length > 0 ? (
+                              partners.map(p => <SelectItem key={p.id} value={p.id!}>{p.name}</SelectItem>)
+                            ) : (
+                              <SelectItem value="none" disabled>No vendors onboarded</SelectItem>
+                            )}
                         </SelectContent>
                     </Select>
+                    <FormMessage />
                     </FormItem>
                 )} />
             </div>
@@ -218,7 +236,7 @@ export function AncillaryProductForm({ product, onSubmit, onCancel }: AirportAnc
                 <FormField control={form.control} name="stockType" render={({ field }) => (
                     <FormItem>
                         <FormLabel>Inventory Mode</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                             <SelectContent>
                                 <SelectItem value="Digital">Digital (Unlimited)</SelectItem>
