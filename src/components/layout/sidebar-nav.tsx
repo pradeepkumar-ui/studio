@@ -82,8 +82,8 @@ const menuItems: MenuItem[] = [
     label: 'Inventory & Stock',
     icon: Boxes,
     subItems: [
-      { href: '/inventory', label: 'Flight Inventory', icon: Plane },
-      { href: '/stock-keeper', label: 'Stock Keeper', icon: ClipboardList },
+      { href: '/inventory/airline', label: 'Airline Ancillary Inventory', icon: Plane },
+      { href: '/inventory/airport', label: 'Airport Ancillary Inventory', icon: Store },
     ],
   },
   {

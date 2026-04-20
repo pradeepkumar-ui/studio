@@ -39,6 +39,51 @@
         "status": { "type": "string", "enum": ["Active", "Draft"] }
       }
     },
+    "airlineAncillaryInventory": {
+      "title": "Airline Ancillary Inventory",
+      "description": "Detailed stock and capacity control for flight-based ancillaries.",
+      "type": "object",
+      "properties": {
+        "ancillaryId": { "type": "string" },
+        "flightNumber": { "type": "string" },
+        "segment": { "type": "string" },
+        "aircraftType": { "type": "string" },
+        "totalCapacity": { "type": "number" },
+        "available": { "type": "number" },
+        "reserved": { "type": "number" },
+        "quotas": {
+          "type": "object",
+          "properties": {
+            "Direct": { "type": "number" },
+            "OTA": { "type": "number" },
+            "GDS": { "type": "number" }
+          }
+        },
+        "status": { "type": "string", "enum": ["Open", "Waitlist", "Closed"] }
+      }
+    },
+    "airportAncillaryInventory": {
+      "title": "Airport Ancillary Inventory",
+      "description": "Detailed capacity control for airport ecosystem services.",
+      "type": "object",
+      "properties": {
+        "ancillaryId": { "type": "string" },
+        "airportCode": { "type": "string" },
+        "location": { "type": "string" },
+        "timeSlotBased": { "type": "boolean" },
+        "totalCapacity": { "type": "number" },
+        "available": { "type": "number" },
+        "quotas": {
+          "type": "object",
+          "properties": {
+            "CUSS": { "type": "number" },
+            "CUTE": { "type": "number" },
+            "Mobile": { "type": "number" }
+          }
+        },
+        "syncStatus": { "type": "string" }
+      }
+    },
     "order": {
       "title": "Order",
       "description": "Represents a customer order containing flights, ancillaries, and airport services.",
@@ -86,21 +131,6 @@
         "guardrails": { "type": "object" },
         "status": { "type": "string", "enum": ["Active", "Inactive", "Test"] }
       }
-    },
-    "stockItem": {
-      "title": "Stock Item",
-      "description": "Exhaustive inventory unit for air ancillaries or ecosystem services.",
-      "type": "object",
-      "properties": {
-        "sku": { "type": "string" },
-        "category": { "type": "string" },
-        "type": { "type": "string", "enum": ["Physical", "Digital", "Service_Capacity"] },
-        "supplier": { "type": "string" },
-        "available": { "type": "number" },
-        "reserved": { "type": "number", "description": "Units held in active retailing carts." },
-        "threshold": { "type": "number", "description": "Minimum stock level before alert." },
-        "status": { "type": "string", "enum": ["In Stock", "Low Stock", "Out of Stock"] }
-      }
     }
   },
   "auth": { "providers": [] },
@@ -112,7 +142,8 @@
     "/cohorts/{cohortId}": { "schema": { "$ref": "#/entities/cohort" }, "description": "Advanced ecosystem targeting cohorts." },
     "/bundles/{bundleId}": { "schema": { "$ref": "#/entities/bundle" }, "description": "Retailing offers and bundles." },
     "/pricingRules/{ruleId}": { "schema": { "$ref": "#/entities/pricingRule" }, "description": "Dynamic pricing and continuous pricing policies." },
-    "/stock/{stockId}": { "schema": { "$ref": "#/entities/stockItem" }, "description": "Inventory and logistics matrix." },
+    "/airlineInventory/{stockId}": { "schema": { "$ref": "#/entities/airlineAncillaryInventory" }, "description": "Carrier-specific ancillary stock." },
+    "/airportInventory/{stockId}": { "schema": { "$ref": "#/entities/airportAncillaryInventory" }, "description": "Airport ecosystem ancillary stock." },
     "/airlineAncillaries/{ancillaryId}": { "schema": { "$ref": "#/entities/airlineAncillary" }, "description": "Exhaustive airline portfolio skus." },
     "/airportServices/{ancillaryId}": { "schema": { "$ref": "#/entities/airportAncillary" }, "description": "Exhaustive airport ecosystem skus." }
   }
