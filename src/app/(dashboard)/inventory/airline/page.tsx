@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AirlineInventoryForm, type AirlineInventory } from '@/components/forms/airline-inventory-form';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
 
 const mockAirlineInventory: any[] = [
     { id: '1', ancillaryName: 'Extra Legroom Seat', pssCode: 'EXLG', flightNumber: 'AC101', totalCapacity: 12, available: 4, reserved: 2, status: 'Open', aircraftType: 'A350', quotas: { Direct: 8, OTA: 2, GDS: 2 } },
@@ -224,8 +225,4 @@ export default function AirlineInventoryPage() {
             </Dialog>
         </div>
     );
-}
-
-function cn(...inputs: any[]) {
-    return inputs.filter(Boolean).join(' ');
 }

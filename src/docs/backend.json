@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "airlineAncillary": {
@@ -117,19 +116,6 @@
             }
           }
         }
-      }
-    },
-    "pricingRule": {
-      "title": "Dynamic Pricing Rule",
-      "description": "A deterministic policy for continuous pricing adjustments and commercial guardrails.",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "trigger": { "type": "object" },
-        "conditions": { "type": "object" },
-        "action": { "type": "object" },
-        "guardrails": { "type": "object" },
-        "status": { "type": "string", "enum": ["Active", "Inactive", "Test"] }
       }
     }
   },
