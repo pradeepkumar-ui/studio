@@ -22,7 +22,6 @@ import {
   ShoppingCart,
   DollarSign,
   BarChart3,
-  RadioTower,
   Plane,
   Settings,
   Layers,
@@ -36,7 +35,6 @@ import {
   MapPin,
   QrCode,
   Store,
-  MonitorDot,
   Truck,
   Target,
   Megaphone,
@@ -45,7 +43,6 @@ import {
   ClipboardList,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
-import { cn } from '@/lib/utils';
 import React from 'react';
 
 type MenuItem = {
@@ -62,14 +59,13 @@ const menuItems: MenuItem[] = [
     icon: LayoutDashboard,
   },
   {
-    href: '/offers',
-    label: 'Offers & Retailing',
-    icon: Ticket,
+    href: '/ecosystem',
+    label: 'Ecosystem Onboarding',
+    icon: Building2,
     subItems: [
-      { href: '/offer-composer', label: 'Airport Offer Composer', icon: QrCode },
-      { href: '/bundles', label: 'Offers & Bundles Studio', icon: Package },
-      { href: '/offers/cohorts', label: 'Retailing Cohorts', icon: Target },
-      { href: '/promotions', label: 'Campaigns & Promos', icon: Megaphone },
+      { href: '/onboarding/airports', label: 'Manage Airports', icon: MapPin },
+      { href: '/onboarding/airlines', label: 'Manage Airlines', icon: Plane },
+      { href: '/onboarding/partners', label: 'Manage Vendors', icon: Store },
     ],
   },
   {
@@ -93,13 +89,14 @@ const menuItems: MenuItem[] = [
     ],
   },
   {
-    href: '/ecosystem',
-    label: 'Ecosystem Onboarding',
-    icon: Building2,
+    href: '/offers',
+    label: 'Offers & Retailing',
+    icon: Ticket,
     subItems: [
-      { href: '/onboarding/airports', label: 'Manage Airports', icon: MapPin },
-      { href: '/onboarding/airlines', label: 'Manage Airlines', icon: Plane },
-      { href: '/onboarding/partners', label: 'Manage Vendors', icon: Store },
+      { href: '/offer-composer', label: 'Airport Offer Composer', icon: QrCode },
+      { href: '/bundles', label: 'Offers & Bundles Studio', icon: Package },
+      { href: '/offers/cohorts', label: 'Retailing Cohorts', icon: Target },
+      { href: '/promotions', label: 'Campaigns & Promos', icon: Megaphone },
     ],
   },
   {
@@ -111,16 +108,6 @@ const menuItems: MenuItem[] = [
       { href: '/orders/servicing', label: 'Order Servicing', icon: Settings },
       { href: '/orders/delivery', label: 'Fulfillment Queue', icon: Truck },
       { href: '/service-consumption', label: 'Service Consumption', icon: Signal },
-    ],
-  },
-  {
-    href: '/sita-ops',
-    label: 'SITA Infrastructure',
-    icon: MonitorDot,
-    subItems: [
-      { href: '/broker', label: 'SITA CUSS/CUTE Integration', icon: RadioTower },
-      { href: '/compliance', label: 'CUPPS Compliance', icon: Database },
-      { href: '/orchestration', label: 'Change Management', icon: Signal },
     ],
   },
   {
@@ -202,7 +189,7 @@ export default function SidebarNav() {
       <SidebarHeader>
         <div className="flex items-center gap-2">
           <div className="bg-primary rounded-md p-1.5 flex items-center justify-center">
-            <MonitorDot className="text-primary-foreground size-5" />
+            <LayoutDashboard className="text-primary-foreground size-5" />
           </div>
           <span className="font-semibold text-lg text-sidebar-foreground group-data-[collapsible=icon]:hidden">
             Offersense
