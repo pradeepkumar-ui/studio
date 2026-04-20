@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -20,16 +19,12 @@ import {
   LayoutDashboard,
   Ticket,
   ShoppingCart,
-  DollarSign,
   BarChart3,
   Plane,
   Settings,
-  Layers,
   ChevronRight,
   Package,
   Database,
-  BrainCircuit,
-  Wand2,
   Signal,
   Building2,
   MapPin,
@@ -40,7 +35,6 @@ import {
   Megaphone,
   KeyRound,
   Boxes,
-  ClipboardList,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import React from 'react';
@@ -110,13 +104,8 @@ const menuItems: MenuItem[] = [
   },
   {
     href: '/analytics',
-    label: 'Analytics & AI',
+    label: 'Retailing Analytics',
     icon: BarChart3,
-    subItems: [
-      { href: '/analytics', label: 'Retailing Analytics', icon: BarChart3 },
-      { href: '/optimisation', label: 'AI Offer Optimisation', icon: Wand2 },
-      { href: '/fare-change-forecast', label: 'Forecasting', icon: BrainCircuit },
-    ],
   },
 ];
 
