@@ -1,6 +1,44 @@
 
 {
   "entities": {
+    "airlineAncillary": {
+      "title": "Airline Ancillary SKU",
+      "description": "Exhaustive portfolio item for airline-managed flight ancillaries.",
+      "type": "object",
+      "properties": {
+        "airlineId": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "pssCode": { "type": "string", "description": "Host PSS SSR identifier." },
+        "defaultPrice": { "type": "number" },
+        "currency": { "type": "string" },
+        "cabinEligibility": { "type": "array", "items": { "type": "string" } },
+        "aircraftEligibility": { "type": "array", "items": { "type": "string" }, "description": "Specific fleet types compatible with this service." },
+        "refundPolicy": { "type": "string" },
+        "advancePurchaseDays": { "type": "number" },
+        "status": { "type": "string", "enum": ["Active", "Disabled", "Testing"] }
+      }
+    },
+    "airportAncillary": {
+      "title": "Airport Ancillary SKU",
+      "description": "Exhaustive portfolio item for airport-managed and partner services.",
+      "type": "object",
+      "properties": {
+        "airportId": { "type": "string" },
+        "providerId": { "type": "string" },
+        "name": { "type": "string" },
+        "sku": { "type": "string" },
+        "category": { "type": "string" },
+        "terminal": { "type": "string" },
+        "gate": { "type": "string" },
+        "price": { "type": "number" },
+        "currency": { "type": "string" },
+        "stockType": { "type": "string", "enum": ["Digital", "Physical"] },
+        "commissionRate": { "type": "number", "description": "SITA Platform commission percentage." },
+        "operatingHours": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Draft"] }
+      }
+    },
     "order": {
       "title": "Order",
       "description": "Represents a customer order containing flights, ancillaries, and airport services.",
@@ -74,6 +112,8 @@
     "/cohorts/{cohortId}": { "schema": { "$ref": "#/entities/cohort" }, "description": "Advanced ecosystem targeting cohorts." },
     "/bundles/{bundleId}": { "schema": { "$ref": "#/entities/bundle" }, "description": "Retailing offers and bundles." },
     "/pricingRules/{ruleId}": { "schema": { "$ref": "#/entities/pricingRule" }, "description": "Dynamic pricing and continuous pricing policies." },
-    "/stock/{stockId}": { "schema": { "$ref": "#/entities/stockItem" }, "description": "Inventory and logistics matrix." }
+    "/stock/{stockId}": { "schema": { "$ref": "#/entities/stockItem" }, "description": "Inventory and logistics matrix." },
+    "/airlineAncillaries/{ancillaryId}": { "schema": { "$ref": "#/entities/airlineAncillary" }, "description": "Exhaustive airline portfolio skus." },
+    "/airportServices/{ancillaryId}": { "schema": { "$ref": "#/entities/airportAncillary" }, "description": "Exhaustive airport ecosystem skus." }
   }
 }

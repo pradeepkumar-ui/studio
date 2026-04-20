@@ -73,10 +73,8 @@ const menuItems: MenuItem[] = [
     label: 'Product Catalogue',
     icon: Database,
     subItems: [
-      { href: '/fares', label: 'Base Fares', icon: DollarSign },
-      { href: '/catalog', label: 'Branded Fares', icon: Layers },
       { href: '/pricing/ancillary', label: 'Airline Ancillaries', icon: Plane },
-      { href: '/ancillary-products', label: 'Airport Services', icon: Store },
+      { href: '/ancillary-products', label: 'Airport Ancillaries', icon: Store },
     ],
   },
   {

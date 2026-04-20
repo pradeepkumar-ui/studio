@@ -22,81 +22,95 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Store, MapPin, Package, DollarSign } from 'lucide-react';
+import { Store, MapPin, Package, DollarSign, Clock, Info } from 'lucide-react';
 import { Separator } from '../ui/separator';
+import { useMemo } from 'react';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
-const ancillaryProductSchema = z.object({
+const airportAncillarySchema = z.object({
   id: z.string().optional(),
   sku: z.string().min(3, 'SKU is required.').toUpperCase(),
   name: z.string().min(5, 'Product name is required.'),
-  providerId: z.string({ required_error: 'Must select an authorized vendor.' }),
-  airportCode: z.string({ required_error: 'Select a parent airport node.' }),
-  terminal: z.string().min(2, 'Terminal is required.'),
-  category: z.enum(['Lounge', 'Parking', 'Retail', 'Voucher', 'Merchandise', 'F&B']),
+  providerId: z.string({ required_error: 'Select an authorized vendor.' }),
+  airportId: z.string({ required_error: 'Select the airport hub.' }),
+  terminal: z.string().min(1, 'Terminal is required.'),
+  gate: z.string().optional(),
+  category: z.enum([
+    'Lounge - Airport', 
+    'Parking - Valet', 
+    'Parking - EV Charging', 
+    'Retail - Voucher', 
+    'F&B - Pre-order', 
+    'Service - Meet & Assist', 
+    'Service - Fast Track',
+    'Service - Porter',
+    'Service - Sleeping Pod'
+  ]),
   price: z.coerce.number().min(0, 'Price must be non-negative.'),
-  currency: z.string().length(3, '3-letter currency code.').toUpperCase(),
+  currency: z.string().length(3, '3-letter code.').toUpperCase(),
   stockType: z.enum(['Digital', 'Physical']),
-  stockLevel: z.coerce.number().optional(),
   commissionRate: z.coerce.number().min(0).max(100),
+  operatingHours: z.string().optional(),
   status: z.enum(['Active', 'Draft']),
+  description: z.string().optional(),
 });
 
-export type AirportService = z.infer<typeof ancillaryProductSchema>;
+export type AirportAncillary = z.infer<typeof airportAncillarySchema>;
 
-const mockVendors = [
-    { id: 'V-001', name: 'SkyLounge Partners', airport: 'LHR' },
-    { id: 'V-002', name: 'Terminal Parking Co', airport: 'JFK' },
-    { id: 'V-003', name: 'EcoVoucher Solutions', airport: 'Global' },
-];
-
-const airportOptions = [
-    { value: 'LHR', label: 'London Heathrow (LHR)' },
-    { value: 'JFK', label: 'John F. Kennedy (JFK)' },
-    { value: 'SIN', label: 'Singapore Changi (SIN)' },
-];
-
-interface AirportServiceFormProps {
-  product: AirportService | null;
-  onSubmit: (data: AirportService) => void;
+interface AirportAncillaryFormProps {
+  product: AirportAncillary | null;
+  onSubmit: (data: AirportAncillary) => void;
   onCancel: () => void;
 }
 
-export function AncillaryProductForm({ product, onSubmit, onCancel }: AirportServiceFormProps) {
-  const form = useForm<AirportService>({
-    resolver: zodResolver(ancillaryProductSchema),
+export function AncillaryProductForm({ product, onSubmit, onCancel }: AirportAncillaryFormProps) {
+  const firestore = useFirestore();
+  const airportsQuery = useMemo(() => firestore ? collection(firestore, 'airports') : undefined, [firestore]);
+  const partnersQuery = useMemo(() => firestore ? collection(firestore, 'partners') : undefined, [firestore]);
+
+  const { data: airports } = useCollection(airportsQuery);
+  const { data: partners } = useCollection(partnersQuery);
+
+  const form = useForm<AirportAncillary>({
+    resolver: zodResolver(airportAncillarySchema),
     defaultValues: product || {
       sku: '',
       name: '',
-      category: 'Lounge',
+      category: 'Lounge - Airport',
       price: 0,
       currency: 'USD',
       stockType: 'Digital',
       commissionRate: 15,
       status: 'Draft',
+      airportId: '',
+      providerId: '',
+      terminal: '',
     },
   });
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-h-[75vh] overflow-y-auto pr-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-h-[80vh] overflow-y-auto pr-4">
         
+        {/* --- IDENTITY --- */}
         <section className="space-y-4">
-            <div className="flex items-center gap-2 text-primary font-bold uppercase text-xs tracking-widest">
-                <Package className="h-4 w-4" />
-                Service Identity & SKU
+            <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-widest">
+                <Package className="h-3.5 w-3.5" />
+                Service Identity
             </div>
             <FormField control={form.control} name="name" render={({ field }) => (
                 <FormItem>
-                <FormLabel>Service Display Name</FormLabel>
-                <FormControl><Input placeholder="e.g., LHR T5 Executive Lounge Pass" {...field} /></FormControl>
+                <FormLabel>Ancillary Product Name</FormLabel>
+                <FormControl><Input placeholder="e.g., LHR T5 Private Sleeping Pod" {...field} /></FormControl>
                 <FormMessage />
                 </FormItem>
             )} />
             <div className="grid grid-cols-2 gap-4">
                 <FormField control={form.control} name="sku" render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Unique SKU</FormLabel>
-                    <FormControl><Input placeholder="e.g., LON-LOU-T5-01" {...field} /></FormControl>
+                    <FormLabel>System SKU</FormLabel>
+                    <FormControl><Input placeholder="e.g., POD-LHR-T5" {...field} /></FormControl>
                     <FormMessage />
                     </FormItem>
                 )} />
@@ -106,12 +120,13 @@ export function AncillaryProductForm({ product, onSubmit, onCancel }: AirportSer
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent>
-                            <SelectItem value="Lounge">Lounge Access</SelectItem>
-                            <SelectItem value="Parking">Airport Parking</SelectItem>
-                            <SelectItem value="Retail">Retail Voucher</SelectItem>
-                            <SelectItem value="Voucher">Digital Voucher</SelectItem>
-                            <SelectItem value="Merchandise">Physical Merch</SelectItem>
-                            <SelectItem value="F&B">Food & Beverage</SelectItem>
+                            <SelectItem value="Lounge - Airport">Airport Operated Lounge</SelectItem>
+                            <SelectItem value="Parking - Valet">Valet Parking</SelectItem>
+                            <SelectItem value="Parking - EV Charging">EV Charging Point</SelectItem>
+                            <SelectItem value="F&B - Pre-order">Food & Beverage Pre-order</SelectItem>
+                            <SelectItem value="Service - Meet & Assist">Meet & Assist (Concierge)</SelectItem>
+                            <SelectItem value="Service - Fast Track">Security Fast Track</SelectItem>
+                            <SelectItem value="Service - Sleeping Pod">Rest & Sleep Services</SelectItem>
                         </SelectContent>
                     </Select>
                     </FormItem>
@@ -121,39 +136,47 @@ export function AncillaryProductForm({ product, onSubmit, onCancel }: AirportSer
 
         <Separator />
 
+        {/* --- DEPLOYMENT --- */}
         <section className="space-y-4">
-            <div className="flex items-center gap-2 text-primary font-bold uppercase text-xs tracking-widest">
-                <Store className="h-4 w-4" />
-                Partner & Deployment
+            <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-widest">
+                <MapPin className="h-3.5 w-3.5" />
+                Operational Node
             </div>
-            <FormField control={form.control} name="providerId" render={({ field }) => (
-                <FormItem>
-                <FormLabel>Authorized Vendor</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl><SelectTrigger><SelectValue placeholder="Select provider" /></SelectTrigger></FormControl>
-                    <SelectContent>
-                        {mockVendors.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
-                    </SelectContent>
-                </Select>
-                <FormMessage />
-                </FormItem>
-            )} />
             <div className="grid grid-cols-2 gap-4">
-                <FormField control={form.control} name="airportCode" render={({ field }) => (
+                <FormField control={form.control} name="airportId" render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Airport Node</FormLabel>
+                    <FormLabel>Airport Hub</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl><SelectTrigger><SelectValue placeholder="Select airport" /></SelectTrigger></FormControl>
+                        <FormControl><SelectTrigger><SelectValue placeholder="Select Node..." /></SelectTrigger></FormControl>
                         <SelectContent>
-                            {airportOptions.map(a => <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>)}
+                            {(airports || []).map(a => <SelectItem key={a.id} value={a.id!}>{a.name} ({a.iataCode})</SelectItem>)}
                         </SelectContent>
                     </Select>
                     </FormItem>
                 )} />
+                <FormField control={form.control} name="providerId" render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Authorized Vendor</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl><SelectTrigger><SelectValue placeholder="Select Partner..." /></SelectTrigger></FormControl>
+                        <SelectContent>
+                            {(partners || []).map(p => <SelectItem key={p.id} value={p.id!}>{p.name}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                    </FormItem>
+                )} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
                 <FormField control={form.control} name="terminal" render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Terminal / Gate</FormLabel>
-                    <FormControl><Input placeholder="e.g., T5 B-Gates" {...field} /></FormControl>
+                    <FormLabel>Terminal</FormLabel>
+                    <FormControl><Input placeholder="e.g., T5" {...field} /></FormControl>
+                    </FormItem>
+                )} />
+                <FormField control={form.control} name="gate" render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Gate/Area (Optional)</FormLabel>
+                    <FormControl><Input placeholder="e.g., Gate B48" {...field} /></FormControl>
                     </FormItem>
                 )} />
             </div>
@@ -161,53 +184,55 @@ export function AncillaryProductForm({ product, onSubmit, onCancel }: AirportSer
 
         <Separator />
 
+        {/* --- COMMERCIALS --- */}
         <section className="space-y-4">
-            <div className="flex items-center gap-2 text-primary font-bold uppercase text-xs tracking-widest">
-                <DollarSign className="h-4 w-4" />
-                Commercials & Fulfillment
+            <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-widest">
+                <DollarSign className="h-3.5 w-3.5" />
+                SITA Commercials
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <FormField control={form.control} name="price" render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Selling Price</FormLabel>
-                        <FormControl><Input type="number" {...field} /></FormControl>
+                        <FormLabel>Unit Price</FormLabel>
+                        <div className="relative">
+                            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <FormControl><Input type="number" {...field} className="pl-9" /></FormControl>
+                        </div>
                     </FormItem>
                 )} />
                  <FormField control={form.control} name="commissionRate" render={({ field }) => (
                     <FormItem>
                         <FormLabel>Marketplace Fee (%)</FormLabel>
                         <FormControl><Input type="number" {...field} /></FormControl>
-                        <FormDescription>Offersense platform commission.</FormDescription>
+                        <FormDescription>SITA Platform revenue share.</FormDescription>
                     </FormItem>
                 )} />
             </div>
             <div className="grid grid-cols-2 gap-4">
+                <FormField control={form.control} name="operatingHours" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel className="flex items-center gap-1.5"><Clock className="h-3 w-3" /> Service Hours</FormLabel>
+                        <FormControl><Input placeholder="e.g., 04:00 - 23:00" {...field} /></FormControl>
+                    </FormItem>
+                )} />
                 <FormField control={form.control} name="stockType" render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Fulfillment Type</FormLabel>
+                        <FormLabel>Inventory Mode</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                             <SelectContent>
-                                <SelectItem value="Digital">Digital (Voucher/QR)</SelectItem>
-                                <SelectItem value="Physical">Physical (Hand-over)</SelectItem>
+                                <SelectItem value="Digital">Digital (Unlimited)</SelectItem>
+                                <SelectItem value="Physical">Physical (Stocked)</SelectItem>
                             </SelectContent>
                         </Select>
                     </FormItem>
                 )} />
-                {form.watch('stockType') === 'Physical' && (
-                     <FormField control={form.control} name="stockLevel" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Current Stock</FormLabel>
-                            <FormControl><Input type="number" {...field} /></FormControl>
-                        </FormItem>
-                    )} />
-                )}
             </div>
         </section>
 
         <div className="flex justify-end gap-4 pt-4 sticky bottom-0 bg-background py-4 border-t z-10">
-            <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-            <Button type="submit">{product ? 'Update Service' : 'Publish to Ecosystem'}</Button>
+            <Button type="button" variant="outline" onClick={onCancel}>Discard</Button>
+            <Button type="submit" className="font-bold">{product ? 'Update Ancillary' : 'Commit to Ecosystem'}</Button>
         </div>
       </form>
     </Form>
