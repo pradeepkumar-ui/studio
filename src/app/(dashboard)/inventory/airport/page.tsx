@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -32,6 +31,10 @@ const mockAirportInventory: any[] = [
     { id: '1', ancillaryName: 'Executive Lounge Entry', airportCode: 'LHR', terminal: 'T5', supplier: 'Lounge Stars', totalCapacity: 45, available: 12, syncStatus: 'Live', quotas: { CUSS: 10, CUTE: 5, Mobile: 30 }, timeSlotBased: true },
     { id: '2', ancillaryName: 'Fast Track Security', airportCode: 'JFK', terminal: 'T4', supplier: 'Airport Authority', totalCapacity: 200, available: 45, syncStatus: 'Live', quotas: { CUSS: 50, CUTE: 50, Mobile: 100 }, timeSlotBased: false },
     { id: '3', ancillaryName: 'VIP Valet Parking', airportCode: 'SIN', terminal: 'T1', supplier: 'Changi Valet', totalCapacity: 20, available: 0, syncStatus: 'Critical', quotas: { CUSS: 2, CUTE: 2, Mobile: 16 }, timeSlotBased: true },
+    { id: '4', ancillaryName: 'Sleeping Pod (6h)', airportCode: 'DXB', terminal: 'T3', supplier: 'Sleep\'nFly', totalCapacity: 12, available: 2, syncStatus: 'Live', quotas: { CUSS: 0, CUTE: 2, Mobile: 10 }, timeSlotBased: true },
+    { id: '5', ancillaryName: 'Porter Service', airportCode: 'LHR', terminal: 'T2', supplier: 'Baggage Helpers', totalCapacity: 100, available: 88, syncStatus: 'Live', quotas: { CUSS: 20, CUTE: 60, Mobile: 20 }, timeSlotBased: false },
+    { id: '6', ancillaryName: 'EV Charging Bay', airportCode: 'LHR', terminal: 'T5', supplier: 'Heathrow Parking', totalCapacity: 10, available: 5, syncStatus: 'Live', quotas: { CUSS: 0, CUTE: 0, Mobile: 10 }, timeSlotBased: true },
+    { id: '7', ancillaryName: 'Meet & Assist', airportCode: 'SIN', terminal: 'T3', supplier: 'Changi Concierge', totalCapacity: 15, available: 1, syncStatus: 'Critical', quotas: { CUSS: 0, CUTE: 10, Mobile: 5 }, timeSlotBased: true },
 ];
 
 export default function AirportInventoryPage() {

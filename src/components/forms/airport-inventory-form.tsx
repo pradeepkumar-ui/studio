@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -52,6 +51,14 @@ export type AirportInventory = z.infer<typeof airportInventorySchema>;
 const mockAirportAncillaries = [
   { id: 'ap1', name: 'Executive Lounge Entry', airportId: 'LHR', terminal: 'T5', providerId: 'Lounge Stars' },
   { id: 'ap2', name: 'Fast Track Security', airportId: 'JFK', terminal: 'T4', providerId: 'Airport Authority' },
+  { id: 'ap3', name: 'VIP Valet Parking', airportId: 'SIN', terminal: 'T1', providerId: 'Changi Valet' },
+  { id: 'ap4', name: 'Premium Sleeping Pod (6h)', airportId: 'DXB', terminal: 'T3', providerId: "Sleep'nFly" },
+  { id: 'ap5', name: 'Porter Service (3 Bags)', airportId: 'LHR', terminal: 'T2', providerId: 'Baggage Helpers' },
+  { id: 'ap6', name: 'Meet & Assist Concierge', airportId: 'SIN', terminal: 'T3', providerId: 'Changi Concierge' },
+  { id: 'ap7', name: 'Short-Stay EV Charging', airportId: 'LHR', terminal: 'T5', providerId: 'Heathrow Parking' },
+  { id: 'ap8', name: 'Gourmet Meal Voucher ($25)', airportId: 'DXB', terminal: 'T1', providerId: 'SkyCafe' },
+  { id: 'ap9', name: 'Premium Shower Suite', airportId: 'SIN', terminal: 'T4', providerId: 'The Haven' },
+  { id: 'ap10', name: 'Arrivals Chauffeur', airportId: 'JFK', terminal: 'T8', providerId: 'JFK Limo' },
 ];
 
 interface AirportInventoryFormProps {
@@ -66,7 +73,7 @@ export function AirportInventoryForm({ inventory, onSubmit, onCancel }: AirportI
   const { data: servicesData } = useCollection(servicesQuery);
 
   const availableServices = useMemo(() => {
-    return servicesData && servicesData.length > 0 ? servicesData : mockAirportAncillaries;
+    return (servicesData && servicesData.length > 0) ? servicesData : mockAirportAncillaries;
   }, [servicesData]);
 
   const form = useForm<AirportInventory>({

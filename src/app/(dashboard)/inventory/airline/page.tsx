@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -32,6 +31,10 @@ const mockAirlineInventory: any[] = [
     { id: '1', ancillaryName: 'Extra Legroom Seat', pssCode: 'EXLG', flightNumber: 'AC101', totalCapacity: 12, available: 4, reserved: 2, status: 'Open', aircraftType: 'A350', quotas: { Direct: 8, OTA: 2, GDS: 2 } },
     { id: '2', ancillaryName: 'Gourmet Meal', pssCode: 'MEAL', flightNumber: 'LH450', totalCapacity: 50, available: 5, reserved: 10, status: 'Waitlist', aircraftType: 'B787', quotas: { Direct: 40, OTA: 10, GDS: 0 } },
     { id: '3', ancillaryName: 'Premium Wi-Fi', pssCode: 'WIFI', flightNumber: 'Global', totalCapacity: 500, available: 450, reserved: 5, status: 'Open', aircraftType: 'All', quotas: { Direct: 300, OTA: 100, GDS: 100 } },
+    { id: '4', ancillaryName: '1st Checked Bag', pssCode: 'BAG1', flightNumber: 'EK202', totalCapacity: 250, available: 12, reserved: 0, status: 'Open', aircraftType: 'B777', quotas: { Direct: 200, OTA: 50, GDS: 0 } },
+    { id: '5', ancillaryName: 'Pet in Cabin', pssCode: 'PETC', flightNumber: 'UA812', totalCapacity: 4, available: 0, reserved: 1, status: 'Closed', aircraftType: 'B787', quotas: { Direct: 4, OTA: 0, GDS: 0 } },
+    { id: '6', ancillaryName: 'Standby Upgrade (J)', pssCode: 'UPGS', flightNumber: 'SQ317', totalCapacity: 10, available: 10, reserved: 0, status: 'Open', aircraftType: 'A380', quotas: { Direct: 10, OTA: 0, GDS: 0 } },
+    { id: '7', ancillaryName: 'Preferred Zone Seat', pssCode: 'PFRD', flightNumber: 'BA287', totalCapacity: 30, available: 2, reserved: 5, status: 'Waitlist', aircraftType: 'B787', quotas: { Direct: 20, OTA: 5, GDS: 5 } },
 ];
 
 export default function AirlineInventoryPage() {
