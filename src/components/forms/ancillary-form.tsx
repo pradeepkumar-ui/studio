@@ -122,10 +122,17 @@ export function AncillaryForm({ ancillary, onSubmit, onCancel }: AncillaryFormPr
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Parent Airline</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger><SelectValue placeholder="Select Carrier..." /></SelectTrigger></FormControl>
                         <SelectContent>
-                            {(airlines || []).map(a => <SelectItem key={a.id} value={a.id!}>{a.name} ({a.icaoCode})</SelectItem>)}
+                            {(airlines || []).map(a => (
+                                <SelectItem key={a.id} value={a.id!}>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-bold">{a.name}</span>
+                                        <span className="text-[10px] text-muted-foreground uppercase font-mono">({a.icaoCode})</span>
+                                    </div>
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                     </FormItem>

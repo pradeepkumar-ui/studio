@@ -154,7 +154,14 @@ export function AncillaryProductForm({ product, onSubmit, onCancel }: AirportAnc
                         </FormControl>
                         <SelectContent>
                             {airports && airports.length > 0 ? (
-                              airports.map(a => <SelectItem key={a.id} value={a.iataCode}>{a.name} ({a.iataCode})</SelectItem>)
+                              airports.map(a => (
+                                <SelectItem key={a.id} value={a.iataCode}>
+                                  <div className="flex flex-col">
+                                    <span className="font-bold">{a.name}</span>
+                                    <span className="text-[10px] text-muted-foreground uppercase font-mono">{a.iataCode}</span>
+                                  </div>
+                                </SelectItem>
+                              ))
                             ) : (
                               <SelectItem value="none" disabled>No airports onboarded</SelectItem>
                             )}
@@ -174,7 +181,14 @@ export function AncillaryProductForm({ product, onSubmit, onCancel }: AirportAnc
                         </FormControl>
                         <SelectContent>
                             {partners && partners.length > 0 ? (
-                              partners.map(p => <SelectItem key={p.id} value={p.id!}>{p.name}</SelectItem>)
+                              partners.map(p => (
+                                <SelectItem key={p.id} value={p.id!}>
+                                  <div className="flex flex-col text-left">
+                                    <span className="font-bold">{p.name}</span>
+                                    <span className="text-[10px] text-muted-foreground uppercase">{p.category} • {p.airportCode}</span>
+                                  </div>
+                                </SelectItem>
+                              ))
                             ) : (
                               <SelectItem value="none" disabled>No vendors onboarded</SelectItem>
                             )}
