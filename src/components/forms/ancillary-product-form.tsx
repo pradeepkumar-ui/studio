@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Store, MapPin, Package, DollarSign, Clock, Info, Loader2 } from 'lucide-react';
+import { Package, MapPin, DollarSign, Clock, Loader2 } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { useMemo } from 'react';
 import { useFirestore, useCollection } from '@/firebase';
@@ -58,6 +57,18 @@ const airportAncillarySchema = z.object({
 
 export type AirportAncillary = z.infer<typeof airportAncillarySchema>;
 
+const mockAirports = [
+  { id: 'lhr-001', iataCode: 'LHR', name: 'London Heathrow' },
+  { id: 'jfk-001', iataCode: 'JFK', name: 'John F. Kennedy' },
+  { id: 'sin-001', iataCode: 'SIN', name: 'Singapore Changi' },
+];
+
+const mockVendors = [
+  { id: 'v-001', name: 'SkyCafe Gourmet', category: 'F&B', airportCode: 'LHR' },
+  { id: 'v-002', name: 'Global Duty Free', category: 'Retail', airportCode: 'JFK' },
+  { id: 'v-003', name: 'Lounge Stars', category: 'Services', airportCode: 'SIN' },
+];
+
 interface AirportAncillaryFormProps {
   product: AirportAncillary | null;
   onSubmit: (data: AirportAncillary) => void;
@@ -69,8 +80,16 @@ export function AncillaryProductForm({ product, onSubmit, onCancel }: AirportAnc
   const airportsQuery = useMemo(() => firestore ? collection(firestore, 'airports') : undefined, [firestore]);
   const partnersQuery = useMemo(() => firestore ? collection(firestore, 'partners') : undefined, [firestore]);
 
-  const { data: airports, loading: loadingAirports } = useCollection(airportsQuery);
-  const { data: partners, loading: loadingPartners } = useCollection(partnersQuery);
+  const { data: airportsData } = useCollection(airportsQuery);
+  const { data: partnersData } = useCollection(partnersQuery);
+
+  const availableAirports = useMemo(() => {
+    return airportsData && airportsData.length > 0 ? airportsData : mockAirports;
+  }, [airportsData]);
+
+  const availableVendors = useMemo(() => {
+    return partnersData && partnersData.length > 0 ? partnersData : mockVendors;
+  }, [partnersData]);
 
   const form = useForm<AirportAncillary>({
     resolver: zodResolver(airportAncillarySchema),
@@ -149,22 +168,18 @@ export function AncillaryProductForm({ product, onSubmit, onCancel }: AirportAnc
                     <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={loadingAirports ? "Loading airports..." : "Select Hub..."} />
+                            <SelectValue placeholder="Select Hub..." />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                            {airports && airports.length > 0 ? (
-                              airports.map(a => (
+                            {availableAirports.map(a => (
                                 <SelectItem key={a.id} value={a.iataCode}>
-                                  <div className="flex flex-col">
+                                  <div className="flex flex-col text-left">
                                     <span className="font-bold">{a.name}</span>
                                     <span className="text-[10px] text-muted-foreground uppercase font-mono">{a.iataCode}</span>
                                   </div>
                                 </SelectItem>
-                              ))
-                            ) : (
-                              <SelectItem value="none" disabled>No airports onboarded</SelectItem>
-                            )}
+                            ))}
                         </SelectContent>
                     </Select>
                     <FormMessage />
@@ -176,22 +191,18 @@ export function AncillaryProductForm({ product, onSubmit, onCancel }: AirportAnc
                     <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={loadingPartners ? "Loading vendors..." : "Select Partner..."} />
+                            <SelectValue placeholder="Select Partner..." />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                            {partners && partners.length > 0 ? (
-                              partners.map(p => (
+                            {availableVendors.map(p => (
                                 <SelectItem key={p.id} value={p.id!}>
                                   <div className="flex flex-col text-left">
                                     <span className="font-bold">{p.name}</span>
                                     <span className="text-[10px] text-muted-foreground uppercase">{p.category} • {p.airportCode}</span>
                                   </div>
                                 </SelectItem>
-                              ))
-                            ) : (
-                              <SelectItem value="none" disabled>No vendors onboarded</SelectItem>
-                            )}
+                            ))}
                         </SelectContent>
                     </Select>
                     <FormMessage />

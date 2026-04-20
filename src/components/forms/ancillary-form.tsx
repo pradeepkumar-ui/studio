@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -78,6 +77,12 @@ const airlineAncillarySchema = z.object({
 
 export type Ancillary = z.infer<typeof airlineAncillarySchema>;
 
+const mockAirlines = [
+  { id: 'airline-001', name: 'Global Airways', icaoCode: 'GAB' },
+  { id: 'airline-002', name: 'SkyBridge Airlines', icaoCode: 'SBA' },
+  { id: 'airline-003', name: 'MetroLink Air', icaoCode: 'MLN' },
+];
+
 interface AncillaryFormProps {
   ancillary: Ancillary | null;
   onSubmit: (data: Ancillary) => void;
@@ -87,7 +92,11 @@ interface AncillaryFormProps {
 export function AncillaryForm({ ancillary, onSubmit, onCancel }: AncillaryFormProps) {
   const firestore = useFirestore();
   const airlinesQuery = useMemo(() => firestore ? collection(firestore, 'airlines') : undefined, [firestore]);
-  const { data: airlines } = useCollection(airlinesQuery);
+  const { data: airlinesData } = useCollection(airlinesQuery);
+
+  const availableAirlines = useMemo(() => {
+    return airlinesData && airlinesData.length > 0 ? airlinesData : mockAirlines;
+  }, [airlinesData]);
 
   const form = useForm<Ancillary>({
     resolver: zodResolver(airlineAncillarySchema),
@@ -125,7 +134,7 @@ export function AncillaryForm({ ancillary, onSubmit, onCancel }: AncillaryFormPr
                     <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger><SelectValue placeholder="Select Carrier..." /></SelectTrigger></FormControl>
                         <SelectContent>
-                            {(airlines || []).map(a => (
+                            {availableAirlines.map(a => (
                                 <SelectItem key={a.id} value={a.id!}>
                                     <div className="flex items-center gap-2">
                                         <span className="font-bold">{a.name}</span>
