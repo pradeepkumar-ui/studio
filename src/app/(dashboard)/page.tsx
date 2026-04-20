@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -20,6 +19,7 @@ import {
   ProgressBar,
   BarList,
   Tracker,
+  DonutChart,
   type Color,
 } from '@tremor/react';
 import { 
@@ -65,7 +65,7 @@ const latencyDistribution = [
   { name: '< 1s', value: 60, color: 'emerald' },
   { name: '1-2s', value: 22, color: 'blue' },
   { name: '2-3s', value: 10, color: 'yellow' },
-  { name: '> 3s', value: 8, color: 'rose' },
+  { name: '4-5s', value: 8, color: 'rose' },
 ];
 
 const eventTimelineData = [
