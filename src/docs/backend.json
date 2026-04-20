@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "airlineAncillary": {
@@ -63,15 +64,19 @@
     },
     "airportAncillaryInventory": {
       "title": "Airport Ancillary Inventory",
-      "description": "Detailed capacity control for airport ecosystem services.",
+      "description": "Detailed capacity control for airport ecosystem services including time-slots and resources.",
       "type": "object",
       "properties": {
         "ancillaryId": { "type": "string" },
         "airportCode": { "type": "string" },
-        "location": { "type": "string" },
+        "terminal": { "type": "string" },
+        "zone": { "type": "string" },
         "timeSlotBased": { "type": "boolean" },
         "totalCapacity": { "type": "number" },
         "available": { "type": "number" },
+        "bufferLimit": { "type": "number" },
+        "resourceType": { "type": "string", "enum": ["Seat", "Staff", "Vehicle", "Bay"] },
+        "fulfillmentMode": { "type": "string", "enum": ["Instant", "Request"] },
         "quotas": {
           "type": "object",
           "properties": {
@@ -80,7 +85,8 @@
             "Mobile": { "type": "number" }
           }
         },
-        "syncStatus": { "type": "string" }
+        "syncStatus": { "type": "string" },
+        "operationalMode": { "type": "string", "enum": ["NORMAL", "CONGESTION", "DISRUPTION"] }
       }
     },
     "order": {
