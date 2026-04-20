@@ -1,44 +1,7 @@
-import { FirebaseApp, initializeApp } from 'firebase/app';
-import { Auth, getAuth } from 'firebase/auth';
-import { Firestore, getFirestore } from 'firebase/firestore';
-
-import { firebaseConfig } from './config';
-import { FirebaseProvider, useAuth, useFirebase, useFirebaseApp, useFirestore } from './provider';
-import { FirebaseClientProvider } from './client-provider';
-import { useCollection } from './firestore/use-collection';
-import { useSubcollection } from './firestore/use-subcollection';
-import { useDoc } from './firestore/use-doc';
-import { useUser } from './auth/use-user';
-
-
-let app: FirebaseApp | undefined;
-let auth: Auth | undefined;
-let firestore: Firestore | undefined;
-
-function initializeFirebase() {
-  if (!app) {
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    firestore = getFirestore(app);
-  }
-  
-  if (!app || !auth || !firestore) {
-    throw new Error("Firebase has not been initialized. Please call initializeFirebase first.");
-  }
-
-  return { app, auth, firestore };
-}
-
-export {
-  initializeFirebase,
-  FirebaseProvider,
-  FirebaseClientProvider,
-  useFirebase,
-  useFirebaseApp,
-  useFirestore,
-  useAuth,
-  useCollection,
-  useSubcollection,
-  useDoc,
-  useUser,
-};
+export * from './provider';
+export * from './client-provider';
+export * from './init';
+export * from './firestore/use-collection';
+export * from './firestore/use-subcollection';
+export * from './firestore/use-doc';
+export * from './auth/use-user';
