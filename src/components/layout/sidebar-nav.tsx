@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -86,9 +85,9 @@ const menuItems: MenuItem[] = [
     label: 'Offers & Retailing',
     icon: Ticket,
     subItems: [
+      { href: '/offers/ancillary-aggregates', label: 'Airline Ancillary Aggregator', icon: Layers },
       { href: '/offers/cohorts', label: 'Retailing Cohorts', icon: Target },
       { href: '/bundles', label: 'Offers & Dynamic pricing', icon: Package },
-      { href: '/offers/ancillary-aggregates', label: 'Airline Ancillary Aggregate', icon: Layers },
       { href: '/offer-composer', label: 'Airport Offer Composer', icon: QrCode },
     ],
   },
