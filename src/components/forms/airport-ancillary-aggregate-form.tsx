@@ -67,6 +67,11 @@ interface AirportAncillaryAggregateFormProps {
 const mockAirportAncillariesFallback = [
   { id: 'ap1', name: 'Executive Lounge Access', ancillaryCode: 'LOU', category: 'Lounge', airportCode: 'LHR' },
   { id: 'ap2', name: 'Fast Track Security', ancillaryCode: 'FST', category: 'Priority service', airportCode: 'JFK' },
+  { id: 'ap3', name: 'VIP Valet Parking', ancillaryCode: 'VAL', category: 'Parking', airportCode: 'SIN' },
+  { id: 'ap4', name: 'Premium Sleeping Pod (6h)', ancillaryCode: 'POD', category: 'Inflight comfort', airportCode: 'DXB' },
+  { id: 'ap5', name: 'Porter Service (3 Bags)', ancillaryCode: 'PTR', category: 'Special service', airportCode: 'LHR' },
+  { id: 'ap6', name: 'Meet & Greet Arrival', ancillaryCode: 'MNG', category: 'Special service', airportCode: 'CDG' },
+  { id: 'ap7', name: 'Airport Chauffeur', ancillaryCode: 'CHF', category: 'Ground Transport', airportCode: 'FRA' },
 ];
 
 export function AirportAncillaryAggregateForm({ aggregate, onSubmit, onCancel }: AirportAncillaryAggregateFormProps) {
