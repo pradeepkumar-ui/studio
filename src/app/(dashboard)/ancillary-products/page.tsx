@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -33,7 +32,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, PlusCircle, Store, MapPin, Loader2, Tag, Percent, Clock } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Store, MapPin, Loader2, Tag, ShieldCheck, Briefcase } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { AncillaryProductForm, type AirportAncillary } from '@/components/forms/ancillary-product-form';
@@ -41,8 +40,8 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
 const initialAirportServices: any[] = [
-    { id: '1', sku: 'LHR-LOU-T5', name: 'LHR Executive Lounge', category: 'Lounge - Airport', providerId: 'V-001', airportId: 'LHR', terminal: 'T5', price: 45, currency: 'USD', stockType: 'Digital', commissionRate: 15, status: 'Active', operatingHours: '04:00 - 23:00' },
-    { id: '2', sku: 'JFK-VAL-T4', name: 'VIP Valet Parking', category: 'Parking - Valet', providerId: 'V-002', airportId: 'JFK', terminal: 'T4', price: 85, currency: 'USD', stockType: 'Physical', commissionRate: 10, status: 'Active', operatingHours: '24/7' },
+    { id: '1', ancillaryCode: 'LOU01', name: 'LHR Executive Lounge Entry', shortName: 'LHR Lounge', category: 'Lounge', subcategory: 'Lounge day pass', status: 'Active', version: 1, airportCode: 'LHR', owningBusinessUnit: 'Hub Ops', providerName: 'Lounge Stars' },
+    { id: '2', ancillaryCode: 'VALET', name: 'VIP Valet Parking', shortName: 'VIP Valet', category: 'Parking', subcategory: 'Valet parking', status: 'Active', version: 1, airportCode: 'JFK', owningBusinessUnit: 'Commercial', providerName: 'Changi Valet' },
 ]
 
 export default function AirportAncillaryCataloguePage() {
@@ -50,15 +49,21 @@ export default function AirportAncillaryCataloguePage() {
   const servicesQuery = useMemo(() => firestore ? collection(firestore, 'airportServices') : undefined, [firestore]);
   const { data: servicesCollection, loading } = useCollection(servicesQuery);
   
+  const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState<AirportAncillary | null>(null);
   const { toast } = useToast();
 
   const displayServices = (servicesCollection && servicesCollection.length > 0) 
-    ? (servicesCollection as AirportAncillary[]) 
+    ? (servicesCollection as any[]) 
     : initialAirportServices;
 
-  const handleOpenDialog = (service: AirportAncillary | null = null) => {
+  const filteredServices = displayServices.filter((s) =>
+    s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    s.ancillaryCode?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleOpenDialog = (service: any | null = null) => {
     setEditingService(service);
     setIsDialogOpen(true);
   };
@@ -69,10 +74,10 @@ export default function AirportAncillaryCataloguePage() {
       if (editingService?.id) {
         const ref = doc(firestore, 'airportServices', editingService.id);
         await setDoc(ref, { ...data, updatedAt: serverTimestamp() }, { merge: true });
-        toast({ title: 'Registry Updated', description: `${data.name} saved successfully.` });
+        toast({ title: 'Hub Registry Updated', description: `${data.name} saved successfully.` });
       } else {
         await addDoc(collection(firestore, 'airportServices'), { ...data, createdAt: serverTimestamp() });
-        toast({ title: 'New Ecosystem SKU', description: `${data.name} published to hub catalogue.` });
+        toast({ title: 'New Hub SKU', description: `${data.name} published to ecosystem catalogue.` });
       }
     } catch (e: any) {
         toast({ variant: 'destructive', title: 'Error', description: e.message });
@@ -94,84 +99,85 @@ export default function AirportAncillaryCataloguePage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight">Airport Ancillary Catalogue</h1>
-          <p className="text-muted-foreground">Manage authorized ecosystem-wide services, terminal deployments, and SITA commission terms.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Airport Ancillary Master</h1>
+          <p className="text-muted-foreground">Manage authorized ecosystem-wide services, hub deployments, and partner ownership details.</p>
         </div>
         <Button onClick={() => handleOpenDialog()} className="font-bold">
             <PlusCircle className="mr-2 h-4 w-4" />
-            Publish Hub Service
+            Create Service Master
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-            <CardTitle>Ecosystem Marketplace</CardTitle>
-            <CardDescription>A centralized registry of all airport partner offerings, deployed per terminal node.</CardDescription>
+            <CardTitle>Ecosystem Hub Registry</CardTitle>
+            <CardDescription>Centralized registry of exhaustive hub services and partner commercials.</CardDescription>
         </CardHeader>
         <CardContent>
-          {loading && displayServices.length === 0 ? (
-            <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
-          ) : (
+          <div className="flex items-center justify-between py-4">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search hub registry..."
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                className="pl-9"
+              />
+            </div>
+          </div>
+
+          <div className="rounded-md border">
             <Table>
-                <TableHeader>
+                <TableHeader className="bg-muted/30">
                 <TableRow>
-                    <TableHead>Service & SKU</TableHead>
-                    <TableHead>Deployment Node</TableHead>
-                    <TableHead>Ecosystem Logic</TableHead>
-                    <TableHead>Service Hours</TableHead>
-                    <TableHead className="text-right">Price / Commission</TableHead>
+                    <TableHead>Master Identity</TableHead>
+                    <TableHead>Categorization</TableHead>
+                    <TableHead>Hub Ownership</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
                 </TableHeader>
                 <TableBody>
-                {displayServices.map((service) => (
-                    <TableRow key={service.id}>
-                    <TableCell className="font-medium">
+                {filteredServices.map((service) => (
+                    <TableRow key={service.id} className="group cursor-default">
+                    <TableCell>
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-primary/10 rounded">
+                            <div className="p-2 bg-primary/10 rounded group-hover:scale-110 transition-transform">
                                 <Store className="h-4 w-4 text-primary" />
                             </div>
                             <div>
-                                <div className="font-bold">{service.name}</div>
-                                <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">{service.sku}</div>
+                                <div className="font-bold text-sm">{service.name}</div>
+                                <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">{service.ancillaryCode} • v{service.version || 1}</div>
                             </div>
                         </div>
                     </TableCell>
                     <TableCell>
-                        <div className="flex items-center gap-1.5 font-mono text-xs">
-                            <MapPin className="h-3 w-3 text-primary" />
-                            <span className="font-bold">{service.airportId}</span>
-                            <span className="text-muted-foreground">({service.terminal})</span>
-                        </div>
-                    </TableCell>
-                    <TableCell>
-                        <div className="flex flex-col gap-1">
+                        <div className="flex flex-col gap-0.5">
                             <Badge variant="secondary" className="text-[9px] w-fit uppercase font-black">{service.category}</Badge>
-                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                                <Tag className="h-2.5 w-2.5" /> {service.stockType} Fulfillment
+                            <span className="text-[10px] text-muted-foreground italic">{service.subcategory}</span>
+                        </div>
+                    </TableCell>
+                    <TableCell>
+                        <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-1.5 font-bold text-xs text-primary">
+                                <MapPin className="h-3 w-3" /> {service.airportCode}
+                            </div>
+                            <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                <Briefcase className="h-2.5 w-2.5" /> {service.owningBusinessUnit}
                             </div>
                         </div>
                     </TableCell>
                     <TableCell>
-                        <div className="flex items-center gap-1 text-xs font-medium">
-                            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                            {service.operatingHours || 'N/A'}
-                        </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                        <div className="font-black text-primary font-mono">{new Intl.NumberFormat('en-US', { style: 'currency', currency: service.currency || 'USD' }).format(service.price)}</div>
-                        <div className="text-[10px] text-emerald-600 font-bold flex items-center justify-end gap-1">
-                            <Percent className="h-2.5 w-2.5" /> {service.commissionRate}% SITA Fee
-                        </div>
+                        <Badge variant={service.status === 'Active' ? 'default' : 'secondary'} className="text-[9px] font-black uppercase">{service.status}</Badge>
                     </TableCell>
                     <TableCell className="text-right">
                         <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button size="icon" variant="ghost"><MoreHorizontal className="h-4 w-4" /></Button>
+                            <Button size="icon" variant="ghost" className="hover:bg-muted"><MoreHorizontal className="h-4 w-4" /></Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Registry Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleOpenDialog(service)}><Tag className="mr-2 h-4 w-4"/>Edit Technical Config</DropdownMenuItem>
+                        <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuLabel className="text-[10px] font-black uppercase text-muted-foreground">Service Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleOpenDialog(service)}><Tag className="mr-2 h-4 w-4"/>Edit Master Details</DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-destructive font-bold" onClick={() => service.id && handleDelete(service.id)}>Offboard SKU</DropdownMenuItem>
                         </DropdownMenuContent>
@@ -181,15 +187,15 @@ export default function AirportAncillaryCataloguePage() {
                 ))}
                 </TableBody>
             </Table>
-          )}
+          </div>
         </CardContent>
       </Card>
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle>{editingService ? 'Update Ecosystem SKU' : 'Publish Exhaustive Hub Service'}</DialogTitle>
-            <DialogDescription>Define precise terminal placement, partner commercials, and fulfillment parameters for this ecosystem ancillary.</DialogDescription>
+            <DialogTitle className="text-2xl font-black">{editingService ? 'Update Hub Master' : 'Initialize Hub Service Master'}</DialogTitle>
+            <DialogDescription>Define core service logic, hub placement, and partner commercials for this ecosystem ancillary.</DialogDescription>
           </DialogHeader>
           <AncillaryProductForm
             product={editingService}

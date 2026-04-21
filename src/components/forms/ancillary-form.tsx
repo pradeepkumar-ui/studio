@@ -21,97 +21,89 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { DollarSign, Plane, Settings2, ShieldCheck, Zap, Info } from 'lucide-react';
-import { MultiSelect } from '../ui/multi-select';
+import { Textarea } from '../ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '../ui/separator';
-import { useMemo } from 'react';
-import { useFirestore, useCollection } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { ShieldCheck, Plane, Briefcase, Calendar as CalendarIcon, Tag, Info } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Calendar } from '../ui/calendar';
+import { format, addYears } from 'date-fns';
+import { cn } from '@/lib/utils';
 
-const ancillaryCategories = [
-    'Baggage - Checked', 
-    'Baggage - Special/Sport', 
-    'Seat - Legroom', 
-    'Seat - Twin/Preferred', 
-    'On-board - Wi-Fi', 
-    'On-board - Meal',
-    'On-board - Premium Bar',
-    'Priority - Fast Track',
-    'Priority - Boarding',
-    'Flexibility - Waiver',
-    'Flexibility - Upgrade Standby',
-    'Lounge Access'
+const mainCategories = [
+  'Baggage',
+  'Seat',
+  'Upgrade',
+  'Priority service',
+  'Lounge',
+  'Meal',
+  'Wi-Fi / connectivity',
+  'Inflight comfort',
+  'Flexibility / protection',
+  'Special service',
+  'Bundle',
 ] as const;
 
-const cabinOptions = [
-    { value: 'Economy', label: 'Economy' },
-    { value: 'Premium Economy', label: 'Premium Economy' },
-    { value: 'Business', label: 'Business' },
-    { value: 'First', label: 'First' },
-    { value: 'All', label: 'All Cabins' },
-];
-
-const aircraftOptions = [
-    { value: 'A350', label: 'Airbus A350' },
-    { value: 'A320', label: 'Airbus A320neo' },
-    { value: 'B787', label: 'Boeing 787 Dreamliner' },
-    { value: 'B777', label: 'Boeing 777' },
-    { value: 'All', label: 'All Aircraft' },
-];
-
-const airlineAncillarySchema = z.object({
+const ancillarySchema = z.object({
   id: z.string().optional(),
-  airlineId: z.string({ required_error: 'Select the carrier this ancillary belongs to.' }),
-  name: z.string().min(3, 'Service name is required.'),
-  category: z.enum(ancillaryCategories),
-  pssCode: z.string().min(2, 'PSS / SSR Code is required for host sync.').toUpperCase(),
-  defaultPrice: z.coerce.number().min(0, 'Price must be a positive number.'),
-  currency: z.string().length(3, 'Currency must be a 3-letter code.').toUpperCase(),
-  status: z.enum(['Active', 'Disabled', 'Testing']),
-  cabinEligibility: z.array(z.string()).min(1, 'Select at least one cabin.'),
-  aircraftEligibility: z.array(z.string()).default(['All']),
-  refundPolicy: z.enum(['Allowed', 'Allowed with Penalty', 'Not Allowed']),
-  advancePurchaseDays: z.coerce.number().min(0).default(0),
+  ancillaryCode: z.string().min(2, 'Code is required.').toUpperCase(),
+  name: z.string().min(3, 'Name is required.'),
+  shortName: z.string().min(2, 'Short name is required.'),
   description: z.string().optional(),
+  category: z.enum(mainCategories),
+  subcategory: z.string().min(2, 'Subcategory is required.'),
+  productType: z.string().default('Ancillary'),
+  status: z.enum(['Active', 'Inactive', 'Draft']),
+  version: z.coerce.number().default(1),
+  effectiveDate: z.object({
+    from: z.date(),
+    to: z.date(),
+  }),
+  // Ownership
+  airlineCode: z.string().length(3, '3-letter code required.').toUpperCase(),
+  owningBusinessUnit: z.string().min(2, 'Business unit required.'),
+  providerType: z.enum(['Internal', 'External']),
+  providerName: z.string().min(2, 'Provider name required.'),
+  internalOwner: z.string().min(2, 'Internal owner required.'),
+  isExternalPartner: z.boolean().default(false),
+  // Legacy price field for compatibility
+  defaultPrice: z.coerce.number().optional(),
+  currency: z.string().optional(),
 });
 
-export type Ancillary = z.infer<typeof airlineAncillarySchema>;
-
-const mockAirlines = [
-  { id: 'airline-001', name: 'Global Airways', icaoCode: 'GAB' },
-  { id: 'airline-002', name: 'SkyBridge Airlines', icaoCode: 'SBA' },
-  { id: 'airline-003', name: 'MetroLink Air', icaoCode: 'MLN' },
-];
+export type Ancillary = z.infer<typeof ancillarySchema>;
 
 interface AncillaryFormProps {
-  ancillary: Ancillary | null;
+  ancillary: any | null;
   onSubmit: (data: Ancillary) => void;
   onCancel: () => void;
 }
 
 export function AncillaryForm({ ancillary, onSubmit, onCancel }: AncillaryFormProps) {
-  const firestore = useFirestore();
-  const airlinesQuery = useMemo(() => firestore ? collection(firestore, 'airlines') : undefined, [firestore]);
-  const { data: airlinesData } = useCollection(airlinesQuery);
-
-  const availableAirlines = useMemo(() => {
-    return airlinesData && airlinesData.length > 0 ? airlinesData : mockAirlines;
-  }, [airlinesData]);
-
   const form = useForm<Ancillary>({
-    resolver: zodResolver(airlineAncillarySchema),
-    defaultValues: ancillary || {
-      airlineId: '',
+    resolver: zodResolver(ancillarySchema),
+    defaultValues: ancillary ? {
+        ...ancillary,
+        effectiveDate: {
+            from: ancillary.effectiveDate?.from instanceof Date ? ancillary.effectiveDate.from : new Date(),
+            to: ancillary.effectiveDate?.to instanceof Date ? ancillary.effectiveDate.to : addYears(new Date(), 1)
+        }
+    } : {
+      ancillaryCode: '',
       name: '',
-      category: 'Baggage - Checked',
-      pssCode: '',
-      defaultPrice: 0,
-      currency: 'USD',
-      status: 'Testing',
-      cabinEligibility: ['All'],
-      aircraftEligibility: ['All'],
-      refundPolicy: 'Not Allowed',
-      advancePurchaseDays: 0,
+      shortName: '',
+      category: 'Baggage',
+      subcategory: '',
+      productType: 'Ancillary',
+      status: 'Active',
+      version: 1,
+      effectiveDate: { from: new Date(), to: addYears(new Date(), 1) },
+      airlineCode: 'GAB',
+      owningBusinessUnit: 'Retailing',
+      providerType: 'Internal',
+      providerName: 'Global Airways',
+      internalOwner: 'Revenue Management',
+      isExternalPartner: false,
     },
   });
 
@@ -119,218 +111,127 @@ export function AncillaryForm({ ancillary, onSubmit, onCancel }: AncillaryFormPr
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-h-[80vh] overflow-y-auto pr-4">
         
-        {/* --- IDENTITY --- */}
+        {/* --- BASIC DETAILS --- */}
         <section className="space-y-4">
             <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-widest">
-                <Plane className="h-3.5 w-3.5" />
-                Carrier Context & Identity
+                <Tag className="h-3.5 w-3.5" /> 1. Core Ancillary Master Details
             </div>
-            <FormField
-                control={form.control}
-                name="airlineId"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Parent Airline</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl><SelectTrigger><SelectValue placeholder="Select Carrier..." /></SelectTrigger></FormControl>
-                        <SelectContent>
-                            {availableAirlines.map(a => (
-                                <SelectItem key={a.id} value={a.id!}>
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-bold">{a.name}</span>
-                                        <span className="text-[10px] text-muted-foreground uppercase font-mono">({a.icaoCode})</span>
-                                    </div>
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    </FormItem>
-                )}
-            />
-            <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Ancillary Display Name</FormLabel>
-                <FormControl>
-                    <Input placeholder="e.g., Heavy Checked Bag (32kg)" {...field} />
-                </FormControl>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
             <div className="grid grid-cols-2 gap-4">
-                <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Service Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
-                        {ancillaryCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                    </FormItem>
-                )}
-                />
-                <FormField
-                control={form.control}
-                name="pssCode"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>PSS / SSR Code</FormLabel>
-                    <FormControl>
-                        <Input placeholder="e.g., BAGH" {...field} maxLength={4} />
-                    </FormControl>
-                    <FormDescription>Carrier's host PSS identifier.</FormDescription>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-            </div>
-        </section>
-
-        <Separator />
-
-        {/* --- PRICING --- */}
-        <section className="space-y-4">
-            <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-widest">
-                <DollarSign className="h-3.5 w-3.5" />
-                Commercial Terms
+                <FormField control={form.control} name="name" render={({ field }) => (
+                    <FormItem><FormLabel>Ancillary Name*</FormLabel><FormControl><Input placeholder="e.g., Preferred Seat" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField control={form.control} name="shortName" render={({ field }) => (
+                    <FormItem><FormLabel>Short Name*</FormLabel><FormControl><Input placeholder="e.g., Pref Seat" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
             </div>
             <div className="grid grid-cols-3 gap-4">
-                <FormField
-                control={form.control}
-                name="defaultPrice"
-                render={({ field }) => (
-                    <FormItem className="col-span-2">
-                    <FormLabel>Base Sell Price</FormLabel>
-                    <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <FormControl>
-                            <Input type="number" placeholder="50" {...field} className="pl-9" />
-                        </FormControl>
-                    </div>
-                    </FormItem>
-                )}
-                />
-                <FormField
-                control={form.control}
-                name="currency"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Currency</FormLabel>
-                    <FormControl>
-                        <Input placeholder="USD" {...field} className="uppercase" maxLength={3} />
-                    </FormControl>
-                    </FormItem>
-                )}
-                />
+                <FormField control={form.control} name="ancillaryCode" render={({ field }) => (
+                    <FormItem><FormLabel>Ancillary Code*</FormLabel><FormControl><Input placeholder="e.g., PRFD" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField control={form.control} name="version" render={({ field }) => (
+                    <FormItem><FormLabel>Version</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>
+                )} />
+                <FormField control={form.control} name="status" render={({ field }) => (
+                    <FormItem><FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                        <SelectContent><SelectItem value="Active">Active</SelectItem><SelectItem value="Inactive">Inactive</SelectItem><SelectItem value="Draft">Draft</SelectItem></SelectContent>
+                    </Select></FormItem>
+                )} />
             </div>
-            <FormField
-                control={form.control}
-                name="advancePurchaseDays"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Min Advance Purchase (Days)</FormLabel>
-                    <FormControl>
-                        <Input type="number" {...field} />
-                    </FormControl>
-                    <FormDescription>Only sell if D-minus > X days.</FormDescription>
-                    </FormItem>
-                )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+                <FormField control={form.control} name="category" render={({ field }) => (
+                    <FormItem><FormLabel>Main Category*</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                        <SelectContent>{mainCategories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                    </Select></FormItem>
+                )} />
+                <FormField control={form.control} name="subcategory" render={({ field }) => (
+                    <FormItem><FormLabel>Subcategory*</FormLabel><FormControl><Input placeholder="e.g., Preferred seat" {...field} /></FormControl></FormItem>
+                )} />
+            </div>
+             <FormField control={form.control} name="description" render={({ field }) => (
+                <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea placeholder="Detailed service description..." {...field} /></FormControl></FormItem>
+            )} />
         </section>
 
         <Separator />
 
-        {/* --- ELIGIBILITY --- */}
+        {/* --- VALIDITY --- */}
         <section className="space-y-4">
             <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-widest">
-                <Settings2 className="h-3.5 w-3.5" />
-                Technical Compatibility
+                <CalendarIcon className="h-3.5 w-3.5" /> 2. Scheduling & Validity
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                    control={form.control}
-                    name="cabinEligibility"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Eligible Cabins</FormLabel>
-                        <FormControl>
-                            <MultiSelect 
-                                options={cabinOptions} 
-                                selected={field.value} 
-                                onChange={field.onChange} 
-                                placeholder="Select cabins..."
-                            />
-                        </FormControl>
+            <div className="grid grid-cols-2 gap-4">
+                <FormField control={form.control} name="effectiveDate.from" render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                        <FormLabel>Effective From</FormLabel>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <FormControl><Button variant="outline" className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4 opacity-50" />{field.value ? format(field.value, "PPP") : <span>Pick date</span>}</Button></FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus /></PopoverContent>
+                        </Popover>
                     </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="aircraftEligibility"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Aircraft Type Compatibility</FormLabel>
-                        <FormControl>
-                            <MultiSelect 
-                                options={aircraftOptions} 
-                                selected={field.value} 
-                                onChange={field.onChange} 
-                                placeholder="Select aircraft..."
-                            />
-                        </FormControl>
+                )} />
+                <FormField control={form.control} name="effectiveDate.to" render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                        <FormLabel>Effective To</FormLabel>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <FormControl><Button variant="outline" className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4 opacity-50" />{field.value ? format(field.value, "PPP") : <span>Pick date</span>}</Button></FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus /></PopoverContent>
+                        </Popover>
                     </FormItem>
-                    )}
-                />
+                )} />
             </div>
-            <FormField
-                control={form.control}
-                name="refundPolicy"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Refund Integrity</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
-                            <SelectItem value="Allowed">Refundable</SelectItem>
-                            <SelectItem value="Allowed with Penalty">Fee Applies</SelectItem>
-                            <SelectItem value="Not Allowed">Non-Refundable</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    </FormItem>
-                )}
-            />
         </section>
 
         <Separator />
 
-        <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Network Status</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                    <SelectContent>
-                        <SelectItem value="Testing">UAT / Sandbox</SelectItem>
-                        <SelectItem value="Active">Live Ecosystem</SelectItem>
-                        <SelectItem value="Disabled">Hidden</SelectItem>
-                    </SelectContent>
-                </Select>
-                </FormItem>
-            )}
-        />
+        {/* --- OWNERSHIP --- */}
+        <section className="space-y-4">
+            <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-widest">
+                <ShieldCheck className="h-3.5 w-3.5" /> 3. Ownership Details
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+                <FormField control={form.control} name="airlineCode" render={({ field }) => (
+                    <FormItem><FormLabel>Airline Code*</FormLabel><FormControl><Input placeholder="e.g., GAB" {...field} maxLength={3} /></FormControl></FormItem>
+                )} />
+                <FormField control={form.control} name="owningBusinessUnit" render={({ field }) => (
+                    <FormItem><FormLabel>Owning Business Unit*</FormLabel><FormControl><Input placeholder="e.g., Retailing" {...field} /></FormControl></FormItem>
+                )} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+                <FormField control={form.control} name="providerType" render={({ field }) => (
+                    <FormItem><FormLabel>Provider Type</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                        <SelectContent><SelectItem value="Internal">Internal</SelectItem><SelectItem value="External">External</SelectItem></SelectContent>
+                    </Select></FormItem>
+                )} />
+                <FormField control={form.control} name="providerName" render={({ field }) => (
+                    <FormItem><FormLabel>Provider Name*</FormLabel><FormControl><Input placeholder="e.g., Global Airways" {...field} /></FormControl></FormItem>
+                )} />
+            </div>
+            <div className="grid grid-cols-2 gap-4 items-end">
+                <FormField control={form.control} name="internalOwner" render={({ field }) => (
+                    <FormItem><FormLabel>Internal Owner*</FormLabel><FormControl><Input placeholder="e.g., RM Team" {...field} /></FormControl></FormItem>
+                )} />
+                <FormField control={form.control} name="isExternalPartner" render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 bg-muted/20 h-10">
+                        <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                        <div className="space-y-1 leading-none"><FormLabel>External Partner Flag</FormLabel></div>
+                    </FormItem>
+                )} />
+            </div>
+        </section>
 
-        <div className="flex justify-end gap-4 pt-4 sticky bottom-0 bg-background py-4 border-t z-10">
-            <Button type="button" variant="outline" onClick={onCancel}>Discard</Button>
-            <Button type="submit" className="font-bold">{ancillary ? 'Update Portfolio Item' : 'Add to Carrier Portfolio'}</Button>
+        <div className="flex justify-end gap-2 pt-4 border-t sticky bottom-0 bg-background py-4">
+          <Button type="button" variant="outline" onClick={onCancel}>Discard</Button>
+          <Button type="submit">Commit to Carrier Catalogue</Button>
         </div>
       </form>
     </Form>
