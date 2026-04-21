@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -34,6 +35,7 @@ import {
   Target,
   KeyRound,
   Boxes,
+  Layers,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import React from 'react';
@@ -86,6 +88,7 @@ const menuItems: MenuItem[] = [
     subItems: [
       { href: '/offers/cohorts', label: 'Retailing Cohorts', icon: Target },
       { href: '/bundles', label: 'Offers & Dynamic pricing', icon: Package },
+      { href: '/offers/ancillary-aggregates', label: 'Airline Ancillary Aggregate', icon: Layers },
       { href: '/offer-composer', label: 'Airport Offer Composer', icon: QrCode },
     ],
   },

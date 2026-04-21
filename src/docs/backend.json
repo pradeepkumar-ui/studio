@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "cohort": {
@@ -97,6 +98,19 @@
         "terminals": { "type": "string" },
         "status": { "type": "string", "enum": ["Active", "Inactive", "Draft"] }
       }
+    },
+    "airlineAncillaryAggregate": {
+      "title": "Airline Ancillary Aggregate Configuration",
+      "description": "Structured aggregate values for specific airline ancillaries based on category-specific parameters.",
+      "type": "object",
+      "properties": {
+        "ancillaryId": { "type": "string" },
+        "ancillaryName": { "type": "string" },
+        "category": { "type": "string" },
+        "configName": { "type": "string" },
+        "parameters": { "type": "object" },
+        "status": { "type": "string", "enum": ["Draft", "Active", "Archived"] }
+      }
     }
   },
   "auth": { "providers": [] },
@@ -107,6 +121,7 @@
     "/cohorts/{cohortId}": { "schema": { "$ref": "#/entities/cohort" }, "description": "Advanced ecosystem targeting cohorts." },
     "/bundles/{bundleId}": { "schema": { "$ref": "#/entities/bundle" }, "description": "Core monetization engine offers." },
     "/airlineAncillaries/{ancillaryId}": { "schema": { "$ref": "#/entities/airlineAncillary" }, "description": "Airline skus." },
-    "/airportServices/{ancillaryId}": { "schema": { "$ref": "#/entities/airportAncillary" }, "description": "Airport ecosystem skus." }
+    "/airportServices/{ancillaryId}": { "schema": { "$ref": "#/entities/airportAncillary" }, "description": "Airport ecosystem skus." },
+    "/airlineAncillaryAggregates/{aggregateId}": { "schema": { "$ref": "#/entities/airlineAncillaryAggregate" }, "description": "Ancillary aggregate configurations." }
   }
 }
