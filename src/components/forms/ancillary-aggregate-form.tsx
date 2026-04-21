@@ -13,7 +13,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
@@ -58,12 +57,23 @@ interface AncillaryAggregateFormProps {
   onCancel: () => void;
 }
 
+const mockAncillariesFallback = [
+  { id: '1', name: 'Extra Legroom Seat', ancillaryCode: 'EXLG', category: 'Seat' },
+  { id: '2', name: 'Premium Wi-Fi (Unlimited)', ancillaryCode: 'WIFU', category: 'Wi-Fi / connectivity' },
+  { id: '3', name: 'Standby Upgrade (J Class)', ancillaryCode: 'UPGS', category: 'Upgrade' },
+  { id: '4', name: '1st Checked Bag (23kg)', ancillaryCode: 'BAG1', category: 'Baggage' },
+];
+
 export function AncillaryAggregateForm({ aggregate, onSubmit, onCancel }: AncillaryAggregateFormProps) {
   const firestore = useFirestore();
   const ancillariesQuery = React.useMemo(() => firestore ? collection(firestore, 'airlineAncillaries') : undefined, [firestore]);
   const { data: ancillariesCollection } = useCollection(ancillariesQuery);
 
-  const ancillaries = (ancillariesCollection || []) as any[];
+  const availableAncillaries = React.useMemo(() => {
+    return (ancillariesCollection && ancillariesCollection.length > 0) 
+      ? (ancillariesCollection as any[]) 
+      : mockAncillariesFallback;
+  }, [ancillariesCollection]);
 
   const form = useForm<AncillaryAggregate>({
     resolver: zodResolver(aggregateSchema),
@@ -76,12 +86,20 @@ export function AncillaryAggregateForm({ aggregate, onSubmit, onCancel }: Ancill
   });
 
   const selectedAncillaryId = form.watch('ancillaryId');
-  const selectedAncillary = ancillaries.find(a => a.id === selectedAncillaryId);
+  const selectedAncillary = availableAncillaries.find(a => a.id === selectedAncillaryId);
   const parameters = selectedAncillary ? (aggregateParamsByCategory[selectedAncillary.category] || []) : [];
+
+  const handleFinalSubmit = (data: AncillaryAggregate) => {
+    onSubmit({
+      ...data,
+      ancillaryName: selectedAncillary?.name,
+      category: selectedAncillary?.category,
+    });
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-h-[80vh] overflow-y-auto pr-4">
+      <form onSubmit={form.handleSubmit(handleFinalSubmit)} className="space-y-6 max-h-[80vh] overflow-y-auto pr-4">
         
         <section className="space-y-4">
             <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-[0.2em]">
@@ -100,10 +118,10 @@ export function AncillaryAggregateForm({ aggregate, onSubmit, onCancel }: Ancill
                 <FormItem>
                     <FormLabel>Linked Airline Ancillary*</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl><SelectTrigger><SelectValue placeholder="Select SKU..." /></SelectTrigger></FormControl>
+                        <FormControl><SelectTrigger><SelectValue placeholder="Select SKU from Catalogue..." /></SelectTrigger></FormControl>
                         <SelectContent>
-                            {ancillaries.map(a => (
-                                <SelectItem key={a.id} value={a.id}>{a.name} ({a.ancillaryCode})</SelectItem>
+                            {availableAncillaries.map(a => (
+                                <SelectItem key={a.id} value={a.id}>{a.name} ({a.ancillaryCode || 'NO_CODE'})</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
@@ -134,11 +152,14 @@ export function AncillaryAggregateForm({ aggregate, onSubmit, onCancel }: Ancill
                         />
                     ))}
                 </div>
+                {parameters.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic">No predefined parameters for this category. You can define custom logic in the configuration name.</p>
+                )}
             </section>
         ) : (
-            <div className="py-12 flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-xl opacity-50">
+            <div className="py-12 flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-xl opacity-50 bg-muted/20">
                 <Info className="h-8 w-8 mb-2" />
-                <p className="text-sm font-medium">Select an ancillary to configure its parameters.</p>
+                <p className="text-sm font-medium">Select an airline ancillary to reveal its aggregate parameters.</p>
             </div>
         )}
 
