@@ -26,15 +26,26 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { Building2, Info, CheckCircle2 } from 'lucide-react';
 
+const dropdownOptions: Record<string, string[]> = {
+  'Aircraft type': ['A320neo', 'A350-900', 'A380-800', 'B737 MAX', 'B777-300ER', 'B787-9'],
+  'Cabin class': ['Economy', 'Premium Economy', 'Business', 'First', 'All'],
+  'Flight duration': ['Short haul', 'Long haul'],
+  'Fare brand': ['Economy Light', 'Economy Flex', 'Business Saver', 'Business Flex'],
+  'Passenger type': ['Adult', 'Child', 'Infant'],
+  'Time to departure': ['< 2hrs', '< 4hrs', '< 6 hrs', '< 8 hrs', '< 12 hrs'],
+  'Channel': ['Web', 'Mobile', 'Kiosk'],
+  'Loyalty tier': ['Platinum', 'Gold', 'Silver', 'Bronze'],
+};
+
 const airportAggregateParamsByCategory: Record<string, string[]> = {
-  'Lounge': ['Airport', 'Terminal/Concourse', 'Lounge Provider', 'Passenger Type (Departure/Arrival/Transit)', 'Cabin/Fare/Loyalty', 'Capacity', 'Time Slot', 'Occupancy Level', 'Channel'],
-  'Priority service': ['Airport Capability', 'Terminal/Checkpoint', 'Security Lane Availability', 'Time Slot', 'Congestion Level', 'Passenger Eligibility (Departure)', 'Channel'],
-  'Special service': ['Airport', 'Terminal', 'Service Type (Arrival/Departure/Transit)', 'Staff Availability', 'Time Slot', 'Passenger Profile (VIP/Family/Elderly)', 'Flight Timing', 'Supplier Capacity'],
-  'Ground Transport': ['Airport/City', 'Pickup/Drop Location', 'Vehicle Availability', 'Passenger Count', 'Baggage Volume', 'Time Slot', 'Supplier Availability'],
-  'Parking': ['Airport', 'Parking Zone', 'Space Availability', 'Vehicle Type', 'Duration of Stay', 'Time Slot', 'Service Type (Self/Valet)'],
-  'Inflight comfort': ['Airport Terminal/Zone', 'Gate Distance', 'Vehicle Availability', 'Staff Availability', 'Passenger Mobility Need', 'Time Slot', 'Service Hours'],
-  'Flexibility / protection': ['Airport Protocol', 'Partner SLA', 'Validation Time', 'Time to Departure', 'Route Exclusion'],
-  'Bundle': ['Ecosystem Partners', 'Combined Price Logic', 'Inventory Sync Status', 'Time Slot Alignment', 'Channel Priority'],
+  'Lounge': ['Airport', 'Terminal/Concourse', 'Lounge Provider', 'Passenger type', 'Cabin class', 'Fare brand', 'Loyalty tier', 'Capacity', 'Time Slot', 'Occupancy Level', 'Channel'],
+  'Priority service': ['Airport Capability', 'Terminal/Checkpoint', 'Security Lane Availability', 'Time Slot', 'Congestion Level', 'Passenger type', 'Channel'],
+  'Special service': ['Airport', 'Terminal', 'Service Type', 'Staff Availability', 'Time Slot', 'Passenger type', 'Flight Timing', 'Supplier Capacity'],
+  'Ground Transport': ['Airport/City', 'Pickup/Drop Location', 'Vehicle Availability', 'Passenger type', 'Baggage Volume', 'Time Slot', 'Supplier Availability'],
+  'Parking': ['Airport', 'Parking Zone', 'Space Availability', 'Vehicle Type', 'Duration of Stay', 'Time Slot', 'Service Type'],
+  'Inflight comfort': ['Airport Terminal/Zone', 'Gate Distance', 'Staff Availability', 'Passenger type', 'Time Slot', 'Service Hours'],
+  'Flexibility / protection': ['Airport Protocol', 'Partner SLA', 'Validation Time', 'Time to departure', 'Route Exclusion'],
+  'Bundle': ['Ecosystem Partners', 'Combined Price Logic', 'Inventory Sync Status', 'Time Slot Alignment', 'Channel'],
 };
 
 const airportAggregateSchema = z.object({
@@ -56,9 +67,6 @@ interface AirportAncillaryAggregateFormProps {
 const mockAirportAncillariesFallback = [
   { id: 'ap1', name: 'Executive Lounge Access', ancillaryCode: 'LOU', category: 'Lounge', airportCode: 'LHR' },
   { id: 'ap2', name: 'Fast Track Security', ancillaryCode: 'FST', category: 'Priority service', airportCode: 'JFK' },
-  { id: 'ap3', name: 'VIP Valet Parking', ancillaryCode: 'PRK', category: 'Parking', airportCode: 'SIN' },
-  { id: 'ap4', name: 'Meet & Greet Service', ancillaryCode: 'MTG', category: 'Special service', airportCode: 'DXB' },
-  { id: 'ap5', name: 'Luxury Chauffeur', ancillaryCode: 'GND', category: 'Ground Transport', airportCode: 'LHR' },
 ];
 
 export function AirportAncillaryAggregateForm({ aggregate, onSubmit, onCancel }: AirportAncillaryAggregateFormProps) {
@@ -86,7 +94,6 @@ export function AirportAncillaryAggregateForm({ aggregate, onSubmit, onCancel }:
   const selectedAncillary = availableAncillaries.find(a => a.id === selectedAncillaryId);
   const parameters = selectedAncillary ? (airportAggregateParamsByCategory[selectedAncillary.category] || []) : [];
 
-  // Update configuration name based on selected ancillary
   React.useEffect(() => {
     if (selectedAncillary) {
         const currentName = form.getValues('configName');
@@ -145,23 +152,36 @@ export function AirportAncillaryAggregateForm({ aggregate, onSubmit, onCancel }:
                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> 2. Hub Aggregate Parameters ({selectedAncillary.category})
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                    {parameters.map(param => (
-                        <FormField 
-                            key={param}
-                            control={form.control} 
-                            name={`parameters.${param}`} 
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className="text-xs">{param}</FormLabel>
-                                    <FormControl><Input placeholder="Set aggregate value..." {...field} value={field.value || ''} /></FormControl>
-                                </FormItem>
-                            )} 
-                        />
-                    ))}
+                    {parameters.map(param => {
+                        const options = dropdownOptions[param];
+                        return (
+                            <FormField 
+                                key={param}
+                                control={form.control} 
+                                name={`parameters.${param}`} 
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-xs">{param}</FormLabel>
+                                        {options ? (
+                                            <Select onValueChange={field.onChange} value={field.value || ''}>
+                                                <FormControl>
+                                                    <SelectTrigger className="h-9">
+                                                        <SelectValue placeholder={`Select ${param.toLowerCase()}...`} />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {options.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                        ) : (
+                                            <FormControl><Input placeholder="Set aggregate value..." {...field} value={field.value || ''} /></FormControl>
+                                        )}
+                                    </FormItem>
+                                )} 
+                            />
+                        );
+                    })}
                 </div>
-                {parameters.length === 0 && (
-                    <p className="text-xs text-muted-foreground italic">No predefined hub parameters for this category. Custom logic can be defined in the configuration name.</p>
-                )}
             </section>
         ) : (
             <div className="py-12 flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-xl opacity-50 bg-muted/20">
