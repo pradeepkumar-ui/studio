@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -21,20 +22,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '../ui/separator';
-import { MultiSelect } from '../ui/multi-select';
-import { Checkbox } from '../ui/checkbox';
-import { Plane, Building2, Settings2, BrainCircuit, Globe, Laptop, MapPin, Target } from 'lucide-react';
-import { Slider } from '../ui/slider';
+import { Separator } from '@/components/ui/separator';
+import { MultiSelect } from '@/components/ui/multi-select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Plane, Building2, Settings2, BrainCircuit, Globe, Laptop, MapPin, Target, Activity, ShieldCheck } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection } from 'firebase/firestore';
-import { useMemo } from 'react';
 
 const cohortSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(5, 'Cohort name is required.'),
   cohortId: z.string().min(3, 'Cohort ID required.').regex(/^[A-Z0-9_]+$/),
-  description: z.string().min(10),
+  description: z.string().min(10, 'Logical description required.'),
   type: z.enum(['static', 'dynamic', 'predictive']).default('static'),
   status: z.enum(['Active', 'Inactive']).default('Active'),
   priority: z.coerce.number().min(1).max(100).default(50),
@@ -59,6 +59,7 @@ const cohortSchema = z.object({
     terminals: z.array(z.string()).default([]),
     locationContext: z.enum(['Anywhere', 'Departure', 'Arrival', 'Lounge', 'Gate']).default('Anywhere'),
     minWaitTime: z.coerce.number().optional(),
+    loungeOccupancy: z.coerce.number().optional(),
   }).optional(),
 
   // Geo, Channel & Sector (Targeting Logic)
@@ -70,10 +71,11 @@ const cohortSchema = z.object({
     sectors: z.array(z.string()).default([]),
   }).optional(),
 
-  // Personalization Layer (Scoring Logic)
+  // Personalization Layer (ML Scores)
   personalization: z.object({
     propensityToBuyScore: z.coerce.number().optional(),
     priceSensitivityScore: z.coerce.number().optional(),
+    lateArrivalProbability: z.coerce.number().optional(),
   }).optional(),
 });
 
@@ -98,23 +100,20 @@ const channelOptions = [
 ];
 const regionOptions = [{ value: 'EU', label: 'Europe' }, { value: 'APAC', label: 'Asia-Pacific' }, { value: 'NAM', label: 'North America' }, { value: 'ME', label: 'Middle East' }, { value: 'LATAM', label: 'Latin America' }];
 
-const fallbackAirlines = [
-    { value: 'GAB', label: 'Global Airways (GAB)' },
-    { value: 'SBA', label: 'SkyBridge Airlines (SBA)' },
-    { value: 'MLN', label: 'MetroLink Air (MLN)' },
-];
-
 export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
   const firestore = useFirestore();
-  const airlinesQuery = useMemo(() => firestore ? collection(firestore, 'airlines') : undefined, [firestore]);
+  const airlinesQuery = React.useMemo(() => firestore ? collection(firestore, 'airlines') : undefined, [firestore]);
   const { data: airlinesData } = useCollection(airlinesQuery);
 
-  const airlineOptions = useMemo(() => {
+  const airlineOptions = React.useMemo(() => {
     const options = (airlinesData || []).map((a: any) => ({
         value: a.icaoCode,
         label: `${a.name} (${a.icaoCode})`
     }));
-    return options.length > 0 ? options : fallbackAirlines;
+    return options.length > 0 ? options : [
+        { value: 'GAB', label: 'Global Airways (GAB)' },
+        { value: 'SBA', label: 'SkyBridge Airlines (SBA)' }
+    ];
   }, [airlinesData]);
 
   const form = useForm<Cohort>({
@@ -132,7 +131,7 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
       airlineRules: { carrierCodes: [], passengerTypes: [], loyaltyTiers: [], cabinClasses: [] },
       airportRules: { airportCodes: [], terminals: [], locationContext: 'Anywhere' },
       ecosystemScope: { channels: [], regions: [], countries: [], pos: [], sectors: [] },
-      personalization: { propensityToBuyScore: 0, priceSensitivityScore: 0 },
+      personalization: { propensityToBuyScore: 0, priceSensitivityScore: 0, lateArrivalProbability: 0 },
     },
   });
 
@@ -158,7 +157,7 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
               )} />
             </div>
             <FormField control={form.control} name="description" render={({ field }) => (
-              <FormItem><FormLabel>Logical Description</FormLabel><FormControl><Input placeholder="Define the business intent for this segment..." {...field} /></FormControl></FormItem>
+              <FormItem><FormLabel>Logical Intent</FormLabel><FormControl><Input placeholder="Define the business goal for this segment..." {...field} /></FormControl></FormItem>
             )} />
             <div className="grid grid-cols-3 gap-4">
               <FormField control={form.control} name="type" render={({ field }) => (
@@ -199,7 +198,7 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
                         )} />
                     </div>
                     <FormField control={form.control} name="ecosystemScope.pos" render={({ field }) => (
-                        <FormItem><FormLabel>Point of Sale (POS) Nodes</FormLabel><FormControl><Input placeholder="e.g., NYC, LON, BOM" {...field} /></FormControl></FormItem>
+                        <FormItem><FormLabel>Point of Sale (POS)</FormLabel><FormControl><Input placeholder="e.g., NYC, LON, BOM" {...field} /></FormControl></FormItem>
                     )} />
                 </div>
              </div>
@@ -207,7 +206,7 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
              <div className="space-y-4">
                 <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><MapPin className="w-3 h-3"/> Sector Mapping</h4>
                 <FormField control={form.control} name="ecosystemScope.sectors" render={({ field }) => (
-                    <FormItem><FormLabel>Eligible Sectors / O&D Pairs</FormLabel><FormControl><Input placeholder="e.g., LHR-JFK, SIN-HKG" {...field} /></FormControl></FormItem>
+                    <FormItem><FormLabel>Eligible Sectors / O&D pairs</FormLabel><FormControl><Input placeholder="e.g., LHR-JFK, SIN-HKG" {...field} /></FormControl></FormItem>
                 )} />
              </div>
           </TabsContent>
@@ -215,9 +214,9 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
           <TabsContent value="airline" className="space-y-6 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Target className="w-3 h-3"/> Profile & Loyalty</h4>
+                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Target className="w-3 h-3"/> PNR & Loyalty</h4>
                 <FormField control={form.control} name="airlineRules.carrierCodes" render={({ field }) => (
-                    <FormItem><FormLabel>Airline / Carrier Scope</FormLabel>
+                    <FormItem><FormLabel>Carrier Scope</FormLabel>
                     <MultiSelect options={airlineOptions} selected={field.value || []} onChange={field.onChange} placeholder="All Onboarded Carriers" />
                     </FormItem>
                 )} />
@@ -232,7 +231,7 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
                 )} />
               </div>
               <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Plane className="w-3 h-3"/> PNR & Cabin</h4>
+                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Plane className="w-3 h-3"/> Flight & Cabin</h4>
                 <FormField control={form.control} name="airlineRules.cabinClasses" render={({ field }) => (
                   <FormItem><FormLabel>Eligible Cabins</FormLabel><MultiSelect options={cabinOptions} selected={field.value || []} onChange={field.onChange} placeholder="All Cabins" /></FormItem>
                 )} />
@@ -254,17 +253,28 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
                 <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Building2 className="w-3 h-3"/> Location Node</h4>
                 <FormField control={form.control} name="airportRules.locationContext" render={({ field }) => (
                   <FormItem><FormLabel>Journey Stage</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                  <SelectContent><SelectItem value="Anywhere">Anywhere</SelectItem><SelectItem value="Departure">Pre-Departure</SelectItem><SelectItem value="Arrival">On-Arrival</SelectItem><SelectItem value="Lounge">In-Lounge</SelectItem><SelectItem value="Gate">At Gate</SelectItem></SelectContent></Select></FormItem>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      <SelectItem value="Anywhere">Anywhere</SelectItem>
+                      <SelectItem value="Departure">Pre-Departure</SelectItem>
+                      <SelectItem value="Arrival">On-Arrival</SelectItem>
+                      <SelectItem value="Lounge">In-Lounge</SelectItem>
+                      <SelectItem value="Gate">At Gate</SelectItem>
+                    </SelectContent>
+                  </Select></FormItem>
                 )} />
                 <FormField control={form.control} name="airportRules.airportCodes" render={({ field }) => (
-                  <FormItem><FormLabel>Specific Airport Hubs</FormLabel><FormControl><Input placeholder="e.g., LHR, JFK, DXB" {...field} /></FormControl></FormItem>
+                  <FormItem><FormLabel>Hub Codes</FormLabel><FormControl><Input placeholder="e.g., LHR, JFK, DXB" {...field} /></FormControl></FormItem>
                 )} />
               </div>
               <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Laptop className="w-3 h-3"/> Operational State</h4>
+                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Activity className="w-3 h-3"/> Live Signals</h4>
                 <FormField control={form.control} name="airportRules.minWaitTime" render={({ field }) => (
                   <FormItem><FormLabel>Security Wait > (Mins)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>
+                )} />
+                <FormField control={form.control} name="airportRules.loungeOccupancy" render={({ field }) => (
+                  <FormItem><FormLabel>Lounge Occupancy > (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>
                 )} />
               </div>
             </div>
@@ -275,22 +285,26 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
                 <h4 className="text-xs font-black uppercase text-indigo-700 tracking-widest flex items-center gap-2"><BrainCircuit className="w-3 h-3"/> ML Propensity Scoring</h4>
                 <div className="grid grid-cols-2 gap-8">
                     <FormField control={form.control} name="personalization.propensityToBuyScore" render={({ field }) => (
-                      <FormItem><div className="flex justify-between"><FormLabel>Propensity Score ></FormLabel><span className="font-bold text-indigo-600">{field.value}%</span></div>
-                      <FormControl><Slider min={0} max={100} value={[field.value || 0]} onValueChange={(v) => field.onChange(v[0])} /></FormControl></FormItem>
+                      <FormItem>
+                        <div className="flex justify-between"><FormLabel>Propensity Score ></FormLabel><span className="font-bold text-indigo-600">{field.value || 0}%</span></div>
+                        <FormControl><Slider min={0} max={100} value={[field.value || 0]} onValueChange={(v) => field.onChange(v[0])} /></FormControl>
+                      </FormItem>
                     )} />
                     <FormField control={form.control} name="personalization.priceSensitivityScore" render={({ field }) => (
-                      <FormItem><div className="flex justify-between"><FormLabel>Sensitivity <</FormLabel><span className="font-bold text-indigo-600">{field.value}%</span></div>
-                      <FormControl><Slider min={0} max={100} value={[field.value || 0]} onValueChange={(v) => field.onChange(v[0])} /></FormControl></FormItem>
+                      <FormItem>
+                        <div className="flex justify-between"><FormLabel>Sensitivity <</FormLabel><span className="font-bold text-indigo-600">{field.value || 0}%</span></div>
+                        <FormControl><Slider min={0} max={100} value={[field.value || 0]} onValueChange={(v) => field.onChange(v[0])} /></FormControl>
+                      </FormItem>
                     )} />
                 </div>
-                <p className="text-[10px] text-indigo-600/70 italic mt-2">These scores are dynamically calculated by the SITA Intelligence engine and used for real-time segment matching.</p>
+                <p className="text-[10px] text-indigo-600/70 italic mt-2">Personalization values are computed by SITA Intelligence based on RFM and past attach rates.</p>
              </div>
           </TabsContent>
         </Tabs>
 
         <div className="flex justify-end gap-3 pt-6 border-t">
           <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button type="submit" className="px-10 font-bold">Define Segment</Button>
+          <Button type="submit" className="px-10 font-bold">Commit Segment</Button>
         </div>
       </form>
     </Form>

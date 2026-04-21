@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
@@ -23,18 +24,17 @@ import {
   SelectGroup,
   SelectLabel,
 } from '@/components/ui/select';
-import { Separator } from '../ui/separator';
-import { PlusCircle, Trash2, Eye, Package, Check, Calendar as CalendarIcon, Zap, DollarSign, Percent, ShieldCheck, Gauge, TrendingUp, Laptop } from 'lucide-react';
-import { MultiSelect } from '../ui/multi-select';
-import { useState, useMemo } from 'react';
-import { Card, CardContent, CardFooter } from '../ui/card';
+import { Separator } from '@/components/ui/separator';
+import { PlusCircle, Trash2, Eye, Package, Check, Calendar as CalendarIcon, Target, DollarSign, Percent, ShieldCheck, TrendingUp, Laptop, Clock } from 'lucide-react';
+import { MultiSelect } from '@/components/ui/multi-select';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import Image from 'next/image';
-import { Badge } from '../ui/badge';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { Calendar } from '../ui/calendar';
+import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format, addDays } from 'date-fns';
-import { Slider } from '../ui/slider';
+import { Slider } from '@/components/ui/slider';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection } from 'firebase/firestore';
 
@@ -117,17 +117,15 @@ const parseScope = (scope: any) => {
 };
 
 export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
-  const [showPreview, setShowPreview] = useState(false);
+  const [showPreview, setShowPreview] = React.useState(false);
   const firestore = useFirestore();
 
-  const ancillariesQuery = useMemo(() => firestore ? collection(firestore, 'airlineAncillaries') : undefined, [firestore]);
-  const airportQuery = useMemo(() => firestore ? collection(firestore, 'airportServices') : undefined, [firestore]);
-  const faresQuery = useMemo(() => firestore ? collection(firestore, 'fareProducts') : undefined, [firestore]);
-  const cohortsQuery = useMemo(() => firestore ? collection(firestore, 'cohorts') : undefined, [firestore]);
+  const ancillariesQuery = React.useMemo(() => firestore ? collection(firestore, 'airlineAncillaries') : undefined, [firestore]);
+  const airportQuery = React.useMemo(() => firestore ? collection(firestore, 'airportServices') : undefined, [firestore]);
+  const cohortsQuery = React.useMemo(() => firestore ? collection(firestore, 'cohorts') : undefined, [firestore]);
 
   const { data: airlineAncillaries } = useCollection(ancillariesQuery);
   const { data: airportServices } = useCollection(airportQuery);
-  const { data: fareProducts } = useCollection(faresQuery);
   const { data: cohorts } = useCollection(cohortsQuery);
 
   const form = useForm<Bundle>({
@@ -168,20 +166,20 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
   const pricingStrategy = form.watch('pricingStrategy');
   const discountValue = form.watch('discount') || 0;
 
-  const allAvailableProducts = useMemo(() => {
+  const allAvailableProducts = React.useMemo(() => {
     const air = (airlineAncillaries || []).map(p => ({ id: p.id, name: p.name, price: p.defaultPrice || 0, type: 'Airline' }));
     const port = (airportServices || []).map(p => ({ id: p.id, name: p.name, price: p.price || 0, type: 'Airport' }));
     return [...air, ...port];
   }, [airlineAncillaries, airportServices]);
 
-  const totalComponentValue = useMemo(() => {
+  const totalComponentValue = React.useMemo(() => {
     return selectedComponents.reduce((total, current) => {
       const product = allAvailableProducts.find(p => p.id === current.value);
       return total + (product ? product.price : 0);
     }, 0);
   }, [selectedComponents, allAvailableProducts]);
 
-  const finalPrice = useMemo(() => {
+  const finalPrice = React.useMemo(() => {
     if (pricingStrategy === 'Absolute Price') return discountValue;
     if (pricingStrategy === 'Fixed Discount') return Math.max(0, totalComponentValue - discountValue);
     return totalComponentValue * (1 - discountValue / 100);
@@ -200,7 +198,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                 <FormItem><FormLabel>Retailing Offer Name</FormLabel><FormControl><Input placeholder="e.g., Platinum Fast-Track Bundle" {...field} /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="description" render={({ field }) => (
-                <FormItem><FormLabel>Customer Positioning</FormLabel><FormControl><Input placeholder="Visual description for touchpoint display" {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Touchpoint Display Text</FormLabel><FormControl><Input placeholder="Visual description for customer display" {...field} /></FormControl><FormMessage /></FormItem>
               )} />
               <div className="grid grid-cols-2 gap-4">
                 <FormField control={form.control} name="category" render={({ field }) => (
@@ -230,17 +228,17 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                     options={(cohorts || []).map(c => ({ value: c.cohortId, label: c.name }))} 
                     selected={field.value || []} 
                     onChange={field.onChange} 
-                    placeholder="Search ecosystem segments..." 
+                    placeholder="Search segments..." 
                   />
-                  <FormDescription className="text-[10px]">Offer only visible to these segments.</FormDescription>
+                  <FormDescription className="text-[10px]">Commercials only applied to these segments.</FormDescription>
                 </FormItem>
               )} />
               <div className="grid grid-cols-2 gap-4">
                  <FormField control={form.control} name="scope.channel" render={({ field }) => (
-                  <FormItem><FormLabel>SITA Touchpoints</FormLabel><MultiSelect options={channelOptions} selected={field.value || []} onChange={field.onChange} placeholder="All channels" /></FormItem>
+                  <FormItem><FormLabel>SITA Channels</FormLabel><MultiSelect options={channelOptions} selected={field.value || []} onChange={field.onChange} placeholder="All channels" /></FormItem>
                 )} />
                 <FormField control={form.control} name="scope.market" render={({ field }) => (
-                  <FormItem><FormLabel>Geo Markets</FormLabel><MultiSelect options={marketOptions} selected={field.value || []} onChange={field.onChange} placeholder="Global" /></FormItem>
+                  <FormItem><FormLabel>Markets</FormLabel><MultiSelect options={marketOptions} selected={field.value || []} onChange={field.onChange} placeholder="Global" /></FormItem>
                 )} />
               </div>
             </section>
@@ -249,10 +247,10 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
           <div className="space-y-8">
             <section className="space-y-4">
               <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-widest">
-                <PlusCircle className="h-4 w-4 text-primary" /> 3. Components & Commercials
+                <PlusCircle className="h-4 w-4 text-primary" /> 3. Components & Commercial Logic
               </div>
               <div className="space-y-2">
-                <FormLabel>Product Composition</FormLabel>
+                <FormLabel>Included SKUs</FormLabel>
                 {fields.map((field, index) => (
                   <div key={field.id} className="flex items-center gap-2">
                     <FormField control={form.control} name={`components.${index}.value`} render={({ field }) => (
@@ -274,11 +272,11 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
 
               <div className="p-4 rounded-xl bg-indigo-50/50 border border-indigo-100 space-y-4 mt-4">
                 <div className="flex items-center gap-2 text-indigo-700 font-bold uppercase text-[10px] tracking-widest mb-2">
-                    <TrendingUp className="h-3 w-3" /> Pricing Command
+                    <TrendingUp className="h-3 w-3" /> Pricing Strategy
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                    <FormField control={form.control} name="pricingStrategy" render={({ field }) => (
-                    <FormItem><FormLabel className="text-xs">Pricing Logic</FormLabel>
+                    <FormItem><FormLabel className="text-xs">Logic</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl><SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent><SelectItem value="Percent Discount">Percent Discount</SelectItem><SelectItem value="Fixed Discount">Fixed Discount</SelectItem><SelectItem value="Absolute Price">Absolute Price</SelectItem></SelectContent>
@@ -286,7 +284,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="discount" render={({ field }) => (
-                    <FormItem><FormLabel className="text-xs">Adjustment</FormLabel>
+                    <FormItem><FormLabel className="text-xs">Value</FormLabel>
                       <FormControl><div className="relative"><Input type="number" {...field} className="h-8 pl-7 text-xs" />
                       {pricingStrategy === 'Percent Discount' ? <Percent className="absolute left-2 top-2.5 h-3 w-3 text-muted-foreground" /> : <DollarSign className="absolute left-2 top-2.5 h-3 w-3 text-muted-foreground" />}</div></FormControl>
                     </FormItem>
@@ -310,7 +308,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                 </div>
 
                 <div className="flex justify-between items-center pt-2">
-                  <span className="text-[10px] font-black text-indigo-700 uppercase">Calculated Yield</span>
+                  <span className="text-[10px] font-black text-indigo-700 uppercase">Est. Yield Per Acceptance</span>
                   <div className="text-right">
                     <span className="text-[10px] text-muted-foreground line-through opacity-50 mr-2">${totalComponentValue.toFixed(2)}</span>
                     <span className="text-xl font-black text-indigo-700 tabular-nums">${finalPrice.toFixed(2)}</span>
@@ -334,7 +332,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                   </div>
                 </div>
                 <CardContent className="pt-6">
-                  <p className="text-sm text-muted-foreground mb-4 italic">{form.getValues('description') || 'Define your value proposition...'}</p>
+                  <p className="text-sm text-muted-foreground mb-4 italic">{form.getValues('description') || 'Visual description...'}</p>
                   <div className="space-y-2">
                     {selectedComponents.filter(c => c.value).map(c => (
                       <div key={c.value} className="flex items-center gap-3 text-xs font-bold p-2 bg-secondary/50 rounded-lg">
@@ -348,7 +346,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                     <span className="text-[10px] font-bold text-muted-foreground line-through opacity-60">${totalComponentValue.toFixed(2)}</span>
                     <span className="text-2xl font-black text-primary">${finalPrice.toFixed(2)}</span>
                   </div>
-                  <Button className="rounded-full px-8 font-black shadow-lg">Purchase</Button>
+                  <Button className="rounded-full px-8 font-black shadow-lg">Activate</Button>
                 </CardFooter>
               </Card>
             </div>
@@ -358,7 +356,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
         <div className="flex justify-between items-center pt-6 sticky bottom-0 bg-background/95 backdrop-blur-sm py-4 border-t z-20">
           <Button type="button" variant="ghost" onClick={() => setShowPreview(!showPreview)}>
             <Eye className="mr-2 h-4 w-4" />
-            {showPreview ? 'Close Preview' : 'Preview Touchpoint'}
+            {showPreview ? 'Close Preview' : 'Preview Touchpoint UI'}
           </Button>
           <div className="flex gap-3">
             <Button type="button" variant="outline" onClick={onCancel}>Discard</Button>
