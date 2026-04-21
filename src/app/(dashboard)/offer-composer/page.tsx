@@ -29,7 +29,8 @@ import {
   Plane,
   User,
   Ticket,
-  Clock
+  Clock,
+  Package
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -54,6 +55,41 @@ const discoverySchema = z.object({
   touchpoint: z.enum(['CUSS_Kiosk', 'CUTE_Desktop', 'Mobile_App', 'NDC_API']).default('CUSS_Kiosk'),
   airportNode: z.string().length(3).toUpperCase().default('LHR'),
 });
+
+const mockBundlesFallback = [
+    { 
+        id: 'MOCK-OFR-001', 
+        name: 'Executive Transit Pack', 
+        description: 'Includes Lounge Access, Priority Boarding, and Ultra Wi-Fi.',
+        domain: 'Hybrid',
+        pricing: { strategy: 'Dynamic', basePrice: 85, currency: 'USD' }, 
+        targeting: { cohortIds: ['Silver', 'Gold', 'CORP_PREMIUM'] } 
+    },
+    { 
+        id: 'MOCK-OFR-002', 
+        name: 'LHR Hub Fast-Track', 
+        description: 'Skip the lines with dedicated Security Fast Track at Terminal 5.',
+        domain: 'Airport',
+        pricing: { strategy: 'Demand', basePrice: 15, currency: 'USD' }, 
+        targeting: { cohortIds: ['LEISURE_PROMO', 'LHR_BIZ_WAIT'] } 
+    },
+    { 
+        id: 'MOCK-OFR-003', 
+        name: 'Family Travel Bundle', 
+        description: 'Pre-ordered kids meals and dedicated family valet parking.',
+        domain: 'Hybrid',
+        pricing: { strategy: 'Static', basePrice: 45, currency: 'USD' }, 
+        targeting: { cohortIds: ['FAMILY_TRIP'] } 
+    },
+    { 
+        id: 'MOCK-OFR-004', 
+        name: 'Elite Hub Access', 
+        description: 'The ultimate airport experience: Private Porter + Suite Access.',
+        domain: 'Airport',
+        pricing: { strategy: 'Demand', basePrice: 120, currency: 'USD' }, 
+        targeting: { cohortIds: ['Platinum', 'CORP_PREMIUM'] } 
+    },
+];
 
 export default function AirportOfferComposerPage() {
   const [step, setStep] = useState<ComposerStep>('pnr_discovery');
@@ -120,19 +156,20 @@ export default function AirportOfferComposerPage() {
     setDiscoveryLog(prev => [...prev, "Identified Cohorts: " + cohorts.join(', ')]);
 
     await new Promise(r => setTimeout(r, 600));
-    setDiscoveryLog(prev => [...prev, "Evaluating " + (allBundles?.length || 0) + " available bundles..."]);
+    const sourceBundles = (allBundles && allBundles.length > 0) ? allBundles : mockBundlesFallback;
+    setDiscoveryLog(prev => [...prev, "Evaluating " + sourceBundles.length + " available strategies..."]);
 
     // Evaluation Logic: Match Bundles to Identified Cohorts
-    const eligible = (allBundles || []).filter((b: any) => {
+    const eligible = sourceBundles.filter((b: any) => {
         // If no cohorts defined, it's global. Otherwise must match.
         if (!b.targeting?.cohortIds || b.targeting.cohortIds.length === 0) return true;
         return b.targeting.cohortIds.some((cid: string) => cohorts.includes(cid));
     });
 
-    setDiscoveryLog(prev => [...prev, "Applied Pricing Strategies: " + eligible.length + " eligible offers found."]);
+    setDiscoveryLog(prev => [...prev, "Decision Engine: " + eligible.length + " eligible offers selected."]);
     
     await new Promise(r => setTimeout(r, 600));
-    setDiscoveryLog(prev => [...prev, "Filtering by inventory & guardrails..."]);
+    setDiscoveryLog(prev => [...prev, "Applying Dynamic Pricing & Yield Guardrails..."]);
 
     // Calculate Dynamic Prices
     const finalOffers = eligible.map((b: any) => {
@@ -370,7 +407,7 @@ export default function AirportOfferComposerPage() {
                                         </div>
                                         <div>
                                             <CardTitle className="text-lg font-black">{offer.name}</CardTitle>
-                                            <CardDescription className="text-xs truncate max-w-[200px]">{offer.description || 'Offersense Dynamic Bundle'}</CardDescription>
+                                            <CardDescription className="text-xs line-clamp-2 min-h-[2.5rem]">{offer.description || 'Offersense Dynamic Bundle'}</CardDescription>
                                         </div>
                                     </div>
                                 </CardHeader>
