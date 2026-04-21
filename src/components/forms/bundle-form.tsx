@@ -25,7 +25,7 @@ import {
   SelectLabel,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { PlusCircle, Trash2, Eye, Package, Check, Calendar as CalendarIcon, Target, DollarSign, Percent, ShieldCheck, TrendingUp, Laptop, Clock } from 'lucide-react';
+import { PlusCircle, Trash2, Eye, Package, Check, Calendar as CalendarIcon, Target, DollarSign, Percent, ShieldCheck, TrendingUp, Laptop, Clock, Zap } from 'lucide-react';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import Image from 'next/image';
@@ -57,12 +57,10 @@ const bundleSchema = z.object({
   }),
   components: z.array(z.object({ value: z.string().min(1, "Select service") })).min(1, "Select at least one component"),
   
-  // Exhaustive Pricing Strategy
   pricingStrategy: z.enum(['Percent Discount', 'Fixed Discount', 'Absolute Price']),
   discount: z.coerce.number().min(0),
   currency: z.string().default('USD'),
   
-  // Advanced Commercial Rules
   channelMarkups: z.array(z.object({
       channel: z.string(),
       uplift: z.coerce.number()
@@ -101,21 +99,6 @@ interface BundleFormProps {
   onCancel: () => void;
 }
 
-const parseScope = (scope: any) => {
-  if (!scope) return { brand: [], channel: [], cohorts: [], market: [] };
-  const parseVal = (val: any) => {
-    if (Array.isArray(val)) return val;
-    if (typeof val === 'string' && val.length > 0) return val.split(',').map((s: string) => s.trim());
-    return [];
-  };
-  return {
-    brand: parseVal(scope.brand),
-    channel: parseVal(scope.channel),
-    cohorts: parseVal(scope.cohorts),
-    market: parseVal(scope.market),
-  };
-};
-
 export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
   const [showPreview, setShowPreview] = React.useState(false);
   const firestore = useFirestore();
@@ -130,22 +113,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
 
   const form = useForm<Bundle>({
     resolver: zodResolver(bundleSchema),
-    defaultValues: bundle ? {
-      ...bundle,
-      components: Array.isArray(bundle.components) 
-        ? bundle.components.map((c: any) => ({ value: typeof c === 'string' ? c : (c.id || '') }))
-        : (bundle.components ? Object.entries(bundle.components).map(([k]) => ({ value: k })) : []),
-      scope: parseScope(bundle.scope),
-      validity: {
-        from: bundle.validity?.from instanceof Date ? bundle.validity.from : (bundle.validity?.from?.toDate?.() || new Date()),
-        to: bundle.validity?.to instanceof Date ? bundle.validity.to : (bundle.validity?.to?.toDate?.() || addDays(new Date(), 30)),
-      },
-      status: bundle.status || 'Draft',
-      pricingStrategy: bundle.pricingStrategy || 'Percent Discount',
-      discount: bundle.discount || 0,
-      priorityLevel: bundle.priorityLevel || 50,
-      imageHint: bundle.imageHint || 'airport luxury',
-    } : {
+    defaultValues: bundle || {
       name: '',
       description: '',
       category: 'Normal',
@@ -157,6 +125,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
       pricingStrategy: 'Percent Discount',
       discount: 10,
       imageHint: 'airport luxury',
+      guardrails: { minPriceFloor: 10, maxPriceCeiling: 500 },
     },
   });
 
@@ -203,8 +172,10 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
               <div className="grid grid-cols-2 gap-4">
                 <FormField control={form.control} name="category" render={({ field }) => (
                   <FormItem><FormLabel>Category</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                  <SelectContent><SelectItem value="Normal">Standard</SelectItem><SelectItem value="Disruption">IROPS / Disruption</SelectItem><SelectItem value="Promotional">Flash Sale</SelectItem></SelectContent></Select></FormItem>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                    <SelectContent><SelectItem value="Normal">Standard</SelectItem><SelectItem value="Disruption">IROPS / Disruption</SelectItem><SelectItem value="Promotional">Flash Sale</SelectItem></SelectContent>
+                  </Select></FormItem>
                 )} />
                 <FormField control={form.control} name="priorityLevel" render={({ field }) => (
                   <FormItem>
@@ -219,7 +190,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
 
             <section className="space-y-4">
               <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-widest">
-                <Target className="h-4 w-4 text-primary" /> 2. Targeting Logic (Who)
+                <Target className="h-4 w-4 text-primary" /> 2. Targeting Scope (Who)
               </div>
               <FormField control={form.control} name="scope.cohorts" render={({ field }) => (
                 <FormItem>
@@ -247,7 +218,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
           <div className="space-y-8">
             <section className="space-y-4">
               <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-widest">
-                <PlusCircle className="h-4 w-4 text-primary" /> 3. Components & Commercial Logic
+                <PlusCircle className="h-4 w-4 text-primary" /> 3. Components & Commercial Engine
               </div>
               <div className="space-y-2">
                 <FormLabel>Included SKUs</FormLabel>
@@ -255,7 +226,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: BundleFormProps) {
                   <div key={field.id} className="flex items-center gap-2">
                     <FormField control={form.control} name={`components.${index}.value`} render={({ field }) => (
                       <FormItem className="flex-1">
-                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl><SelectTrigger className="h-9"><SelectValue placeholder="Select SKU..." /></SelectTrigger></FormControl>
                           <SelectContent>
                             <SelectGroup><SelectLabel>Carrier Ancillaries</SelectLabel>{(airlineAncillaries || []).map(p => (<SelectItem key={p.id} value={p.id!}>{p.name} (${p.defaultPrice})</SelectItem>))}</SelectGroup>
