@@ -12,6 +12,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
@@ -21,7 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -29,61 +29,87 @@ import {
   Plane, 
   Building2, 
   Settings, 
-  BrainCircuit, 
   Globe, 
   Laptop, 
-  MapPin, 
   Target, 
   Activity, 
-  ShieldCheck, 
-  Clock, 
-  Users 
+  Users,
+  Trophy,
+  Ticket,
+  DollarSign,
+  Clock,
+  Heart,
+  Sparkles,
+  Accessibility
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
-import { useFirestore, useCollection } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const cohortSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(5, 'Cohort name is required.'),
-  cohortId: z.string().min(3, 'Cohort ID required.').regex(/^[A-Z0-9_]+$/),
+  cohortId: z.string().min(3, 'Cohort ID required.').toUpperCase().regex(/^[A-Z0-9_]+$/),
+  domain: z.enum(['Airline', 'Airport']).default('Airline'),
   description: z.string().min(10, 'Logical description required.'),
   type: z.enum(['static', 'dynamic', 'predictive']).default('static'),
   status: z.enum(['Active', 'Inactive']).default('Active'),
   priority: z.coerce.number().min(1).max(100).default(50),
-  evaluation_mode: z.enum(['real-time', 'cached', 'batch']).default('real-time'),
-  combination_logic: z.enum(['AND', 'OR']).default('AND'),
-  override_flag: z.boolean().default(false),
 
-  airlineRules: z.object({
-    carrierCodes: z.array(z.string()).default([]),
-    passengerTypes: z.array(z.string()).default([]),
-    loyaltyTiers: z.array(z.string()).default([]),
-    corporateFlag: z.boolean().default(false),
+  // --- EXHAUSTIVE AIRLINE PARAMETERS ---
+  airlineParams: z.object({
+    // Passenger Type
+    paxTypes: z.array(z.string()).default([]), // Adult, Child, Infant
+    compositions: z.array(z.string()).default([]), // Solo, Family, Group
+    isCorporate: z.boolean().default(false),
+    
+    // Loyalty
+    loyaltyTiers: z.array(z.string()).default([]), // Silver, Gold, Platinum
+    membershipStatus: z.string().optional(),
+    
+    // Fare / Booking
+    fareFamilies: z.array(z.string()).default([]),
     cabinClasses: z.array(z.string()).default([]),
-    isInternational: z.boolean().optional(),
-    isLongHaul: z.boolean().optional(),
+    bookingClasses: z.array(z.string()).default([]),
+    
+    // Behavior
+    isFrequentTraveler: z.boolean().optional(),
+    travelPurpose: z.enum(['Any', 'Business', 'Leisure']).default('Any'),
+    haulLength: z.enum(['Any', 'Short', 'Long']).default('Any'),
+    
+    // Purchase History
+    pastAncillaries: z.array(z.string()).default([]), // seat, baggage, meals, upgrades
+    
+    // Commercial Sensitivity
+    priceSensitivity: z.enum(['Any', 'High', 'Low']).default('Any'),
+    discountUsage: z.enum(['Any', 'Frequent', 'Rare']).default('Any'),
+    
+    // Journey
+    geography: z.enum(['Any', 'Domestic', 'International']).default('Any'),
+    tripType: z.array(z.string()).default([]), // one-way, round-trip, connecting
+    bookingWindow: z.enum(['Any', 'Early', 'Last-minute']).default('Any'),
+    
+    // Preferences
+    seatPreference: z.string().optional(),
+    mealPreference: z.string().optional(),
+    
+    // Premium Intent
+    hasUpgradeHistory: z.boolean().default(false),
+    hasLoungeHistory: z.boolean().default(false),
+    
+    // Group Indicator
+    hasChildren: z.boolean().default(false),
+    isMultiPaxPnr: z.boolean().default(false),
+    
+    // SSR
+    specialNeeds: z.array(z.string()).default([]), // wheelchair, special meal
   }).optional(),
 
-  airportRules: z.object({
+  // --- AIRPORT PARAMETERS ---
+  airportParams: z.object({
     airportCodes: z.array(z.string()).default([]),
     terminals: z.array(z.string()).default([]),
-    locationContext: z.enum(['Anywhere', 'Departure', 'Arrival', 'Lounge', 'Gate']).default('Anywhere'),
     minWaitTime: z.coerce.number().optional(),
-    loungeOccupancy: z.coerce.number().optional(),
-  }).optional(),
-
-  ecosystemScope: z.object({
-    channels: z.array(z.string()).default([]),
-    regions: z.array(z.string()).default([]),
-    countries: z.array(z.string()).default([]),
-    pos: z.array(z.string()).default([]),
-    sectors: z.array(z.string()).default([]),
-  }).optional(),
-
-  personalization: z.object({
-    propensityToBuyScore: z.coerce.number().optional(),
-    priceSensitivityScore: z.coerce.number().optional(),
+    locationContext: z.enum(['Anywhere', 'Departure', 'Arrival', 'Lounge', 'Gate']).default('Anywhere'),
   }).optional(),
 });
 
@@ -91,151 +117,143 @@ export type Cohort = z.infer<typeof cohortSchema>;
 
 interface CohortFormProps {
   cohort: Cohort | null;
+  domain: 'Airline' | 'Airport';
   onSubmit: (data: Cohort) => void;
   onCancel: () => void;
 }
 
-const tierOptions = [
-  { value: 'Bronze', label: 'Bronze' },
+const paxTypeOpts = [
+  { value: 'Adult', label: 'Adult' },
+  { value: 'Child', label: 'Child' },
+  { value: 'Infant', label: 'Infant' }
+];
+
+const compositionOpts = [
+  { value: 'Solo', label: 'Solo Traveler' },
+  { value: 'Family', label: 'Family' },
+  { value: 'Group', label: 'Large Group' }
+];
+
+const tierOpts = [
   { value: 'Silver', label: 'Silver' },
   { value: 'Gold', label: 'Gold' },
   { value: 'Platinum', label: 'Platinum' }
 ];
 
-const cabinOptions = [
+const cabinOpts = [
   { value: 'Economy', label: 'Economy' },
-  { value: 'Premium', label: 'Premium' },
   { value: 'Business', label: 'Business' },
   { value: 'First', label: 'First' }
 ];
 
-const channelOptions = [
-  { value: 'Web', label: 'Web Direct' },
-  { value: 'App', label: 'Mobile App' },
-  { value: 'CUSS', label: 'SITA CUSS Kiosk' },
-  { value: 'CUTE', label: 'SITA CUTE Agent' },
-  { value: 'CUPPS', label: 'SITA CUPPS' },
-  { value: 'OTA', label: 'OTA' },
-  { value: 'NDC', label: 'NDC API' },
+const ancillaryHistoryOpts = [
+  { value: 'seat', label: 'Seat Selections' },
+  { value: 'baggage', label: 'Extra Baggage' },
+  { value: 'meals', label: 'Premium Meals' },
+  { value: 'upgrades', label: 'Paid Upgrades' }
 ];
 
-const regionOptions = [
-  { value: 'EU', label: 'Europe' },
-  { value: 'APAC', label: 'Asia-Pacific' },
-  { value: 'NAM', label: 'North America' },
-  { value: 'ME', label: 'Middle East' },
-  { value: 'LATAM', label: 'Latin America' }
+const tripTypeOpts = [
+  { value: 'one-way', label: 'One-Way' },
+  { value: 'round-trip', label: 'Round-Trip' },
+  { value: 'connecting', label: 'Connecting' }
 ];
 
-const paxTypeOptions = [
-  { value: 'ADT', label: 'Adult' },
-  { value: 'CHD', label: 'Child' },
-  { value: 'INF', label: 'Infant' }
+const ssrOpts = [
+  { value: 'wheelchair', label: 'Wheelchair Assistance' },
+  { value: 'special-meal', label: 'Special Meal Requirements' },
+  { value: 'infant-ssr', label: 'Infant / Bassinet' }
 ];
 
-export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
-  const firestore = useFirestore();
-  const airlinesQuery = React.useMemo(() => firestore ? collection(firestore, 'airlines') : undefined, [firestore]);
-  const { data: airlinesData } = useCollection(airlinesQuery);
-
-  const airlineOptions = React.useMemo(() => {
-    const options = (airlinesData || []).map((a: any) => ({
-      value: a.icaoCode,
-      label: `${a.name} (${a.icaoCode})`
-    }));
-    return options.length > 0 ? options : [
-      { value: 'GAB', label: 'Global Airways (GAB)' },
-      { value: 'SBA', label: 'SkyBridge Airlines (SBA)' }
-    ];
-  }, [airlinesData]);
-
+export function CohortForm({ cohort, domain, onSubmit, onCancel }: CohortFormProps) {
   const form = useForm<Cohort>({
     resolver: zodResolver(cohortSchema),
     defaultValues: cohort || {
       name: '',
       cohortId: '',
+      domain: domain,
       description: '',
       type: 'static',
       status: 'Active',
       priority: 50,
-      evaluation_mode: 'real-time',
-      combination_logic: 'AND',
-      override_flag: false,
-      airlineRules: { carrierCodes: [], passengerTypes: [], loyaltyTiers: [], cabinClasses: [] },
-      airportRules: { airportCodes: [], terminals: [], locationContext: 'Anywhere' },
-      ecosystemScope: { channels: [], regions: [], countries: [], pos: [], sectors: [] },
-      personalization: { propensityToBuyScore: 0, priceSensitivityScore: 0 },
+      airlineParams: {
+        paxTypes: [],
+        compositions: [],
+        loyaltyTiers: [],
+        fareFamilies: [],
+        cabinClasses: [],
+        bookingClasses: [],
+        pastAncillaries: [],
+        tripType: [],
+        specialNeeds: [],
+        travelPurpose: 'Any',
+        haulLength: 'Any',
+        priceSensitivity: 'Any',
+        discountUsage: 'Any',
+        geography: 'Any',
+        bookingWindow: 'Any',
+      },
+      airportParams: {
+        airportCodes: [],
+        terminals: [],
+        locationContext: 'Anywhere',
+      }
     },
   });
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-muted">
-            <TabsTrigger value="general" className="text-[10px] uppercase font-bold py-2">
-              <Settings className="w-3 h-3 mr-1" /> General
-            </TabsTrigger>
-            <TabsTrigger value="scope" className="text-[10px] uppercase font-bold py-2">
-              <Globe className="w-3 h-3 mr-1" /> Geography
-            </TabsTrigger>
-            <TabsTrigger value="airline" className="text-[10px] uppercase font-bold py-2">
-              <Plane className="w-3 h-3 mr-1" /> Airline
-            </TabsTrigger>
-            <TabsTrigger value="airport" className="text-[10px] uppercase font-bold py-2">
-              <Building2 className="w-3 h-3 mr-1" /> Airport
-            </TabsTrigger>
-            <TabsTrigger value="predictive" className="text-[10px] uppercase font-bold py-2">
-              <BrainCircuit className="w-3 h-3 mr-1" /> Predictive
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="general" className="space-y-4 py-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-h-[80vh] overflow-y-auto pr-4">
+        
+        {/* --- SECTION 1: MASTER IDENTITY --- */}
+        <section className="space-y-4">
+            <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-[0.2em]">
+                <Settings className="h-3.5 w-3.5" /> 1. Segment Identity & State
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <FormField control={form.control} name="name" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Cohort Display Name</FormLabel>
-                  <FormControl><Input placeholder="e.g., LHR High-Wait Business" {...field} /></FormControl>
+                  <FormLabel>Cohort Name</FormLabel>
+                  <FormControl><Input placeholder="e.g., Q4 High-Spend Leisure" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
               <FormField control={form.control} name="cohortId" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Cohort ID (Upper/Alpha)</FormLabel>
-                  <FormControl><Input placeholder="e.g., LHR_BIZ_LATE" {...field} /></FormControl>
+                  <FormLabel>Logical Cohort ID</FormLabel>
+                  <FormControl><Input placeholder="e.g., Q4_PREMIUM_LEISURE" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
             </div>
             <FormField control={form.control} name="description" render={({ field }) => (
               <FormItem>
-                <FormLabel>Description</FormLabel>
-                <FormControl><Input placeholder="Segment intent..." {...field} /></FormControl>
+                <FormLabel>Segment Intent Description</FormLabel>
+                <FormControl><Input placeholder="Explain the commercial logic of this cohort..." {...field} /></FormControl>
               </FormItem>
             )} />
             <div className="grid grid-cols-3 gap-4">
               <FormField control={form.control} name="type" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Type</FormLabel>
+                  <FormLabel>Evaluation Type</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                     <SelectContent>
-                      <SelectItem value="static">Static Rules</SelectItem>
-                      <SelectItem value="dynamic">Dynamic Real-time</SelectItem>
-                      <SelectItem value="predictive">Predictive (AI)</SelectItem>
+                      <SelectItem value="static">Static Rules (Baseline)</SelectItem>
+                      <SelectItem value="dynamic">Dynamic (Request-time)</SelectItem>
+                      <SelectItem value="predictive">Predictive (ML Scoring)</SelectItem>
                     </SelectContent>
                   </Select>
                 </FormItem>
               )} />
-              <FormField control={form.control} name="evaluation_mode" render={({ field }) => (
+               <FormField control={form.control} name="status" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Evaluation</FormLabel>
+                  <FormLabel>Status</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                     <SelectContent>
-                      <SelectItem value="real-time">Request-time</SelectItem>
-                      <SelectItem value="cached">Cache-lookup</SelectItem>
-                      <SelectItem value="batch">Batch Job</SelectItem>
+                      <SelectItem value="Active">Active</SelectItem>
+                      <SelectItem value="Inactive">Paused</SelectItem>
                     </SelectContent>
                   </Select>
                 </FormItem>
@@ -243,236 +261,273 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
               <FormField control={form.control} name="priority" render={({ field }) => (
                 <FormItem>
                   <div className="flex justify-between">
-                    <FormLabel>Priority</FormLabel>
+                    <FormLabel>Engine Priority</FormLabel>
                     <span className="text-xs font-bold text-primary">{field.value}</span>
                   </div>
                   <FormControl>
-                    <Slider 
-                      min={1} 
-                      max={100} 
-                      step={1} 
-                      value={[field.value]} 
-                      onValueChange={(v) => field.onChange(v[0])} 
-                    />
+                    <Slider min={1} max={100} step={1} value={[field.value]} onValueChange={(v) => field.onChange(v[0])} />
                   </FormControl>
                 </FormItem>
               )} />
             </div>
-          </TabsContent>
+        </section>
 
-          <TabsContent value="scope" className="space-y-6 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase text-primary flex items-center gap-2">
-                  <Laptop className="w-3 h-3" /> Sales Channels
-                </h4>
-                <FormField control={form.control} name="ecosystemScope.channels" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Authorized Channels</FormLabel>
-                    <FormControl>
-                      <MultiSelect 
-                        options={channelOptions} 
-                        selected={field.value || []} 
-                        onChange={field.onChange} 
-                        placeholder="All Channels" 
-                      />
-                    </FormControl>
-                  </FormItem>
-                )} />
-              </div>
-              <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase text-primary flex items-center gap-2">
-                  <Globe className="w-3 h-3" /> Geo & POS
-                </h4>
+        <Separator />
+
+        {/* --- SECTION 2: AIRLINE PARAMETERS --- */}
+        {domain === 'Airline' && (
+            <section className="space-y-4">
+                <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-[0.2em]">
+                    <Plane className="h-3.5 w-3.5" /> 2. Airline Retailing Parameters
+                </div>
+                
+                <Accordion type="multiple" className="w-full">
+                    {/* PASSENGER TYPE */}
+                    <AccordionItem value="pax">
+                        <AccordionTrigger className="text-sm font-bold"><Users className="h-4 w-4 mr-2" /> Passenger Type & Composition</AccordionTrigger>
+                        <AccordionContent className="space-y-4 pt-2">
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormField control={form.control} name="airlineParams.paxTypes" render={({ field }) => (
+                                    <FormItem><FormLabel className="text-xs">Pax Type</FormLabel>
+                                    <MultiSelect options={paxTypeOpts} selected={field.value} onChange={field.onChange} placeholder="Adult, Child..." /></FormItem>
+                                )} />
+                                <FormField control={form.control} name="airlineParams.compositions" render={({ field }) => (
+                                    <FormItem><FormLabel className="text-xs">PNR Composition</FormLabel>
+                                    <MultiSelect options={compositionOpts} selected={field.value} onChange={field.onChange} placeholder="Solo, Family..." /></FormItem>
+                                )} />
+                            </div>
+                            <FormField control={form.control} name="airlineParams.isCorporate" render={({ field }) => (
+                                <FormItem className="flex items-center gap-2 space-y-0 rounded-md border p-3 bg-muted/20">
+                                    <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                    <FormLabel className="text-xs font-bold">Is Corporate Traveler</FormLabel>
+                                </FormItem>
+                            )} />
+                        </AccordionContent>
+                    </AccordionItem>
+
+                    {/* LOYALTY */}
+                    <AccordionItem value="loyalty">
+                        <AccordionTrigger className="text-sm font-bold"><Trophy className="h-4 w-4 mr-2" /> Loyalty & Membership</AccordionTrigger>
+                        <AccordionContent className="space-y-4 pt-2">
+                            <FormField control={form.control} name="airlineParams.loyaltyTiers" render={({ field }) => (
+                                <FormItem><FormLabel className="text-xs">Frequent Flyer Tier</FormLabel>
+                                <MultiSelect options={tierOpts} selected={field.value} onChange={field.onChange} placeholder="Select tiers..." /></FormItem>
+                            )} />
+                            <FormField control={form.control} name="airlineParams.membershipStatus" render={({ field }) => (
+                                <FormItem><FormLabel className="text-xs">Membership Status</FormLabel>
+                                <FormControl><Input placeholder="e.g., Lifetime, Active, VIP" {...field} /></FormControl></FormItem>
+                            )} />
+                        </AccordionContent>
+                    </AccordionItem>
+
+                    {/* FARE & BOOKING */}
+                    <AccordionItem value="fare">
+                        <AccordionTrigger className="text-sm font-bold"><Ticket className="h-4 w-4 mr-2" /> Fare & Booking Context</AccordionTrigger>
+                        <AccordionContent className="space-y-4 pt-2">
+                             <FormField control={form.control} name="airlineParams.cabinClasses" render={({ field }) => (
+                                <FormItem><FormLabel className="text-xs">Cabin Class</FormLabel>
+                                <MultiSelect options={cabinOpts} selected={field.value} onChange={field.onChange} placeholder="Economy, Business..." /></FormItem>
+                            )} />
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormField control={form.control} name="airlineParams.fareFamilies" render={({ field }) => (
+                                    <FormItem><FormLabel className="text-xs">Fare Family / Brand</FormLabel>
+                                    <FormControl><Input placeholder="e.g., Flex, Saver" value={field.value?.join(', ')} onChange={(e) => field.onChange(e.target.value.split(',').map(v => v.trim()))} /></FormControl></FormItem>
+                                )} />
+                                <FormField control={form.control} name="airlineParams.bookingClasses" render={({ field }) => (
+                                    <FormItem><FormLabel className="text-xs">Booking Class (RBD)</FormLabel>
+                                    <FormControl><Input placeholder="e.g., Y, J, F" value={field.value?.join(', ')} onChange={(e) => field.onChange(e.target.value.split(',').map(v => v.trim()))} /></FormControl></FormItem>
+                                )} />
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+
+                    {/* TRAVEL BEHAVIOR */}
+                    <AccordionItem value="behavior">
+                        <AccordionTrigger className="text-sm font-bold"><Activity className="h-4 w-4 mr-2" /> Travel Behavior & Intent</AccordionTrigger>
+                        <AccordionContent className="grid grid-cols-3 gap-4 pt-2">
+                             <FormField control={form.control} name="airlineParams.travelPurpose" render={({ field }) => (
+                                <FormItem><FormLabel className="text-xs">Purpose</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                    <SelectContent><SelectItem value="Any">Any</SelectItem><SelectItem value="Business">Business</SelectItem><SelectItem value="Leisure">Leisure</SelectItem></SelectContent>
+                                </Select></FormItem>
+                            )} />
+                            <FormField control={form.control} name="airlineParams.haulLength" render={({ field }) => (
+                                <FormItem><FormLabel className="text-xs">Flight Duration</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                    <SelectContent><SelectItem value="Any">Any</SelectItem><SelectItem value="Short">Short-Haul</SelectItem><SelectItem value="Long">Long-Haul</SelectItem></SelectContent>
+                                </Select></FormItem>
+                            )} />
+                            <FormField control={form.control} name="airlineParams.isFrequentTraveler" render={({ field }) => (
+                                <FormItem className="flex items-center gap-2 pt-8">
+                                    <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                    <FormLabel className="text-xs">Frequent Traveler</FormLabel>
+                                </FormItem>
+                            )} />
+                        </AccordionContent>
+                    </AccordionItem>
+
+                    {/* ANCILLARY HISTORY */}
+                    <AccordionItem value="history">
+                        <AccordionTrigger className="text-sm font-bold"><History className="h-4 w-4 mr-2" /> Ancillary Purchase History</AccordionTrigger>
+                        <AccordionContent className="pt-2">
+                            <FormField control={form.control} name="airlineParams.pastAncillaries" render={({ field }) => (
+                                <FormItem><FormLabel className="text-xs">Historical Product Preferences</FormLabel>
+                                <MultiSelect options={ancillaryHistoryOpts} selected={field.value} onChange={field.onChange} placeholder="What have they bought before?" /></FormItem>
+                            )} />
+                        </AccordionContent>
+                    </AccordionItem>
+
+                    {/* PRICE SENSITIVITY */}
+                    <AccordionItem value="sensitivity">
+                        <AccordionTrigger className="text-sm font-bold"><DollarSign className="h-4 w-4 mr-2" /> Commercial & Price Sensitivity</AccordionTrigger>
+                        <AccordionContent className="grid grid-cols-2 gap-4 pt-2">
+                            <FormField control={form.control} name="airlineParams.priceSensitivity" render={({ field }) => (
+                                <FormItem><FormLabel className="text-xs">Price Sensitivity Score</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                    <SelectContent><SelectItem value="Any">Any</SelectItem><SelectItem value="High">High (Price Conscious)</SelectItem><SelectItem value="Low">Low (Yield Focused)</SelectItem></SelectContent>
+                                </Select></FormItem>
+                            )} />
+                             <FormField control={form.control} name="airlineParams.discountUsage" render={({ field }) => (
+                                <FormItem><FormLabel className="text-xs">Discount Usage Pattern</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                    <SelectContent><SelectItem value="Any">Any</SelectItem><SelectItem value="Frequent">Frequent User</SelectItem><SelectItem value="Rare">Rarely Uses Promos</SelectItem></SelectContent>
+                                </Select></FormItem>
+                            )} />
+                        </AccordionContent>
+                    </AccordionItem>
+
+                    {/* JOURNEY LOGIC */}
+                    <AccordionItem value="journey">
+                        <AccordionTrigger className="text-sm font-bold"><Globe className="h-4 w-4 mr-2" /> Journey & Trip Type</AccordionTrigger>
+                        <AccordionContent className="space-y-4 pt-2">
+                             <div className="grid grid-cols-3 gap-4">
+                                <FormField control={form.control} name="airlineParams.geography" render={({ field }) => (
+                                    <FormItem><FormLabel className="text-xs">Geography</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                        <SelectContent><SelectItem value="Any">Any</SelectItem><SelectItem value="Domestic">Domestic Only</SelectItem><SelectItem value="International">International Only</SelectItem></SelectContent>
+                                    </Select></FormItem>
+                                )} />
+                                <FormField control={form.control} name="airlineParams.bookingWindow" render={({ field }) => (
+                                    <FormItem><FormLabel className="text-xs">Time to Departure</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                        <SelectContent><SelectItem value="Any">Any</SelectItem><SelectItem value="Early">Early Booker</SelectItem><SelectItem value="Last-minute">Last-minute Traveler</SelectItem></SelectContent>
+                                    </Select></FormItem>
+                                )} />
+                                <FormField control={form.control} name="airlineParams.tripType" render={({ field }) => (
+                                    <FormItem className="col-span-1"><FormLabel className="text-xs">Trip Cycle</FormLabel>
+                                    <MultiSelect options={tripTypeOpts} selected={field.value} onChange={field.onChange} placeholder="One-way..." /></FormItem>
+                                )} />
+                             </div>
+                        </AccordionContent>
+                    </AccordionItem>
+
+                    {/* PREFERENCES */}
+                    <AccordionItem value="preferences">
+                        <AccordionTrigger className="text-sm font-bold"><Heart className="h-4 w-4 mr-2" /> Preferences & Profiles</AccordionTrigger>
+                        <AccordionContent className="grid grid-cols-2 gap-4 pt-2">
+                            <FormField control={form.control} name="airlineParams.seatPreference" render={({ field }) => (
+                                <FormItem><FormLabel className="text-xs">Seat Attribute</FormLabel><FormControl><Input placeholder="Window, Aisle, Extra Legroom" {...field} /></FormControl></FormItem>
+                            )} />
+                            <FormField control={form.control} name="airlineParams.mealPreference" render={({ field }) => (
+                                <FormItem><FormLabel className="text-xs">Dietary / Meal</FormLabel><FormControl><Input placeholder="Vegetarian, Kosher, Gourmet" {...field} /></FormControl></FormItem>
+                            )} />
+                        </AccordionContent>
+                    </AccordionItem>
+
+                    {/* PREMIUM BEHAVIOR */}
+                    <AccordionItem value="premium">
+                        <AccordionTrigger className="text-sm font-bold"><Sparkles className="h-4 w-4 mr-2" /> Premium Travel Tendencies</AccordionTrigger>
+                        <AccordionContent className="grid grid-cols-2 gap-4 pt-2">
+                             <FormField control={form.control} name="airlineParams.hasUpgradeHistory" render={({ field }) => (
+                                <FormItem className="flex items-center gap-2 space-y-0 rounded-md border p-3 bg-muted/20">
+                                    <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                    <FormLabel className="text-xs">History of Upgrading</FormLabel>
+                                </FormItem>
+                            )} />
+                             <FormField control={form.control} name="airlineParams.hasLoungeHistory" render={({ field }) => (
+                                <FormItem className="flex items-center gap-2 space-y-0 rounded-md border p-3 bg-muted/20">
+                                    <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                    <FormLabel className="text-xs">Historical Lounge Usage</FormLabel>
+                                </FormItem>
+                            )} />
+                        </AccordionContent>
+                    </AccordionItem>
+
+                    {/* PNR METADATA */}
+                    <AccordionItem value="metadata">
+                        <AccordionTrigger className="text-sm font-bold"><Users className="h-4 w-4 mr-2" /> PNR Indicators</AccordionTrigger>
+                        <AccordionContent className="grid grid-cols-2 gap-4 pt-2">
+                             <FormField control={form.control} name="airlineParams.isMultiPaxPnr" render={({ field }) => (
+                                <FormItem className="flex items-center gap-2 space-y-0 rounded-md border p-3">
+                                    <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                    <FormLabel className="text-xs">Multiple Passengers in PNR</FormLabel>
+                                </FormItem>
+                            )} />
+                             <FormField control={form.control} name="airlineParams.hasChildren" render={({ field }) => (
+                                <FormItem className="flex items-center gap-2 space-y-0 rounded-md border p-3">
+                                    <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                    <FormLabel className="text-xs">Children Present in PNR</FormLabel>
+                                </FormItem>
+                            )} />
+                        </AccordionContent>
+                    </AccordionItem>
+
+                    {/* SSR */}
+                    <AccordionItem value="ssr">
+                        <AccordionTrigger className="text-sm font-bold"><Accessibility className="h-4 w-4 mr-2" /> Special Needs (SSR)</AccordionTrigger>
+                        <AccordionContent className="pt-2">
+                            <FormField control={form.control} name="airlineParams.specialNeeds" render={({ field }) => (
+                                <FormItem><FormLabel className="text-xs">Authorized SSR Toggles</FormLabel>
+                                <MultiSelect options={ssrOpts} selected={field.value} onChange={field.onChange} placeholder="Identify special assistance..." /></FormItem>
+                            )} />
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
+            </section>
+        )}
+
+        {/* --- SECTION 3: AIRPORT PARAMETERS --- */}
+        {domain === 'Airport' && (
+            <section className="space-y-4">
+                <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-[0.2em]">
+                    <Building2 className="h-3.5 w-3.5" /> 2. Airport Context Rules
+                </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <FormField control={form.control} name="ecosystemScope.regions" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Regions</FormLabel>
-                      <FormControl>
-                        <MultiSelect 
-                          options={regionOptions} 
-                          selected={field.value || []} 
-                          onChange={field.onChange} 
-                          placeholder="Global" 
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="ecosystemScope.countries" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>ISO Countries</FormLabel>
-                      <FormControl><Input placeholder="US, IN, GB" {...field} /></FormControl>
-                    </FormItem>
-                  )} />
+                    <FormField control={form.control} name="airportParams.locationContext" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Node Context</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                            <SelectContent>
+                                <SelectItem value="Anywhere">Anywhere</SelectItem>
+                                <SelectItem value="Departure">Pre-Departure</SelectItem>
+                                <SelectItem value="Arrival">On-Arrival</SelectItem>
+                                <SelectItem value="Lounge">In-Lounge</SelectItem>
+                                <SelectItem value="Gate">At Gate</SelectItem>
+                            </SelectContent>
+                            </Select>
+                        </FormItem>
+                    )} />
+                    <FormField control={form.control} name="airportParams.minWaitTime" render={({ field }) => (
+                        <FormItem><FormLabel>Security Wait Time &gt; (Min)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>
+                    )} />
                 </div>
-              </div>
-            </div>
-          </TabsContent>
+                <FormField control={form.control} name="airportParams.airportCodes" render={({ field }) => (
+                    <FormItem><FormLabel>Target Airport Nodes (IATA)</FormLabel>
+                    <FormControl><Input placeholder="e.g., LHR, JFK, SIN" value={field.value?.join(', ')} onChange={(e) => field.onChange(e.target.value.split(',').map(v => v.trim()))} /></FormControl></FormItem>
+                )} />
+            </section>
+        )}
 
-          <TabsContent value="airline" className="space-y-6 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase text-primary flex items-center gap-2">
-                  <Users className="w-3 h-3" /> Profile & Loyalty
-                </h4>
-                <FormField control={form.control} name="airlineRules.carrierCodes" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Carrier Scope</FormLabel>
-                    <FormControl>
-                      <MultiSelect 
-                        options={airlineOptions} 
-                        selected={field.value || []} 
-                        onChange={field.onChange} 
-                        placeholder="All Carriers" 
-                      />
-                    </FormControl>
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="airlineRules.loyaltyTiers" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Loyalty Tiers</FormLabel>
-                    <FormControl>
-                      <MultiSelect 
-                        options={tierOptions} 
-                        selected={field.value || []} 
-                        onChange={field.onChange} 
-                        placeholder="All Tiers" 
-                      />
-                    </FormControl>
-                  </FormItem>
-                )} />
-              </div>
-              <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase text-primary flex items-center gap-2">
-                  <Plane className="w-3 h-3" /> Itinerary
-                </h4>
-                <FormField control={form.control} name="airlineRules.cabinClasses" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Eligible Cabins</FormLabel>
-                    <FormControl>
-                      <MultiSelect 
-                        options={cabinOptions} 
-                        selected={field.value || []} 
-                        onChange={field.onChange} 
-                        placeholder="All Cabins" 
-                      />
-                    </FormControl>
-                  </FormItem>
-                )} />
-                <div className="grid grid-cols-2 gap-4 pt-2">
-                  <FormField control={form.control} name="airlineRules.isInternational" render={({ field }) => (
-                    <FormItem className="flex items-center gap-2 space-y-0">
-                      <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                      <FormLabel className="text-xs">International</FormLabel>
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="airlineRules.isLongHaul" render={({ field }) => (
-                    <FormItem className="flex items-center gap-2 space-y-0">
-                      <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                      <FormLabel className="text-xs">Long Haul</FormLabel>
-                    </FormItem>
-                  )} />
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="airport" className="space-y-6 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase text-primary flex items-center gap-2">
-                  <MapPin className="w-3 h-3" /> Nodes
-                </h4>
-                <FormField control={form.control} name="airportRules.locationContext" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Journey Stage</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="Anywhere">Anywhere</SelectItem>
-                        <SelectItem value="Departure">Pre-Departure</SelectItem>
-                        <SelectItem value="Arrival">On-Arrival</SelectItem>
-                        <SelectItem value="Lounge">In-Lounge</SelectItem>
-                        <SelectItem value="Gate">At Gate</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="airportRules.airportCodes" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Hub Codes</FormLabel>
-                    <FormControl><Input placeholder="LHR, JFK, DXB" {...field} /></FormControl>
-                  </FormItem>
-                )} />
-              </div>
-              <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase text-primary flex items-center gap-2">
-                  <Activity className="w-3 h-3" /> Live Signals
-                </h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField control={form.control} name="airportRules.minWaitTime" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Wait Time &gt; (Min)</FormLabel>
-                      <FormControl><Input type="number" {...field} /></FormControl>
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="airportRules.loungeOccupancy" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Lounge &gt; (%)</FormLabel>
-                      <FormControl><Input type="number" {...field} /></FormControl>
-                    </FormItem>
-                  )} />
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="predictive" className="space-y-6 py-4">
-            <div className="space-y-4 p-4 border rounded-lg bg-indigo-50/50">
-              <h4 className="text-xs font-black uppercase text-indigo-700 flex items-center gap-2">
-                <BrainCircuit className="w-3 h-3" /> ML Scoring
-              </h4>
-              <div className="grid grid-cols-2 gap-8">
-                <FormField control={form.control} name="personalization.propensityToBuyScore" render={({ field }) => (
-                  <FormItem>
-                    <div className="flex justify-between">
-                      <FormLabel>Propensity &gt;</FormLabel>
-                      <span className="font-bold text-indigo-600">{field.value || 0}%</span>
-                    </div>
-                    <FormControl>
-                      <Slider 
-                        min={0} 
-                        max={100} 
-                        value={[field.value || 0]} 
-                        onValueChange={(v) => field.onChange(v[0])} 
-                      />
-                    </FormControl>
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="personalization.priceSensitivityScore" render={({ field }) => (
-                  <FormItem>
-                    <div className="flex justify-between">
-                      <FormLabel>Sensitivity &lt;</FormLabel>
-                      <span className="font-bold text-indigo-600">{field.value || 0}%</span>
-                    </div>
-                    <FormControl>
-                      <Slider 
-                        min={0} 
-                        max={100} 
-                        value={[field.value || 0]} 
-                        onValueChange={(v) => field.onChange(v[0])} 
-                      />
-                    </FormControl>
-                  </FormItem>
-                )} />
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        <div className="flex justify-end gap-3 pt-6 border-t">
+        <div className="flex justify-end gap-3 pt-6 border-t sticky bottom-0 bg-background py-4">
           <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button type="submit" className="px-10 font-bold">Commit Segment</Button>
+          <Button type="submit" className="px-10 font-bold">Commit Segment Logic</Button>
         </div>
       </form>
     </Form>
