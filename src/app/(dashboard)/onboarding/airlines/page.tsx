@@ -43,7 +43,6 @@ export default function AirlineOnboardingPage() {
     const [editingAirline, setEditingAirline] = useState<AirlineOnboarding | null>(null);
     const { toast } = useToast();
 
-    // PERFORMANCE: Immediate UI Pattern - default to mock data while loading if registry is empty
     const displayAirlines = useMemo(() => {
         const sourceData = (airlinesCollection && airlinesCollection.length > 0) 
             ? airlinesCollection as any[] 
@@ -94,7 +93,10 @@ export default function AirlineOnboardingPage() {
                     <h1 className="text-3xl font-bold tracking-tight">Airline Onboarding</h1>
                     <p className="text-muted-foreground">Map carrier PSS systems to ecosystem airport nodes.</p>
                 </div>
-                <Button onClick={() => handleOpenDialog()}><PlusCircle className="mr-2 h-4 w-4" /> Onboard Airline</Button>
+                <div className="flex items-center gap-2">
+                    {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                    <Button onClick={() => handleOpenDialog()}><PlusCircle className="mr-2 h-4 w-4" /> Onboard Airline</Button>
+                </div>
             </div>
 
             <Card>
@@ -114,69 +116,65 @@ export default function AirlineOnboardingPage() {
                             />
                         </div>
                     </div>
-                    {/* OPTIMIZATION: Only show loader if we have zero data to show (even mock) */}
-                    {loading && airlinesCollection === null ? (
-                        <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
-                    ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Airline & Code</TableHead>
-                                    <TableHead>PSS / Protocol</TableHead>
-                                    <TableHead>Operating Hubs</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
+                    
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Airline & Code</TableHead>
+                                <TableHead>PSS / Protocol</TableHead>
+                                <TableHead>Operating Hubs</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {displayAirlines.map((airline) => (
+                                <TableRow key={airline.id}>
+                                    <TableCell>
+                                        <div className="flex items-center gap-2">
+                                            <div className="p-2 bg-primary/10 rounded">
+                                                <Plane className="h-4 w-4 text-primary" />
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-sm">{airline.name}</div>
+                                                <div className="font-mono text-[10px] text-muted-foreground uppercase">{airline.icaoCode}</div>
+                                            </div>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-medium">{airline.pssType}</span>
+                                            <span className="text-[10px] text-muted-foreground font-mono">{airline.pnrMessagingType || 'EDIFACT'}</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-wrap gap-1 max-w-[200px]">
+                                            {airline.operatingAirports?.map((hub: string) => (
+                                            <Badge key={hub} variant="secondary" className="text-[10px] font-mono">{hub}</Badge>
+                                            ))}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant={airline.status === 'Active' ? 'default' : 'secondary'}>{airline.status}</Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-56">
+                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                <DropdownMenuItem onClick={() => handleOpenDialog(airline)}>Edit Config</DropdownMenuItem>
+                                                <DropdownMenuItem><Network className="mr-2 h-4 w-4"/>Check PSS Sync</DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(airline.id!)}>Remove</DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
                                 </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {displayAirlines.map((airline) => (
-                                    <TableRow key={airline.id}>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                <div className="p-2 bg-primary/10 rounded">
-                                                  <Plane className="h-4 w-4 text-primary" />
-                                                </div>
-                                                <div>
-                                                  <div className="font-bold text-sm">{airline.name}</div>
-                                                  <div className="font-mono text-[10px] text-muted-foreground uppercase">{airline.icaoCode}</div>
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col">
-                                              <span className="text-sm font-medium">{airline.pssType}</span>
-                                              <span className="text-[10px] text-muted-foreground font-mono">{airline.pnrMessagingType || 'EDIFACT'}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-wrap gap-1 max-w-[200px]">
-                                              {airline.operatingAirports?.map((hub: string) => (
-                                                <Badge key={hub} variant="secondary" className="text-[10px] font-mono">{hub}</Badge>
-                                              ))}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant={airline.status === 'Active' ? 'default' : 'secondary'}>{airline.status}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end" className="w-56">
-                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                    <DropdownMenuItem onClick={() => handleOpenDialog(airline)}>Edit Config</DropdownMenuItem>
-                                                    <DropdownMenuItem><Network className="mr-2 h-4 w-4"/>Check PSS Sync</DropdownMenuItem>
-                                                    <DropdownMenuSeparator />
-                                                    <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(airline.id!)}>Remove</DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    )}
+                            ))}
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
 

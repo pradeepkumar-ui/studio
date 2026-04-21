@@ -43,7 +43,6 @@ export default function PartnerOnboardingPage() {
     const [editingPartner, setEditingPartner] = useState<PartnerOnboarding | null>(null);
     const { toast } = useToast();
 
-    // PERFORMANCE: Immediate UI Pattern - defaults to mock data while loading
     const displayPartners = useMemo(() => {
         const sourceData = (partnersCollection && partnersCollection.length > 0) 
             ? partnersCollection as any[] 
@@ -94,7 +93,10 @@ export default function PartnerOnboardingPage() {
                     <h1 className="text-3xl font-bold tracking-tight">Partner Onboarding</h1>
                     <p className="text-muted-foreground">Manage authorized ecosystem vendors and their terminal deployments.</p>
                 </div>
-                <Button onClick={() => handleOpenDialog()}><PlusCircle className="mr-2 h-4 w-4" /> Onboard Partner</Button>
+                <div className="flex items-center gap-2">
+                    {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                    <Button onClick={() => handleOpenDialog()}><PlusCircle className="mr-2 h-4 w-4" /> Onboard Partner</Button>
+                </div>
             </div>
 
             <Card>
@@ -114,64 +116,60 @@ export default function PartnerOnboardingPage() {
                             />
                         </div>
                     </div>
-                    {/* OPTIMIZATION: Instant UI rendering */}
-                    {loading && partnersCollection === null ? (
-                        <div className="flex justify-center py-10"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
-                    ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Vendor Name</TableHead>
-                                    <TableHead>Location (Hub / Node)</TableHead>
-                                    <TableHead>Category</TableHead>
-                                    <TableHead>Yield / Rate</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
+                    
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Vendor Name</TableHead>
+                                <TableHead>Location (Hub / Node)</TableHead>
+                                <TableHead>Category</TableHead>
+                                <TableHead>Yield / Rate</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {displayPartners.map((partner) => (
+                                <TableRow key={partner.id}>
+                                    <TableCell className="font-medium">
+                                        <div className="flex items-center gap-2">
+                                            <Store className="h-4 w-4 text-muted-foreground" />
+                                            {partner.name}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-1.5 font-mono text-[10px]">
+                                            <Badge variant="outline">{partner.airportCode}</Badge>
+                                            <span className="text-muted-foreground">({partner.terminal})</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant="secondary" className="text-[10px]">{partner.category}</Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="text-sm font-medium">{partner.commissionRate}%</div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant={partner.status === 'Active' ? 'default' : 'outline'}>{partner.status}</Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-56">
+                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                <DropdownMenuItem onClick={() => handleOpenDialog(partner)}>Edit Deployment</DropdownMenuItem>
+                                                <DropdownMenuItem><MapPin className="mr-2 h-4 w-4"/>Relocate Vendor</DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem className="text-destructive font-bold" onClick={() => handleDelete(partner.id!)}>Offboard</DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
                                 </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {displayPartners.map((partner) => (
-                                    <TableRow key={partner.id}>
-                                        <TableCell className="font-medium">
-                                            <div className="flex items-center gap-2">
-                                                <Store className="h-4 w-4 text-muted-foreground" />
-                                                {partner.name}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-1.5 font-mono text-[10px]">
-                                              <Badge variant="outline">{partner.airportCode}</Badge>
-                                              <span className="text-muted-foreground">({partner.terminal})</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                          <Badge variant="secondary" className="text-[10px]">{partner.category}</Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                          <div className="text-sm font-medium">{partner.commissionRate}%</div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant={partner.status === 'Active' ? 'default' : 'outline'}>{partner.status}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end" className="w-56">
-                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                    <DropdownMenuItem onClick={() => handleOpenDialog(partner)}>Edit Deployment</DropdownMenuItem>
-                                                    <DropdownMenuItem><MapPin className="mr-2 h-4 w-4"/>Relocate Vendor</DropdownMenuItem>
-                                                    <DropdownMenuSeparator />
-                                                    <DropdownMenuItem className="text-destructive font-bold" onClick={() => handleDelete(partner.id!)}>Offboard</DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    )}
+                            ))}
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
 

@@ -28,6 +28,7 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import Link from 'next/link';
 
 const mockAirports: AirportOnboarding[] = [
     { id: '1', name: 'Heathrow Airport', iataCode: 'LHR', location: 'London', status: 'Active', sitaEnabled: true, terminals: 'T2, T3, T4, T5', hardwarePrefix: 'K-LHR', timeZone: 'GMT', technicalContact: 'ops@heathrow.com' },
@@ -50,7 +51,6 @@ export default function AirportOnboardingPage() {
     const [selectedAirportForAirlines, setSelectedAirportForAirlines] = useState<AirportOnboarding | null>(null);
     const { toast } = useToast();
 
-    // PERFORMANCE: Immediate UI Pattern - default to mock data while loading
     const displayAirports = useMemo(() => {
         const sourceData = (airportsCollection && airportsCollection.length > 0) 
             ? airportsCollection as AirportOnboarding[] 
@@ -125,7 +125,10 @@ export default function AirportOnboardingPage() {
                     <h1 className="text-3xl font-bold tracking-tight">Airport Onboarding</h1>
                     <p className="text-muted-foreground">Manage participating airports and configure SITA hardware/carrier permissions.</p>
                 </div>
-                <Button onClick={() => handleOpenDialog()} className="font-bold"><PlusCircle className="mr-2 h-4 w-4" /> Onboard Airport</Button>
+                <div className="flex items-center gap-2">
+                    {loadingAirports && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                    <Button onClick={() => handleOpenDialog()} className="font-bold"><PlusCircle className="mr-2 h-4 w-4" /> Onboard Airport</Button>
+                </div>
             </div>
 
             <Card>
@@ -145,66 +148,61 @@ export default function AirportOnboardingPage() {
                             />
                         </div>
                     </div>
-                    {/* OPTIMIZATION: Instant UI rendering */}
-                    {loadingAirports && airportsCollection === null ? (
-                        <div className="flex justify-center py-10"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
-                    ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Airport Name</TableHead>
-                                    <TableHead>Code</TableHead>
-                                    <TableHead>City</TableHead>
-                                    <TableHead>SITA Enabled</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
+                    
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Airport Name</TableHead>
+                                <TableHead>Code</TableHead>
+                                <TableHead>City</TableHead>
+                                <TableHead>SITA Enabled</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {displayAirports.map((airport) => (
+                                <TableRow key={airport.id} className="group">
+                                    <TableCell className="font-medium">{airport.name}</TableCell>
+                                    <TableCell className="font-mono font-bold text-primary">{airport.iataCode}</TableCell>
+                                    <TableCell>{airport.location}</TableCell>
+                                    <TableCell>
+                                        {airport.sitaEnabled ? (
+                                            <Badge variant="default" className="bg-blue-500"><MonitorDot className="mr-1 h-3 w-3" /> CUSS/CUTE</Badge>
+                                        ) : (
+                                            <Badge variant="outline">Web Only</Badge>
+                                        )}
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant={airport.status === 'Active' ? 'default' : 'secondary'}>{airport.status}</Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-56">
+                                                <DropdownMenuLabel>Ecosystem Node Actions</DropdownMenuLabel>
+                                                <DropdownMenuItem onClick={() => handleOpenAirlinesDialog(airport)}>
+                                                    <Plane className="mr-2 h-4 w-4 text-primary" /> Manage Enabled Airlines
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleOpenDialog(airport)}>
+                                                    Edit Hardware Details
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem className="text-destructive font-bold" onClick={() => handleDelete(airport.id!)}>
+                                                    Offboard Node
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
                                 </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {displayAirports.map((airport) => (
-                                    <TableRow key={airport.id} className="group">
-                                        <TableCell className="font-medium">{airport.name}</TableCell>
-                                        <TableCell className="font-mono font-bold text-primary">{airport.iataCode}</TableCell>
-                                        <TableCell>{airport.location}</TableCell>
-                                        <TableCell>
-                                            {airport.sitaEnabled ? (
-                                                <Badge variant="default" className="bg-blue-500"><MonitorDot className="mr-1 h-3 w-3" /> CUSS/CUTE</Badge>
-                                            ) : (
-                                                <Badge variant="outline">Web Only</Badge>
-                                            )}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant={airport.status === 'Active' ? 'default' : 'secondary'}>{airport.status}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end" className="w-56">
-                                                    <DropdownMenuLabel>Ecosystem Node Actions</DropdownMenuLabel>
-                                                    <DropdownMenuItem onClick={() => handleOpenAirlinesDialog(airport)}>
-                                                        <Plane className="mr-2 h-4 w-4 text-primary" /> Manage Enabled Airlines
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => handleOpenDialog(airport)}>
-                                                        Edit Hardware Details
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuSeparator />
-                                                    <DropdownMenuItem className="text-destructive font-bold" onClick={() => handleDelete(airport.id!)}>
-                                                        Offboard Node
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    )}
+                            ))}
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
 
-            {/* --- PRIMARY ONBOARDING DIALOG --- */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
@@ -219,7 +217,6 @@ export default function AirportOnboardingPage() {
                 </DialogContent>
             </Dialog>
 
-            {/* --- CARRIER ENABLEMENT DIALOG --- */}
             <Dialog open={isAirlinesDialogOpen} onOpenChange={setIsAirlinesDialogOpen}>
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
