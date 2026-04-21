@@ -50,6 +50,33 @@ import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
 import { Timestamp } from 'firebase/firestore';
 
+// --- MOCK FALLBACKS FOR PROTOTYPING ---
+const mockAirlines = [
+    { id: '1', name: 'Global Airways', icaoCode: 'GAB' },
+    { id: '2', name: 'SkyBridge Airlines', icaoCode: 'SBA' },
+];
+
+const mockAirports = [
+    { id: '1', name: 'Heathrow Airport', iataCode: 'LHR' },
+    { id: '2', name: 'John F. Kennedy', iataCode: 'JFK' },
+];
+
+const mockAirlineAncillaries = [
+  { id: 'ANC-001', name: 'Extra Legroom Seat', pssCode: 'EXLG', airlineId: '1' },
+  { id: 'ANC-002', name: 'Premium Wi-Fi', pssCode: 'WIFI', airlineId: '1' },
+  { id: 'ANC-003', name: 'Gourmet Meal', pssCode: 'MEAL', airlineId: '2' },
+];
+
+const mockAirportServices = [
+  { id: 'APS-001', name: 'LHR Executive Lounge', sku: 'LHR-LOU', airportId: 'LHR' },
+  { id: 'APS-002', name: 'JFK VIP Valet', sku: 'JFK-VAL', airportId: 'JFK' },
+];
+
+const mockCohorts = [
+    { cohortId: 'LHR_BIZ_WAIT', name: 'LHR High-Wait Business' },
+    { cohortId: 'IN_WEB_PROMO', name: 'India POS Web Promo' },
+];
+
 const bundleSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(5, 'Monetization name is required.'),
@@ -92,11 +119,17 @@ export function BundleForm({ bundle, onSubmit, onCancel }: { bundle: any | null,
   const airportServicesQuery = React.useMemo(() => firestore ? collection(firestore, 'airportServices') : undefined, [firestore]);
   const cohortsQuery = React.useMemo(() => firestore ? collection(firestore, 'cohorts') : undefined, [firestore]);
 
-  const { data: airlines } = useCollection(airlinesQuery);
-  const { data: airports } = useCollection(airportsQuery);
-  const { data: airlineAncillaries } = useCollection(airlineAncillariesQuery);
-  const { data: airportServices } = useCollection(airportServicesQuery);
-  const { data: cohorts } = useCollection(cohortsQuery);
+  const { data: airlinesCollection } = useCollection(airlinesQuery);
+  const { data: airportsCollection } = useCollection(airportsQuery);
+  const { data: airlineAncillariesCollection } = useCollection(airlineAncillariesQuery);
+  const { data: airportServicesCollection } = useCollection(airportServicesQuery);
+  const { data: cohortsCollection } = useCollection(cohortsQuery);
+
+  const airlines = (airlinesCollection && airlinesCollection.length > 0) ? airlinesCollection : mockAirlines;
+  const airports = (airportsCollection && airportsCollection.length > 0) ? airportsCollection : mockAirports;
+  const airlineAncillaries = (airlineAncillariesCollection && airlineAncillariesCollection.length > 0) ? airlineAncillariesCollection : mockAirlineAncillaries;
+  const airportServices = (airportServicesCollection && airportServicesCollection.length > 0) ? airportServicesCollection : mockAirportServices;
+  const cohorts = (cohortsCollection && cohortsCollection.length > 0) ? cohortsCollection : mockCohorts;
 
   const form = useForm<Bundle>({
     resolver: zodResolver(bundleSchema),
@@ -134,29 +167,21 @@ export function BundleForm({ bundle, onSubmit, onCancel }: { bundle: any | null,
   const owningAirportId = form.watch('owningAirportId');
 
   const availableAirlineAncillaries = React.useMemo(() => {
-    if (!airlineAncillaries) return [];
-    if (domain === 'Airline') {
-        // If we picked an airline, show only their products. Otherwise, return all for selection.
-        return owningAirlineId 
-            ? airlineAncillaries.filter((a: any) => a.airlineId === owningAirlineId)
-            : airlineAncillaries;
+    if (domain === 'Airline' && owningAirlineId) {
+        return airlineAncillaries.filter((a: any) => a.airlineId === owningAirlineId);
     }
     return airlineAncillaries;
   }, [airlineAncillaries, domain, owningAirlineId]);
 
   const availableAirportServices = React.useMemo(() => {
-    if (!airportServices) return [];
-    if (domain === 'Airport') {
-        // If we picked an airport, show only their products. Otherwise, return all for selection.
-        return owningAirportId 
-            ? airportServices.filter((a: any) => a.airportId === owningAirportId)
-            : airportServices;
+    if (domain === 'Airport' && owningAirportId) {
+        return airportServices.filter((a: any) => a.airportId === owningAirportId);
     }
     return airportServices;
   }, [airportServices, domain, owningAirportId]);
 
   const cohortOptions = React.useMemo(() => {
-      return (cohorts || []).map((c: any) => ({
+      return cohorts.map((c: any) => ({
           value: c.cohortId || c.id,
           label: c.name || c.cohortId || 'Unnamed Cohort'
       }));
@@ -199,13 +224,9 @@ export function BundleForm({ bundle, onSubmit, onCancel }: { bundle: any | null,
                         <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl><SelectTrigger><SelectValue placeholder="Which Airline?" /></SelectTrigger></FormControl>
                             <SelectContent>
-                                {airlines && airlines.length > 0 ? (
-                                    airlines.map((a: any) => (
-                                        <SelectItem key={a.id} value={a.id}>{a.name} ({a.icaoCode})</SelectItem>
-                                    ))
-                                ) : (
-                                    <SelectItem value="_empty" disabled>No airlines found</SelectItem>
-                                )}
+                                {airlines.map((a: any) => (
+                                    <SelectItem key={a.id} value={a.id}>{a.name} ({a.icaoCode})</SelectItem>
+                                ))}
                             </SelectContent>
                         </Select></FormItem>
                     )} />
@@ -216,13 +237,9 @@ export function BundleForm({ bundle, onSubmit, onCancel }: { bundle: any | null,
                         <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl><SelectTrigger><SelectValue placeholder="Which Airport?" /></SelectTrigger></FormControl>
                             <SelectContent>
-                                {airports && airports.length > 0 ? (
-                                    airports.map((a: any) => (
-                                        <SelectItem key={a.id} value={a.iataCode}>{a.name} ({a.iataCode})</SelectItem>
-                                    ))
-                                ) : (
-                                    <SelectItem value="_empty" disabled>No airports found</SelectItem>
-                                )}
+                                {airports.map((a: any) => (
+                                    <SelectItem key={a.id} value={a.iataCode}>{a.name} ({a.iataCode})</SelectItem>
+                                ))}
                             </SelectContent>
                         </Select></FormItem>
                     )} />
@@ -284,21 +301,19 @@ export function BundleForm({ bundle, onSubmit, onCancel }: { bundle: any | null,
                                         {(domain === 'Airline' || domain === 'Hybrid') && (
                                             <SelectGroup>
                                                 <SelectLabel className="flex items-center gap-2"><Plane className="h-3 w-3" /> Airline Ancillaries</SelectLabel>
-                                                {availableAirlineAncillaries.length > 0 ? (
-                                                    availableAirlineAncillaries.map((p: any) => (<SelectItem key={p.id} value={p.id!}>{p.name} ({p.pssCode})</SelectItem>))
-                                                ) : (
-                                                    <SelectItem value="_no_airline" disabled>No airline products available</SelectItem>
-                                                )}
+                                                {availableAirlineAncillaries.map((p: any) => (
+                                                    <SelectItem key={p.id} value={p.id!}>{p.name} ({p.pssCode})</SelectItem>
+                                                ))}
+                                                {availableAirlineAncillaries.length === 0 && <SelectItem value="_none" disabled>No carrier products found</SelectItem>}
                                             </SelectGroup>
                                         )}
                                         {(domain === 'Airport' || domain === 'Hybrid') && (
                                             <SelectGroup>
                                                 <SelectLabel className="flex items-center gap-2"><Building2 className="h-3 w-3" /> Airport Services</SelectLabel>
-                                                {availableAirportServices.length > 0 ? (
-                                                    availableAirportServices.map((p: any) => (<SelectItem key={p.id} value={p.id!}>{p.name} ({p.sku || p.pssCode})</SelectItem>))
-                                                ) : (
-                                                    <SelectItem value="_no_airport" disabled>No airport products available</SelectItem>
-                                                )}
+                                                {availableAirportServices.map((p: any) => (
+                                                    <SelectItem key={p.id} value={p.id!}>{p.name} ({p.sku || p.pssCode})</SelectItem>
+                                                ))}
+                                                {availableAirportServices.length === 0 && <SelectItem value="_none_apt" disabled>No airport products found</SelectItem>}
                                             </SelectGroup>
                                         )}
                                     </SelectContent>
