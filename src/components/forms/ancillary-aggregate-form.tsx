@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -62,6 +61,13 @@ const mockAncillariesFallback = [
   { id: '2', name: 'Premium Wi-Fi (Unlimited)', ancillaryCode: 'WIFU', category: 'Wi-Fi / connectivity' },
   { id: '3', name: 'Standby Upgrade (J Class)', ancillaryCode: 'UPGS', category: 'Upgrade' },
   { id: '4', name: '1st Checked Bag (23kg)', ancillaryCode: 'BAG1', category: 'Baggage' },
+  { id: '5', name: 'Priority Boarding', ancillaryCode: 'PBDG', category: 'Priority service' },
+  { id: '6', name: 'Executive Lounge Access', ancillaryCode: 'LOUA', category: 'Lounge' },
+  { id: '7', name: 'Gourmet Meal Pre-order', ancillaryCode: 'MEAL', category: 'Meal' },
+  { id: '8', name: 'Premium Amenity Kit', ancillaryCode: 'AMEN', category: 'Inflight comfort' },
+  { id: '9', name: 'Flex Change Protection', ancillaryCode: 'FLXP', category: 'Flexibility / protection' },
+  { id: '10', name: 'Unaccompanied Minor', ancillaryCode: 'UMNR', category: 'Special service' },
+  { id: '11', name: 'Transit Comfort Bundle', ancillaryCode: 'BUN1', category: 'Bundle' },
 ];
 
 export function AncillaryAggregateForm({ aggregate, onSubmit, onCancel }: AncillaryAggregateFormProps) {
@@ -89,6 +95,17 @@ export function AncillaryAggregateForm({ aggregate, onSubmit, onCancel }: Ancill
   const selectedAncillary = availableAncillaries.find(a => a.id === selectedAncillaryId);
   const parameters = selectedAncillary ? (aggregateParamsByCategory[selectedAncillary.category] || []) : [];
 
+  // Update configuration name based on selected ancillary
+  React.useEffect(() => {
+    if (selectedAncillary) {
+        const currentName = form.getValues('configName');
+        // Only update if current name is empty or was previously a default name
+        if (!currentName || currentName.includes('Logic Set') || currentName === '') {
+            form.setValue('configName', `${selectedAncillary.name} Logic Set`, { shouldValidate: true });
+        }
+    }
+  }, [selectedAncillaryId, selectedAncillary, form]);
+
   const handleFinalSubmit = (data: AncillaryAggregate) => {
     onSubmit({
       ...data,
@@ -106,14 +123,6 @@ export function AncillaryAggregateForm({ aggregate, onSubmit, onCancel }: Ancill
                 <Layers className="h-3.5 w-3.5" /> 1. Configuration Target
             </div>
             
-            <FormField control={form.control} name="configName" render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Configuration Name*</FormLabel>
-                    <FormControl><Input placeholder="e.g., LHR-JFK Premium Baggage Logic" {...field} /></FormControl>
-                    <FormMessage />
-                </FormItem>
-            )} />
-
             <FormField control={form.control} name="ancillaryId" render={({ field }) => (
                 <FormItem>
                     <FormLabel>Linked Airline Ancillary*</FormLabel>
@@ -125,6 +134,14 @@ export function AncillaryAggregateForm({ aggregate, onSubmit, onCancel }: Ancill
                             ))}
                         </SelectContent>
                     </Select>
+                    <FormMessage />
+                </FormItem>
+            )} />
+
+            <FormField control={form.control} name="configName" render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Configuration Name*</FormLabel>
+                    <FormControl><Input placeholder="e.g., LHR-JFK Premium Baggage Logic" {...field} /></FormControl>
                     <FormMessage />
                 </FormItem>
             )} />
