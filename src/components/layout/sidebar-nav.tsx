@@ -86,6 +86,7 @@ const menuItems: MenuItem[] = [
     icon: Ticket,
     subItems: [
       { href: '/offers/ancillary-aggregates', label: 'Airline Ancillary Aggregator', icon: Layers },
+      { href: '/offers/airport-ancillary-aggregates', label: 'Airport Ancillary Aggregator', icon: Building2 },
       { href: '/offers/cohorts', label: 'Retailing Cohorts', icon: Target },
       { href: '/bundles', label: 'Offers & Dynamic pricing', icon: Package },
       { href: '/offer-composer', label: 'Airport Offer Composer', icon: QrCode },
