@@ -63,6 +63,20 @@ const categoryDefaultNames: Record<string, string> = {
   'Bundle': 'Retailing Bundle',
 };
 
+const categoryDefaultCodes: Record<string, string> = {
+  'Baggage': 'BAG',
+  'Seat': 'SEAT',
+  'Upgrade': 'UPGR',
+  'Priority service': 'PRTY',
+  'Lounge': 'LOU',
+  'Meal': 'MEAL',
+  'Wi-Fi / connectivity': 'WIFI',
+  'Inflight comfort': 'CMFT',
+  'Flexibility / protection': 'FLEX',
+  'Special service': 'SPEC',
+  'Bundle': 'BUN',
+};
+
 const ancillarySchema = z.object({
   id: z.string().optional(),
   // Mandatory Core Details
@@ -141,12 +155,16 @@ export function AncillaryForm({ ancillary, onSubmit, onCancel }: AncillaryFormPr
   const selectedCategory = form.watch('category');
   const availableSubcategories = categorySubcategoryMap[selectedCategory] || [];
 
-  // Update name based on category if not explicitly touched by user
+  // Update name, shortName, and code based on category if not explicitly touched by user
   React.useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (name === 'category') {
           const newName = categoryDefaultNames[value.category as string] || '';
+          const newCode = categoryDefaultCodes[value.category as string] || '';
+          
           form.setValue('name', newName, { shouldValidate: true });
+          form.setValue('shortName', newName, { shouldValidate: true });
+          form.setValue('ancillaryCode', newCode, { shouldValidate: true });
           
           // Reset subcategory to first available for the new category
           const newSubs = categorySubcategoryMap[value.category as string];
