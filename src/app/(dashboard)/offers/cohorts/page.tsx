@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -32,7 +33,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, PlusCircle, Loader2 } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2, Target, BrainCircuit, Activity, Zap, ShieldCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { CohortForm, type Cohort } from '@/components/forms/cohort-form';
@@ -46,68 +47,30 @@ const mockCohorts: Cohort[] = [
         cohortId: 'LHR_BIZ_WAIT', 
         status: 'Active', 
         description: 'Business class at LHR T5 facing > 20m security wait.', 
-        definition: { 
-            channels: ['CUSS', 'Mobile'], 
-            airports: ['LHR'], 
-            airlines: ['BA'], 
-            cabinClasses: ['Business'],
-            location: 'Airport_Departure', 
-            securityWaitTime: 20, 
-            loyaltyTiers: ['Gold', 'Platinum'],
-            aircraftTypes: ['A350', 'B787'],
-            transitStatus: 'Any',
-            travelGroup: ['Solo']
-        } 
+        type: 'dynamic',
+        evaluation_mode: 'real-time',
+        priority: 85,
+        combination_logic: 'AND',
+        override_flag: true,
+        airlineRules: { cabinClasses: ['Business'], passengerTypes: ['ADT'], loyaltyTiers: ['Gold', 'Platinum'], bookingChannels: [], tripTypes: [], fareBrands: [] },
+        airportRules: { airportCodes: ['LHR'], terminals: ['T5'], minWaitTime: 20, locationContext: 'Departure' },
+        outputs: { discount: 10, rankingBoost: 20, eligibleProducts: [], bundleIds: [] }
     },
     { 
         id: 'COH-002', 
-        name: 'JFK Premium Leisure', 
-        cohortId: 'JFK_PREM_LSR', 
+        name: 'Premium Upsell Target', 
+        cohortId: 'PREM_UPSELL_ML', 
         status: 'Active', 
-        description: 'Premium cabins on JFK-LHR routes using Mobile app.', 
-        definition: { 
-            channels: ['Mobile'], 
-            airports: ['JFK'], 
-            routes: 'JFK-LHR',
-            cabinClasses: ['Business', 'First'],
-            location: 'Anywhere',
-            loyaltyTiers: ['Silver', 'Gold'],
-            transitStatus: 'Any',
-            travelGroup: ['Couple', 'Family']
-        } 
-    },
-    { 
-        id: 'COH-003', 
-        name: 'SIN Transit Loungers', 
-        cohortId: 'SIN_TRANSIT_LOUNGE', 
-        status: 'Active', 
-        description: 'Transiting pax at SIN with 4-8 hour connections.', 
-        definition: { 
-            channels: ['CUSS', 'CUTE'], 
-            airports: ['SIN'],
-            cabinClasses: ['Economy'],
-            transitStatus: 'Transit',
-            minConnectionTime: 240,
-            maxConnectionTime: 480,
-            location: 'Airport_Departure',
-            loyaltyTiers: ['Bronze'],
-            travelGroup: ['Solo', 'Couple']
-        } 
+        description: 'Predictive cohort for passengers with high propensity to upgrade.', 
+        type: 'predictive',
+        evaluation_mode: 'cached',
+        priority: 90,
+        combination_logic: 'AND',
+        override_flag: false,
+        personalization: { propensityToBuyScore: 75, isUpsellCandidate: true, priceSensitivityScore: 30 },
+        outputs: { rankingBoost: 50, markup: 5, eligibleProducts: [], bundleIds: [] }
     },
 ];
-
-const getDefinitionString = (definition: Cohort['definition']) => {
-    if (!definition) return '';
-    const parts: string[] = [];
-    if (definition.channels?.length > 0) parts.push(`Ch: ${definition.channels.join(', ')}`);
-    if (definition.airports?.length > 0) parts.push(`Apt: ${definition.airports.join(', ')}`);
-    if (definition.transitStatus && definition.transitStatus !== 'Any') parts.push(`Pax: ${definition.transitStatus}`);
-    if (definition.cabinClasses?.length > 0) parts.push(`Cab: ${definition.cabinClasses.join(', ')}`);
-    if (definition.fareBrands?.length > 0) parts.push(`Brand: ${definition.fareBrands.join(', ')}`);
-    if (definition.securityWaitTime && definition.securityWaitTime > 0) parts.push(`Wait > ${definition.securityWaitTime}m`);
-    if (definition.travelGroup?.length > 0) parts.push(`Group: ${definition.travelGroup.join(', ')}`);
-    return parts.join(' | ') || 'All Passengers';
-}
 
 export default function CohortsPage() {
   const firestore = useFirestore();
@@ -125,54 +88,39 @@ export default function CohortsPage() {
     setIsDialogOpen(true);
   };
 
-  const handleDialogClose = () => {
-    setIsDialogOpen(false);
-    setEditingCohort(null);
-  };
-
   const handleFormSubmit = async (data: Cohort) => {
     if (!firestore) return;
     try {
       if (editingCohort?.id) {
         const cohortRef = doc(firestore, 'cohorts', editingCohort.id);
         await setDoc(cohortRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
-        toast({ title: 'Cohort Updated', description: `Cohort "${data.name}" has been updated.` });
+        toast({ title: 'Cohort Synchronized', description: `Segment "${data.name}" successfully updated in orchestration engine.` });
       } else {
         await addDoc(collection(firestore, 'cohorts'), { ...data, createdAt: serverTimestamp() });
-        toast({ title: 'Cohort Created', description: `Cohort "${data.name}" has been created.` });
+        toast({ title: 'Cohort Established', description: `Segment "${data.name}" is now live for ecosystem evaluation.` });
       }
     } catch (e: any) {
-        console.error(e);
-        toast({
-            variant: "destructive",
-            title: "Uh oh! Something went wrong.",
-            description: e.message || "There was a problem with your request.",
-        });
+        toast({ variant: "destructive", title: "Sync Failed", description: e.message });
     }
-    handleDialogClose();
+    setIsDialogOpen(false);
   };
 
   const handleDelete = async (cohortId: string) => {
     if (!cohortId || !firestore) return;
     try {
       await deleteDoc(doc(firestore, 'cohorts', cohortId));
-      toast({
-        variant: 'destructive',
-        title: 'Cohort Deleted',
-        description: 'The cohort has been successfully deleted.',
-      });
+      toast({ variant: 'destructive', title: 'Cohort Purged', description: 'Segment removed from ecosystem evaluation.' });
     } catch (e: any) {
-      console.error(e);
-      toast({
-        variant: 'destructive',
-        title: 'Uh oh! Something went wrong.',
-        description: e.message || 'Could not delete the cohort.',
-      });
+      toast({ variant: 'destructive', title: 'Error', description: e.message });
     }
   };
 
-  const getStatusBadgeVariant = (status: Cohort['status']) => {
-    return status === 'Active' ? 'default' : 'outline';
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+        case 'predictive': return <BrainCircuit className="w-3.5 h-3.5 text-indigo-600" />;
+        case 'dynamic': return <Activity className="w-3.5 h-3.5 text-emerald-600" />;
+        default: return <Target className="w-3.5 h-3.5 text-blue-600" />;
+    }
   };
 
   return (
@@ -180,26 +128,42 @@ export default function CohortsPage() {
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <div className="flex flex-col gap-2">
-            <h1 className="text-3xl font-bold tracking-tight">
-              Ecosystem Cohort Management
-            </h1>
-            <p className="text-muted-foreground">
-              Define exhaustive customer segments using SITA channels, airport signals, and deep airline host metadata.
-            </p>
+            <h1 className="text-3xl font-bold tracking-tight">Ecosystem Retailing Cohorts</h1>
+            <p className="text-muted-foreground">Orchestrate personalized retailing sets using airline PNRs, airport real-time signals, and ML propensity scores.</p>
           </div>
-          <Button onClick={() => handleOpenDialog()}>
-            <PlusCircle className="mr-2" />
-            Create Advanced Cohort
+          <Button onClick={() => handleOpenDialog()} className="font-bold">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Initialize Advanced Cohort
           </Button>
         </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Customer Cohorts</CardTitle>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card className="p-6">
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2"><Target className="w-3 h-3 text-primary" /> Active Segments</p>
+                <p className="text-2xl font-black mt-2">{displayCohorts.length}</p>
+            </Card>
+            <Card className="p-6">
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2"><Activity className="w-3 h-3 text-emerald-600" /> Real-time Nodes</p>
+                <p className="text-2xl font-black mt-2">{displayCohorts.filter(c => c.type === 'dynamic').length}</p>
+            </Card>
+            <Card className="p-6">
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2"><BrainCircuit className="w-3 h-3 text-indigo-600" /> Predictive ML</p>
+                <p className="text-2xl font-black mt-2">{displayCohorts.filter(c => c.type === 'predictive').length}</p>
+            </Card>
+             <Card className="p-6 border-indigo-100 bg-indigo-50/20">
+                <p className="text-[10px] font-black uppercase text-indigo-700 tracking-widest flex items-center gap-2"><ShieldCheck className="w-3 h-3 text-indigo-600" /> Evaluation Sync</p>
+                <p className="text-2xl font-black mt-2 text-indigo-700">100%</p>
+            </Card>
+        </div>
+
+        <Card className="shadow-md">
+          <CardHeader className="bg-muted/10">
+            <CardTitle>Cohort Management Registry</CardTitle>
             <CardDescription>
-              Manage complex targeting rules for personalized airport ecosystem retailing.
+              Manage exhaustive targeting rules across airline and airport stakeholder dimensions.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             {loading && displayCohorts.length === 0 && (
               <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -207,52 +171,65 @@ export default function CohortsPage() {
             )}
             {displayCohorts.length > 0 && !error && (
               <Table>
-                <TableHeader>
+                <TableHeader className="bg-muted/30">
                   <TableRow>
-                    <TableHead>Cohort Name</TableHead>
-                    <TableHead>Cohort ID</TableHead>
-                    <TableHead className="max-w-[400px]">Definition Logic</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>
-                      <span className="sr-only">Actions</span>
-                    </TableHead>
+                    <TableHead className="text-[10px] uppercase font-black">Cohort Identity</TableHead>
+                    <TableHead className="text-[10px] uppercase font-black">Type / Evaluation</TableHead>
+                    <TableHead className="text-[10px] uppercase font-black text-center">Priority</TableHead>
+                    <TableHead className="text-[10px] uppercase font-black">Actions & Eligibility</TableHead>
+                    <TableHead className="text-[10px] uppercase font-black">Status</TableHead>
+                    <TableHead className="sr-only">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {displayCohorts.map((cohort) => (
-                    <TableRow key={cohort.id}>
-                      <TableCell className="font-medium">
-                        <div>{cohort.name}</div>
-                        <div className="text-xs text-muted-foreground">{cohort.description}</div>
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">{cohort.cohortId}</TableCell>
-                      <TableCell className="text-[10px] font-mono leading-relaxed">
-                          {getDefinitionString(cohort.definition)}
+                    <TableRow key={cohort.id} className="group cursor-default">
+                      <TableCell>
+                        <div className="flex flex-col gap-0.5">
+                            <span className="font-bold text-sm">{cohort.name}</span>
+                            <span className="text-[10px] font-mono text-muted-foreground uppercase">{cohort.cohortId}</span>
+                            <p className="text-[10px] text-muted-foreground max-w-[200px] truncate">{cohort.description}</p>
+                        </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getStatusBadgeVariant(cohort.status)}>
+                        <div className="flex items-center gap-2">
+                             <div className="p-1.5 bg-muted rounded-md">{getTypeIcon(cohort.type)}</div>
+                             <div className="flex flex-col">
+                                <span className="text-xs font-bold capitalize">{cohort.type}</span>
+                                <span className="text-[9px] text-muted-foreground uppercase tracking-widest">{cohort.evaluation_mode}</span>
+                             </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                         <Badge variant="outline" className="font-mono text-[10px]">{cohort.priority}</Badge>
+                      </TableCell>
+                      <TableCell>
+                         <div className="flex flex-col gap-1">
+                             <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-600">
+                                <Zap className="w-3 h-3" /> Lift: {cohort.outputs?.rankingBoost || 0} boost
+                             </div>
+                             <div className="flex items-center gap-1 text-[10px] font-bold text-primary">
+                                <Target className="w-3 h-3" /> Discount: {cohort.outputs?.discount || 0}%
+                             </div>
+                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={cohort.status === 'Active' ? 'default' : 'outline'} className="text-[10px] uppercase">
                           {cohort.status}
                         </Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button
-                              aria-haspopup="true"
-                              size="icon"
-                              variant="ghost"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Toggle menu</span>
-                            </Button>
+                            <Button size="icon" variant="ghost"><MoreHorizontal className="h-4 w-4" /></Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleOpenDialog(cohort)}>Edit Cohort</DropdownMenuItem>
-                            <DropdownMenuItem>Simulate Audience Reach</DropdownMenuItem>
-                            <DropdownMenuItem>View Conversion Trends</DropdownMenuItem>
+                          <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuLabel>Cohort Operations</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleOpenDialog(cohort)}>Modify Definitions</DropdownMenuItem>
+                            <DropdownMenuItem>Simulate Audience Hit-rate</DropdownMenuItem>
+                            <DropdownMenuItem>View Retention Trends</DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(cohort.id!)}>Delete</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive font-bold" onClick={() => handleDelete(cohort.id!)}>Decommission Segment</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -261,23 +238,21 @@ export default function CohortsPage() {
                 </TableBody>
               </Table>
             )}
-            {error && <p className="text-destructive">Error loading cohorts: {error.message}</p>}
+            {error && <p className="text-destructive">Sync Error: {error.message}</p>}
           </CardContent>
         </Card>
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-5xl">
           <DialogHeader>
-            <DialogTitle>{editingCohort ? 'Edit Advanced Cohort' : 'Create Exhaustive Ecosystem Cohort'}</DialogTitle>
-            <DialogDescription>
-              {editingCohort ? `Editing cohort "${editingCohort.name}".` : 'Define precise ecosystem targeting rules across all stakeholder dimensions.'}
-            </DialogDescription>
+            <DialogTitle>Configure Advanced Retailing Segment</DialogTitle>
+            <DialogDescription>Define precise ecosystem targeting rules across Airline Host, Airport Node, and ML dimensions.</DialogDescription>
           </DialogHeader>
           <CohortForm
             cohort={editingCohort}
             onSubmit={handleFormSubmit}
-            onCancel={handleDialogClose}
+            onCancel={() => setIsDialogOpen(false)}
           />
         </DialogContent>
       </Dialog>

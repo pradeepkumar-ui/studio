@@ -1,6 +1,47 @@
 
 {
   "entities": {
+    "cohort": {
+      "title": "Ecosystem Retailing Cohort",
+      "description": "Exhaustive segment definition for personalized retailing orchestration.",
+      "type": "object",
+      "properties": {
+        "cohort_id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "type": { "type": "string", "enum": ["static", "dynamic", "predictive"] },
+        "status": { "type": "string", "enum": ["Active", "Inactive"] },
+        "priority": { "type": "number", "description": "Ranking when multiple cohorts match." },
+        "validity": {
+          "type": "object",
+          "properties": {
+            "effective_from": { "type": "string", "format": "date-time" },
+            "effective_to": { "type": "string", "format": "date-time" }
+          }
+        },
+        "evaluation_mode": { "type": "string", "enum": ["real-time", "cached", "batch"] },
+        "combination_logic": { "type": "string", "enum": ["AND", "OR"] },
+        "rules": {
+          "type": "object",
+          "properties": {
+            "airline": { "type": "object", "description": "Carrier-specific PNR and profile signals." },
+            "airport": { "type": "object", "description": "Real-time location and node signals." },
+            "predictive": { "type": "object", "description": "ML propensity and sensitivity scores." }
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "eligible_products": { "type": "array", "items": { "type": "string" } },
+            "bundle_ids": { "type": "array", "items": { "type": "string" } },
+            "pricing_strategy": { "type": "string" },
+            "discount_percentage": { "type": "number" },
+            "ranking_boost": { "type": "number" },
+            "guardrails": { "type": "object" }
+          }
+        }
+      }
+    },
     "airlineAncillary": {
       "title": "Airline Ancillary SKU",
       "description": "Exhaustive portfolio item for airline-managed flight ancillaries.",
