@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -33,7 +32,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, PlusCircle, Loader2, Target, BrainCircuit, Activity, Zap, ShieldCheck, Globe, Laptop } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2, Target, BrainCircuit, Activity, ShieldCheck, Globe, Laptop } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { CohortForm, type Cohort } from '@/components/forms/cohort-form';
@@ -54,8 +53,7 @@ const mockCohorts: Cohort[] = [
         override_flag: true,
         airlineRules: { carrierCodes: ['GAB'], cabinClasses: ['Business'], loyaltyTiers: ['Gold', 'Platinum'] },
         airportRules: { airportCodes: ['LHR'], terminals: ['T5'], minWaitTime: 20, locationContext: 'Departure' },
-        ecosystemScope: { channels: ['CUSS', 'CUTE', 'App'], regions: ['EU'], pos: ['LON'] },
-        outputs: { discount: 10, rankingBoost: 20 }
+        ecosystemScope: { channels: ['CUSS', 'CUTE', 'App'], regions: ['EU'] },
     },
     { 
         id: 'COH-002', 
@@ -68,8 +66,7 @@ const mockCohorts: Cohort[] = [
         priority: 50,
         combination_logic: 'AND',
         override_flag: false,
-        ecosystemScope: { channels: ['Web'], regions: ['APAC'], countries: ['IN'], pos: ['BOM', 'DEL'] },
-        outputs: { discount: 15, rankingBoost: 10 }
+        ecosystemScope: { channels: ['Web'], regions: ['APAC'], countries: ['IN'] },
     },
 ];
 
@@ -95,13 +92,13 @@ export default function CohortsPage() {
       if (editingCohort?.id) {
         const cohortRef = doc(firestore, 'cohorts', editingCohort.id);
         await setDoc(cohortRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
-        toast({ title: 'Cohort Synchronized', description: `Segment "${data.name}" successfully updated in orchestration engine.` });
+        toast({ title: 'Cohort Updated', description: `Segment "${data.name}" successfully updated.` });
       } else {
         await addDoc(collection(firestore, 'cohorts'), { ...data, createdAt: serverTimestamp() });
-        toast({ title: 'Cohort Established', description: `Segment "${data.name}" is now live for ecosystem evaluation.` });
+        toast({ title: 'Cohort Created', description: `Segment "${data.name}" is now live.` });
       }
     } catch (e: any) {
-        toast({ variant: "destructive", title: "Sync Failed", description: e.message });
+        toast({ variant: "destructive", title: "Error", description: e.message });
     }
     setIsDialogOpen(false);
   };
@@ -110,7 +107,7 @@ export default function CohortsPage() {
     if (!cohortId || !firestore) return;
     try {
       await deleteDoc(doc(firestore, 'cohorts', cohortId));
-      toast({ variant: 'destructive', title: 'Cohort Purged', description: 'Segment removed from ecosystem evaluation.' });
+      toast({ variant: 'destructive', title: 'Cohort Removed' });
     } catch (e: any) {
       toast({ variant: 'destructive', title: 'Error', description: e.message });
     }
@@ -129,12 +126,12 @@ export default function CohortsPage() {
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <div className="flex flex-col gap-2">
-            <h1 className="text-3xl font-bold tracking-tight">Ecosystem Retailing Cohorts</h1>
-            <p className="text-muted-foreground">Orchestrate segments based on Airlines, Airports, POS, Regions, and SITA Hardware Channels.</p>
+            <h1 className="text-3xl font-bold tracking-tight text-primary">Passenger Segments (Cohorts)</h1>
+            <p className="text-muted-foreground">Define logical segments for ecosystem targeting. Commercial positioning (pricing/discounts) is managed in the Offers & Bundles Studio.</p>
           </div>
           <Button onClick={() => handleOpenDialog()} className="font-bold">
             <PlusCircle className="mr-2 h-4 w-4" />
-            Initialize Advanced Cohort
+            Define New Segment
           </Button>
         </div>
 
@@ -159,9 +156,9 @@ export default function CohortsPage() {
 
         <Card className="shadow-md">
           <CardHeader className="bg-muted/10">
-            <CardTitle>Cohort Management Registry</CardTitle>
+            <CardTitle>Cohort Registry</CardTitle>
             <CardDescription>
-              Manage targeting across Geo (POS, Country), Channel (CUSS/CUTE), and Sector dimensions.
+              Orchestrate targeting criteria across Geo, Channel, and PSS contexts. Pricing logic for these segments is applied in the Studio.
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
@@ -174,11 +171,11 @@ export default function CohortsPage() {
               <Table>
                 <TableHeader className="bg-muted/30">
                   <TableRow>
-                    <TableHead className="text-[10px] uppercase font-black">Cohort Identity</TableHead>
+                    <TableHead className="text-[10px] uppercase font-black">Segment Identity</TableHead>
+                    <TableHead className="text-[10px] uppercase font-black">Carrier Scope</TableHead>
                     <TableHead className="text-[10px] uppercase font-black">Geographic / POS Scope</TableHead>
                     <TableHead className="text-[10px] uppercase font-black">SITA Channels</TableHead>
                     <TableHead className="text-[10px] uppercase font-black text-center">Priority</TableHead>
-                    <TableHead className="text-[10px] uppercase font-black">Dynamic Adjustment</TableHead>
                     <TableHead className="sr-only">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -193,6 +190,14 @@ export default function CohortsPage() {
                         </div>
                       </TableCell>
                       <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                             {cohort.airlineRules?.carrierCodes?.map(code => (
+                                <Badge key={code} variant="outline" className="text-[9px] px-1.5 font-mono">{code}</Badge>
+                             ))}
+                             {(!cohort.airlineRules?.carrierCodes || cohort.airlineRules.carrierCodes.length === 0) && <span className="text-xs text-muted-foreground italic">All Carriers</span>}
+                        </div>
+                      </TableCell>
+                      <TableCell>
                         <div className="flex flex-col gap-1">
                              <div className="text-xs font-bold text-primary">{cohort.ecosystemScope?.regions?.join(', ') || 'Global'}</div>
                              <div className="text-[10px] text-muted-foreground">POS: {cohort.ecosystemScope?.pos?.join(', ') || 'All'}</div>
@@ -203,21 +208,11 @@ export default function CohortsPage() {
                             {cohort.ecosystemScope?.channels?.map(ch => (
                                 <Badge key={ch} variant="secondary" className="text-[9px] px-1.5">{ch}</Badge>
                             ))}
-                            {(!cohort.ecosystemScope?.channels || cohort.ecosystemScope?.channels.length === 0) && <span className="text-xs text-muted-foreground">All Channels</span>}
+                            {(!cohort.ecosystemScope?.channels || cohort.ecosystemScope?.channels.length === 0) && <span className="text-xs text-muted-foreground italic">All Channels</span>}
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
                          <Badge variant="outline" className="font-mono text-[10px]">{cohort.priority}</Badge>
-                      </TableCell>
-                      <TableCell>
-                         <div className="flex flex-col gap-1">
-                             <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-600">
-                                <Zap className="w-3 h-3" /> Lift: {cohort.outputs?.rankingBoost || 0}
-                             </div>
-                             <div className="flex items-center gap-1 text-[10px] font-bold text-primary">
-                                <Target className="w-3 h-3" /> Disc: {cohort.outputs?.discount || 0}%
-                             </div>
-                         </div>
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
@@ -225,11 +220,11 @@ export default function CohortsPage() {
                             <Button size="icon" variant="ghost"><MoreHorizontal className="h-4 w-4" /></Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-56">
-                            <DropdownMenuLabel>Cohort Operations</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleOpenDialog(cohort)}>Modify Definitions</DropdownMenuItem>
-                            <DropdownMenuItem>Simulate Audience Hit-rate</DropdownMenuItem>
+                            <DropdownMenuLabel>Cohort Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleOpenDialog(cohort)}>Edit Logic</DropdownMenuItem>
+                            <DropdownMenuItem>View Active Matches</DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive font-bold" onClick={() => handleDelete(cohort.id!)}>Decommission Segment</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive font-bold" onClick={() => handleDelete(cohort.id!)}>Delete Segment</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -245,8 +240,8 @@ export default function CohortsPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-5xl">
           <DialogHeader>
-            <DialogTitle>Configure Ecosystem Retailing Segment</DialogTitle>
-            <DialogDescription>Define precision targeting across Airlines, Airport Nodes, Geographic POS, and SITA Hardware Channels.</DialogDescription>
+            <DialogTitle>Configure Passenger Segment</DialogTitle>
+            <DialogDescription>Define logical targeting rules. Commercial positioning (pricing/discounts) is handled in the Offers & Bundles Studio.</DialogDescription>
           </DialogHeader>
           <CohortForm
             cohort={editingCohort}

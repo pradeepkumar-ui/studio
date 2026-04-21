@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,7 +11,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
@@ -26,7 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '../ui/separator';
 import { MultiSelect } from '../ui/multi-select';
 import { Checkbox } from '../ui/checkbox';
-import { Plane, Building2, User, Zap, ShieldCheck, Target, Activity, Settings2, Database, BrainCircuit, Globe, Laptop, MapPin } from 'lucide-react';
+import { Plane, Building2, Settings2, BrainCircuit, Globe, Laptop, MapPin, Target } from 'lucide-react';
 import { Slider } from '../ui/slider';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection } from 'firebase/firestore';
@@ -44,7 +42,7 @@ const cohortSchema = z.object({
   combination_logic: z.enum(['AND', 'OR']).default('AND'),
   override_flag: z.boolean().default(false),
 
-  // Airline Parameters
+  // Airline Parameters (Targeting Logic)
   airlineRules: z.object({
     carrierCodes: z.array(z.string()).default([]),
     passengerTypes: z.array(z.string()).default([]),
@@ -55,7 +53,7 @@ const cohortSchema = z.object({
     isLongHaul: z.boolean().optional(),
   }).optional(),
 
-  // Airport Parameters
+  // Airport Parameters (Targeting Logic)
   airportRules: z.object({
     airportCodes: z.array(z.string()).default([]),
     terminals: z.array(z.string()).default([]),
@@ -63,25 +61,16 @@ const cohortSchema = z.object({
     minWaitTime: z.coerce.number().optional(),
   }).optional(),
 
-  // Geo, Channel & Sector
+  // Geo, Channel & Sector (Targeting Logic)
   ecosystemScope: z.object({
     channels: z.array(z.string()).default([]),
     regions: z.array(z.string()).default([]),
     countries: z.array(z.string()).default([]),
-    pos: z.array(z.string()).default([]), // Point of Sale
-    sectors: z.array(z.string()).default([]), // O&D or specific clusters
-    tripTypes: z.array(z.string()).default([]),
+    pos: z.array(z.string()).default([]),
+    sectors: z.array(z.string()).default([]),
   }).optional(),
 
-  // Output Actions
-  outputs: z.object({
-    eligibleProducts: z.array(z.string()).default([]),
-    bundleIds: z.array(z.string()).default([]),
-    discount: z.coerce.number().min(0).max(100).default(0),
-    rankingBoost: z.coerce.number().default(0),
-  }).optional(),
-
-  // Personalization Layer
+  // Personalization Layer (Scoring Logic)
   personalization: z.object({
     propensityToBuyScore: z.coerce.number().optional(),
     priceSensitivityScore: z.coerce.number().optional(),
@@ -117,7 +106,8 @@ const fallbackAirlines = [
 
 export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
   const firestore = useFirestore();
-  const { data: airlinesData } = useCollection(firestore ? collection(firestore, 'airlines') : undefined);
+  const airlinesQuery = useMemo(() => firestore ? collection(firestore, 'airlines') : undefined, [firestore]);
+  const { data: airlinesData } = useCollection(airlinesQuery);
 
   const airlineOptions = useMemo(() => {
     const options = (airlinesData || []).map((a: any) => ({
@@ -142,7 +132,6 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
       airlineRules: { carrierCodes: [], passengerTypes: [], loyaltyTiers: [], cabinClasses: [] },
       airportRules: { airportCodes: [], terminals: [], locationContext: 'Anywhere' },
       ecosystemScope: { channels: [], regions: [], countries: [], pos: [], sectors: [] },
-      outputs: { eligibleProducts: [], bundleIds: [], discount: 0, rankingBoost: 0 },
       personalization: { propensityToBuyScore: 0, priceSensitivityScore: 0 },
     },
   });
@@ -151,16 +140,14 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 h-auto p-1 bg-muted">
-            <TabsTrigger value="general" className="text-[10px] uppercase font-bold py-2"><Settings2 className="w-3 h-3 mr-1" /> Core</TabsTrigger>
-            <TabsTrigger value="scope" className="text-[10px] uppercase font-bold py-2"><Globe className="w-3 h-3 mr-1" /> Geo & Ch</TabsTrigger>
-            <TabsTrigger value="airline" className="text-[10px] uppercase font-bold py-2"><Plane className="w-3 h-3 mr-1" /> Airline</TabsTrigger>
-            <TabsTrigger value="airport" className="text-[10px] uppercase font-bold py-2"><Building2 className="w-3 h-3 mr-1" /> Airport</TabsTrigger>
-            <TabsTrigger value="outputs" className="text-[10px] uppercase font-bold py-2"><Zap className="w-3 h-3 mr-1" /> Actions</TabsTrigger>
-            <TabsTrigger value="predictive" className="text-[10px] uppercase font-bold py-2"><BrainCircuit className="w-3 h-3 mr-1" /> ML</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-muted">
+            <TabsTrigger value="general" className="text-[10px] uppercase font-bold py-2"><Settings2 className="w-3 h-3 mr-1" /> Core Identity</TabsTrigger>
+            <TabsTrigger value="scope" className="text-[10px] uppercase font-bold py-2"><Globe className="w-3 h-3 mr-1" /> Geo & Channel</TabsTrigger>
+            <TabsTrigger value="airline" className="text-[10px] uppercase font-bold py-2"><Plane className="w-3 h-3 mr-1" /> Airline Context</TabsTrigger>
+            <TabsTrigger value="airport" className="text-[10px] uppercase font-bold py-2"><Building2 className="w-3 h-3 mr-1" /> Airport Context</TabsTrigger>
+            <TabsTrigger value="predictive" className="text-[10px] uppercase font-bold py-2"><BrainCircuit className="w-3 h-3 mr-1" /> ML Signals</TabsTrigger>
           </TabsList>
 
-          {/* --- CORE SETTINGS --- */}
           <TabsContent value="general" className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <FormField control={form.control} name="name" render={({ field }) => (
@@ -191,7 +178,6 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
             </div>
           </TabsContent>
 
-          {/* --- ECOSYSTEM SCOPE (GEO & CHANNEL) --- */}
           <TabsContent value="scope" className="space-y-6 py-4">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
@@ -213,28 +199,26 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
                         )} />
                     </div>
                     <FormField control={form.control} name="ecosystemScope.pos" render={({ field }) => (
-                        <FormItem><FormLabel>Point of Sale (POS) Nodes</FormLabel><FormControl><Input placeholder="e.g., NYC, LON, BOM" {...field} /></FormControl><FormDescription className="text-[10px]">Specific locations where retailing is triggered.</FormDescription></FormItem>
+                        <FormItem><FormLabel>Point of Sale (POS) Nodes</FormLabel><FormControl><Input placeholder="e.g., NYC, LON, BOM" {...field} /></FormControl></FormItem>
                     )} />
                 </div>
              </div>
              <Separator />
              <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><MapPin className="w-3 h-3"/> Sector & Route Clusters</h4>
+                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><MapPin className="w-3 h-3"/> Sector Mapping</h4>
                 <FormField control={form.control} name="ecosystemScope.sectors" render={({ field }) => (
-                    <FormItem><FormLabel>Eligible Sectors / O&D Pairs</FormLabel><FormControl><Input placeholder="e.g., LHR-JFK, SIN-HKG, Domestic_IN" {...field} /></FormControl><FormDescription className="text-[10px]">Target specific routes or logical sector groupings.</FormDescription></FormItem>
+                    <FormItem><FormLabel>Eligible Sectors / O&D Pairs</FormLabel><FormControl><Input placeholder="e.g., LHR-JFK, SIN-HKG" {...field} /></FormControl></FormItem>
                 )} />
              </div>
           </TabsContent>
 
-          {/* --- AIRLINE RULES --- */}
           <TabsContent value="airline" className="space-y-6 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><User className="w-3 h-3"/> Profile & Loyalty</h4>
+                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Target className="w-3 h-3"/> Profile & Loyalty</h4>
                 <FormField control={form.control} name="airlineRules.carrierCodes" render={({ field }) => (
                     <FormItem><FormLabel>Airline / Carrier Scope</FormLabel>
-                    <MultiSelect options={airlineOptions} selected={field.value || []} onChange={field.onChange} placeholder="Filter by Participating Airlines..." />
-                    <FormDescription className="text-[10px]">Create airline-specific cohorts by selecting carriers.</FormDescription>
+                    <MultiSelect options={airlineOptions} selected={field.value || []} onChange={field.onChange} placeholder="All Onboarded Carriers" />
                     </FormItem>
                 )} />
                 <FormField control={form.control} name="airlineRules.loyaltyTiers" render={({ field }) => (
@@ -248,7 +232,7 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
                 )} />
               </div>
               <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Database className="w-3 h-3"/> PNR & Cabin</h4>
+                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Plane className="w-3 h-3"/> PNR & Cabin</h4>
                 <FormField control={form.control} name="airlineRules.cabinClasses" render={({ field }) => (
                   <FormItem><FormLabel>Eligible Cabins</FormLabel><MultiSelect options={cabinOptions} selected={field.value || []} onChange={field.onChange} placeholder="All Cabins" /></FormItem>
                 )} />
@@ -264,11 +248,10 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
             </div>
           </TabsContent>
 
-          {/* --- AIRPORT RULES --- */}
           <TabsContent value="airport" className="space-y-6 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Target className="w-3 h-3"/> Location Node</h4>
+                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Building2 className="w-3 h-3"/> Location Node</h4>
                 <FormField control={form.control} name="airportRules.locationContext" render={({ field }) => (
                   <FormItem><FormLabel>Journey Stage</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
@@ -279,58 +262,35 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
                 )} />
               </div>
               <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Activity className="w-3 h-3"/> Operational State</h4>
+                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Laptop className="w-3 h-3"/> Operational State</h4>
                 <FormField control={form.control} name="airportRules.minWaitTime" render={({ field }) => (
-                  <FormItem><FormLabel>Security Wait &gt; (Mins)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormDescription className="text-[10px]">Contextual trigger for queue-relief offers.</FormDescription></FormItem>
+                  <FormItem><FormLabel>Security Wait > (Mins)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>
                 )} />
               </div>
             </div>
           </TabsContent>
 
-          {/* --- OUTPUT ACTIONS --- */}
-          <TabsContent value="outputs" className="space-y-6 py-4">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Zap className="w-3 h-3"/> Retailing Actions</h4>
-                  <FormField control={form.control} name="outputs.bundleIds" render={({ field }) => (
-                    <FormItem><FormLabel>Target Bundles / SKUs</FormLabel><FormControl><Input placeholder="e.g., BUN-001, PR-99" {...field} /></FormControl></FormItem>
-                  )} />
-                </div>
-                <div className="space-y-4">
-                  <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><ShieldCheck className="w-3 h-3"/> Dynamic Adjustments</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField control={form.control} name="outputs.discount" render={({ field }) => (
-                      <FormItem><FormLabel>Discount (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>
-                    )} />
-                    <FormField control={form.control} name="outputs.rankingBoost" render={({ field }) => (
-                      <FormItem><FormLabel>Sort Ranking Boost</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>
-                    )} />
-                  </div>
-                </div>
-             </div>
-          </TabsContent>
-
-          {/* --- ML PERSONALIZATION --- */}
           <TabsContent value="predictive" className="space-y-6 py-4">
              <div className="space-y-4 p-4 border rounded-lg bg-indigo-50/50">
                 <h4 className="text-xs font-black uppercase text-indigo-700 tracking-widest flex items-center gap-2"><BrainCircuit className="w-3 h-3"/> ML Propensity Scoring</h4>
                 <div className="grid grid-cols-2 gap-8">
                     <FormField control={form.control} name="personalization.propensityToBuyScore" render={({ field }) => (
-                      <FormItem><div className="flex justify-between"><FormLabel>Propensity Score &gt;</FormLabel><span className="font-bold text-indigo-600">{field.value}%</span></div>
+                      <FormItem><div className="flex justify-between"><FormLabel>Propensity Score ></FormLabel><span className="font-bold text-indigo-600">{field.value}%</span></div>
                       <FormControl><Slider min={0} max={100} value={[field.value || 0]} onValueChange={(v) => field.onChange(v[0])} /></FormControl></FormItem>
                     )} />
                     <FormField control={form.control} name="personalization.priceSensitivityScore" render={({ field }) => (
-                      <FormItem><div className="flex justify-between"><FormLabel>Sensitivity &lt;</FormLabel><span className="font-bold text-indigo-600">{field.value}%</span></div>
+                      <FormItem><div className="flex justify-between"><FormLabel>Sensitivity <</FormLabel><span className="font-bold text-indigo-600">{field.value}%</span></div>
                       <FormControl><Slider min={0} max={100} value={[field.value || 0]} onValueChange={(v) => field.onChange(v[0])} /></FormControl></FormItem>
                     )} />
                 </div>
+                <p className="text-[10px] text-indigo-600/70 italic mt-2">These scores are dynamically calculated by the SITA Intelligence engine and used for real-time segment matching.</p>
              </div>
           </TabsContent>
         </Tabs>
 
         <div className="flex justify-end gap-3 pt-6 border-t">
           <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button type="submit" className="px-10 font-bold">Register Ecosystem Cohort</Button>
+          <Button type="submit" className="px-10 font-bold">Define Segment</Button>
         </div>
       </form>
     </Form>
