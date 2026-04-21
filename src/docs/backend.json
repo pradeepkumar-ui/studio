@@ -30,6 +30,9 @@
       "properties": {
         "name": { "type": "string" },
         "description": { "type": "string" },
+        "domain": { "type": "string", "enum": ["Airline", "Airport", "Hybrid"] },
+        "owningAirlineId": { "type": "string" },
+        "owningAirportId": { "type": "string" },
         "offerType": { "type": "string", "enum": ["Single", "Bundle", "Upgrade", "Conditional"] },
         "version": { "type": "number" },
         "status": { "type": "string", "enum": ["Draft", "Published", "Archived"] },

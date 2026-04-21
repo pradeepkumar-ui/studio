@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -39,7 +40,10 @@ import {
     Settings, 
     Layers,
     AlertCircle,
-    Calendar as CalendarIcon
+    Calendar as CalendarIcon,
+    Plane,
+    Building2,
+    Briefcase
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MultiSelect } from '@/components/ui/multi-select';
@@ -55,6 +59,9 @@ const bundleSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(5, 'Monetization name is required.'),
   description: z.string().min(10, 'Technical description required.'),
+  domain: z.enum(['Airline', 'Airport', 'Hybrid']).default('Airline'),
+  owningAirlineId: z.string().optional(),
+  owningAirportId: z.string().optional(),
   offerType: z.enum(['Single', 'Bundle', 'Upgrade', 'Conditional', 'Contextual']).default('Bundle'),
   status: z.enum(['Draft', 'Published', 'Archived']).default('Draft'),
   priority: z.coerce.number().min(1).max(100).default(50),
@@ -76,16 +83,11 @@ const bundleSchema = z.object({
     ceilingPrice: z.coerce.number().optional(),
     adjustmentType: z.enum(['Percentage', 'Fixed', 'Multiplier']).default('Percentage'),
     adjustmentValue: z.coerce.number().default(0),
-    markupRules: z.array(z.object({
-        channel: z.string(),
-        uplift: z.coerce.number()
-    })).optional(),
   }),
 
   targeting: z.object({
     cohortIds: z.array(z.string()).default([]),
     conflictPriority: z.coerce.number().default(1),
-    channelExclusions: z.array(z.string()).default([]),
   }),
 });
 
@@ -93,12 +95,16 @@ export type Bundle = z.infer<typeof bundleSchema>;
 
 export function BundleForm({ bundle, onSubmit, onCancel }: { bundle: any | null, onSubmit: (data: Bundle) => void, onCancel: () => void }) {
   const firestore = useFirestore();
-  const airlinesQuery = React.useMemo(() => firestore ? collection(firestore, 'airlineAncillaries') : undefined, [firestore]);
-  const airportQuery = React.useMemo(() => firestore ? collection(firestore, 'airportServices') : undefined, [firestore]);
+  const airlinesQuery = React.useMemo(() => firestore ? collection(firestore, 'airlines') : undefined, [firestore]);
+  const airportsQuery = React.useMemo(() => firestore ? collection(firestore, 'airports') : undefined, [firestore]);
+  const airlineAncillariesQuery = React.useMemo(() => firestore ? collection(firestore, 'airlineAncillaries') : undefined, [firestore]);
+  const airportServicesQuery = React.useMemo(() => firestore ? collection(firestore, 'airportServices') : undefined, [firestore]);
   const cohortsQuery = React.useMemo(() => firestore ? collection(firestore, 'cohorts') : undefined, [firestore]);
 
-  const { data: airlineAncillaries } = useCollection(airlinesQuery);
-  const { data: airportServices } = useCollection(airportQuery);
+  const { data: airlines } = useCollection(airlinesQuery);
+  const { data: airports } = useCollection(airportsQuery);
+  const { data: airlineAncillaries } = useCollection(airlineAncillariesQuery);
+  const { data: airportServices } = useCollection(airportServicesQuery);
   const { data: cohorts } = useCollection(cohortsQuery);
 
   const form = useForm<Bundle>({
@@ -106,6 +112,9 @@ export function BundleForm({ bundle, onSubmit, onCancel }: { bundle: any | null,
     defaultValues: {
       name: bundle?.name || '',
       description: bundle?.description || '',
+      domain: bundle?.domain || 'Airline',
+      owningAirlineId: bundle?.owningAirlineId || '',
+      owningAirportId: bundle?.owningAirportId || '',
       offerType: bundle?.offerType || 'Bundle',
       status: bundle?.status || 'Draft',
       priority: bundle?.priority || 50,
@@ -124,14 +133,31 @@ export function BundleForm({ bundle, onSubmit, onCancel }: { bundle: any | null,
       targeting: { 
           cohortIds: bundle?.targeting?.cohortIds || [], 
           conflictPriority: bundle?.targeting?.conflictPriority || 1, 
-          channelExclusions: bundle?.targeting?.channelExclusions || [] 
       },
     },
   });
 
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "components" });
 
-  const pricingStrategy = form.watch('pricing.strategy');
+  const domain = form.watch('domain');
+  const owningAirlineId = form.watch('owningAirlineId');
+  const owningAirportId = form.watch('owningAirportId');
+
+  const filteredAirlineAncillaries = React.useMemo(() => {
+    if (!airlineAncillaries) return [];
+    if (domain === 'Airline' && owningAirlineId) {
+        return airlineAncillaries.filter((a: any) => a.airlineId === owningAirlineId);
+    }
+    return airlineAncillaries;
+  }, [airlineAncillaries, domain, owningAirlineId]);
+
+  const filteredAirportServices = React.useMemo(() => {
+    if (!airportServices) return [];
+    if (domain === 'Airport' && owningAirportId) {
+        return airportServices.filter((a: any) => a.airportId === owningAirportId);
+    }
+    return airportServices;
+  }, [airportServices, domain, owningAirportId]);
 
   return (
     <Form {...form}>
@@ -147,25 +173,63 @@ export function BundleForm({ bundle, onSubmit, onCancel }: { bundle: any | null,
           {/* --- GENERAL IDENTITY --- */}
           <TabsContent value="general" className="space-y-4 py-4">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField control={form.control} name="name" render={({ field }) => (
-                    <FormItem><FormLabel>Monetization Identity</FormLabel><FormControl><Input placeholder="e.g., LHR Luxury Bundle" {...field} /></FormControl></FormItem>
+                <FormField control={form.control} name="domain" render={({ field }) => (
+                    <FormItem><FormLabel>Retailing Domain</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                        <SelectContent>
+                            <SelectItem value="Airline">Carrier-Specific (Airline)</SelectItem>
+                            <SelectItem value="Airport">Hub-Specific (Airport)</SelectItem>
+                            <SelectItem value="Hybrid">Ecosystem (Hybrid Mix)</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormDescription className="text-[10px]">Defines the product mapping scope.</FormDescription></FormItem>
                 )} />
+                <FormField control={form.control} name="name" render={({ field }) => (
+                    <FormItem><FormLabel>Strategy Identity</FormLabel><FormControl><Input placeholder="e.g., LHR Luxury Bundle" {...field} /></FormControl></FormItem>
+                )} />
+             </div>
+
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {domain === 'Airline' && (
+                    <FormField control={form.control} name="owningAirlineId" render={({ field }) => (
+                        <FormItem><FormLabel>Owning Airline</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl><SelectTrigger><SelectValue placeholder="Select Carrier..." /></SelectTrigger></FormControl>
+                            <SelectContent>
+                                {(airlines || []).map((a: any) => (
+                                    <SelectItem key={a.id} value={a.id}>{a.name} ({a.icaoCode})</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select></FormItem>
+                    )} />
+                )}
+                {domain === 'Airport' && (
+                    <FormField control={form.control} name="owningAirportId" render={({ field }) => (
+                        <FormItem><FormLabel>Owning Hub Node</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl><SelectTrigger><SelectValue placeholder="Select Airport..." /></SelectTrigger></FormControl>
+                            <SelectContent>
+                                {(airports || []).map((a: any) => (
+                                    <SelectItem key={a.id} value={a.iataCode}>{a.name} ({a.iataCode})</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select></FormItem>
+                    )} />
+                )}
                 <FormField control={form.control} name="offerType" render={({ field }) => (
                     <FormItem><FormLabel>Strategy Model</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent>
-                            <SelectItem value="Single">Single Ancillary</SelectItem>
-                            <SelectItem value="Bundle">Orchestrated Bundle</SelectItem>
-                            <SelectItem value="Upgrade">Priority Upgrade</SelectItem>
-                            <SelectItem value="Conditional">Rule-Conditional</SelectItem>
+                            <SelectItem value="Single">Single SKU</SelectItem>
+                            <SelectItem value="Bundle">Multi-SKU Bundle</SelectItem>
+                            <SelectItem value="Upgrade">Upsell / Upgrade</SelectItem>
                         </SelectContent>
                     </Select></FormItem>
                 )} />
              </div>
-             <FormField control={form.control} name="description" render={({ field }) => (
-                <FormItem><FormLabel>Commercial Intent</FormLabel><FormControl><Input placeholder="Objective of this offer..." {...field} /></FormControl></FormItem>
-             )} />
+
              <div className="grid grid-cols-2 gap-4">
                 <FormField control={form.control} name="validity" render={({ field }) => (
                     <FormItem className="flex flex-col">
@@ -197,29 +261,39 @@ export function BundleForm({ bundle, onSubmit, onCancel }: { bundle: any | null,
                     <FormItem><FormLabel>Orchestration Status</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent><SelectItem value="Draft">Sandboxed (Internal)</SelectItem><SelectItem value="Published">Live (Decision Engine)</SelectItem><SelectItem value="Archived">Historical</SelectItem></SelectContent>
+                        <SelectContent><SelectItem value="Draft">Draft</SelectItem><SelectItem value="Published">Live</SelectItem><SelectItem value="Archived">Archived</SelectItem></SelectContent>
                     </Select></FormItem>
                 )} />
              </div>
           </TabsContent>
 
-          {/* --- COMPOSITION & BUNDLING --- */}
+          {/* --- COMPOSITION --- */}
           <TabsContent value="composition" className="space-y-4 py-4">
              <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                    <FormLabel>Product Mapping (Airline + Airport Mix)</FormLabel>
+                    <FormLabel>Catalogue Mapping ({domain} Portfolio)</FormLabel>
                     <Button type="button" variant="outline" size="sm" onClick={() => append({ value: '', isMandatory: true })}><PlusCircle className="h-3 w-3 mr-1" /> Add Component</Button>
                 </div>
                 {fields.map((field, index) => (
                     <div key={field.id} className="grid grid-cols-12 gap-2 items-end p-3 rounded-lg border bg-muted/20">
-                        <div className="col-span-6">
+                        <div className="col-span-8">
                              <FormField control={form.control} name={`components.${index}.value`} render={({ field }) => (
                                 <FormItem>
                                     <Select onValueChange={field.onChange} value={field.value}>
-                                        <FormControl><SelectTrigger className="h-9"><SelectValue placeholder="Select SKU..." /></SelectTrigger></FormControl>
+                                        <FormControl><SelectTrigger className="h-9"><SelectValue placeholder="Select Product SKU..." /></SelectTrigger></FormControl>
                                         <SelectContent>
-                                            <SelectGroup><SelectLabel>Carrier Ancillaries</SelectLabel>{(airlineAncillaries || []).map(p => (<SelectItem key={p.id} value={p.id!}>{p.name} (${p.defaultPrice || 0})</SelectItem>))}</SelectGroup>
-                                            <SelectGroup><SelectLabel>Hub Services</SelectLabel>{(airportServices || []).map(p => (<SelectItem key={p.id} value={p.id!}>{p.name} (${p.price || 0})</SelectItem>))}</SelectGroup>
+                                            {(domain === 'Airline' || domain === 'Hybrid') && (
+                                                <SelectGroup>
+                                                    <SelectLabel className="flex items-center gap-2"><Plane className="h-3 w-3" /> Carrier Ancillaries</SelectLabel>
+                                                    {filteredAirlineAncillaries.map((p: any) => (<SelectItem key={p.id} value={p.id!}>{p.name} ({p.pssCode})</SelectItem>))}
+                                                </SelectGroup>
+                                            )}
+                                            {(domain === 'Airport' || domain === 'Hybrid') && (
+                                                <SelectGroup>
+                                                    <SelectLabel className="flex items-center gap-2"><Building2 className="h-3 w-3" /> Hub Services</SelectLabel>
+                                                    {filteredAirportServices.map((p: any) => (<SelectItem key={p.id} value={p.id!}>{p.name} ({p.sku})</SelectItem>))}
+                                                </SelectGroup>
+                                            )}
                                         </SelectContent>
                                     </Select>
                                 </FormItem>
@@ -233,55 +307,48 @@ export function BundleForm({ bundle, onSubmit, onCancel }: { bundle: any | null,
                                 </FormItem>
                             )} />
                         </div>
-                        <div className="col-span-3 flex justify-end">
+                        <div className="col-span-1 flex justify-end">
                             <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} disabled={fields.length <= 1}><Trash2 className="h-4 w-4" /></Button>
                         </div>
                     </div>
                 ))}
              </div>
-             <div className="p-3 rounded-lg bg-indigo-50 border border-indigo-100 flex items-start gap-2">
-                 <Zap className="h-4 w-4 text-indigo-600 shrink-0 mt-0.5" />
-                 <p className="text-[10px] text-indigo-700 font-medium">Bundling engine automatically handles conflict resolution for overlapping SKUs within the same PNR context.</p>
-             </div>
           </TabsContent>
 
-          {/* --- PRICING ENGINE --- */}
+          {/* --- PRICING --- */}
           <TabsContent value="pricing" className="space-y-6 py-4">
              <div className="grid grid-cols-3 gap-4">
                 <FormField control={form.control} name="pricing.strategy" render={({ field }) => (
-                    <FormItem><FormLabel>Pricing Model</FormLabel>
+                    <FormItem><FormLabel>Dynamic Strategy</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent>
-                            <SelectItem value="Static">Static Price</SelectItem>
-                            <SelectItem value="Dynamic">Continuous Pricing</SelectItem>
-                            <SelectItem value="Demand">Demand-Driven (Load Factor)</SelectItem>
+                            <SelectItem value="Static">Deterministic (Fixed)</SelectItem>
+                            <SelectItem value="Dynamic">Continuous (Micro-adj)</SelectItem>
+                            <SelectItem value="Demand">Demand-Based (Signals)</SelectItem>
                             <SelectItem value="Time-based">Temporal (DBD)</SelectItem>
-                            <SelectItem value="Bid">Auction/Bid Logic</SelectItem>
                         </SelectContent>
                     </Select></FormItem>
                 )} />
                  <FormField control={form.control} name="pricing.basePrice" render={({ field }) => (
-                    <FormItem><FormLabel>Base Ecosystem Price</FormLabel>
-                    <div className="relative"><DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><FormControl><Input type="number" className="pl-9" {...field} /></FormControl></div>
+                    <FormItem><FormLabel>Base Price (Bundle)</FormLabel>
+                    <div className="relative"><DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><FormControl><Input type="number" className="pl-9 font-bold" {...field} /></FormControl></div>
                     </FormItem>
                 )} />
                 <FormField control={form.control} name="pricing.currency" render={({ field }) => (
-                    <FormItem><FormLabel>Currency</FormLabel><FormControl><Input maxLength={3} {...field} className="font-mono" /></FormControl></FormItem>
+                    <FormItem><FormLabel>ISO Currency</FormLabel><FormControl><Input maxLength={3} {...field} className="font-mono uppercase" /></FormControl></FormItem>
                 )} />
              </div>
 
-             <Separator />
-
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-[10px] font-black uppercase text-indigo-700 tracking-widest"><TrendingUp className="h-3 h-3" /> Adjustment deltas</div>
+                <div className="space-y-4 p-4 border rounded-xl bg-primary/5">
+                    <div className="flex items-center gap-2 text-[10px] font-black uppercase text-primary tracking-widest"><TrendingUp className="h-3 h-3" /> Yield Delta</div>
                     <div className="grid grid-cols-2 gap-4">
                         <FormField control={form.control} name="pricing.adjustmentType" render={({ field }) => (
-                            <FormItem><FormLabel className="text-xs">Method</FormLabel>
+                            <FormItem><FormLabel className="text-xs">Type</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl><SelectTrigger className="h-8"><SelectValue /></SelectTrigger></FormControl>
-                                <SelectContent><SelectItem value="Percentage">% Adjustment</SelectItem><SelectItem value="Fixed">Fixed Amount</SelectItem><SelectItem value="Multiplier">Price Multiplier</SelectItem></SelectContent>
+                                <SelectContent><SelectItem value="Percentage">% Adjustment</SelectItem><SelectItem value="Fixed">Fixed Delta</SelectItem></SelectContent>
                             </Select></FormItem>
                         )} />
                         <FormField control={form.control} name="pricing.adjustmentValue" render={({ field }) => (
@@ -289,7 +356,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: { bundle: any | null,
                         )} />
                     </div>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-4 p-4 border rounded-xl bg-destructive/5">
                     <div className="flex items-center gap-2 text-[10px] font-black uppercase text-destructive tracking-widest"><ShieldCheck className="h-3 h-3" /> Yield Guardrails</div>
                     <div className="grid grid-cols-2 gap-4">
                         <FormField control={form.control} name="pricing.floorPrice" render={({ field }) => (
@@ -303,42 +370,42 @@ export function BundleForm({ bundle, onSubmit, onCancel }: { bundle: any | null,
              </div>
           </TabsContent>
 
-          {/* --- TARGETING & ORCHESTRATION --- */}
+          {/* --- TARGETING --- */}
           <TabsContent value="targeting" className="space-y-6 py-4">
              <FormField control={form.control} name="targeting.cohortIds" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Linked Retailing Cohorts</FormLabel>
+                  <FormLabel>Decision Engine Targets (Cohorts)</FormLabel>
                   <FormControl>
                     <MultiSelect 
                       options={(cohorts || []).map((c: any) => ({ value: c.cohortId, label: c.name }))} 
                       selected={field.value || []} 
                       onChange={field.onChange} 
-                      placeholder="Search segments..." 
+                      placeholder="Search and map segments..." 
                     />
                   </FormControl>
-                  <FormDescription className="text-[10px]">Real-time evaluation will only trigger this offer if the passenger matches one of these cohorts.</FormDescription>
+                  <FormDescription className="text-[10px]">Real-time evaluation links these segments to the commercial logic defined.</FormDescription>
                 </FormItem>
               )} />
               
               <div className="grid grid-cols-2 gap-6">
                 <FormField control={form.control} name="priority" render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Conflict Resolution Priority</FormLabel>
+                        <FormLabel>Retailing Priority</FormLabel>
                         <FormControl><Input type="number" {...field} /></FormControl>
-                        <FormDescription className="text-[10px]">Higher value wins in multi-cohort matches.</FormDescription>
+                        <FormDescription className="text-[10px]">Higher value ensures prominence in touchpoint carousels.</FormDescription>
                     </FormItem>
                 )} />
                 <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 flex gap-2">
                     <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                    <p className="text-[10px] text-amber-800 leading-tight"><strong>Ecosystem Warning:</strong> Publishing multiple high-priority offers to the same cohort may result in decision engine throttling.</p>
+                    <p className="text-[10px] text-amber-800 leading-tight"><strong>Retailing Warning:</strong> Conflicting high-priority offers for the same cohort will be load-balanced by the SITA Decision Engine.</p>
                 </div>
               </div>
           </TabsContent>
         </Tabs>
 
         <div className="flex justify-end gap-3 pt-6 border-t">
-          <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button type="submit" className="px-10 font-bold">Commit Strategized Offer</Button>
+          <Button type="button" variant="outline" onClick={onCancel}>Discard</Button>
+          <Button type="submit" className="px-10 font-bold">Commit Monetization Logic</Button>
         </div>
       </form>
     </Form>
