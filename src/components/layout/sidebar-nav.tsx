@@ -84,9 +84,9 @@ const menuItems: MenuItem[] = [
     label: 'Offers & Retailing',
     icon: Ticket,
     subItems: [
-      { href: '/offer-composer', label: 'Airport Offer Composer', icon: QrCode },
-      { href: '/bundles', label: 'Offers & Dynamic pricing', icon: Package },
       { href: '/offers/cohorts', label: 'Retailing Cohorts', icon: Target },
+      { href: '/bundles', label: 'Offers & Dynamic pricing', icon: Package },
+      { href: '/offer-composer', label: 'Airport Offer Composer', icon: QrCode },
     ],
   },
   {
