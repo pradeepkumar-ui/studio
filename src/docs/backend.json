@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "cohort": {
@@ -73,24 +72,30 @@
       "description": "Exhaustive portfolio item for airline-managed flight ancillaries.",
       "type": "object",
       "properties": {
-        "airlineId": { "type": "string" },
+        "ancillaryCode": { "type": "string" },
         "name": { "type": "string" },
+        "shortName": { "type": "string" },
         "category": { "type": "string" },
-        "pssCode": { "type": "string" },
-        "defaultPrice": { "type": "number" },
-        "currency": { "type": "string" }
+        "subcategory": { "type": "string" },
+        "airlineCode": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Inactive", "Draft"] },
+        "version": { "type": "number" }
       }
     },
     "airportAncillary": {
-      "title": "Airport Ancillary SKU",
-      "description": "Exhaustive portfolio item for airport-managed and partner services.",
+      "title": "Airport Ancillary Master SKU",
+      "description": "High-fidelity master definition for hub-managed and partner services.",
       "type": "object",
       "properties": {
-        "airportId": { "type": "string" },
-        "providerId": { "type": "string" },
+        "ancillaryCode": { "type": "string" },
         "name": { "type": "string" },
-        "sku": { "type": "string" },
-        "price": { "type": "number" }
+        "category": { "type": "string" },
+        "serviceType": { "type": "string", "enum": ["slot-based", "on-demand", "request-based"] },
+        "airlineCode": { "type": "string" },
+        "airportCode": { "type": "string" },
+        "providerName": { "type": "string" },
+        "terminals": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Inactive", "Draft"] }
       }
     }
   },
