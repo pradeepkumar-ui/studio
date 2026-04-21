@@ -30,7 +30,8 @@ import {
   User,
   Ticket,
   Clock,
-  Package
+  Package,
+  Database
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -46,7 +47,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 type ComposerStep = 'pnr_discovery' | 'offer_generation' | 'results' | 'checkout' | 'confirmation';
 
@@ -100,11 +101,14 @@ export default function AirportOfferComposerPage() {
   const [generatedOffers, setGeneratedOffers] = useState<any[]>([]);
   const [selectedOffer, setSelectedOffer] = useState<any>(null);
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
+  
+  // Two-stage checkout states
+  const [isPaid, setIsPaid] = useState(false);
+  const [isSynced, setIsSynced] = useState(false);
 
   const { toast } = useToast();
   const firestore = useFirestore();
 
-  // Fetch bundles and cohorts for the engine
   const { data: allBundles } = useCollection(firestore ? collection(firestore, 'bundles') : undefined);
 
   const form = useForm<z.infer<typeof discoverySchema>>({
@@ -116,13 +120,21 @@ export default function AirportOfferComposerPage() {
     },
   });
 
+  const resetSimulation = () => {
+    setStep('pnr_discovery');
+    setPnrData(null);
+    setIsPaid(false);
+    setIsSynced(false);
+    setSelectedOffer(null);
+    setDiscoveryLog([]);
+  };
+
   const handlePnrSearch = async () => {
     setIsLoading(true);
     setDiscoveryLog(["Searching Host PSS for PNR " + form.getValues('pnr') + "..."]);
     
     await new Promise(r => setTimeout(r, 1000));
     
-    // Mock PNR Data Fetch
     const mockData = {
         pnr: form.getValues('pnr'),
         passenger: 'John Smith',
@@ -150,7 +162,6 @@ export default function AirportOfferComposerPage() {
     await new Promise(r => setTimeout(r, 600));
     setDiscoveryLog(prev => [...prev, "Analyzing " + form.getValues('touchpoint') + " channel constraints..."]);
     
-    // Identify Cohorts
     const cohorts = [pnrData.loyaltyTier, pnrData.tripPurpose === 'Leisure' ? 'LEISURE_PROMO' : 'CORP_PREMIUM'];
     setIdentifiedCohorts(cohorts);
     setDiscoveryLog(prev => [...prev, "Identified Cohorts: " + cohorts.join(', ')]);
@@ -159,9 +170,7 @@ export default function AirportOfferComposerPage() {
     const sourceBundles = (allBundles && allBundles.length > 0) ? allBundles : mockBundlesFallback;
     setDiscoveryLog(prev => [...prev, "Evaluating " + sourceBundles.length + " available strategies..."]);
 
-    // Evaluation Logic: Match Bundles to Identified Cohorts
     const eligible = sourceBundles.filter((b: any) => {
-        // If no cohorts defined, it's global. Otherwise must match.
         if (!b.targeting?.cohortIds || b.targeting.cohortIds.length === 0) return true;
         return b.targeting.cohortIds.some((cid: string) => cohorts.includes(cid));
     });
@@ -171,12 +180,10 @@ export default function AirportOfferComposerPage() {
     await new Promise(r => setTimeout(r, 600));
     setDiscoveryLog(prev => [...prev, "Applying Dynamic Pricing & Yield Guardrails..."]);
 
-    // Calculate Dynamic Prices
     const finalOffers = eligible.map((b: any) => {
         let price = b.pricing?.basePrice || 50;
         let adjustmentMsg = "Base";
 
-        // Simulated Dynamic Logic
         if (b.pricing?.strategy === 'Demand') {
             price *= 1.15;
             adjustmentMsg = "Demand Surge (+15%)";
@@ -185,7 +192,6 @@ export default function AirportOfferComposerPage() {
             adjustmentMsg = "Cohort Discount (-10%)";
         }
 
-        // Apply Channel Markup
         if (form.getValues('touchpoint') === 'CUSS_Kiosk') {
             price += 10;
             adjustmentMsg += " | Kiosk Convenience (+$10)";
@@ -207,8 +213,18 @@ export default function AirportOfferComposerPage() {
   };
 
   const handleCompletePayment = async () => {
+    setIsLoading(true);
+    await new Promise(r => setTimeout(r, 1000));
+    setIsPaid(true);
+    setIsLoading(false);
+    setDiscoveryLog(prev => [...prev, "Payment Authorized: Transaction Settled."]);
+    toast({ title: "Payment Successful", description: "The transaction has been authorized and settled." });
+  };
+
+  const handleSyncPSS = async () => {
     if (!firestore) return;
     setIsLoading(true);
+    setDiscoveryLog(prev => [...prev, "Initiating Host PSS Synchronization..."]);
     
     try {
         const orderId = `ORD-${Math.floor(Math.random() * 90000) + 10000}`;
@@ -244,11 +260,14 @@ export default function AirportOfferComposerPage() {
         });
 
         setCreatedOrderId(orderId);
-        await new Promise(r => setTimeout(r, 1500)); 
-        setStep('confirmation');
-        toast({ title: "Fulfillment Successful", description: "PSS Synchronised & Order Registered." });
+        await new Promise(r => setTimeout(r, 1200)); 
+        setIsSynced(true);
+        setDiscoveryLog(prev => [...prev, "PSS Sync Complete: Virtual EMD Issued and SSRs updated."]);
+        toast({ title: "Sync Successful", description: "PSS Synchronised and Order Registered." });
+        
+        setTimeout(() => setStep('confirmation'), 800);
     } catch (e: any) {
-        toast({ variant: 'destructive', title: 'Payment Error', description: e.message });
+        toast({ variant: 'destructive', title: 'Sync Error', description: e.message });
     } finally {
         setIsLoading(false);
     }
@@ -261,7 +280,7 @@ export default function AirportOfferComposerPage() {
           <h1 className="text-3xl font-black tracking-tight text-primary">Airport Offer Composer</h1>
           <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest">REAL-TIME OFFER DECISION & DELIVERY SIMULATOR</p>
         </div>
-        <Button variant="ghost" onClick={() => { setStep('pnr_discovery'); setPnrData(null); }} className="text-muted-foreground">
+        <Button variant="ghost" onClick={resetSimulation} className="text-muted-foreground">
             <History className="mr-2 h-4 w-4" /> Reset Simulation
         </Button>
       </div>
@@ -452,43 +471,62 @@ export default function AirportOfferComposerPage() {
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <Card className="shadow-2xl border-primary/20 overflow-hidden">
-                            <div className="bg-primary p-6 text-white">
-                                <CardTitle className="text-white flex items-center gap-2"><CreditCard className="h-5 w-5" /> Transaction Authorization</CardTitle>
-                                <p className="text-xs text-white/70 mt-1 uppercase font-bold tracking-widest">Master Order Summary</p>
+                            <div className={cn("p-6 text-white transition-colors duration-500", isPaid ? "bg-emerald-600" : "bg-primary")}>
+                                <CardTitle className="text-white flex items-center gap-2">
+                                    {isPaid ? <Check className="h-5 w-5" /> : <CreditCard className="h-5 w-5" />}
+                                    {isPaid ? "Payment Complete" : "Transaction Authorization"}
+                                </CardTitle>
+                                <p className="text-xs text-white/70 mt-1 uppercase font-bold tracking-widest">
+                                    {isPaid ? "Proceed to technical host sync" : "Retailing Order Summary"}
+                                </p>
                             </div>
                             <CardContent className="pt-6 space-y-6">
                                 <div className="space-y-3 p-5 bg-slate-50 rounded-2xl border border-slate-200">
                                     <div className="flex justify-between text-xs font-black text-slate-400 uppercase tracking-widest">
-                                        <span>Parent PNR</span>
+                                        <span>Master PNR</span>
                                         <span className="text-primary font-mono">{pnrData.pnr}</span>
                                     </div>
                                     <Separator />
-                                    <div className="flex justify-between items-center py-1">
-                                        <span className="text-sm font-medium">Air Transportation ({pnrData.cabin})</span>
-                                        <span className="font-mono text-sm text-slate-500">${pnrData.baseFare.toFixed(2)}</span>
-                                    </div>
                                     <div className="flex justify-between items-center py-1 text-primary font-black">
                                         <span className="text-sm">{selectedOffer.name}</span>
-                                        <span className="font-mono text-sm">+${selectedOffer.displayPrice.toFixed(2)}</span>
+                                        <span className="font-mono text-sm">${selectedOffer.displayPrice.toFixed(2)}</span>
                                     </div>
                                     <Separator className="my-2" />
                                     <div className="flex justify-between items-center pt-2">
                                         <span className="text-lg font-black uppercase text-slate-700">Total Settlement</span>
-                                        <span className="text-3xl font-black text-primary font-mono tracking-tighter">${(pnrData.baseFare + selectedOffer.displayPrice).toFixed(2)}</span>
+                                        <span className="text-3xl font-black text-primary font-mono tracking-tighter">${selectedOffer.displayPrice.toFixed(2)}</span>
                                     </div>
                                 </div>
+
+                                {isPaid && (
+                                    <Alert className="bg-emerald-50 border-emerald-200">
+                                        <Check className="h-4 w-4 text-emerald-600" />
+                                        <AlertTitle className="text-emerald-800 font-black text-xs uppercase">Payment Successful</AlertTitle>
+                                        <AlertDescription className="text-emerald-700 text-[10px]">
+                                            Funds captured. Ready to commit retailing SSRs to host carrier system.
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
+
                                 <div className="flex items-center gap-4 p-4 border rounded-2xl bg-blue-50/50 border-blue-100">
                                     <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white"><ShieldCheck className="h-6 w-6" /></div>
                                     <p className="text-xs text-blue-900 leading-tight">
-                                        Proceeding will trigger a <strong>SITA Virtual EMD</strong> and commit SSR updates to the <strong>Host PSS</strong> system.
+                                        {isPaid ? "Settlement authorized via SITA Broker. Update host PSS to finalize." : "Proceeding will authorize financial settlement and prepare the Virtual EMD for synchronization."}
                                     </p>
                                 </div>
                             </CardContent>
                             <CardFooter>
-                                <Button onClick={handleCompletePayment} className="w-full h-14 text-lg font-black uppercase tracking-widest shadow-xl" disabled={isLoading}>
-                                    {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <CreditCard className="mr-2 h-5 w-5" />}
-                                    Commit & Sync PSS
-                                </Button>
+                                {!isPaid ? (
+                                    <Button onClick={handleCompletePayment} className="w-full h-14 text-lg font-black uppercase tracking-widest shadow-xl" disabled={isLoading}>
+                                        {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <CreditCard className="mr-2 h-5 w-5" />}
+                                        Complete Payment
+                                    </Button>
+                                ) : (
+                                    <Button onClick={handleSyncPSS} className="w-full h-14 text-lg font-black uppercase tracking-widest shadow-xl bg-emerald-600 hover:bg-emerald-700" disabled={isLoading}>
+                                        {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Database className="mr-2 h-5 w-5" />}
+                                        Sync PSS
+                                    </Button>
+                                )}
                             </CardFooter>
                         </Card>
 
@@ -496,8 +534,16 @@ export default function AirportOfferComposerPage() {
                             <Card className="bg-slate-50/50 border-dashed border-2">
                                 <CardHeader className="pb-2"><CardTitle className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Fulfillment Token Preview</CardTitle></CardHeader>
                                 <CardContent className="flex flex-col items-center py-8">
-                                    <div className="p-4 bg-white rounded-2xl shadow-xl border-2 border-white relative group">
-                                        <Image src="https://picsum.photos/seed/sita-qr/200/200" alt="QR" width={180} height={180} className="opacity-80" data-ai-hint="qr code" />
+                                    <div className="p-4 bg-white rounded-2xl shadow-xl border-2 border-white relative group overflow-hidden">
+                                        <div className="relative w-[180px] h-[180px]">
+                                            <Image 
+                                                src="https://picsum.photos/seed/sita-qr/200/200" 
+                                                alt="QR" 
+                                                fill
+                                                className="opacity-90" 
+                                                data-ai-hint="qr code" 
+                                            />
+                                        </div>
                                         <div className="absolute inset-0 flex items-center justify-center bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity">
                                              <QrCode className="h-10 w-10 text-primary" />
                                         </div>
@@ -509,7 +555,7 @@ export default function AirportOfferComposerPage() {
                                 <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
                                 <div className="space-y-1">
                                     <p className="text-xs font-black uppercase text-amber-800 tracking-wider">Compliance Enforcement</p>
-                                    <p className="text-[10px] text-amber-700 leading-relaxed">Price recalculation verified against <strong>Policy Pack v18</strong>. Settlement complies with SITA CUPPS and carrier-specific retailing guardrails.</p>
+                                    <p className="text-[10px] text-amber-700 leading-relaxed">Price verified against <strong>Policy Pack v18</strong>. Settlement complies with SITA CUPPS and carrier-specific retailing guardrails.</p>
                                 </div>
                             </div>
                         </div>
@@ -554,15 +600,8 @@ export default function AirportOfferComposerPage() {
                                     </div>
                                     <Separator />
                                     <div className="space-y-4">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Transaction Breakdown</p>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Retailing Breakdown</p>
                                         <div className="space-y-3">
-                                            <div className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="p-2 bg-white rounded-xl border shadow-sm text-slate-400"><Activity className="h-5 w-5" /></div>
-                                                    <div><p className="font-bold text-sm text-slate-700">Air Transportation Sync</p><p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{pnrData.cabin} • {pnrData.route}</p></div>
-                                                </div>
-                                                <p className="font-mono font-black text-slate-400 text-sm">${pnrData.baseFare.toFixed(2)}</p>
-                                            </div>
                                             <div className="flex justify-between items-center p-4 bg-emerald-50/40 border border-emerald-100 rounded-2xl">
                                                 <div className="flex items-center gap-4">
                                                     <div className="p-2 bg-white rounded-xl border shadow-sm text-emerald-600"><Ticket className="h-5 w-5" /></div>
@@ -575,7 +614,7 @@ export default function AirportOfferComposerPage() {
                                 </div>
                                 <div className="bg-slate-50 p-8 flex justify-between items-center border-t">
                                     <p className="text-xs font-black uppercase text-slate-400 tracking-[0.2em]">Total Settled</p>
-                                    <p className="text-4xl font-black text-primary font-mono tracking-tighter">${(pnrData.baseFare + selectedOffer.displayPrice).toFixed(2)}</p>
+                                    <p className="text-4xl font-black text-primary font-mono tracking-tighter">${selectedOffer.displayPrice.toFixed(2)}</p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -606,7 +645,7 @@ export default function AirportOfferComposerPage() {
                             </Card>
 
                             <div className="flex flex-col gap-3">
-                                <Button className="w-full font-black uppercase tracking-widest h-12 rounded-xl" onClick={() => { setStep('pnr_discovery'); setPnrData(null); }}>
+                                <Button className="w-full font-black uppercase tracking-widest h-12 rounded-xl" onClick={resetSimulation}>
                                     New Simulation <ArrowRight className="ml-2 h-4 w-4" />
                                 </Button>
                                 <Button variant="outline" className="w-full font-black uppercase tracking-widest h-12 rounded-xl" asChild>
