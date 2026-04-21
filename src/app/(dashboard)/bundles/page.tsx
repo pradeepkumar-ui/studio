@@ -33,29 +33,26 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, PlusCircle, Loader2, Bot, User, Search, Package, Target, Zap, Copy, History, Plane, Building2, Briefcase } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2, Bot, Search, Package, Target, History, Plane, Building2, Briefcase, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { BundleForm, type Bundle } from '@/components/forms/bundle-form';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, addDoc, doc, setDoc, serverTimestamp, deleteDoc, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, doc, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { addDays } from 'date-fns';
 
-const mockOffers: any[] = [
+const initialMockOffers: any[] = [
     { 
         id: 'OFR-001', 
         name: 'Executive Transit Pack', 
         domain: 'Airline',
         owningAirlineId: 'GAB',
-        offerType: 'Bundle', 
         status: 'Published', 
-        version: 1, 
-        priority: 85, 
         validity: { from: new Date(), to: addDays(new Date(), 30) },
-        components: [{ value: 'LOUA', isMandatory: true }, { value: 'PBDG', isMandatory: false }], 
-        pricing: { strategy: 'Demand', basePrice: 85, currentPrice: 72 }, 
+        components: [{ value: 'LOUA', isMandatory: true }], 
+        pricing: { strategy: 'Demand', basePrice: 85, currency: 'USD' }, 
         targeting: { cohortIds: ['LHR_BIZ_WAIT'] } 
     },
     { 
@@ -63,14 +60,11 @@ const mockOffers: any[] = [
         name: 'LHR Premium Priority', 
         domain: 'Airport',
         owningAirportId: 'LHR',
-        offerType: 'Single', 
         status: 'Published', 
-        version: 2, 
-        priority: 40, 
         validity: { from: new Date(), to: addDays(new Date(), 60) },
         components: [{ value: 'PBDG', isMandatory: true }], 
-        pricing: { strategy: 'Static', basePrice: 15, currentPrice: 15 }, 
-        targeting: { cohortIds: ['Global'] } 
+        pricing: { strategy: 'Static', basePrice: 15, currency: 'USD' }, 
+        targeting: { cohortIds: [] } 
     },
 ];
 
@@ -78,43 +72,25 @@ export default function BundlesPage() {
   const firestore = useFirestore();
   const bundlesQuery = useMemo(() => firestore ? collection(firestore, 'bundles') : undefined, [firestore]);
   const { data: bundlesCollection, loading } = useCollection(bundlesQuery);
-  const [filters, setFilters] = useState({ name: '', domain: 'all', status: 'all' });
+  const [filters, setFilters] = useState({ name: '', domain: 'all' });
   
-  const displayOffers = useMemo(() => {
-    let sourceData = (bundlesCollection && bundlesCollection.length > 0) ? bundlesCollection : mockOffers;
-    
-    return sourceData.filter(offer => {
-      const nameMatch = filters.name ? offer.name.toLowerCase().includes(filters.name.toLowerCase()) : true;
-      const domainMatch = filters.domain === 'all' || offer.domain === filters.domain;
-      const statusMatch = filters.status === 'all' || offer.status === filters.status;
-      return nameMatch && domainMatch && statusMatch;
-    });
-  }, [bundlesCollection, filters]);
-
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBundle, setEditingBundle] = useState<any | null>(null);
   const { toast } = useToast();
 
+  const displayOffers = useMemo(() => {
+    let sourceData = (bundlesCollection && bundlesCollection.length > 0) ? bundlesCollection : initialMockOffers;
+    
+    return sourceData.filter(offer => {
+      const nameMatch = filters.name ? offer.name.toLowerCase().includes(filters.name.toLowerCase()) : true;
+      const domainMatch = filters.domain === 'all' || offer.domain === filters.domain;
+      return nameMatch && domainMatch;
+    });
+  }, [bundlesCollection, filters]);
+
   const handleOpenDialog = (bundle: any | null = null) => {
     setEditingBundle(bundle);
     setIsDialogOpen(true);
-  };
-
-  const handleClone = async (bundle: any) => {
-    if (!firestore) return;
-    try {
-        const { id, ...cloneData } = bundle;
-        await addDoc(collection(firestore, 'bundles'), {
-            ...cloneData,
-            name: `${cloneData.name} (Copy)`,
-            status: 'Draft',
-            version: (cloneData.version || 1) + 1,
-            createdAt: serverTimestamp()
-        });
-        toast({ title: 'Strategy Cloned', description: `Created a draft version of ${bundle.name}.` });
-    } catch (e: any) {
-        toast({ variant: 'destructive', title: 'Clone Failed', description: e.message });
-    }
   };
 
   const handleFormSubmit = async (data: Bundle) => {
@@ -123,10 +99,10 @@ export default function BundlesPage() {
       if (editingBundle?.id) {
         const ref = doc(firestore, 'bundles', editingBundle.id);
         await setDoc(ref, { ...data, updatedAt: serverTimestamp() }, { merge: true });
-        toast({ title: 'Monetization Updated' });
+        toast({ title: 'Monetization strategy updated' });
       } else {
-        await addDoc(collection(firestore, 'bundles'), { ...data, version: 1, createdAt: serverTimestamp() });
-        toast({ title: 'New Strategy Live' });
+        await addDoc(collection(firestore, 'bundles'), { ...data, createdAt: serverTimestamp() });
+        toast({ title: 'New offer strategy live' });
       }
     } catch (e: any) {
         toast({ variant: "destructive", title: "Error", description: e.message });
@@ -134,15 +110,25 @@ export default function BundlesPage() {
     setIsDialogOpen(false);
   };
 
+  const handleDelete = async (id: string) => {
+    if (!firestore) return;
+    try {
+        await deleteDoc(doc(firestore, 'bundles', id));
+        toast({ title: 'Offer strategy archived' });
+    } catch (e: any) {
+        toast({ variant: 'destructive', title: 'Delete Failed', description: e.message });
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold tracking-tight text-primary">Offers & Dynamic pricing</h1>
-          <p className="text-muted-foreground font-medium">Core monetization engine for ecosystem-wide personalized airline and airport services.</p>
+          <p className="text-muted-foreground font-medium">Configure cohort-driven monetization strategies for airline and airport services.</p>
         </div>
         <Button onClick={() => handleOpenDialog()} className="font-bold h-11 px-8 shadow-indigo-100 shadow-xl">
-          <PlusCircle className="mr-2 h-4 w-4" /> Define Offer
+          <PlusCircle className="mr-2 h-4 w-4" /> Define Offer Strategy
         </Button>
       </div>
 
@@ -151,9 +137,9 @@ export default function BundlesPage() {
           <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-lg">Monetization Registry</CardTitle>
-                <CardDescription>Configure products, dynamic pricing deltas, and cohort-driven targeting.</CardDescription>
+                <CardDescription>Mapped product sets with live dynamic pricing and targeting rules.</CardDescription>
               </div>
-              <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-100 font-black text-[10px] uppercase">Evaluation Engine: Live</Badge>
+              <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-100 font-black text-[10px] uppercase">Engine: Operational</Badge>
           </div>
         </CardHeader>
         <CardContent className="pt-6">
@@ -166,9 +152,9 @@ export default function BundlesPage() {
                 <SelectTrigger className="w-[180px] h-10"><SelectValue placeholder="Offer Domain" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Domains</SelectItem>
-                  <SelectItem value="Airline">Carrier Offers</SelectItem>
-                  <SelectItem value="Airport">Hub Offers</SelectItem>
-                  <SelectItem value="Hybrid">Hybrid Mix</SelectItem>
+                  <SelectItem value="Airline">Airline Specific</SelectItem>
+                  <SelectItem value="Airport">Airport Hub Specific</SelectItem>
+                  <SelectItem value="Hybrid">Hybrid Bundle</SelectItem>
                 </SelectContent>
               </Select>
           </div>
@@ -179,10 +165,10 @@ export default function BundlesPage() {
             <Table>
               <TableHeader className="bg-muted/30">
                 <TableRow>
-                  <TableHead className="text-[10px] uppercase font-black">Offer Strategy</TableHead>
+                  <TableHead className="text-[10px] uppercase font-black">Strategy Identity</TableHead>
                   <TableHead className="text-[10px] uppercase font-black">Retailing Domain</TableHead>
-                  <TableHead className="text-[10px] uppercase font-black">Pricing Strategy</TableHead>
-                  <TableHead className="text-[10px] uppercase font-black">Decision Target</TableHead>
+                  <TableHead className="text-[10px] uppercase font-black">Dynamic Logic</TableHead>
+                  <TableHead className="text-[10px] uppercase font-black">Target Cohorts</TableHead>
                   <TableHead className="text-right text-[10px] uppercase font-black">Base Price</TableHead>
                   <TableHead className="text-right text-[10px] uppercase font-black">Actions</TableHead>
                 </TableRow>
@@ -194,9 +180,9 @@ export default function BundlesPage() {
                       <div className="flex items-center gap-3">
                          <div className="p-2 bg-primary/10 rounded-xl transition-transform group-hover:scale-110"><Package className="h-4 w-4 text-primary" /></div>
                          <div>
-                            <div className="font-bold flex items-center gap-1.5">{offer.name} {offer.priority > 80 && <Zap className="h-3 w-3 text-amber-500 fill-amber-500" />}</div>
+                            <div className="font-bold">{offer.name}</div>
                             <div className="text-[10px] text-muted-foreground uppercase font-black flex items-center gap-1">
-                                <History className="w-2.5 h-2.5" /> v{offer.version} • {offer.status}
+                                <History className="w-2.5 h-2.5" /> {offer.status}
                             </div>
                          </div>
                       </div>
@@ -217,6 +203,7 @@ export default function BundlesPage() {
                             {offer.targeting?.cohortIds?.map((c: string) => (
                                 <Badge key={c} variant="secondary" className="text-[9px] px-1.5 font-mono">{c}</Badge>
                             )) || <span className="text-[10px] text-muted-foreground italic">Global</span>}
+                            {offer.targeting?.cohortIds?.length === 0 && <span className="text-[10px] text-muted-foreground italic">Global</span>}
                         </div>
                     </TableCell>
                     <TableCell className="text-right">
@@ -228,11 +215,10 @@ export default function BundlesPage() {
                           <Button size="icon" variant="ghost" className="hover:bg-muted"><MoreHorizontal className="h-4 w-4" /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56">
-                          <DropdownMenuLabel className="text-[10px] uppercase font-black text-muted-foreground">Monetization Manager</DropdownMenuLabel>
+                          <DropdownMenuLabel className="text-[10px] uppercase font-black text-muted-foreground">Strategy Manager</DropdownMenuLabel>
                           <DropdownMenuItem onClick={() => handleOpenDialog(offer)}><History className="mr-2 h-4 w-4"/>Edit Technical Strategy</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleClone(offer)}><Copy className="mr-2 h-4 w-4"/>Clone Strategy</DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive font-bold" onClick={() => offer.id && deleteDoc(doc(firestore!, 'bundles', offer.id))}>Archive Monetization</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive font-bold" onClick={() => handleDelete(offer.id!)}><Trash2 className="mr-2 h-4 w-4"/>Archive Strategy</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -245,10 +231,10 @@ export default function BundlesPage() {
       </Card>
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-5xl">
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black">{editingBundle ? 'Update Monetization Strategy' : 'Configure New Offer'}</DialogTitle>
-            <DialogDescription className="font-medium">Define exhaustive product logic, dynamic pricing deltas, and real-time decision criteria.</DialogDescription>
+            <DialogTitle className="text-2xl font-black">{editingBundle ? 'Update Monetization strategy' : 'Configure New Offer Strategy'}</DialogTitle>
+            <DialogDescription className="font-medium">Define simple product composition, dynamic price adjustments, and target cohorts.</DialogDescription>
           </DialogHeader>
           <BundleForm bundle={editingBundle} onSubmit={handleFormSubmit} onCancel={() => setIsDialogOpen(false)} />
         </DialogContent>
