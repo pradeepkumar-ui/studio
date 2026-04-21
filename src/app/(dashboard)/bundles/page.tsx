@@ -104,7 +104,7 @@ export default function BundlesPage() {
         toast({ title: 'Offer Updated', description: `Retailing item "${data.name}" updated successfully.` });
       } else {
         await addDoc(collection(firestore, 'bundles'), { ...bundleData, createdAt: serverTimestamp(), source: 'Manual' });
-        toast({ title: 'Offer Created', description: `New retailing item "${data.name}" added to studio.` });
+        toast({ title: 'Offer Created', description: `New retailing item "${data.name}" added to registry.` });
       }
     } catch (e: any) {
         toast({ variant: "destructive", title: "Error", description: e.message });
@@ -145,7 +145,7 @@ export default function BundlesPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight">Offers & Bundles Studio</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Offers & Dynamic pricing</h1>
           <p className="text-muted-foreground">
             Manage single-ancillary offers or multi-service retailing bundles targeted by customer cohorts.
           </p>

@@ -127,7 +127,7 @@ export default function CohortsPage() {
         <div className="flex items-center justify-between">
           <div className="flex flex-col gap-2">
             <h1 className="text-3xl font-bold tracking-tight text-primary">Passenger Segments (Cohorts)</h1>
-            <p className="text-muted-foreground">Define logical segments for ecosystem targeting. Commercial positioning (pricing/discounts) is managed in the Offers & Bundles Studio.</p>
+            <p className="text-muted-foreground">Define logical segments for ecosystem targeting. Commercial positioning (pricing/discounts) is managed in the Offers & Dynamic pricing.</p>
           </div>
           <Button onClick={() => handleOpenDialog()} className="font-bold">
             <PlusCircle className="mr-2 h-4 w-4" />
@@ -158,7 +158,7 @@ export default function CohortsPage() {
           <CardHeader className="bg-muted/10">
             <CardTitle>Cohort Registry</CardTitle>
             <CardDescription>
-              Orchestrate targeting criteria across Geo, Channel, and PSS contexts. Pricing logic for these segments is applied in the Studio.
+              Orchestrate targeting criteria across Geo, Channel, and PSS contexts. Pricing logic for these segments is applied in the Dynamic Pricing studio.
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
@@ -241,7 +241,7 @@ export default function CohortsPage() {
         <DialogContent className="max-w-5xl">
           <DialogHeader>
             <DialogTitle>Configure Passenger Segment</DialogTitle>
-            <DialogDescription>Define logical targeting rules. Commercial positioning (pricing/discounts) is handled in the Offers & Bundles Studio.</DialogDescription>
+            <DialogDescription>Define logical targeting rules. Commercial positioning (pricing/discounts) is handled in the Offers & Dynamic pricing.</DialogDescription>
           </DialogHeader>
           <CohortForm
             cohort={editingCohort}
