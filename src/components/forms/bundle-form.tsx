@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -104,16 +103,29 @@ export function BundleForm({ bundle, onSubmit, onCancel }: { bundle: any | null,
 
   const form = useForm<Bundle>({
     resolver: zodResolver(bundleSchema),
-    defaultValues: bundle || {
-      name: '',
-      description: '',
-      offerType: 'Bundle',
-      status: 'Draft',
-      priority: 50,
-      validity: { from: new Date(), to: addDays(new Date(), 30) },
-      components: [{ value: '', isMandatory: true }],
-      pricing: { strategy: 'Static', basePrice: 0, currency: 'USD', adjustmentType: 'Percentage', adjustmentValue: 0 },
-      targeting: { cohortIds: [], conflictPriority: 1, channelExclusions: [] },
+    defaultValues: {
+      name: bundle?.name || '',
+      description: bundle?.description || '',
+      offerType: bundle?.offerType || 'Bundle',
+      status: bundle?.status || 'Draft',
+      priority: bundle?.priority || 50,
+      validity: { 
+          from: bundle?.validity?.from instanceof Date ? bundle.validity.from : (bundle?.validity?.from?.toDate ? bundle.validity.from.toDate() : new Date()), 
+          to: bundle?.validity?.to instanceof Date ? bundle.validity.to : (bundle?.validity?.to?.toDate ? bundle.validity.to.toDate() : addDays(new Date(), 30)) 
+      },
+      components: bundle?.components || [{ value: '', isMandatory: true }],
+      pricing: { 
+          strategy: bundle?.pricing?.strategy || 'Static', 
+          basePrice: bundle?.pricing?.basePrice || 0, 
+          currency: bundle?.pricing?.currency || 'USD', 
+          adjustmentType: bundle?.pricing?.adjustmentType || 'Percentage', 
+          adjustmentValue: bundle?.pricing?.adjustmentValue || 0 
+      },
+      targeting: { 
+          cohortIds: bundle?.targeting?.cohortIds || [], 
+          conflictPriority: bundle?.targeting?.conflictPriority || 1, 
+          channelExclusions: bundle?.targeting?.channelExclusions || [] 
+      },
     },
   });
 
@@ -160,9 +172,24 @@ export function BundleForm({ bundle, onSubmit, onCancel }: { bundle: any | null,
                         <FormLabel>Active Monetization Window</FormLabel>
                         <Popover>
                             <PopoverTrigger asChild>
-                                <FormControl><Button variant="outline" className={cn('w-full pl-3 text-left font-normal', !field.value?.from && 'text-muted-foreground')}><CalendarIcon className="mr-2 h-4 w-4" />{field.value?.from ? (field.value.to ? <>{format(field.value.from, "LLL dd, y")} - {format(field.value.to, "LLL dd, y")}</> : format(field.value.from, "LLL dd, y")) : <span>Pick dates</span>}</Button></FormControl>
+                                <FormControl>
+                                    <Button variant="outline" className={cn('w-full pl-3 text-left font-normal', !field.value?.from && 'text-muted-foreground')}>
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {field.value?.from ? (
+                                            field.value.to ? <>{format(field.value.from, "LLL dd, y")} - {format(field.value.to, "LLL dd, y")}</> : format(field.value.from, "LLL dd, y")
+                                        ) : <span>Pick dates</span>}
+                                    </Button>
+                                </FormControl>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start"><Calendar initialFocus mode="range" selected={{ from: field.value.from, to: field.value.to }} onSelect={(r: any) => r && field.onChange(r)} numberOfMonths={2} /></PopoverContent>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar 
+                                    initialFocus 
+                                    mode="range" 
+                                    selected={field.value ? { from: field.value.from, to: field.value.to } : undefined} 
+                                    onSelect={(r: any) => r && field.onChange(r)} 
+                                    numberOfMonths={2} 
+                                />
+                            </PopoverContent>
                         </Popover>
                     </FormItem>
                 )} />
@@ -191,8 +218,8 @@ export function BundleForm({ bundle, onSubmit, onCancel }: { bundle: any | null,
                                     <Select onValueChange={field.onChange} value={field.value}>
                                         <FormControl><SelectTrigger className="h-9"><SelectValue placeholder="Select SKU..." /></SelectTrigger></FormControl>
                                         <SelectContent>
-                                            <SelectGroup><SelectLabel>Carrier Ancillaries</SelectLabel>{(airlineAncillaries || []).map(p => (<SelectItem key={p.id} value={p.id!}>{p.name} (${p.defaultPrice})</SelectItem>))}</SelectGroup>
-                                            <SelectGroup><SelectLabel>Hub Services</SelectLabel>{(airportServices || []).map(p => (<SelectItem key={p.id} value={p.id!}>{p.name} (${p.price})</SelectItem>))}</SelectGroup>
+                                            <SelectGroup><SelectLabel>Carrier Ancillaries</SelectLabel>{(airlineAncillaries || []).map(p => (<SelectItem key={p.id} value={p.id!}>{p.name} (${p.defaultPrice || 0})</SelectItem>))}</SelectGroup>
+                                            <SelectGroup><SelectLabel>Hub Services</SelectLabel>{(airportServices || []).map(p => (<SelectItem key={p.id} value={p.id!}>{p.name} (${p.price || 0})</SelectItem>))}</SelectGroup>
                                         </SelectContent>
                                     </Select>
                                 </FormItem>
@@ -283,7 +310,7 @@ export function BundleForm({ bundle, onSubmit, onCancel }: { bundle: any | null,
                   <FormLabel>Linked Retailing Cohorts</FormLabel>
                   <FormControl>
                     <MultiSelect 
-                      options={(cohorts || []).map(c => ({ value: c.cohortId, label: c.name }))} 
+                      options={(cohorts || []).map((c: any) => ({ value: c.cohortId, label: c.name }))} 
                       selected={field.value || []} 
                       onChange={field.onChange} 
                       placeholder="Search segments..." 

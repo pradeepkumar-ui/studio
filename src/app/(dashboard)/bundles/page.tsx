@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -41,10 +40,33 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, serverTimestamp, deleteDoc, Timestamp } from 'firebase/firestore';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { addDays } from 'date-fns';
 
 const mockOffers: any[] = [
-    { id: 'OFR-001', name: 'Executive Transit Pack', offerType: 'Bundle', status: 'Published', version: 1, priority: 85, components: [{ value: 'LOUA', isMandatory: true }, { value: 'PBDG', isMandatory: false }], pricing: { strategy: 'Demand', basePrice: 85, currentPrice: 72 }, targeting: { cohorts: ['LHR_BIZ_WAIT'] } },
-    { id: 'OFR-002', name: 'Priority Boarding Solo', offerType: 'Single', status: 'Published', version: 2, priority: 40, components: [{ value: 'PBDG', isMandatory: true }], pricing: { strategy: 'Static', basePrice: 15, currentPrice: 15 }, targeting: { cohorts: ['All'] } },
+    { 
+        id: 'OFR-001', 
+        name: 'Executive Transit Pack', 
+        offerType: 'Bundle', 
+        status: 'Published', 
+        version: 1, 
+        priority: 85, 
+        validity: { from: new Date(), to: addDays(new Date(), 30) },
+        components: [{ value: 'LOUA', isMandatory: true }, { value: 'PBDG', isMandatory: false }], 
+        pricing: { strategy: 'Demand', basePrice: 85, currentPrice: 72 }, 
+        targeting: { cohortIds: ['LHR_BIZ_WAIT'] } 
+    },
+    { 
+        id: 'OFR-002', 
+        name: 'Priority Boarding Solo', 
+        offerType: 'Single', 
+        status: 'Published', 
+        version: 2, 
+        priority: 40, 
+        validity: { from: new Date(), to: addDays(new Date(), 60) },
+        components: [{ value: 'PBDG', isMandatory: true }], 
+        pricing: { strategy: 'Static', basePrice: 15, currentPrice: 15 }, 
+        targeting: { cohortIds: ['All'] } 
+    },
 ];
 
 export default function BundlesPage() {
