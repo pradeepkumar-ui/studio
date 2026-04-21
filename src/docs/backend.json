@@ -18,13 +18,51 @@
             "channels": { "type": "array", "items": { "type": "string" } },
             "regions": { "type": "array", "items": { "type": "string" } },
             "countries": { "type": "array", "items": { "type": "string" } },
-            "pos": { "type": "array", "items": { "type": "string" } },
-            "sectors": { "type": "array", "items": { "type": "string" } }
+            "pos": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "bundle": {
+      "title": "Retailing Offer",
+      "description": "Core monetization entity combining products, dynamic pricing, and cohort targeting.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "offerType": { "type": "string", "enum": ["Single", "Bundle", "Upgrade", "Conditional"] },
+        "version": { "type": "number" },
+        "status": { "type": "string", "enum": ["Draft", "Published", "Archived"] },
+        "priority": { "type": "number" },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productId": { "type": "string" },
+              "isMandatory": { "type": "boolean" },
+              "substitutionId": { "type": "string" }
+            }
           }
         },
-        "airlineRules": { "type": "object" },
-        "airportRules": { "type": "object" },
-        "outputs": { "type": "object" }
+        "pricing": {
+          "type": "object",
+          "properties": {
+            "strategy": { "type": "string", "enum": ["Static", "Dynamic", "Demand", "Time-based"] },
+            "basePrice": { "type": "number" },
+            "floorPrice": { "type": "number" },
+            "ceilingPrice": { "type": "number" },
+            "adjustmentType": { "type": "string", "enum": ["Percentage", "Fixed", "Multiplier"] },
+            "adjustmentValue": { "type": "number" }
+          }
+        },
+        "targeting": {
+          "type": "object",
+          "properties": {
+            "cohortIds": { "type": "array", "items": { "type": "string" } },
+            "conflictPriority": { "type": "number" }
+          }
+        }
       }
     },
     "airlineAncillary": {
@@ -37,8 +75,7 @@
         "category": { "type": "string" },
         "pssCode": { "type": "string" },
         "defaultPrice": { "type": "number" },
-        "currency": { "type": "string" },
-        "status": { "type": "string" }
+        "currency": { "type": "string" }
       }
     },
     "airportAncillary": {
@@ -50,57 +87,18 @@
         "providerId": { "type": "string" },
         "name": { "type": "string" },
         "sku": { "type": "string" },
-        "price": { "type": "number" },
-        "status": { "type": "string" }
-      }
-    },
-    "airlineAncillaryInventory": {
-      "title": "Airline Ancillary Inventory",
-      "description": "Detailed stock and capacity control for flight-based ancillaries.",
-      "type": "object",
-      "properties": {
-        "ancillaryId": { "type": "string" },
-        "flightNumber": { "type": "string" },
-        "available": { "type": "number" },
-        "status": { "type": "string" }
-      }
-    },
-    "airportAncillaryInventory": {
-      "title": "Airport Ancillary Inventory",
-      "description": "Detailed capacity control for airport ecosystem services.",
-      "type": "object",
-      "properties": {
-        "ancillaryId": { "type": "string" },
-        "airportCode": { "type": "string" },
-        "available": { "type": "number" },
-        "status": { "type": "string" }
-      }
-    },
-    "order": {
-      "title": "Order",
-      "description": "Represents a customer order containing flights, ancillaries, and airport services.",
-      "type": "object",
-      "properties": {
-        "customer": { "type": "string" },
-        "email": { "type": "string" },
-        "status": { "type": "string" },
-        "amount": { "type": "number" },
-        "source": { "type": "string" }
+        "price": { "type": "number" }
       }
     }
   },
   "auth": { "providers": [] },
   "firestore": {
     "/airports/{airportId}": { "schema": { "$ref": "#/entities/airport" }, "description": "Onboarded airports." },
-    "/partners/{partnerId}": { "schema": { "$ref": "#/entities/partner" }, "description": "Airport retail and service partners." },
     "/airlines/{airlineId}": { "schema": { "$ref": "#/entities/airline" }, "description": "Participating airlines." },
-    "/orders/{orderId}": { "schema": { "$ref": "#/entities/order" }, "description": "Orders including airport touchpoint metadata." },
+    "/orders/{orderId}": { "schema": { "$ref": "#/entities/order" }, "description": "Orders including touchpoint metadata." },
     "/cohorts/{cohortId}": { "schema": { "$ref": "#/entities/cohort" }, "description": "Advanced ecosystem targeting cohorts." },
-    "/bundles/{bundleId}": { "schema": { "$ref": "#/entities/bundle" }, "description": "Retailing offers and bundles." },
-    "/pricingRules/{ruleId}": { "schema": { "$ref": "#/entities/pricingRule" }, "description": "Dynamic pricing and continuous pricing policies." },
-    "/airlineInventory/{stockId}": { "schema": { "$ref": "#/entities/airlineAncillaryInventory" }, "description": "Carrier-specific ancillary stock." },
-    "/airportInventory/{stockId}": { "schema": { "$ref": "#/entities/airportAncillaryInventory" }, "description": "Airport ecosystem ancillary stock." },
-    "/airlineAncillaries/{ancillaryId}": { "schema": { "$ref": "#/entities/airlineAncillary" }, "description": "Exhaustive airline portfolio skus." },
-    "/airportServices/{ancillaryId}": { "schema": { "$ref": "#/entities/airportAncillary" }, "description": "Exhaustive airport ecosystem skus." }
+    "/bundles/{bundleId}": { "schema": { "$ref": "#/entities/bundle" }, "description": "Core monetization engine offers." },
+    "/airlineAncillaries/{ancillaryId}": { "schema": { "$ref": "#/entities/airlineAncillary" }, "description": "Airline skus." },
+    "/airportServices/{ancillaryId}": { "schema": { "$ref": "#/entities/airportAncillary" }, "description": "Airport ecosystem skus." }
   }
 }
