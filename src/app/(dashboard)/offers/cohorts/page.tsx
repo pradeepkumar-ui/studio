@@ -33,7 +33,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, PlusCircle, Loader2, Target, BrainCircuit, Activity, Zap, ShieldCheck } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2, Target, BrainCircuit, Activity, Zap, ShieldCheck, Globe, Laptop } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { CohortForm, type Cohort } from '@/components/forms/cohort-form';
@@ -52,23 +52,24 @@ const mockCohorts: Cohort[] = [
         priority: 85,
         combination_logic: 'AND',
         override_flag: true,
-        airlineRules: { cabinClasses: ['Business'], passengerTypes: ['ADT'], loyaltyTiers: ['Gold', 'Platinum'], bookingChannels: [], tripTypes: [], fareBrands: [] },
+        airlineRules: { carrierCodes: ['GAB'], cabinClasses: ['Business'], loyaltyTiers: ['Gold', 'Platinum'] },
         airportRules: { airportCodes: ['LHR'], terminals: ['T5'], minWaitTime: 20, locationContext: 'Departure' },
-        outputs: { discount: 10, rankingBoost: 20, eligibleProducts: [], bundleIds: [] }
+        ecosystemScope: { channels: ['CUSS', 'CUTE', 'App'], regions: ['EU'], pos: ['LON'] },
+        outputs: { discount: 10, rankingBoost: 20 }
     },
     { 
         id: 'COH-002', 
-        name: 'Premium Upsell Target', 
-        cohortId: 'PREM_UPSELL_ML', 
+        name: 'India POS Web Promo', 
+        cohortId: 'IN_WEB_PROMO', 
         status: 'Active', 
-        description: 'Predictive cohort for passengers with high propensity to upgrade.', 
-        type: 'predictive',
-        evaluation_mode: 'cached',
-        priority: 90,
+        description: 'Web direct search from India Point of Sale.', 
+        type: 'static',
+        evaluation_mode: 'real-time',
+        priority: 50,
         combination_logic: 'AND',
         override_flag: false,
-        personalization: { propensityToBuyScore: 75, isUpsellCandidate: true, priceSensitivityScore: 30 },
-        outputs: { rankingBoost: 50, markup: 5, eligibleProducts: [], bundleIds: [] }
+        ecosystemScope: { channels: ['Web'], regions: ['APAC'], countries: ['IN'], pos: ['BOM', 'DEL'] },
+        outputs: { discount: 15, rankingBoost: 10 }
     },
 ];
 
@@ -129,7 +130,7 @@ export default function CohortsPage() {
         <div className="flex items-center justify-between">
           <div className="flex flex-col gap-2">
             <h1 className="text-3xl font-bold tracking-tight">Ecosystem Retailing Cohorts</h1>
-            <p className="text-muted-foreground">Orchestrate personalized retailing sets using airline PNRs, airport real-time signals, and ML propensity scores.</p>
+            <p className="text-muted-foreground">Orchestrate segments based on Airlines, Airports, POS, Regions, and SITA Hardware Channels.</p>
           </div>
           <Button onClick={() => handleOpenDialog()} className="font-bold">
             <PlusCircle className="mr-2 h-4 w-4" />
@@ -143,12 +144,12 @@ export default function CohortsPage() {
                 <p className="text-2xl font-black mt-2">{displayCohorts.length}</p>
             </Card>
             <Card className="p-6">
-                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2"><Activity className="w-3 h-3 text-emerald-600" /> Real-time Nodes</p>
-                <p className="text-2xl font-black mt-2">{displayCohorts.filter(c => c.type === 'dynamic').length}</p>
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2"><Globe className="w-3 h-3 text-emerald-600" /> Multi-Region</p>
+                <p className="text-2xl font-black mt-2">{displayCohorts.filter(c => (c.ecosystemScope?.regions?.length || 0) > 0).length}</p>
             </Card>
             <Card className="p-6">
-                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2"><BrainCircuit className="w-3 h-3 text-indigo-600" /> Predictive ML</p>
-                <p className="text-2xl font-black mt-2">{displayCohorts.filter(c => c.type === 'predictive').length}</p>
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2"><Laptop className="w-3 h-3 text-indigo-600" /> SITA Touchpoints</p>
+                <p className="text-2xl font-black mt-2">{displayCohorts.filter(c => c.ecosystemScope?.channels?.some(ch => ['CUSS', 'CUTE', 'CUPPS'].includes(ch))).length}</p>
             </Card>
              <Card className="p-6 border-indigo-100 bg-indigo-50/20">
                 <p className="text-[10px] font-black uppercase text-indigo-700 tracking-widest flex items-center gap-2"><ShieldCheck className="w-3 h-3 text-indigo-600" /> Evaluation Sync</p>
@@ -160,7 +161,7 @@ export default function CohortsPage() {
           <CardHeader className="bg-muted/10">
             <CardTitle>Cohort Management Registry</CardTitle>
             <CardDescription>
-              Manage exhaustive targeting rules across airline and airport stakeholder dimensions.
+              Manage targeting across Geo (POS, Country), Channel (CUSS/CUTE), and Sector dimensions.
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
@@ -174,10 +175,10 @@ export default function CohortsPage() {
                 <TableHeader className="bg-muted/30">
                   <TableRow>
                     <TableHead className="text-[10px] uppercase font-black">Cohort Identity</TableHead>
-                    <TableHead className="text-[10px] uppercase font-black">Type / Evaluation</TableHead>
+                    <TableHead className="text-[10px] uppercase font-black">Geographic / POS Scope</TableHead>
+                    <TableHead className="text-[10px] uppercase font-black">SITA Channels</TableHead>
                     <TableHead className="text-[10px] uppercase font-black text-center">Priority</TableHead>
-                    <TableHead className="text-[10px] uppercase font-black">Actions & Eligibility</TableHead>
-                    <TableHead className="text-[10px] uppercase font-black">Status</TableHead>
+                    <TableHead className="text-[10px] uppercase font-black">Dynamic Adjustment</TableHead>
                     <TableHead className="sr-only">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -188,16 +189,21 @@ export default function CohortsPage() {
                         <div className="flex flex-col gap-0.5">
                             <span className="font-bold text-sm">{cohort.name}</span>
                             <span className="text-[10px] font-mono text-muted-foreground uppercase">{cohort.cohortId}</span>
-                            <p className="text-[10px] text-muted-foreground max-w-[200px] truncate">{cohort.description}</p>
+                            <div className="flex items-center gap-1.5 mt-1">{getTypeIcon(cohort.type)} <span className="text-[9px] uppercase font-black text-muted-foreground">{cohort.type}</span></div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                             <div className="p-1.5 bg-muted rounded-md">{getTypeIcon(cohort.type)}</div>
-                             <div className="flex flex-col">
-                                <span className="text-xs font-bold capitalize">{cohort.type}</span>
-                                <span className="text-[9px] text-muted-foreground uppercase tracking-widest">{cohort.evaluation_mode}</span>
-                             </div>
+                        <div className="flex flex-col gap-1">
+                             <div className="text-xs font-bold text-primary">{cohort.ecosystemScope?.regions?.join(', ') || 'Global'}</div>
+                             <div className="text-[10px] text-muted-foreground">POS: {cohort.ecosystemScope?.pos?.join(', ') || 'All'}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                            {cohort.ecosystemScope?.channels?.map(ch => (
+                                <Badge key={ch} variant="secondary" className="text-[9px] px-1.5">{ch}</Badge>
+                            ))}
+                            {(!cohort.ecosystemScope?.channels || cohort.ecosystemScope?.channels.length === 0) && <span className="text-xs text-muted-foreground">All Channels</span>}
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
@@ -206,17 +212,12 @@ export default function CohortsPage() {
                       <TableCell>
                          <div className="flex flex-col gap-1">
                              <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-600">
-                                <Zap className="w-3 h-3" /> Lift: {cohort.outputs?.rankingBoost || 0} boost
+                                <Zap className="w-3 h-3" /> Lift: {cohort.outputs?.rankingBoost || 0}
                              </div>
                              <div className="flex items-center gap-1 text-[10px] font-bold text-primary">
-                                <Target className="w-3 h-3" /> Discount: {cohort.outputs?.discount || 0}%
+                                <Target className="w-3 h-3" /> Disc: {cohort.outputs?.discount || 0}%
                              </div>
                          </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={cohort.status === 'Active' ? 'default' : 'outline'} className="text-[10px] uppercase">
-                          {cohort.status}
-                        </Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
@@ -227,7 +228,6 @@ export default function CohortsPage() {
                             <DropdownMenuLabel>Cohort Operations</DropdownMenuLabel>
                             <DropdownMenuItem onClick={() => handleOpenDialog(cohort)}>Modify Definitions</DropdownMenuItem>
                             <DropdownMenuItem>Simulate Audience Hit-rate</DropdownMenuItem>
-                            <DropdownMenuItem>View Retention Trends</DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-destructive font-bold" onClick={() => handleDelete(cohort.id!)}>Decommission Segment</DropdownMenuItem>
                           </DropdownMenuContent>
@@ -238,7 +238,6 @@ export default function CohortsPage() {
                 </TableBody>
               </Table>
             )}
-            {error && <p className="text-destructive">Sync Error: {error.message}</p>}
           </CardContent>
         </Card>
       </div>
@@ -246,8 +245,8 @@ export default function CohortsPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-5xl">
           <DialogHeader>
-            <DialogTitle>Configure Advanced Retailing Segment</DialogTitle>
-            <DialogDescription>Define precise ecosystem targeting rules across Airline Host, Airport Node, and ML dimensions.</DialogDescription>
+            <DialogTitle>Configure Ecosystem Retailing Segment</DialogTitle>
+            <DialogDescription>Define precision targeting across Airlines, Airport Nodes, Geographic POS, and SITA Hardware Channels.</DialogDescription>
           </DialogHeader>
           <CohortForm
             cohort={editingCohort}

@@ -3,7 +3,7 @@
   "entities": {
     "cohort": {
       "title": "Ecosystem Retailing Cohort",
-      "description": "Exhaustive segment definition for personalized retailing orchestration.",
+      "description": "Exhaustive segment definition for personalized retailing orchestration including geo-spatial and channel targeting.",
       "type": "object",
       "properties": {
         "cohort_id": { "type": "string" },
@@ -11,35 +11,20 @@
         "description": { "type": "string" },
         "type": { "type": "string", "enum": ["static", "dynamic", "predictive"] },
         "status": { "type": "string", "enum": ["Active", "Inactive"] },
-        "priority": { "type": "number", "description": "Ranking when multiple cohorts match." },
-        "validity": {
+        "priority": { "type": "number" },
+        "ecosystemScope": {
           "type": "object",
           "properties": {
-            "effective_from": { "type": "string", "format": "date-time" },
-            "effective_to": { "type": "string", "format": "date-time" }
+            "channels": { "type": "array", "items": { "type": "string" } },
+            "regions": { "type": "array", "items": { "type": "string" } },
+            "countries": { "type": "array", "items": { "type": "string" } },
+            "pos": { "type": "array", "items": { "type": "string" } },
+            "sectors": { "type": "array", "items": { "type": "string" } }
           }
         },
-        "evaluation_mode": { "type": "string", "enum": ["real-time", "cached", "batch"] },
-        "combination_logic": { "type": "string", "enum": ["AND", "OR"] },
-        "rules": {
-          "type": "object",
-          "properties": {
-            "airline": { "type": "object", "description": "Carrier-specific PNR and profile signals." },
-            "airport": { "type": "object", "description": "Real-time location and node signals." },
-            "predictive": { "type": "object", "description": "ML propensity and sensitivity scores." }
-          }
-        },
-        "outputs": {
-          "type": "object",
-          "properties": {
-            "eligible_products": { "type": "array", "items": { "type": "string" } },
-            "bundle_ids": { "type": "array", "items": { "type": "string" } },
-            "pricing_strategy": { "type": "string" },
-            "discount_percentage": { "type": "number" },
-            "ranking_boost": { "type": "number" },
-            "guardrails": { "type": "object" }
-          }
-        }
+        "airlineRules": { "type": "object" },
+        "airportRules": { "type": "object" },
+        "outputs": { "type": "object" }
       }
     },
     "airlineAncillary": {
@@ -50,14 +35,10 @@
         "airlineId": { "type": "string" },
         "name": { "type": "string" },
         "category": { "type": "string" },
-        "pssCode": { "type": "string", "description": "Host PSS SSR identifier." },
+        "pssCode": { "type": "string" },
         "defaultPrice": { "type": "number" },
         "currency": { "type": "string" },
-        "cabinEligibility": { "type": "array", "items": { "type": "string" } },
-        "aircraftEligibility": { "type": "array", "items": { "type": "string" }, "description": "Specific fleet types compatible with this service." },
-        "refundPolicy": { "type": "string" },
-        "advancePurchaseDays": { "type": "number" },
-        "status": { "type": "string", "enum": ["Active", "Disabled", "Testing"] }
+        "status": { "type": "string" }
       }
     },
     "airportAncillary": {
@@ -69,15 +50,8 @@
         "providerId": { "type": "string" },
         "name": { "type": "string" },
         "sku": { "type": "string" },
-        "category": { "type": "string" },
-        "terminal": { "type": "string" },
-        "gate": { "type": "string" },
         "price": { "type": "number" },
-        "currency": { "type": "string" },
-        "stockType": { "type": "string", "enum": ["Digital", "Physical"] },
-        "commissionRate": { "type": "number", "description": "SITA Platform commission percentage." },
-        "operatingHours": { "type": "string" },
-        "status": { "type": "string", "enum": ["Active", "Draft"] }
+        "status": { "type": "string" }
       }
     },
     "airlineAncillaryInventory": {
@@ -87,47 +61,19 @@
       "properties": {
         "ancillaryId": { "type": "string" },
         "flightNumber": { "type": "string" },
-        "segment": { "type": "string" },
-        "aircraftType": { "type": "string" },
-        "totalCapacity": { "type": "number" },
         "available": { "type": "number" },
-        "reserved": { "type": "number" },
-        "quotas": {
-          "type": "object",
-          "properties": {
-            "Direct": { "type": "number" },
-            "OTA": { "type": "number" },
-            "GDS": { "type": "number" }
-          }
-        },
-        "status": { "type": "string", "enum": ["Open", "Waitlist", "Closed"] }
+        "status": { "type": "string" }
       }
     },
     "airportAncillaryInventory": {
       "title": "Airport Ancillary Inventory",
-      "description": "Detailed capacity control for airport ecosystem services including time-slots and resources.",
+      "description": "Detailed capacity control for airport ecosystem services.",
       "type": "object",
       "properties": {
         "ancillaryId": { "type": "string" },
         "airportCode": { "type": "string" },
-        "terminal": { "type": "string" },
-        "zone": { "type": "string" },
-        "timeSlotBased": { "type": "boolean" },
-        "totalCapacity": { "type": "number" },
         "available": { "type": "number" },
-        "bufferLimit": { "type": "number" },
-        "resourceType": { "type": "string", "enum": ["Seat", "Staff", "Vehicle", "Bay"] },
-        "fulfillmentMode": { "type": "string", "enum": ["Instant", "Request"] },
-        "quotas": {
-          "type": "object",
-          "properties": {
-            "CUSS": { "type": "number" },
-            "CUTE": { "type": "number" },
-            "Mobile": { "type": "number" }
-          }
-        },
-        "syncStatus": { "type": "string" },
-        "operationalMode": { "type": "string", "enum": ["NORMAL", "CONGESTION", "DISRUPTION"] }
+        "status": { "type": "string" }
       }
     },
     "order": {
@@ -136,33 +82,10 @@
       "type": "object",
       "properties": {
         "customer": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "status": { "type": "string", "enum": ["Pending", "Fulfilled", "Canceled", "Partially Fulfilled"] },
-        "date": { "type": "string", "format": "date" },
+        "email": { "type": "string" },
+        "status": { "type": "string" },
         "amount": { "type": "number" },
-        "currency": { "type": "string" },
-        "source": { "type": "string", "enum": ["Web", "Mobile", "CUSS", "CUTE", "CUPPS"], "description": "The airport touchpoint that generated the order." },
-        "airportCode": { "type": "string", "description": "IATA code of the airport where the order was fulfilled." },
-        "payment": {
-          "type": "object",
-          "properties": {
-            "method": { "type": "string" },
-            "status": { "type": "string" }
-          }
-        },
-        "services": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": { "type": "string" },
-              "type": { "type": "string", "enum": ["Flight", "Baggage", "Seat", "Lounge", "Parking", "FastTrack", "Retail"] },
-              "provider": { "type": "string", "description": "The airline or airport vendor providing the service." },
-              "status": { "type": "string" },
-              "price": { "type": "number" }
-            }
-          }
-        }
+        "source": { "type": "string" }
       }
     }
   },

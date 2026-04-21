@@ -26,7 +26,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '../ui/separator';
 import { MultiSelect } from '../ui/multi-select';
 import { Checkbox } from '../ui/checkbox';
-import { Plane, Building2, User, Zap, ShieldCheck, Target, Activity, Settings2, Database, BrainCircuit } from 'lucide-react';
+import { Plane, Building2, User, Zap, ShieldCheck, Target, Activity, Settings2, Database, BrainCircuit, Globe, Laptop, MapPin } from 'lucide-react';
 import { Slider } from '../ui/slider';
 
 const cohortSchema = z.object({
@@ -41,47 +41,47 @@ const cohortSchema = z.object({
   combination_logic: z.enum(['AND', 'OR']).default('AND'),
   override_flag: z.boolean().default(false),
 
-  // 2. Airline Parameters
+  // Airline Parameters
   airlineRules: z.object({
+    carrierCodes: z.array(z.string()).default([]),
     passengerTypes: z.array(z.string()).default([]),
     loyaltyTiers: z.array(z.string()).default([]),
     corporateFlag: z.boolean().default(false),
-    bookingChannels: z.array(z.string()).default([]),
-    tripTypes: z.array(z.string()).default([]),
-    fareBrands: z.array(z.string()).default([]),
     cabinClasses: z.array(z.string()).default([]),
     isInternational: z.boolean().optional(),
     isLongHaul: z.boolean().optional(),
-    seatAssigned: z.boolean().optional(),
   }).optional(),
 
-  // 4. Airport Parameters
+  // Airport Parameters
   airportRules: z.object({
     airportCodes: z.array(z.string()).default([]),
     terminals: z.array(z.string()).default([]),
-    checkedIn: z.boolean().optional(),
-    bagsDropped: z.boolean().optional(),
-    minWaitTime: z.coerce.number().optional(),
     locationContext: z.enum(['Anywhere', 'Departure', 'Arrival', 'Lounge', 'Gate']).default('Anywhere'),
+    minWaitTime: z.coerce.number().optional(),
   }).optional(),
 
-  // 3 & 5. Output Actions
+  // Geo, Channel & Sector
+  ecosystemScope: z.object({
+    channels: z.array(z.string()).default([]),
+    regions: z.array(z.string()).default([]),
+    countries: z.array(z.string()).default([]),
+    pos: z.array(z.string()).default([]), // Point of Sale
+    sectors: z.array(z.string()).default([]), // O&D or specific clusters
+    tripTypes: z.array(z.string()).default([]),
+  }).optional(),
+
+  // Output Actions
   outputs: z.object({
     eligibleProducts: z.array(z.string()).default([]),
     bundleIds: z.array(z.string()).default([]),
     discount: z.coerce.number().min(0).max(100).default(0),
-    markup: z.coerce.number().min(0).default(0),
     rankingBoost: z.coerce.number().default(0),
-    messageTemplate: z.string().optional(),
   }).optional(),
 
-  // 6. Personalization Layer
+  // Personalization Layer
   personalization: z.object({
     propensityToBuyScore: z.coerce.number().optional(),
     priceSensitivityScore: z.coerce.number().optional(),
-    isUpsellCandidate: z.boolean().optional(),
-    minPriceFloor: z.coerce.number().optional(),
-    maxPriceCap: z.coerce.number().optional(),
   }).optional(),
 });
 
@@ -95,6 +95,16 @@ interface CohortFormProps {
 
 const tierOptions = [{ value: 'Bronze', label: 'Bronze' }, { value: 'Silver', label: 'Silver' }, { value: 'Gold', label: 'Gold' }, { value: 'Platinum', label: 'Platinum' }];
 const cabinOptions = [{ value: 'Economy', label: 'Economy' }, { value: 'Premium', label: 'Premium' }, { value: 'Business', label: 'Business' }, { value: 'First', label: 'First' }];
+const channelOptions = [
+    { value: 'Web', label: 'Web Direct' }, 
+    { value: 'App', label: 'Mobile App' }, 
+    { value: 'CUSS', label: 'SITA CUSS Kiosk' }, 
+    { value: 'CUTE', label: 'SITA CUTE Agent' },
+    { value: 'CUPPS', label: 'SITA CUPPS' },
+    { value: 'OTA', label: 'OTA' },
+    { value: 'NDC', label: 'NDC API' },
+];
+const regionOptions = [{ value: 'EU', label: 'Europe' }, { value: 'APAC', label: 'Asia-Pacific' }, { value: 'NAM', label: 'North America' }, { value: 'ME', label: 'Middle East' }, { value: 'LATAM', label: 'Latin America' }];
 
 export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
   const form = useForm<Cohort>({
@@ -109,9 +119,10 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
       evaluation_mode: 'real-time',
       combination_logic: 'AND',
       override_flag: false,
-      airlineRules: { passengerTypes: [], loyaltyTiers: [], bookingChannels: [], tripTypes: [], fareBrands: [], cabinClasses: [] },
+      airlineRules: { carrierCodes: [], passengerTypes: [], loyaltyTiers: [], cabinClasses: [] },
       airportRules: { airportCodes: [], terminals: [], locationContext: 'Anywhere' },
-      outputs: { eligibleProducts: [], bundleIds: [], discount: 0, markup: 0, rankingBoost: 0 },
+      ecosystemScope: { channels: [], regions: [], countries: [], pos: [], sectors: [] },
+      outputs: { eligibleProducts: [], bundleIds: [], discount: 0, rankingBoost: 0 },
       personalization: { propensityToBuyScore: 0, priceSensitivityScore: 0 },
     },
   });
@@ -120,71 +131,110 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-muted">
+          <TabsList className="grid w-full grid-cols-6 h-auto p-1 bg-muted">
             <TabsTrigger value="general" className="text-[10px] uppercase font-bold py-2"><Settings2 className="w-3 h-3 mr-1" /> Core</TabsTrigger>
+            <TabsTrigger value="scope" className="text-[10px] uppercase font-bold py-2"><Globe className="w-3 h-3 mr-1" /> Geo & Ch</TabsTrigger>
             <TabsTrigger value="airline" className="text-[10px] uppercase font-bold py-2"><Plane className="w-3 h-3 mr-1" /> Airline</TabsTrigger>
             <TabsTrigger value="airport" className="text-[10px] uppercase font-bold py-2"><Building2 className="w-3 h-3 mr-1" /> Airport</TabsTrigger>
             <TabsTrigger value="outputs" className="text-[10px] uppercase font-bold py-2"><Zap className="w-3 h-3 mr-1" /> Actions</TabsTrigger>
-            <TabsTrigger value="predictive" className="text-[10px] uppercase font-bold py-2"><BrainCircuit className="w-3 h-3 mr-1" /> Personalized</TabsTrigger>
+            <TabsTrigger value="predictive" className="text-[10px] uppercase font-bold py-2"><BrainCircuit className="w-3 h-3 mr-1" /> ML</TabsTrigger>
           </TabsList>
 
-          {/* --- GENERAL SETTINGS --- */}
+          {/* --- CORE SETTINGS --- */}
           <TabsContent value="general" className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <FormField control={form.control} name="name" render={({ field }) => (
-                <FormItem><FormLabel>Master Cohort Name</FormLabel><FormControl><Input placeholder="e.g., LHR Priority Business" {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Cohort Display Name</FormLabel><FormControl><Input placeholder="e.g., LHR High-Wait Business" {...field} /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="cohortId" render={({ field }) => (
-                <FormItem><FormLabel>System ID (Unique)</FormLabel><FormControl><Input placeholder="e.g., LHR_BIZ_PREM" {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Cohort ID (Upper/Alpha)</FormLabel><FormControl><Input placeholder="e.g., LHR_BIZ_LATE" {...field} /></FormControl><FormMessage /></FormItem>
               )} />
             </div>
             <FormField control={form.control} name="description" render={({ field }) => (
-              <FormItem><FormLabel>Functional Description</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+              <FormItem><FormLabel>Logical Description</FormLabel><FormControl><Input placeholder="Define the business intent for this segment..." {...field} /></FormControl></FormItem>
             )} />
             <div className="grid grid-cols-3 gap-4">
               <FormField control={form.control} name="type" render={({ field }) => (
-                <FormItem><FormLabel>Evaluation Type</FormLabel>
+                <FormItem><FormLabel>Segment Type</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                <SelectContent><SelectItem value="static">Static (Rule-based)</SelectItem><SelectItem value="dynamic">Dynamic (Real-time)</SelectItem><SelectItem value="predictive">Predictive (ML)</SelectItem></SelectContent></Select></FormItem>
+                <SelectContent><SelectItem value="static">Static Rules</SelectItem><SelectItem value="dynamic">Dynamic Real-time</SelectItem><SelectItem value="predictive">Predictive (AI)</SelectItem></SelectContent></Select></FormItem>
               )} />
               <FormField control={form.control} name="evaluation_mode" render={({ field }) => (
-                <FormItem><FormLabel>Mode</FormLabel>
+                <FormItem><FormLabel>Evaluation</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                <SelectContent><SelectItem value="real-time">Real-time Evaluate</SelectItem><SelectItem value="cached">Cached Entry</SelectItem><SelectItem value="batch">Batch Pre-process</SelectItem></SelectContent></Select></FormItem>
+                <SelectContent><SelectItem value="real-time">Request-time</SelectItem><SelectItem value="cached">Cache-lookup</SelectItem><SelectItem value="batch">Batch Job</SelectItem></SelectContent></Select></FormItem>
               )} />
                <FormField control={form.control} name="priority" render={({ field }) => (
-                <FormItem><div className="flex justify-between"><FormLabel>Priority Rank</FormLabel><span className="text-xs font-bold">{field.value}</span></div>
+                <FormItem><div className="flex justify-between"><FormLabel>Priority (1-100)</FormLabel><span className="text-xs font-bold text-primary">{field.value}</span></div>
                 <FormControl><Slider min={1} max={100} value={[field.value]} onValueChange={(v) => field.onChange(v[0])} /></FormControl></FormItem>
               )} />
             </div>
+          </TabsContent>
+
+          {/* --- ECOSYSTEM SCOPE (GEO & CHANNEL) --- */}
+          <TabsContent value="scope" className="space-y-6 py-4">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                    <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Laptop className="w-3 h-3"/> Sales Channels</h4>
+                    <FormField control={form.control} name="ecosystemScope.channels" render={({ field }) => (
+                        <FormItem><FormLabel>Authorized Channels</FormLabel>
+                        <MultiSelect options={channelOptions} selected={field.value || []} onChange={field.onChange} placeholder="All SITA Channels" /></FormItem>
+                    )} />
+                </div>
+                <div className="space-y-4">
+                    <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Globe className="w-3 h-3"/> Geography & POS</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField control={form.control} name="ecosystemScope.regions" render={({ field }) => (
+                            <FormItem><FormLabel>Target Regions</FormLabel>
+                            <MultiSelect options={regionOptions} selected={field.value || []} onChange={field.onChange} placeholder="Global" /></FormItem>
+                        )} />
+                         <FormField control={form.control} name="ecosystemScope.countries" render={({ field }) => (
+                            <FormItem><FormLabel>ISO Countries</FormLabel><FormControl><Input placeholder="e.g., US, IN, GB" {...field} /></FormControl></FormItem>
+                        )} />
+                    </div>
+                    <FormField control={form.control} name="ecosystemScope.pos" render={({ field }) => (
+                        <FormItem><FormLabel>Point of Sale (POS) Nodes</FormLabel><FormControl><Input placeholder="e.g., NYC, LON, BOM" {...field} /></FormControl><FormDescription className="text-[10px]">Specific locations where retailing is triggered.</FormDescription></FormItem>
+                    )} />
+                </div>
+             </div>
+             <Separator />
+             <div className="space-y-4">
+                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><MapPin className="w-3 h-3"/> Sector & Route Clusters</h4>
+                <FormField control={form.control} name="ecosystemScope.sectors" render={({ field }) => (
+                    <FormItem><FormLabel>Eligible Sectors / O&D Pairs</FormLabel><FormControl><Input placeholder="e.g., LHR-JFK, SIN-HKG, Domestic_IN" {...field} /></FormControl><FormDescription className="text-[10px]">Target specific routes or logical sector groupings.</FormDescription></FormItem>
+                )} />
+             </div>
           </TabsContent>
 
           {/* --- AIRLINE RULES --- */}
           <TabsContent value="airline" className="space-y-6 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><User className="w-3 h-3"/> Passenger Profile</h4>
+                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><User className="w-3 h-3"/> Profile & Loyalty</h4>
+                <FormField control={form.control} name="airlineRules.carrierCodes" render={({ field }) => (
+                    <FormItem><FormLabel>Airline Filter (ICAO)</FormLabel><FormControl><Input placeholder="e.g., GAB, SBA" {...field} /></FormControl></FormItem>
+                )} />
                 <FormField control={form.control} name="airlineRules.loyaltyTiers" render={({ field }) => (
                   <FormItem><FormLabel>Loyalty Tiers</FormLabel><MultiSelect options={tierOptions} selected={field.value || []} onChange={field.onChange} placeholder="All Tiers" /></FormItem>
                 )} />
                 <FormField control={form.control} name="airlineRules.corporateFlag" render={({ field }) => (
                   <FormItem className="flex items-center gap-3 space-y-0 rounded-md border p-3 bg-muted/20">
                     <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                    <div className="leading-none"><FormLabel>Corporate Traveler Only</FormLabel><FormDescription className="text-[10px]">Identify via B2B/Contract IDs.</FormDescription></div>
+                    <div className="leading-none"><FormLabel>B2B / Corporate Only</FormLabel></div>
                   </FormItem>
                 )} />
               </div>
               <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Database className="w-3 h-3"/> PNR & Itinerary</h4>
+                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Database className="w-3 h-3"/> PNR & Cabin</h4>
                 <FormField control={form.control} name="airlineRules.cabinClasses" render={({ field }) => (
                   <FormItem><FormLabel>Eligible Cabins</FormLabel><MultiSelect options={cabinOptions} selected={field.value || []} onChange={field.onChange} placeholder="All Cabins" /></FormItem>
                 )} />
                 <div className="grid grid-cols-2 gap-4 pt-2">
                   <FormField control={form.control} name="airlineRules.isInternational" render={({ field }) => (
-                    <FormItem className="flex items-center gap-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="text-xs">Intl. Travel</FormLabel></FormItem>
+                    <FormItem className="flex items-center gap-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="text-xs">Intl. Sector</FormLabel></FormItem>
                   )} />
-                   <FormField control={form.control} name="airlineRules.seatAssigned" render={({ field }) => (
-                    <FormItem className="flex items-center gap-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="text-xs">Has Seat Assigned</FormLabel></FormItem>
+                   <FormField control={form.control} name="airlineRules.isLongHaul" render={({ field }) => (
+                    <FormItem className="flex items-center gap-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="text-xs">Long Haul</FormLabel></FormItem>
                   )} />
                 </div>
               </div>
@@ -195,29 +245,21 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
           <TabsContent value="airport" className="space-y-6 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Target className="w-3 h-3"/> Location Context</h4>
+                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Target className="w-3 h-3"/> Location Node</h4>
                 <FormField control={form.control} name="airportRules.locationContext" render={({ field }) => (
-                  <FormItem><FormLabel>Physical Presence</FormLabel>
+                  <FormItem><FormLabel>Journey Stage</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                  <SelectContent><SelectItem value="Anywhere">Anywhere in Ecosystem</SelectItem><SelectItem value="Departure">Departure Concourse</SelectItem><SelectItem value="Arrival">Arriving / Baggage</SelectItem><SelectItem value="Lounge">Inside Partner Lounge</SelectItem><SelectItem value="Gate">At Assigned Gate</SelectItem></SelectContent></Select></FormItem>
+                  <SelectContent><SelectItem value="Anywhere">Anywhere</SelectItem><SelectItem value="Departure">Pre-Departure</SelectItem><SelectItem value="Arrival">On-Arrival</SelectItem><SelectItem value="Lounge">In-Lounge</SelectItem><SelectItem value="Gate">At Gate</SelectItem></SelectContent></Select></FormItem>
                 )} />
                 <FormField control={form.control} name="airportRules.airportCodes" render={({ field }) => (
-                  <FormItem><FormLabel>Airport Nodes</FormLabel><FormControl><Input placeholder="e.g., LHR, JFK" {...field} /></FormControl><FormDescription className="text-[10px]">Comma separated list.</FormDescription></FormItem>
+                  <FormItem><FormLabel>Specific Airport Hubs</FormLabel><FormControl><Input placeholder="e.g., LHR, JFK, DXB" {...field} /></FormControl></FormItem>
                 )} />
               </div>
               <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Activity className="w-3 h-3"/> Real-time State</h4>
+                <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Activity className="w-3 h-3"/> Operational State</h4>
                 <FormField control={form.control} name="airportRules.minWaitTime" render={({ field }) => (
-                  <FormItem><FormLabel>Security Wait &gt; (Mins)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormDescription className="text-[10px]">Trigger if terminal wait exceeds limit.</FormDescription></FormItem>
+                  <FormItem><FormLabel>Security Wait &gt; (Mins)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormDescription className="text-[10px]">Contextual trigger for queue-relief offers.</FormDescription></FormItem>
                 )} />
-                <div className="grid grid-cols-2 gap-4 pt-2">
-                  <FormField control={form.control} name="airportRules.checkedIn" render={({ field }) => (
-                    <FormItem className="flex items-center gap-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="text-xs">Checked-in</FormLabel></FormItem>
-                  )} />
-                   <FormField control={form.control} name="airportRules.bagsDropped" render={({ field }) => (
-                    <FormItem className="flex items-center gap-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="text-xs">Bags Dropped</FormLabel></FormItem>
-                  )} />
-                </div>
               </div>
             </div>
           </TabsContent>
@@ -226,57 +268,46 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
           <TabsContent value="outputs" className="space-y-6 py-4">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Database className="w-3 h-3"/> Retailing Eligibility</h4>
+                  <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><Zap className="w-3 h-3"/> Retailing Actions</h4>
                   <FormField control={form.control} name="outputs.bundleIds" render={({ field }) => (
-                    <FormItem><FormLabel>Force-Include Bundles</FormLabel><FormControl><Input placeholder="e.g., BUN-001, BUN-002" {...field} /></FormControl></FormItem>
+                    <FormItem><FormLabel>Target Bundles / SKUs</FormLabel><FormControl><Input placeholder="e.g., BUN-001, PR-99" {...field} /></FormControl></FormItem>
                   )} />
                 </div>
                 <div className="space-y-4">
-                  <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><ShieldCheck className="w-3 h-3"/> Pricing & Ranking</h4>
+                  <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><ShieldCheck className="w-3 h-3"/> Dynamic Adjustments</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <FormField control={form.control} name="outputs.discount" render={({ field }) => (
-                      <FormItem><FormLabel>Apply Discount (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>
+                      <FormItem><FormLabel>Discount (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>
                     )} />
                     <FormField control={form.control} name="outputs.rankingBoost" render={({ field }) => (
-                      <FormItem><FormLabel>Ranking Boost (Score)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>
+                      <FormItem><FormLabel>Sort Ranking Boost</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>
                     )} />
                   </div>
                 </div>
              </div>
           </TabsContent>
 
-          {/* --- PERSONALIZATION LAYER --- */}
+          {/* --- ML PERSONALIZATION --- */}
           <TabsContent value="predictive" className="space-y-6 py-4">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4 p-4 border rounded-lg bg-indigo-50/50">
-                    <h4 className="text-xs font-black uppercase text-indigo-700 tracking-widest flex items-center gap-2"><BrainCircuit className="w-3 h-3"/> ML Scoring Thresholds</h4>
+             <div className="space-y-4 p-4 border rounded-lg bg-indigo-50/50">
+                <h4 className="text-xs font-black uppercase text-indigo-700 tracking-widest flex items-center gap-2"><BrainCircuit className="w-3 h-3"/> ML Propensity Scoring</h4>
+                <div className="grid grid-cols-2 gap-8">
                     <FormField control={form.control} name="personalization.propensityToBuyScore" render={({ field }) => (
-                      <FormItem><div className="flex justify-between"><FormLabel>Propensity to Buy &gt;</FormLabel><span className="font-bold">{field.value}%</span></div>
+                      <FormItem><div className="flex justify-between"><FormLabel>Propensity Score &gt;</FormLabel><span className="font-bold text-indigo-600">{field.value}%</span></div>
                       <FormControl><Slider min={0} max={100} value={[field.value || 0]} onValueChange={(v) => field.onChange(v[0])} /></FormControl></FormItem>
                     )} />
                     <FormField control={form.control} name="personalization.priceSensitivityScore" render={({ field }) => (
-                      <FormItem><div className="flex justify-between"><FormLabel>Price Sensitivity &lt;</FormLabel><span className="font-bold">{field.value}%</span></div>
+                      <FormItem><div className="flex justify-between"><FormLabel>Sensitivity &lt;</FormLabel><span className="font-bold text-indigo-600">{field.value}%</span></div>
                       <FormControl><Slider min={0} max={100} value={[field.value || 0]} onValueChange={(v) => field.onChange(v[0])} /></FormControl></FormItem>
                     )} />
-                </div>
-                <div className="space-y-4 p-4 border rounded-lg bg-emerald-50/50">
-                    <h4 className="text-xs font-black uppercase text-emerald-700 tracking-widest flex items-center gap-2"><ShieldCheck className="w-3 h-3"/> Commercial Guardrails</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField control={form.control} name="personalization.minPriceFloor" render={({ field }) => (
-                        <FormItem><FormLabel>Min Price Floor ($)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>
-                      )} />
-                      <FormField control={form.control} name="personalization.maxPriceCap" render={({ field }) => (
-                        <FormItem><FormLabel>Max Price Cap ($)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>
-                      )} />
-                    </div>
                 </div>
              </div>
           </TabsContent>
         </Tabs>
 
         <div className="flex justify-end gap-3 pt-6 border-t">
-          <Button type="button" variant="outline" onClick={onCancel}>Discard Changes</Button>
-          <Button type="submit" className="px-8 font-bold">Commit Segment to Ecosystem</Button>
+          <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+          <Button type="submit" className="px-10 font-bold">Register Ecosystem Cohort</Button>
         </div>
       </form>
     </Form>
