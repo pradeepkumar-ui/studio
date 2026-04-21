@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -44,11 +43,15 @@ export default function AirlineOnboardingPage() {
     const [editingAirline, setEditingAirline] = useState<AirlineOnboarding | null>(null);
     const { toast } = useToast();
 
+    // PERFORMANCE: Immediate UI Pattern - default to mock data while loading if registry is empty
     const displayAirlines = useMemo(() => {
-        const sourceData = (airlinesCollection && airlinesCollection.length > 0) ? airlinesCollection as any[] : mockAirlines;
+        const sourceData = (airlinesCollection && airlinesCollection.length > 0) 
+            ? airlinesCollection as any[] 
+            : mockAirlines;
+        
         return sourceData.filter(a => 
-            a.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-            a.icaoCode.toLowerCase().includes(searchTerm.toLowerCase())
+            a.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+            a.icaoCode?.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [airlinesCollection, searchTerm]);
 
@@ -87,7 +90,7 @@ export default function AirlineOnboardingPage() {
     return (
         <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
-                <div>
+                <div className="flex flex-col gap-1">
                     <h1 className="text-3xl font-bold tracking-tight">Airline Onboarding</h1>
                     <p className="text-muted-foreground">Map carrier PSS systems to ecosystem airport nodes.</p>
                 </div>
@@ -111,8 +114,9 @@ export default function AirlineOnboardingPage() {
                             />
                         </div>
                     </div>
-                    {loading ? (
-                        <div className="flex justify-center py-10"><Loader2 className="h-8 w-8 animate-spin" /></div>
+                    {/* OPTIMIZATION: Only show loader if we have zero data to show (even mock) */}
+                    {loading && airlinesCollection === null ? (
+                        <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
                     ) : (
                         <Table>
                             <TableHeader>
@@ -159,7 +163,7 @@ export default function AirlineOnboardingPage() {
                                                 <DropdownMenuTrigger asChild>
                                                     <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
                                                 </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
+                                                <DropdownMenuContent align="end" className="w-56">
                                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                     <DropdownMenuItem onClick={() => handleOpenDialog(airline)}>Edit Config</DropdownMenuItem>
                                                     <DropdownMenuItem><Network className="mr-2 h-4 w-4"/>Check PSS Sync</DropdownMenuItem>

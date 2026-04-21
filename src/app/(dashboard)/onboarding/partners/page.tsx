@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -44,11 +43,15 @@ export default function PartnerOnboardingPage() {
     const [editingPartner, setEditingPartner] = useState<PartnerOnboarding | null>(null);
     const { toast } = useToast();
 
+    // PERFORMANCE: Immediate UI Pattern - defaults to mock data while loading
     const displayPartners = useMemo(() => {
-        const sourceData = (partnersCollection && partnersCollection.length > 0) ? partnersCollection as any[] : mockPartners;
+        const sourceData = (partnersCollection && partnersCollection.length > 0) 
+            ? partnersCollection as any[] 
+            : mockPartners;
+        
         return sourceData.filter(p => 
-            p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-            p.airportCode.toLowerCase().includes(searchTerm.toLowerCase())
+            p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+            p.airportCode?.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [partnersCollection, searchTerm]);
 
@@ -87,7 +90,7 @@ export default function PartnerOnboardingPage() {
     return (
         <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
-                <div>
+                <div className="flex flex-col gap-1">
                     <h1 className="text-3xl font-bold tracking-tight">Partner Onboarding</h1>
                     <p className="text-muted-foreground">Manage authorized ecosystem vendors and their terminal deployments.</p>
                 </div>
@@ -111,8 +114,9 @@ export default function PartnerOnboardingPage() {
                             />
                         </div>
                     </div>
-                    {loading ? (
-                        <div className="flex justify-center py-10"><Loader2 className="h-8 w-8 animate-spin" /></div>
+                    {/* OPTIMIZATION: Instant UI rendering */}
+                    {loading && partnersCollection === null ? (
+                        <div className="flex justify-center py-10"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
                     ) : (
                         <Table>
                             <TableHeader>
@@ -154,12 +158,12 @@ export default function PartnerOnboardingPage() {
                                                 <DropdownMenuTrigger asChild>
                                                     <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
                                                 </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
+                                                <DropdownMenuContent align="end" className="w-56">
                                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                     <DropdownMenuItem onClick={() => handleOpenDialog(partner)}>Edit Deployment</DropdownMenuItem>
                                                     <DropdownMenuItem><MapPin className="mr-2 h-4 w-4"/>Relocate Vendor</DropdownMenuItem>
                                                     <DropdownMenuSeparator />
-                                                    <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(partner.id!)}>Offboard</DropdownMenuItem>
+                                                    <DropdownMenuItem className="text-destructive font-bold" onClick={() => handleDelete(partner.id!)}>Offboard</DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>

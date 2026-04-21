@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -51,11 +50,15 @@ export default function AirportOnboardingPage() {
     const [selectedAirportForAirlines, setSelectedAirportForAirlines] = useState<AirportOnboarding | null>(null);
     const { toast } = useToast();
 
+    // PERFORMANCE: Immediate UI Pattern - default to mock data while loading
     const displayAirports = useMemo(() => {
-        const sourceData = (airportsCollection && airportsCollection.length > 0) ? airportsCollection as AirportOnboarding[] : mockAirports;
+        const sourceData = (airportsCollection && airportsCollection.length > 0) 
+            ? airportsCollection as AirportOnboarding[] 
+            : mockAirports;
+
         return sourceData.filter(a => 
-            a.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-            a.iataCode.toLowerCase().includes(searchTerm.toLowerCase())
+            a.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+            a.iataCode?.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [airportsCollection, searchTerm]);
 
@@ -118,8 +121,8 @@ export default function AirportOnboardingPage() {
     return (
         <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-primary">Airport Onboarding</h1>
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-3xl font-bold tracking-tight">Airport Onboarding</h1>
                     <p className="text-muted-foreground">Manage participating airports and configure SITA hardware/carrier permissions.</p>
                 </div>
                 <Button onClick={() => handleOpenDialog()} className="font-bold"><PlusCircle className="mr-2 h-4 w-4" /> Onboard Airport</Button>
@@ -142,8 +145,9 @@ export default function AirportOnboardingPage() {
                             />
                         </div>
                     </div>
-                    {loadingAirports ? (
-                        <div className="flex justify-center py-10"><Loader2 className="h-8 w-8 animate-spin" /></div>
+                    {/* OPTIMIZATION: Instant UI rendering */}
+                    {loadingAirports && airportsCollection === null ? (
+                        <div className="flex justify-center py-10"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
                     ) : (
                         <Table>
                             <TableHeader>
@@ -261,7 +265,7 @@ export default function AirportOnboardingPage() {
                                 <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground gap-2">
                                     <Plane className="h-8 w-8 opacity-20" />
                                     <p className="text-sm">No onboarded carriers found in the global registry.</p>
-                                    <Button variant="link" className="text-xs">Go to Airline Onboarding</Button>
+                                    <Button variant="link" className="text-xs" asChild><Link href="/onboarding/airlines">Go to Airline Onboarding</Link></Button>
                                 </div>
                             )}
                         </ScrollArea>

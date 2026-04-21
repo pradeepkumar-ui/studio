@@ -56,8 +56,8 @@ const menuItems: MenuItem[] = [
     label: 'Ecosystem Onboarding',
     icon: Building2,
     subItems: [
-      { href: '/onboarding/airports', label: 'Manage Airports', icon: MapPin },
       { href: '/onboarding/airlines', label: 'Manage Airlines', icon: Plane },
+      { href: '/onboarding/airports', label: 'Manage Airports', icon: MapPin },
       { href: '/onboarding/partners', label: 'Manage Vendors', icon: Store },
     ],
   },
