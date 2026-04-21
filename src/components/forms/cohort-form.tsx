@@ -28,6 +28,9 @@ import { MultiSelect } from '../ui/multi-select';
 import { Checkbox } from '../ui/checkbox';
 import { Plane, Building2, User, Zap, ShieldCheck, Target, Activity, Settings2, Database, BrainCircuit, Globe, Laptop, MapPin } from 'lucide-react';
 import { Slider } from '../ui/slider';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import { useMemo } from 'react';
 
 const cohortSchema = z.object({
   id: z.string().optional(),
@@ -106,7 +109,24 @@ const channelOptions = [
 ];
 const regionOptions = [{ value: 'EU', label: 'Europe' }, { value: 'APAC', label: 'Asia-Pacific' }, { value: 'NAM', label: 'North America' }, { value: 'ME', label: 'Middle East' }, { value: 'LATAM', label: 'Latin America' }];
 
+const fallbackAirlines = [
+    { value: 'GAB', label: 'Global Airways (GAB)' },
+    { value: 'SBA', label: 'SkyBridge Airlines (SBA)' },
+    { value: 'MLN', label: 'MetroLink Air (MLN)' },
+];
+
 export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
+  const firestore = useFirestore();
+  const { data: airlinesData } = useCollection(firestore ? collection(firestore, 'airlines') : undefined);
+
+  const airlineOptions = useMemo(() => {
+    const options = (airlinesData || []).map((a: any) => ({
+        value: a.icaoCode,
+        label: `${a.name} (${a.icaoCode})`
+    }));
+    return options.length > 0 ? options : fallbackAirlines;
+  }, [airlinesData]);
+
   const form = useForm<Cohort>({
     resolver: zodResolver(cohortSchema),
     defaultValues: cohort || {
@@ -212,7 +232,10 @@ export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
               <div className="space-y-4">
                 <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2"><User className="w-3 h-3"/> Profile & Loyalty</h4>
                 <FormField control={form.control} name="airlineRules.carrierCodes" render={({ field }) => (
-                    <FormItem><FormLabel>Airline Filter (ICAO)</FormLabel><FormControl><Input placeholder="e.g., GAB, SBA" {...field} /></FormControl></FormItem>
+                    <FormItem><FormLabel>Airline / Carrier Scope</FormLabel>
+                    <MultiSelect options={airlineOptions} selected={field.value || []} onChange={field.onChange} placeholder="Filter by Participating Airlines..." />
+                    <FormDescription className="text-[10px]">Create airline-specific cohorts by selecting carriers.</FormDescription>
+                    </FormItem>
                 )} />
                 <FormField control={form.control} name="airlineRules.loyaltyTiers" render={({ field }) => (
                   <FormItem><FormLabel>Loyalty Tiers</FormLabel><MultiSelect options={tierOptions} selected={field.value || []} onChange={field.onChange} placeholder="All Tiers" /></FormItem>
