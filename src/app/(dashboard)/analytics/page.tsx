@@ -26,7 +26,19 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Plane, Store, ShieldCheck, Activity, TrendingUp, DollarSign } from 'lucide-react';
+import { 
+  Building2, 
+  Plane, 
+  Store, 
+  ShieldCheck, 
+  Activity, 
+  TrendingUp, 
+  DollarSign, 
+  Ticket, 
+  ShoppingCart,
+  Zap,
+  MapPin
+} from 'lucide-react';
 
 // --- Global Ecosystem KPIs ---
 const kpiData = [
@@ -44,6 +56,14 @@ const airlinePerformance = [
   { name: 'EuroConnect', volume: 38200, yield: 3100000, conversion: '19.2%', sync: '99.9%' },
 ];
 
+// --- Airline Offer Summary ---
+const airlineOffers = [
+    { name: 'Business Upgrade Boost', sales: 12400, conv: '18.2%', status: 'Top Performer' },
+    { name: 'Family Comfort Bundle', sales: 8200, conv: '14.5%', status: 'Stable' },
+    { name: 'Fast-Track Wi-Fi Pack', sales: 5100, conv: '22.1%', status: 'Rising' },
+    { name: 'Priority Boarding Solo', sales: 3400, conv: '9.8%', status: 'Low' },
+];
+
 // --- Airport Node Analytics ---
 const airportPerformance = [
   { node: 'LHR - Heathrow (T5)', throughput: '125K Events', yield: '$2.1M', capture: '24.5%', status: 'High Performance' },
@@ -52,12 +72,20 @@ const airportPerformance = [
   { node: 'DXB - Dubai (T3)', throughput: '110K Events', yield: '$1.8M', capture: '16.5%', status: 'Maintenance' },
 ];
 
-// --- Vendor / Partner Analytics ---
-const vendorPerformance = [
-  { partner: 'Lounge Stars', category: 'Lounge', revenue: 850000, commission: 127500, attach: '14.2%' },
-  { partner: 'SkyCafe Gourmet', category: 'F&B', revenue: 420000, commission: 50400, attach: '22.8%' },
-  { partner: 'Global Duty Free', category: 'Retail', revenue: 1200000, commission: 180000, attach: '8.5%' },
-  { partner: 'Changi Valet', category: 'Parking', revenue: 310000, commission: 31000, attach: '5.2%' },
+// --- Airport Offer Summary ---
+const airportOffers = [
+    { name: 'LHR North Lounge Access', sales: 9800, conv: '24.1%', status: 'High Yield' },
+    { name: 'JFK Security Fast Track', sales: 15400, conv: '32.5%', status: 'High Volume' },
+    { name: 'SIN VIP Valet Special', sales: 2100, conv: '12.8%', status: 'Premium' },
+    { name: 'DXB Sleep Pods (Peak)', sales: 4200, conv: '19.2%', status: 'Stable' },
+];
+
+// --- Recent Ecosystem Transactions ---
+const recentTransactions = [
+    { id: 'ORD-982', domain: 'Airline', provider: 'GAB', route: 'LHR-JFK', amount: 1250, status: 'Settled' },
+    { id: 'ORD-983', domain: 'Airport', provider: 'LHR-T5', route: 'LHR-DEL', amount: 45, status: 'Confirmed' },
+    { id: 'ORD-984', domain: 'Airline', provider: 'SBA', route: 'SIN-HKG', amount: 890, status: 'Settled' },
+    { id: 'ORD-985', domain: 'Airport', provider: 'JFK-T4', route: 'JFK-LAX', amount: 15, status: 'Confirmed' },
 ];
 
 const chartFormatter = (number: number) =>
@@ -72,7 +100,7 @@ export default function SitaRetailingAnalyticsPage() {
       <div className="flex flex-col gap-1">
         <h1 className="text-3xl font-black tracking-tight text-primary">Ecosystem Retailing Analytics</h1>
         <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest">
-          Comprehensive Yield, Volume & Commission Intelligence for SITA Management
+          Comprehensive Yield, Volume & Commission Intelligence for Management
         </p>
       </div>
 
@@ -106,95 +134,209 @@ export default function SitaRetailingAnalyticsPage() {
         <TabPanels>
           {/* --- AIRLINE ANALYTICS --- */}
           <TabPanel>
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
-              <Card className="lg:col-span-8">
-                <Title>Carrier Performance Matrix</Title>
-                <Text>Yield and conversion efficiency across participating airlines.</Text>
-                <Table className="mt-6">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Airline Partner</TableHead>
-                      <TableHead className="text-right">Total Yield</TableHead>
-                      <TableHead className="text-right">Order Volume</TableHead>
-                      <TableHead className="text-right">Conversion</TableHead>
-                      <TableHead className="text-right">PSS Sync</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {airlinePerformance.map((item) => (
-                      <TableRow key={item.name}>
-                        <TableCell className="font-bold text-primary">{item.name}</TableCell>
-                        <TableCell className="text-right font-mono font-black">{chartFormatter(item.yield)}</TableCell>
-                        <TableCell className="text-right">{valueFormatter(item.volume)}</TableCell>
-                        <TableCell className="text-right">
-                          <Badge variant="secondary">{item.conversion}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right text-emerald-600 font-bold">{item.sync}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Card>
-              <Card className="lg:col-span-4">
-                <Title>Yield Share by Carrier</Title>
-                <DonutChart
-                  className="h-64 mt-6"
-                  data={airlinePerformance}
-                  category="yield"
-                  index="name"
-                  valueFormatter={chartFormatter}
-                  colors={['blue', 'cyan', 'indigo', 'violet']}
-                />
-              </Card>
+            <div className="space-y-6 mt-6">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <Card className="lg:col-span-8">
+                        <Title className="flex items-center gap-2"><Zap className="h-4 w-4 text-primary" /> Carrier Performance Matrix</Title>
+                        <Text>Yield and conversion efficiency across participating airlines.</Text>
+                        <Table className="mt-6">
+                        <TableHeader>
+                            <TableRow>
+                            <TableHead>Airline Partner</TableHead>
+                            <TableHead className="text-right">Total Yield</TableHead>
+                            <TableHead className="text-right">Order Volume</TableHead>
+                            <TableHead className="text-right">Conversion</TableHead>
+                            <TableHead className="text-right">PSS Sync</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {airlinePerformance.map((item) => (
+                            <TableRow key={item.name}>
+                                <TableCell className="font-bold text-primary">{item.name}</TableCell>
+                                <TableCell className="text-right font-mono font-black">{chartFormatter(item.yield)}</TableCell>
+                                <TableCell className="text-right">{valueFormatter(item.volume)}</TableCell>
+                                <TableCell className="text-right">
+                                <Badge variant="secondary">{item.conversion}</Badge>
+                                </TableCell>
+                                <TableCell className="text-right text-emerald-600 font-bold">{item.sync}</TableCell>
+                            </TableRow>
+                            ))}
+                        </TableBody>
+                        </Table>
+                    </Card>
+                    <Card className="lg:col-span-4">
+                        <Title>Yield Share by Carrier</Title>
+                        <DonutChart
+                        className="h-64 mt-6"
+                        data={airlinePerformance}
+                        category="yield"
+                        index="name"
+                        valueFormatter={chartFormatter}
+                        colors={['blue', 'cyan', 'indigo', 'violet']}
+                        />
+                    </Card>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card>
+                        <Title className="flex items-center gap-2"><Ticket className="h-4 w-4 text-primary" /> Airline Offer Summary</Title>
+                        <Text>Top carrier-side monetization strategies by engagement.</Text>
+                        <Table className="mt-4">
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Offer Strategy</TableHead>
+                                    <TableHead className="text-right">Sales</TableHead>
+                                    <TableHead className="text-right">Conv.</TableHead>
+                                    <TableHead className="text-right">Status</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {airlineOffers.map(offer => (
+                                    <TableRow key={offer.name}>
+                                        <TableCell className="font-medium text-xs">{offer.name}</TableCell>
+                                        <TableCell className="text-right text-xs font-mono">{valueFormatter(offer.sales)}</TableCell>
+                                        <TableCell className="text-right text-xs font-bold text-emerald-600">{offer.conv}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Badge variant="outline" className="text-[8px] uppercase">{offer.status}</Badge>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </Card>
+                    <Card>
+                        <Title className="flex items-center gap-2"><ShoppingCart className="h-4 w-4 text-primary" /> Recent Carrier Transactions</Title>
+                        <Text>Unified summary of latest airline-domain ecosystem settlements.</Text>
+                        <Table className="mt-4">
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Order ID</TableHead>
+                                    <TableHead>Provider</TableHead>
+                                    <TableHead className="text-right">Amount</TableHead>
+                                    <TableHead className="text-right">Status</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {recentTransactions.filter(t => t.domain === 'Airline').map(t => (
+                                    <TableRow key={t.id}>
+                                        <TableCell className="font-mono text-xs">{t.id}</TableCell>
+                                        <TableCell className="text-xs font-bold">{t.provider}</TableCell>
+                                        <TableCell className="text-right text-xs font-black text-primary">${t.amount}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Badge className="text-[8px] bg-emerald-600">{t.status}</Badge>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </Card>
+                </div>
             </div>
           </TabPanel>
 
           {/* --- AIRPORT ANALYTICS --- */}
           <TabPanel>
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
-               <Card className="lg:col-span-4">
-                <Title>Volume by Airport Node</Title>
-                <BarList
-                  data={airportPerformance.map(a => ({ name: a.node, value: parseInt(a.throughput.replace(/[^0-9]/g, '')) }))}
-                  className="mt-6"
-                  color="blue"
-                />
-              </Card>
-              <Card className="lg:col-span-8">
-                <Title>Node Operational Intelligence</Title>
-                <Text>Real-time capture rates and throughput signals per terminal node.</Text>
-                <Table className="mt-6">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Airport Hub & Terminal</TableHead>
-                      <TableHead className="text-right">Yield</TableHead>
-                      <TableHead className="text-right">Capture Rate</TableHead>
-                      <TableHead>Health Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {airportPerformance.map((item) => (
-                      <TableRow key={item.node}>
-                        <TableCell className="font-bold">{item.node}</TableCell>
-                        <TableCell className="text-right font-mono">{item.yield}</TableCell>
-                        <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-2">
-                                <span className="font-bold">{item.capture}</span>
-                                <div className="w-12 bg-muted rounded-full h-1">
-                                    <div className="bg-primary h-1 rounded-full" style={{ width: item.capture }} />
+            <div className="space-y-6 mt-6">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <Card className="lg:col-span-4">
+                    <Title>Volume by Airport Node</Title>
+                    <BarList
+                    data={airportPerformance.map(a => ({ name: a.node, value: parseInt(a.throughput.replace(/[^0-9]/g, '')) }))}
+                    className="mt-6"
+                    color="blue"
+                    />
+                </Card>
+                <Card className="lg:col-span-8">
+                    <Title className="flex items-center gap-2"><MapPin className="h-4 w-4 text-primary" /> Node Operational Intelligence</Title>
+                    <Text>Real-time capture rates and throughput signals per terminal node.</Text>
+                    <Table className="mt-6">
+                    <TableHeader>
+                        <TableRow>
+                        <TableHead>Airport Hub & Terminal</TableHead>
+                        <TableHead className="text-right">Yield</TableHead>
+                        <TableHead className="text-right">Capture Rate</TableHead>
+                        <TableHead>Health Status</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {airportPerformance.map((item) => (
+                        <TableRow key={item.node}>
+                            <TableCell className="font-bold">{item.node}</TableCell>
+                            <TableCell className="text-right font-mono">{item.yield}</TableCell>
+                            <TableCell className="text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                    <span className="font-bold">{item.capture}</span>
+                                    <div className="w-12 bg-muted rounded-full h-1">
+                                        <div className="bg-primary h-1 rounded-full" style={{ width: item.capture }} />
+                                    </div>
                                 </div>
-                            </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={item.status === 'High Performance' ? 'default' : (item.status === 'Optimal' ? 'secondary' : 'outline')}>
-                            {item.status}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Card>
+                            </TableCell>
+                            <TableCell>
+                            <Badge variant={item.status === 'High Performance' ? 'default' : (item.status === 'Optimal' ? 'secondary' : 'outline')}>
+                                {item.status}
+                            </Badge>
+                            </TableCell>
+                        </TableRow>
+                        ))}
+                    </TableBody>
+                    </Table>
+                </Card>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card>
+                        <Title className="flex items-center gap-2"><Ticket className="h-4 w-4 text-primary" /> Hub Offer Performance</Title>
+                        <Text>Top terminal-side services and bundles by conversion.</Text>
+                        <Table className="mt-4">
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Hub Service</TableHead>
+                                    <TableHead className="text-right">Users</TableHead>
+                                    <TableHead className="text-right">Conv.</TableHead>
+                                    <TableHead className="text-right">Category</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {airportOffers.map(offer => (
+                                    <TableRow key={offer.name}>
+                                        <TableCell className="font-medium text-xs">{offer.name}</TableCell>
+                                        <TableCell className="text-right text-xs font-mono">{valueFormatter(offer.sales)}</TableCell>
+                                        <TableCell className="text-right text-xs font-bold text-blue-600">{offer.conv}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Badge variant="outline" className="text-[8px] uppercase">{offer.status}</Badge>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </Card>
+                    <Card>
+                        <Title className="flex items-center gap-2"><ShoppingCart className="h-4 w-4 text-primary" /> Terminal Transaction Log</Title>
+                        <Text>Summary of latest hub-domain ecosystem conversions.</Text>
+                        <Table className="mt-4">
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Order ID</TableHead>
+                                    <TableHead>Hub Node</TableHead>
+                                    <TableHead className="text-right">Amount</TableHead>
+                                    <TableHead className="text-right">Status</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {recentTransactions.filter(t => t.domain === 'Airport').map(t => (
+                                    <TableRow key={t.id}>
+                                        <TableCell className="font-mono text-xs">{t.id}</TableCell>
+                                        <TableCell className="text-xs font-bold">{t.provider}</TableCell>
+                                        <TableCell className="text-right text-xs font-black text-primary">${t.amount}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Badge className="text-[8px] bg-blue-600">{t.status}</Badge>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </Card>
+                </div>
             </div>
           </TabPanel>
 
