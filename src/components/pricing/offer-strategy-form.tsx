@@ -39,7 +39,9 @@ import {
   PlusCircle,
   Eye,
   Calendar as CalendarIcon,
-  Ticket
+  Ticket,
+  DollarSign,
+  Layers
 } from 'lucide-react';
 import { 
   DialogHeader, 
@@ -95,6 +97,18 @@ const mockAncillariesFallback = [
     { id: 'AGG-001', configName: 'Premium Route Baggage', ancillaryName: '1st Checked Bag', basePrice: 35.00, currency: 'USD' },
     { id: 'AGG-002', configName: 'Long-Haul Seat', ancillaryName: 'Extra Legroom Seat', basePrice: 50.00, currency: 'USD' },
     { id: 'AGG-003', configName: 'Hub Lounge LHR', ancillaryName: 'Executive Lounge', basePrice: 45.00, currency: 'USD' },
+    { id: 'AGG-004', configName: 'Fast Track Gate', ancillaryName: 'Priority Boarding', basePrice: 15.00, currency: 'USD' },
+    { id: 'AGG-005', configName: 'Inflight Connect', ancillaryName: 'Streaming Wi-Fi', basePrice: 20.00, currency: 'USD' },
+    { id: 'AGG-006', configName: 'Gourmet Selection', ancillaryName: 'Premium Hot Meal', basePrice: 25.00, currency: 'USD' },
+    { id: 'AGG-007', configName: 'Comfort Pack', ancillaryName: 'Amenity Kit', basePrice: 12.00, currency: 'USD' },
+];
+
+const mockCohortsFallback = [
+    { id: 'C-001', cohortId: 'PLAT_SOLO_BIZ', name: 'Platinum Solo Business' },
+    { id: 'C-002', cohortId: 'IN_WEB_PROMO', name: 'India POS Web Promo' },
+    { id: 'C-003', cohortId: 'FAMILY_TRIP', name: 'Leisure Families' },
+    { id: 'C-004', cohortId: 'US_CORP_ELITE', name: 'US Corporate Elite' },
+    { id: 'C-005', cohortId: 'LAST_MINUTE_PAX', name: 'Last-Minute Travelers' },
 ];
 
 export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFormProps) {
@@ -113,7 +127,7 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
   const { data: cohortsData } = useCollection(cohortsQuery);
 
   const aggregates = (aggregatesData && aggregatesData.length > 0) ? aggregatesData : mockAncillariesFallback;
-  const cohorts = cohortsData || [];
+  const cohorts = (cohortsData && cohortsData.length > 0) ? cohortsData : mockCohortsFallback;
 
   const form = useForm<OfferStrategy>({
     resolver: zodResolver(offerStrategySchema),
@@ -252,6 +266,28 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
                           <FormMessage />
                       </FormItem>
                   )} />
+
+                  {/* READ ONLY BASE PRICE DISPLAY */}
+                  {calculation.selectedProducts.length > 0 && (
+                      <div className="p-4 rounded-xl bg-white border border-slate-200 space-y-3">
+                          <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1.5">
+                              <DollarSign className="h-3 w-3" /> Commercial Base Value (Read-Only)
+                          </p>
+                          <div className="space-y-2">
+                              {calculation.selectedProducts.map((p: any) => (
+                                  <div key={p.id} className="flex justify-between items-center text-sm">
+                                      <span className="text-muted-foreground font-medium">{p.ancillaryName || p.configName}</span>
+                                      <span className="font-mono font-bold">${p.basePrice?.toFixed(2)}</span>
+                                  </div>
+                              ))}
+                              <Separator className="my-2" />
+                              <div className="flex justify-between items-center text-sm font-black">
+                                  <span>Total Registry Base Value</span>
+                                  <span className="text-primary">${calculation.baseTotal.toFixed(2)}</span>
+                              </div>
+                          </div>
+                      </div>
+                  )}
               </section>
 
               <Separator />
@@ -477,7 +513,7 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
                                             <p className="text-xs font-bold">{p.ancillaryName}</p>
                                             <p className="text-[9px] text-muted-foreground uppercase font-mono">{p.configName}</p>
                                         </div>
-                                        <Badge variant="outline" className="text-[9px] font-mono">${p.basePrice}</Badge>
+                                        <Badge variant="outline" className="text-[9px] font-mono">${p.basePrice?.toFixed(2)}</Badge>
                                     </div>
                                 ))}
                             </div>
