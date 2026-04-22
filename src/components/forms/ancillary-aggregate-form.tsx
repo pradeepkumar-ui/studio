@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,7 +24,8 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection } from 'firebase/firestore';
-import { Layers, Info, CheckCircle2, DollarSign } from 'lucide-react';
+import { Layers, Info, CheckCircle2, DollarSign, PlusCircle, Trash2, Settings2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const dropdownOptions: Record<string, string[]> = {
   'Aircraft type': ['A320neo', 'A350-900', 'A380-800', 'B737 MAX', 'B777-300ER', 'B787-9'],
@@ -35,21 +36,25 @@ const dropdownOptions: Record<string, string[]> = {
   'Time to departure': ['< 2hrs', '< 4hrs', '< 6 hrs', '< 8 hrs', '< 12 hrs'],
   'Channel': ['Web', 'Mobile', 'Kiosk'],
   'Loyalty tier': ['Platinum', 'Gold', 'Silver', 'Bronze'],
+  'Departure/arrival/transit status': ['Departure', 'Arrival', 'Transit'],
+  'Route type': ['Domestic', 'International', 'Regional'],
+  'Fulfillment capability': ['Instant', 'Manual', 'Supplier-confirmed'],
 };
 
-const aggregateParamsByCategory: Record<string, string[]> = {
-  'Baggage': ['Route', 'Fare brand', 'Baggage allowance', 'Aircraft type', 'Hold capacity', 'Passenger type', 'Airport restrictions', 'Weight/piece rules', 'Time to departure', 'Channel'],
-  'Seat': ['Aircraft type', 'Seat map / cabin layout', 'Cabin class', 'Fare brand', 'Passenger profile', 'Loyalty tier', 'Seat availability', 'Check-in status', 'Route', 'Time to departure'],
-  'Upgrade': ['Aircraft type', 'Premium cabin availability', 'Cabin class', 'Fare brand', 'Loyalty tier', 'Load factor', 'Route', 'Time to departure', 'Check-in status', 'Upgrade inventory'],
-  'Priority service': ['Airport capability', 'Route', 'Cabin class', 'Fare brand', 'Loyalty tier', 'Passenger type', 'Airport process setup', 'Time to departure', 'Channel'],
-  'Lounge': ['Airport / terminal', 'Lounge provider availability', 'Cabin class', 'Loyalty tier', 'Fare brand', 'Route type', 'Departure/arrival/transit status', 'Capacity', 'Time slot', 'Channel'],
-  'Meal': ['Flight duration', 'Route', 'Departure station catering capability', 'Aircraft galley capability', 'Cabin class', 'Meal inventory', 'Passenger type', 'Cutoff time', 'Channel'],
-  'Wi-Fi / connectivity': ['Aircraft type', 'Aircraft retrofit/connectivity availability', 'Provider coverage', 'Route/geography', 'Flight duration', 'Cabin class', 'Device/session rules', 'Time of purchase'],
-  'Inflight comfort': ['Aircraft type', 'Flight duration', 'Cabin class', 'Route', 'Available onboard inventory', 'Passenger type', 'Service level', 'Fulfillment capability'],
-  'Flexibility / protection': ['Fare brand', 'Booking status', 'Route', 'Time to departure', 'Passenger type'],
-  'Special service': ['Passenger type', 'SSR type', 'Airport capability', 'Aircraft type', 'Route restrictions', 'Lead time'],
-  'Bundle': ['Route', 'Aircraft type', 'Cabin class', 'Fare brand', 'Passenger type', 'Channel', 'Time to departure'],
-};
+const MASTER_PARAMETER_POOL = [
+  'Route', 'Fare brand', 'Baggage allowance', 'Aircraft type', 'Hold capacity', 
+  'Passenger type', 'Airport restrictions', 'Weight/piece rules', 'Time to departure', 
+  'Channel', 'Seat map / cabin layout', 'Cabin class', 'Passenger profile', 
+  'Loyalty tier', 'Seat availability', 'Check-in status', 'Premium cabin availability', 
+  'Load factor', 'Upgrade inventory', 'Airport capability', 'Airport process setup', 
+  'Airport / terminal', 'Lounge provider availability', 'Route type', 
+  'Departure/arrival/transit status', 'Capacity', 'Time slot', 
+  'Departure station catering capability', 'Aircraft galley capability', 
+  'Meal inventory', 'Cutoff time', 'Aircraft retrofit/connectivity availability', 
+  'Provider coverage', 'Route/geography', 'Flight duration', 'Device/session rules', 
+  'Time of purchase', 'Available onboard inventory', 'Service level', 
+  'Fulfillment capability', 'Booking status', 'SSR type', 'Lead time'
+].sort();
 
 const aggregateSchema = z.object({
   id: z.string().optional(),
@@ -58,7 +63,10 @@ const aggregateSchema = z.object({
   basePrice: z.coerce.number().min(0, 'Base price must be a non-negative number.'),
   currency: z.string().length(3, 'Currency must be a 3-letter code.').toUpperCase().default('USD'),
   status: z.enum(['Draft', 'Active', 'Archived']).default('Draft'),
-  parameters: z.record(z.string(), z.string()).default({}),
+  parameters: z.array(z.object({
+    name: z.string().min(1, 'Select a parameter'),
+    value: z.string().min(1, 'Value is required')
+  })).default([]),
 });
 
 export type AncillaryAggregate = z.infer<typeof aggregateSchema> & { ancillaryName?: string, category?: string };
@@ -89,21 +97,38 @@ export function AncillaryAggregateForm({ aggregate, onSubmit, onCancel }: Ancill
       : mockAncillariesFallback;
   }, [ancillariesCollection]);
 
+  // Transform existing record-style parameters to array if editing an old record
+  const initialParameters = React.useMemo(() => {
+    if (!aggregate?.parameters) return [];
+    if (Array.isArray(aggregate.parameters)) return aggregate.parameters;
+    return Object.entries(aggregate.parameters).map(([name, value]) => ({ 
+      name, 
+      value: String(value) 
+    }));
+  }, [aggregate]);
+
   const form = useForm<AncillaryAggregate>({
     resolver: zodResolver(aggregateSchema),
-    defaultValues: aggregate || {
+    defaultValues: aggregate ? {
+      ...aggregate,
+      parameters: initialParameters
+    } : {
       configName: '',
       ancillaryId: '',
       basePrice: 0,
       currency: 'USD',
       status: 'Draft',
-      parameters: {},
+      parameters: [],
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "parameters"
   });
 
   const selectedAncillaryId = form.watch('ancillaryId');
   const selectedAncillary = availableAncillaries.find(a => a.id === selectedAncillaryId);
-  const parameters = selectedAncillary ? (aggregateParamsByCategory[selectedAncillary.category] || []) : [];
 
   React.useEffect(() => {
     if (selectedAncillary) {
@@ -114,17 +139,9 @@ export function AncillaryAggregateForm({ aggregate, onSubmit, onCancel }: Ancill
     }
   }, [selectedAncillaryId, selectedAncillary, form]);
 
-  const handleFinalSubmit = (data: AncillaryAggregate) => {
-    onSubmit({
-      ...data,
-      ancillaryName: selectedAncillary?.name,
-      category: selectedAncillary?.category,
-    });
-  };
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleFinalSubmit)} className="space-y-6 max-h-[80vh] overflow-y-auto pr-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-h-[80vh] overflow-y-auto pr-4">
         
         <section className="space-y-4">
             <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-[0.2em]">
@@ -177,49 +194,94 @@ export function AncillaryAggregateForm({ aggregate, onSubmit, onCancel }: Ancill
 
         <Separator />
 
-        {selectedAncillary ? (
-            <section className="space-y-4">
+        <section className="space-y-4">
+            <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-[0.2em]">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> 2. Aggregate Parameters ({selectedAncillary.category})
+                    <Settings2 className="h-3.5 w-3.5" /> 2. User-Managed Aggregate Parameters
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                    {parameters.map(param => {
-                        const options = dropdownOptions[param];
+                <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => append({ name: '', value: '' })}
+                    className="h-8 font-bold"
+                >
+                    <PlusCircle className="h-3.5 w-3.5 mr-2" /> Add Parameter
+                </Button>
+            </div>
+
+            {fields.length > 0 ? (
+                <div className="space-y-3">
+                    {fields.map((item, index) => {
+                        const selectedParamName = form.watch(`parameters.${index}.name`);
+                        const options = dropdownOptions[selectedParamName];
+
                         return (
-                            <FormField 
-                                key={param}
-                                control={form.control} 
-                                name={`parameters.${param}`} 
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="text-xs">{param}</FormLabel>
-                                        {options ? (
-                                            <Select onValueChange={field.onChange} value={field.value || ''}>
-                                                <FormControl>
-                                                    <SelectTrigger className="h-9">
-                                                        <SelectValue placeholder={`Select ${param.toLowerCase()}...`} />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                    {options.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
-                                                </SelectContent>
-                                            </Select>
-                                        ) : (
-                                            <FormControl><Input placeholder="Set value..." {...field} value={field.value || ''} /></FormControl>
+                            <div key={item.id} className="grid grid-cols-12 gap-3 p-4 rounded-xl border bg-muted/20 items-end">
+                                <div className="col-span-5">
+                                    <FormField
+                                        control={form.control}
+                                        name={`parameters.${index}.name`}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-[10px] font-black uppercase text-muted-foreground">Parameter Name</FormLabel>
+                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                    <FormControl><SelectTrigger className="h-9"><SelectValue placeholder="Select..." /></SelectTrigger></FormControl>
+                                                    <SelectContent>
+                                                        {MASTER_PARAMETER_POOL.map(p => (
+                                                            <SelectItem key={p} value={p}>{p}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
                                         )}
-                                    </FormItem>
-                                )} 
-                            />
+                                    />
+                                </div>
+                                <div className="col-span-6">
+                                    <FormField
+                                        control={form.control}
+                                        name={`parameters.${index}.value`}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-[10px] font-black uppercase text-muted-foreground">Configuration Value</FormLabel>
+                                                {options ? (
+                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                        <FormControl><SelectTrigger className="h-9"><SelectValue placeholder="Value..." /></SelectTrigger></FormControl>
+                                                        <SelectContent>
+                                                            {options.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+                                                        </SelectContent>
+                                                    </Select>
+                                                ) : (
+                                                    <FormControl><Input placeholder="Set value..." className="h-9" {...field} /></FormControl>
+                                                )}
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                                <div className="col-span-1 flex justify-end">
+                                    <Button 
+                                        type="button" 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        onClick={() => remove(index)}
+                                        className="text-muted-foreground hover:text-destructive h-9 w-9"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
                         );
                     })}
                 </div>
-            </section>
-        ) : (
-            <div className="py-12 flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-xl opacity-50 bg-muted/20">
-                <Info className="h-8 w-8 mb-2" />
-                <p className="text-sm font-medium">Select an airline ancillary to reveal its aggregate parameters.</p>
-            </div>
-        )}
+            ) : (
+                <div className="py-8 flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-xl opacity-50 bg-muted/10">
+                    <Settings2 className="h-8 w-8 mb-2" />
+                    <p className="text-sm font-medium">No parameters defined. Click "Add Parameter" to begin.</p>
+                </div>
+            )}
+        </section>
 
         <Separator />
 
