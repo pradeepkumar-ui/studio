@@ -135,7 +135,7 @@ export default function CohortsPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight text-primary">Retailing Cohorts</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-primary">Airline Cohorts</h1>
           <p className="text-muted-foreground">Manage logical segments for targeted retailing across carrier and hub domains.</p>
         </div>
         <Button onClick={() => handleOpenDialog()} className="font-bold">
