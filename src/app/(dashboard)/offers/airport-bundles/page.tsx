@@ -90,6 +90,54 @@ const mockAirportOfferStrategies: AirportOfferStrategy[] = [
         pricing: { type: 'FixedPrice', value: 15, currency: 'USD' },
         dynamicPricing: { enabled: true, ruleType: 'TimeBased', threshold: '07:00-10:00', adjustmentPercent: 10 },
         guardRails: { minPrice: 10, maxPrice: 25 }
+    },
+    {
+        id: 'APT-OFR-004',
+        name: 'DXB Private Suite Access',
+        type: 'Single',
+        ancillaryIds: ['HUB-AGG-005'],
+        status: 'Active',
+        validity: { from: '2025-01-01', to: '2025-12-31' },
+        cohortIds: ['Platinum', 'VIP'],
+        pricing: { type: 'FixedPrice', value: 120, currency: 'USD' },
+        dynamicPricing: { enabled: true, ruleType: 'CapacityBased', threshold: '< 2 Suites', adjustmentPercent: 25 },
+        guardRails: { minPrice: 100, maxPrice: 300 }
+    },
+    {
+        id: 'APT-OFR-005',
+        name: 'JFK Elite Arrival Bundle',
+        type: 'Bundle',
+        ancillaryIds: ['HUB-AGG-006', 'HUB-AGG-005'],
+        status: 'Active',
+        validity: { from: '2025-11-01', to: '2026-03-31' },
+        cohortIds: ['JFK_ELITE_ARRIVE', 'CORP_PREMIUM'],
+        pricing: { type: 'PercentageDiscount', value: 20, currency: 'USD' },
+        dynamicPricing: { enabled: false, ruleType: 'TimeBased', adjustmentPercent: 0 },
+        guardRails: { minPrice: 150, maxPrice: 500 }
+    },
+    {
+        id: 'APT-OFR-006',
+        name: 'LHR Concierge & Buggy',
+        type: 'Bundle',
+        ancillaryIds: ['HUB-AGG-005', 'HUB-AGG-004'],
+        status: 'Draft',
+        validity: { from: '2025-12-01', to: '2026-01-31' },
+        cohortIds: ['TRANSIT_LONG_HAUL'],
+        pricing: { type: 'FixedPrice', value: 45, currency: 'USD' },
+        dynamicPricing: { enabled: true, ruleType: 'TimeBased', threshold: 'Morning Peak', adjustmentPercent: 15 },
+        guardRails: { minPrice: 40, maxPrice: 100 }
+    },
+    {
+        id: 'APT-OFR-007',
+        name: 'FRA Valet Premium',
+        type: 'Single',
+        ancillaryIds: ['HUB-AGG-006'],
+        status: 'Inactive',
+        validity: { from: '2025-01-01', to: '2025-12-31' },
+        cohortIds: [],
+        pricing: { type: 'FixedPrice', value: 95, currency: 'USD' },
+        dynamicPricing: { enabled: false, ruleType: 'CapacityBased', adjustmentPercent: 0 },
+        guardRails: { minPrice: 80, maxPrice: 150 }
     }
 ];
 
