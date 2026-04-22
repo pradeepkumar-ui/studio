@@ -782,7 +782,7 @@ export default function OffersenseComposerPage() {
                                     </TreeItem>
 
                                     {/* AIRPORT ANCILLARIES */}
-                                    <TreeItem label="Airport Ancillaries" isCategory>
+                                    <TreeItem label="Airport Ancillaries" isCategory isLast>
                                         {selectedAirportOffers.map((id, idx) => {
                                             const offer = mockOffers.find(o => o.id === id);
                                             return (
@@ -794,12 +794,6 @@ export default function OffersenseComposerPage() {
                                             );
                                         })}
                                         {selectedAirportOffers.length === 0 && <TreeItem label="No Airport Services" />}
-                                    </TreeItem>
-
-                                    {/* THIRD PARTY SERVICES (Mocked for structure) */}
-                                    <TreeItem label="Third-party Services" isCategory isLast>
-                                        <TreeItem label="City Transfer (Chauffeur)" price={45} />
-                                        <TreeItem label="Airport Hotel (Pod)" price={80} isLast />
                                     </TreeItem>
                                 </div>
 
@@ -815,7 +809,7 @@ export default function OffersenseComposerPage() {
                                         <div className="text-right">
                                             <p className="text-5xl font-black font-mono tracking-tighter text-slate-900">
                                                 ${(
-                                                    890 + 45 + 80 + // Base/Third party
+                                                    890 + // Base flight
                                                     [...selectedAirlineOffers, ...selectedAirportOffers].reduce((sum, id) => sum + (mockOffers.find(o => o.id === id)?.finalPrice || 0), 0)
                                                 ).toFixed(2)}
                                             </p>
