@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -18,6 +17,7 @@ import {
   QrCode, 
   Plane, 
   User, 
+  Users,
   Ticket, 
   Clock, 
   Building2,
@@ -46,7 +46,9 @@ import {
   Store,
   DollarSign,
   TrendingUp,
-  ShoppingCart
+  ShoppingCart,
+  Target,
+  Calculator
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -413,15 +415,17 @@ export default function OffersenseSimulatorPage() {
                                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pt-2">
                                                     <FormField control={form.control} name="airline" render={({field}) => (
                                                         <FormItem><FormLabel>Airline</FormLabel>
-                                                        <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                                        <SelectContent><SelectItem value="GAB">Global Airways</SelectItem><SelectItem value="SBA">SkyBridge Airlines</SelectItem></SelectContent></Select></FormItem>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                                            <SelectContent><SelectItem value="GAB">Global Airways</SelectItem><SelectItem value="SBA">SkyBridge Airlines</SelectItem></SelectContent></Select></FormItem>
                                                     )} />
                                                     <FormField control={form.control} name="flightNumber" render={({field}) => (<FormItem><FormLabel>Flight #</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)} />
                                                     <FormField control={form.control} name="travelDate" render={({field}) => (<FormItem><FormLabel>Travel Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl></FormItem>)} />
                                                     <FormField control={form.control} name="bookingStage" render={({field}) => (
                                                         <FormItem><FormLabel>Booking Stage</FormLabel>
-                                                        <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                                        <SelectContent><SelectItem value="At booking">At booking</SelectItem><SelectItem value="Check-in">Check-in</SelectItem><SelectItem value="Airport">Airport</SelectItem><SelectItem value="Gate">Gate</SelectItem></SelectContent></Select></FormItem>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                                            <SelectContent><SelectItem value="At booking">At booking</SelectItem><SelectItem value="Check-in">Check-in</SelectItem><SelectItem value="Airport">Airport</SelectItem><SelectItem value="Gate">Gate</SelectItem></SelectContent></Select></FormItem>
                                                     )} />
                                                 </div>
                                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
@@ -429,13 +433,15 @@ export default function OffersenseSimulatorPage() {
                                                     <FormField control={form.control} name="destination" render={({field}) => (<FormItem><FormLabel>Destination (IATA)</FormLabel><FormControl><Input maxLength={3} {...field} /></FormControl></FormItem>)} />
                                                     <FormField control={form.control} name="geography" render={({field}) => (
                                                         <FormItem><FormLabel>Geography</FormLabel>
-                                                        <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                                        <SelectContent><SelectItem value="Domestic">Domestic</SelectItem><SelectItem value="International">International</SelectItem></SelectContent></Select></FormItem>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                                            <SelectContent><SelectItem value="Domestic">Domestic</SelectItem><SelectItem value="International">International</SelectItem></SelectContent></Select></FormItem>
                                                     )} />
                                                     <FormField control={form.control} name="channel" render={({field}) => (
                                                         <FormItem><FormLabel>Sales Channel</FormLabel>
-                                                        <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                                        <SelectContent><SelectItem value="Web">Web</SelectItem><SelectItem value="App">App</SelectItem><SelectItem value="CUSS">CUSS Kiosk</SelectItem><SelectItem value="Agent">Agent Desktop</SelectItem></SelectContent></Select></FormItem>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                                            <SelectContent><SelectItem value="Web">Web</SelectItem><SelectItem value="App">App</SelectItem><SelectItem value="CUSS">CUSS Kiosk</SelectItem><SelectItem value="Agent">Agent Desktop</SelectItem></SelectContent></Select></FormItem>
                                                     )} />
                                                 </div>
                                             </AccordionContent>
@@ -454,13 +460,15 @@ export default function OffersenseSimulatorPage() {
                                                     <FormField control={form.control} name="children" render={({field}) => (<FormItem><FormLabel>Children</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
                                                     <FormField control={form.control} name="paxType" render={({field}) => (
                                                         <FormItem><FormLabel>Group Category</FormLabel>
-                                                        <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                                        <SelectContent><SelectItem value="Solo">Solo</SelectItem><SelectItem value="Family">Family</SelectItem><SelectItem value="Corporate">Corporate</SelectItem><SelectItem value="VIP">VIP</SelectItem></SelectContent></Select></FormItem>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                                            <SelectContent><SelectItem value="Solo">Solo</SelectItem><SelectItem value="Family">Family</SelectItem><SelectItem value="Group">Group</SelectItem><SelectItem value="Corporate">Corporate</SelectItem><SelectItem value="VIP">VIP</SelectItem></SelectContent></Select></FormItem>
                                                     )} />
                                                     <FormField control={form.control} name="purpose" render={({field}) => (
                                                         <FormItem><FormLabel>Travel Purpose</FormLabel>
-                                                        <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                                        <SelectContent><SelectItem value="Business">Business</SelectItem><SelectItem value="Leisure">Leisure</SelectItem></SelectContent></Select></FormItem>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                                            <SelectContent><SelectItem value="Business">Business</SelectItem><SelectItem value="Leisure">Leisure</SelectItem></SelectContent></Select></FormItem>
                                                     )} />
                                                 </div>
                                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
@@ -483,23 +491,27 @@ export default function OffersenseSimulatorPage() {
                                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pt-2">
                                                     <FormField control={form.control} name="loyaltyTier" render={({field}) => (
                                                         <FormItem><FormLabel>Loyalty Tier</FormLabel>
-                                                        <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                                        <SelectContent><SelectItem value="None">None</SelectItem><SelectItem value="Silver">Silver</SelectItem><SelectItem value="Gold">Gold</SelectItem><SelectItem value="Platinum">Platinum</SelectItem></SelectContent></Select></FormItem>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                                            <SelectContent><SelectItem value="None">None</SelectItem><SelectItem value="Silver">Silver</SelectItem><SelectItem value="Gold">Gold</SelectItem><SelectItem value="Platinum">Platinum</SelectItem></SelectContent></Select></FormItem>
                                                     )} />
                                                     <FormField control={form.control} name="cabinClass" render={({field}) => (
                                                         <FormItem><FormLabel>Cabin Class</FormLabel>
-                                                        <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                                        <SelectContent><SelectItem value="Economy">Economy</SelectItem><SelectItem value="Business">Business</SelectItem><SelectItem value="First">First</SelectItem></SelectContent></Select></FormItem>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                                            <SelectContent><SelectItem value="Economy">Economy</SelectItem><SelectItem value="Premium Economy">Premium Economy</SelectItem><SelectItem value="Business">Business</SelectItem><SelectItem value="First">First</SelectItem></SelectContent></Select></FormItem>
                                                     )} />
                                                     <FormField control={form.control} name="fareFamily" render={({field}) => (
                                                         <FormItem><FormLabel>Fare Brand</FormLabel>
-                                                        <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                                        <SelectContent><SelectItem value="Basic">Basic</SelectItem><SelectItem value="Standard">Standard</SelectItem><SelectItem value="Flex">Flex</SelectItem><SelectItem value="Premium">Premium</SelectItem></SelectContent></Select></FormItem>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                                            <SelectContent><SelectItem value="Basic">Basic</SelectItem><SelectItem value="Standard">Standard</SelectItem><SelectItem value="Flex">Flex</SelectItem><SelectItem value="Premium">Premium</SelectItem></SelectContent></Select></FormItem>
                                                     )} />
                                                     <FormField control={form.control} name="priceSensitivity" render={({field}) => (
                                                         <FormItem><FormLabel>Price Sensitivity</FormLabel>
-                                                        <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                                        <SelectContent><SelectItem value="Low">Low</SelectItem><SelectItem value="Medium">Medium</SelectItem><SelectItem value="High">High</SelectItem></SelectContent></Select></FormItem>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                                            <SelectContent><SelectItem value="Low">Low</SelectItem><SelectItem value="Medium">Medium</SelectItem><SelectItem value="High">High</SelectItem></SelectContent></Select></FormItem>
                                                     )} />
                                                 </div>
                                             </AccordionContent>
