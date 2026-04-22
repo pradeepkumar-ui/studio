@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -176,30 +176,40 @@ export default function OffersenseComposerPage() {
 
   const handleCompleteAirportPayment = async () => {
       setIsLoading(true);
+      // Simulated processing time
       await new Promise(r => setTimeout(r, 1200));
       
       const newId = `ORD-${Math.floor(Math.random() * 90000) + 10000}`;
       setOrderId(newId);
 
       // Persist to Firestore for the unified order view in other modules
-      if (firestore) {
-          const finalTotal = [...selectedAirlineOffers, ...selectedAirportOffers].reduce((sum, id) => {
-              const offer = mockOffers.find(o => o.id === id);
-              return sum + (offer?.finalPrice || 0);
-          }, 0);
+      // GUIDELINE: We do NOT await mutation calls directly to avoid blocking the demo flow
+      if (firestore && pnrContext) {
+          try {
+            const finalTotal = [...selectedAirlineOffers, ...selectedAirportOffers].reduce((sum, id) => {
+                const offer = mockOffers.find(o => o.id === id);
+                return sum + (offer?.finalPrice || 0);
+            }, 0);
 
-          await addDoc(collection(firestore, 'orders'), {
-              id: newId,
-              customer: pnrContext.passengers[0].name,
-              pnr: pnrContext.pnr,
-              route: pnrContext.route,
-              amount: finalTotal,
-              status: 'Fulfilled',
-              date: new Date().toISOString().split('T')[0],
-              source: 'CUSS_Kiosk',
-              paymentStatus: 'Paid',
-              createdAt: serverTimestamp()
-          });
+            const orderData = {
+                id: newId,
+                customer: pnrContext.passengers[0]?.name || 'Demo Passenger',
+                pnr: pnrContext.pnr,
+                route: pnrContext.route,
+                amount: finalTotal,
+                status: 'Fulfilled',
+                date: new Date().toISOString().split('T')[0],
+                source: 'CUSS_Kiosk',
+                paymentStatus: 'Paid',
+                isSimulated: true,
+                createdAt: serverTimestamp()
+            };
+
+            addDoc(collection(firestore, 'orders'), orderData)
+                .catch(err => console.error("Firestore persistence skipped (demo mode):", err));
+          } catch (e) {
+            console.warn("Could not save demo order to registry:", e);
+          }
       }
 
       setIsLoading(false);
@@ -600,7 +610,7 @@ export default function OffersenseComposerPage() {
                 </CardContent>
                 <CardFooter className="p-8 bg-slate-50 border-t flex justify-end">
                      <Button onClick={handleCompleteAirportPayment} disabled={isLoading} className="w-full h-14 text-md font-black uppercase tracking-widest bg-amber-600 hover:bg-amber-700 shadow-xl">
-                        {isLoading ? <Loader2 className="animate-spin mr-2" /> : <CreditCard className="mr-2 h-5 w-5" />}
+                        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
                         Complete Airport Payment
                     </Button>
                 </CardFooter>
@@ -640,7 +650,7 @@ export default function OffersenseComposerPage() {
                 <div className="flex justify-between items-end">
                     <div className="space-y-1">
                         <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em]">Master Order Receipt</p>
-                        <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">{orderId}</h2>
+                        <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">{orderId || 'ORD-99999'}</h2>
                     </div>
                     <div className="text-right space-y-1">
                         <Badge className="bg-emerald-600 px-4 py-1 font-mono tracking-widest text-[10px]">TRANSACTION_SETTLED</Badge>
@@ -679,7 +689,7 @@ export default function OffersenseComposerPage() {
                                     <div className="flex flex-wrap gap-2">
                                         {selectedPax.map(id => {
                                             const p = pnrContext.passengers.find((px: any) => px.id === id);
-                                            return <Badge key={id} variant="secondary" className="px-3 py-1.5 font-bold text-sm bg-slate-100 text-slate-700">{p.name}</Badge>;
+                                            return <Badge key={id} variant="secondary" className="px-3 py-1.5 font-bold text-sm bg-slate-100 text-slate-700">{p?.name || 'Passenger'}</Badge>;
                                         })}
                                     </div>
                                 </div>
