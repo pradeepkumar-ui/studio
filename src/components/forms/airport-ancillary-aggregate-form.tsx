@@ -24,18 +24,18 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection } from 'firebase/firestore';
-import { Building2, Info, CheckCircle2, DollarSign, PlusCircle, Trash2, Settings2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Building2, Info, DollarSign, PlusCircle, Trash2, Settings2 } from 'lucide-react';
 
 const dropdownOptions: Record<string, string[]> = {
-  'Cabin class': ['Economy', 'Premium Economy', 'Business', 'First', 'All'],
-  'Fare brand': ['Economy Light', 'Economy Flex', 'Business Saver', 'Business Flex'],
-  'Passenger type': ['Adult', 'Child', 'Infant'],
+  'Cabin Class': ['Economy', 'Premium Economy', 'Business', 'First', 'All'],
+  'Fare Brand': ['Economy Light', 'Economy Flex', 'Business Saver', 'Business Flex'],
+  'Passenger Type': ['Adult', 'Child', 'Infant'],
   'Channel': ['Web', 'Mobile', 'CUSS Kiosk', 'CUTE Agent', 'CUPPS'],
-  'Loyalty tier': ['Platinum', 'Gold', 'Silver', 'Bronze', 'None'],
+  'Loyalty Tier': ['Platinum', 'Gold', 'Silver', 'Bronze', 'None'],
   'Journey Stage': ['Departure', 'Arrival', 'Transit', 'All'],
   'Security Lane Status': ['Open', 'Limited', 'Express Only', 'Closed'],
   'Lounge Occupancy Level': ['Low', 'Moderate', 'High', 'At Capacity'],
+  'Operational Mode': ['NORMAL', 'CONGESTION', 'DISRUPTION'],
 };
 
 const MASTER_AIRPORT_PARAMETER_POOL = [
@@ -63,7 +63,8 @@ const MASTER_AIRPORT_PARAMETER_POOL = [
   'Passenger Type',
   'Loyalty Tier',
   'Cabin Class',
-  'Fare Brand'
+  'Fare Brand',
+  'Operational Mode'
 ].sort();
 
 const airportAggregateSchema = z.object({
@@ -263,7 +264,7 @@ export function AirportAncillaryAggregateForm({ aggregate, onSubmit, onCancel }:
                                                 <FormLabel className="text-[10px] font-black uppercase text-muted-foreground">Registry Value</FormLabel>
                                                 {options ? (
                                                     <Select onValueChange={field.onChange} value={field.value}>
-                                                        <FormControl><SelectTrigger className="h-9"><SelectValue placeholder="Value..." /></SelectTrigger></FormControl>
+                                                        <FormControl><SelectTrigger className="h-9"><SelectValue placeholder="Select Value..." /></SelectTrigger></FormControl>
                                                         <SelectContent>
                                                             {options.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
                                                         </SelectContent>

@@ -24,8 +24,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection } from 'firebase/firestore';
-import { Layers, Info, CheckCircle2, DollarSign, PlusCircle, Trash2, Settings2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Layers, Info, DollarSign, PlusCircle, Trash2, Settings2 } from 'lucide-react';
 
 const dropdownOptions: Record<string, string[]> = {
   'Aircraft type': ['A320neo', 'A350-900', 'A380-800', 'B737 MAX', 'B777-300ER', 'B787-9'],
@@ -160,9 +159,17 @@ export function AncillaryAggregateForm({ aggregate, onSubmit, onCancel }: Ancill
     }
   }, [selectedAncillaryId, selectedAncillary, form]);
 
+  const handleFinalSubmit = (data: AncillaryAggregate) => {
+    onSubmit({
+      ...data,
+      ancillaryName: selectedAncillary?.name,
+      category: selectedAncillary?.category,
+    });
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-h-[80vh] overflow-y-auto pr-4">
+      <form onSubmit={form.handleSubmit(handleFinalSubmit)} className="space-y-6 max-h-[80vh] overflow-y-auto pr-4">
         
         <section className="space-y-4">
             <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-[0.2em]">
@@ -268,7 +275,7 @@ export function AncillaryAggregateForm({ aggregate, onSubmit, onCancel }: Ancill
                                                 <FormLabel className="text-[10px] font-black uppercase text-muted-foreground">Configuration Value</FormLabel>
                                                 {options ? (
                                                     <Select onValueChange={field.onChange} value={field.value}>
-                                                        <FormControl><SelectTrigger className="h-9"><SelectValue placeholder="Value..." /></SelectTrigger></FormControl>
+                                                        <FormControl><SelectTrigger className="h-9"><SelectValue placeholder="Select Value..." /></SelectTrigger></FormControl>
                                                         <SelectContent>
                                                             {options.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
                                                         </SelectContent>
