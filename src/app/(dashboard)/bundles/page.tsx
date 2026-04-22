@@ -89,6 +89,54 @@ const mockOfferStrategies: OfferStrategy[] = [
         pricing: { type: 'PercentageDiscount', value: 15, currency: 'USD' },
         dynamicPricing: { enabled: true, ruleType: 'TimeBased', threshold: '< 24 Hours', adjustmentPercent: 5 },
         guardRails: { minPrice: 5, maxPrice: 25 }
+    },
+    {
+        id: 'OFR-STRAT-004',
+        name: 'Student Explorer Program',
+        type: 'Single',
+        ancillaryIds: ['AGG-001'],
+        status: 'Active',
+        validity: { from: '2025-06-01', to: '2025-09-30' },
+        cohortIds: ['STUDENT_INTL'],
+        pricing: { type: 'FixedDiscount', value: 25, currency: 'USD' },
+        dynamicPricing: { enabled: false, ruleType: 'TimeBased', adjustmentPercent: 0 },
+        guardRails: { minPrice: 10, maxPrice: 50 }
+    },
+    {
+        id: 'OFR-STRAT-005',
+        name: 'Early Bird Summer 2025',
+        type: 'Single',
+        ancillaryIds: ['AGG-002'],
+        status: 'Draft',
+        validity: { from: '2025-01-01', to: '2025-03-31' },
+        cohortIds: ['EARLY_BOOKER'],
+        pricing: { type: 'PercentageDiscount', value: 30, currency: 'USD' },
+        dynamicPricing: { enabled: false, ruleType: 'TimeBased', adjustmentPercent: 0 },
+        guardRails: { minPrice: 20, maxPrice: 100 }
+    },
+    {
+        id: 'OFR-STRAT-006',
+        name: 'Premium Transit Lounge Access',
+        type: 'Bundle',
+        ancillaryIds: ['AGG-003', 'AGG-005'],
+        status: 'Active',
+        validity: { from: '2025-01-01', to: '2025-12-31' },
+        cohortIds: ['LONG_HAUL_TRANSIT'],
+        pricing: { type: 'FixedPrice', value: 55, currency: 'USD' },
+        dynamicPricing: { enabled: true, ruleType: 'InventoryBased', threshold: '< 20% Capacity', adjustmentPercent: 15 },
+        guardRails: { minPrice: 50, maxPrice: 90 }
+    },
+    {
+        id: 'OFR-STRAT-007',
+        name: 'Corporate Multi-Bag Pass',
+        type: 'Single',
+        ancillaryIds: ['AGG-001'],
+        status: 'Active',
+        validity: { from: '2025-01-01', to: '2025-12-31' },
+        cohortIds: ['CORP_HEAVY_TRAVEL'],
+        pricing: { type: 'FixedPrice', value: 30, currency: 'USD' },
+        dynamicPricing: { enabled: true, ruleType: 'InventoryBased', threshold: 'Hold > 80%', adjustmentPercent: 20 },
+        guardRails: { minPrice: 30, maxPrice: 60 }
     }
 ];
 
