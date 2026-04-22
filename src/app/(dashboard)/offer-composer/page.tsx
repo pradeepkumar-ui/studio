@@ -18,6 +18,7 @@ import {
   Plane, 
   User, 
   Users,
+  Target,
   Ticket, 
   Clock, 
   Building2,
@@ -47,7 +48,6 @@ import {
   DollarSign,
   TrendingUp,
   ShoppingCart,
-  Target,
   Calculator
 } from 'lucide-react';
 import Image from 'next/image';
@@ -62,8 +62,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 // --- SIMULATION SCHEMAS ---
@@ -228,13 +226,33 @@ export default function OffersenseSimulatorPage() {
   const next = () => {
     const steps: Step[] = ['INPUT', 'SUMMARY', 'COHORTS', 'UNIVERSE', 'FILTERING', 'PRICING', 'RANKING', 'LIMITING', 'DISPLAY', 'STOCK', 'PAYMENT', 'UPDATE', 'FINAL'];
     const idx = steps.indexOf(currentStep);
-    if (idx < steps.length - 1) setCurrentStep(steps[idx + 1]);
+    
+    if (idx < steps.length - 1) {
+        let nextStep = steps[idx + 1];
+        
+        // Logical Skipping: If explanation trace is off, skip from Summary straight to Display
+        if (!simulationData?.runExplanation && currentStep === 'SUMMARY') {
+            nextStep = 'DISPLAY';
+        }
+        
+        setCurrentStep(nextStep);
+    }
   };
 
   const back = () => {
     const steps: Step[] = ['INPUT', 'SUMMARY', 'COHORTS', 'UNIVERSE', 'FILTERING', 'PRICING', 'RANKING', 'LIMITING', 'DISPLAY', 'STOCK', 'PAYMENT', 'UPDATE', 'FINAL'];
     const idx = steps.indexOf(currentStep);
-    if (idx > 0) setCurrentStep(steps[idx - 1]);
+    
+    if (idx > 0) {
+        let prevStep = steps[idx - 1];
+        
+        // Logical Skipping: If explanation trace was off, return from Display to Summary
+        if (!simulationData?.runExplanation && currentStep === 'DISPLAY') {
+            prevStep = 'SUMMARY';
+        }
+        
+        setCurrentStep(prevStep);
+    }
   };
 
   const handleRunSimulation = (data: SimulationData) => {
@@ -348,18 +366,6 @@ export default function OffersenseSimulatorPage() {
       return rankedOffers.slice(0, 4); // Max 4 for simulation
   }, [rankedOffers]);
 
-  // --- RENDER SCREENS ---
-
-  const renderHeader = (title: string, desc: string, icon?: any) => (
-      <div className="flex flex-col gap-1 mb-6 border-b pb-4">
-          <h2 className="text-xl font-black text-primary uppercase flex items-center gap-2">
-            {icon && <span className="p-1.5 bg-primary/10 rounded-lg">{icon}</span>}
-            {title}
-          </h2>
-          <p className="text-sm text-muted-foreground font-medium">{desc}</p>
-      </div>
-  );
-
   return (
     <div className="flex flex-col gap-6 max-w-6xl mx-auto w-full min-h-[85vh]">
       <div className="flex items-center justify-between border-b pb-4">
@@ -400,7 +406,6 @@ export default function OffersenseSimulatorPage() {
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(handleRunSimulation)}>
                             <div className="grid grid-cols-1 md:grid-cols-12">
-                                {/* Left Sidebar: Navigation tabs for form sections if needed, or just scrolling */}
                                 <div className="md:col-span-12 p-8 space-y-10">
                                     <Accordion type="multiple" defaultValue={['journey', 'pax', 'profile', 'purchases']} className="w-full">
                                         
@@ -414,7 +419,8 @@ export default function OffersenseSimulatorPage() {
                                             <AccordionContent className="px-4 pb-8">
                                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pt-2">
                                                     <FormField control={form.control} name="airline" render={({field}) => (
-                                                        <FormItem><FormLabel>Airline</FormLabel>
+                                                        <FormItem>
+                                                        <FormLabel>Airline</FormLabel>
                                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                             <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                                                             <SelectContent><SelectItem value="GAB">Global Airways</SelectItem><SelectItem value="SBA">SkyBridge Airlines</SelectItem></SelectContent></Select></FormItem>
@@ -543,7 +549,15 @@ export default function OffersenseSimulatorPage() {
 
                             <CardFooter className="bg-primary/5 border-t p-8 flex justify-between items-center">
                                 <div className="flex items-center gap-6">
-                                    <FormField control={form.control} name="runExplanation" render={({field}) => (<FormItem className="flex items-center gap-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="text-xs font-black uppercase">Run Logic Explanation Trace</FormLabel></FormItem>)} />
+                                    <FormField control={form.control} name="runExplanation" render={({field}) => (
+                                        <FormItem className="flex items-center gap-2 space-y-0">
+                                            <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                            <div className="space-y-0.5">
+                                                <FormLabel className="text-xs font-black uppercase">Run Logic Explanation Trace</FormLabel>
+                                                <FormDescription className="text-[10px]">Step through internal engine decisions (Cohorting, Pricing, Ranking).</FormDescription>
+                                            </div>
+                                        </FormItem>
+                                    )} />
                                 </div>
                                 <Button type="submit" disabled={isLoading} className="h-14 px-12 font-black uppercase tracking-widest shadow-xl">
                                     {isLoading ? <Loader2 className="mr-2 animate-spin h-5 w-5" /> : <Zap className="mr-2 h-5 w-5 fill-current" />}
@@ -599,6 +613,9 @@ export default function OffersenseSimulatorPage() {
                         </div>
                     </div>
                 </CardContent>
+                <CardFooter className="bg-slate-50 border-t p-4 flex justify-center italic text-[10px] text-muted-foreground font-medium">
+                    {simulationData.runExplanation ? "Explanation Trace active: Stepping through logic gates." : "Direct Preview active: Jumping to final Offer Shelf."}
+                </CardFooter>
             </Card>
         )}
 
