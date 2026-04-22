@@ -29,9 +29,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
 } from '@/components/ui/dialog';
 import { 
   MoreHorizontal, 
@@ -40,12 +37,13 @@ import {
   Search, 
   Package, 
   Tag, 
-  TrendingUp, 
   ShieldCheck, 
   Users,
   Trash2,
   Edit,
-  Zap
+  Zap,
+  TrendingUp,
+  AlertCircle
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -55,11 +53,49 @@ import { Input } from '@/components/ui/input';
 import { OfferStrategyForm, type OfferStrategy } from '@/components/pricing/offer-strategy-form';
 import { cn } from '@/lib/utils';
 
+const mockOfferStrategies: OfferStrategy[] = [
+    {
+        id: 'OFR-STRAT-001',
+        name: 'Holiday Family Comfort Bundle',
+        type: 'Bundle',
+        ancillaryIds: ['AGG-001', 'AGG-002'],
+        status: 'Active',
+        validity: { from: '2025-11-01', to: '2026-01-15' },
+        cohortIds: ['FAMILY_TRIP', 'LEISURE_PROMO'],
+        pricing: { type: 'PercentageDiscount', value: 20, currency: 'USD' },
+        dynamicPricing: { enabled: true, ruleType: 'TimeBased', threshold: 'T-7 Days', adjustmentPercent: 10 },
+        guardRails: { minPrice: 45, maxPrice: 120 }
+    },
+    {
+        id: 'OFR-STRAT-002',
+        name: 'Business Priority Plus',
+        type: 'Bundle',
+        ancillaryIds: ['AGG-003', 'AGG-004'],
+        status: 'Active',
+        validity: { from: '2025-10-01', to: '2026-12-31' },
+        cohortIds: ['PLAT_SOLO_BIZ', 'CORP_PREMIUM'],
+        pricing: { type: 'FixedPrice', value: 85, currency: 'USD' },
+        dynamicPricing: { enabled: false, ruleType: 'InventoryBased', adjustmentPercent: 0 },
+        guardRails: { minPrice: 75, maxPrice: 150 }
+    },
+    {
+        id: 'OFR-STRAT-003',
+        name: 'Last Minute Wi-Fi Special',
+        type: 'Single',
+        ancillaryIds: ['AGG-005'],
+        status: 'Active',
+        validity: { from: '2025-01-01', to: '2025-12-31' },
+        cohortIds: [],
+        pricing: { type: 'PercentageDiscount', value: 15, currency: 'USD' },
+        dynamicPricing: { enabled: true, ruleType: 'TimeBased', threshold: '< 24 Hours', adjustmentPercent: 5 },
+        guardRails: { minPrice: 5, maxPrice: 25 }
+    }
+];
+
 export default function AirlineOffersPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   
-  // Memoize queries to prevent infinite loops
   const offersQuery = useMemo(() => 
     firestore ? query(collection(firestore, 'offers'), orderBy('createdAt', 'desc')) : undefined
   , [firestore]);
@@ -70,10 +106,12 @@ export default function AirlineOffersPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingOffer, setEditingOffer] = useState<OfferStrategy | null>(null);
 
-  const filteredOffers = useMemo(() => {
-    if (!offers) return [];
-    return (offers as OfferStrategy[]).filter(o => 
-      o.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const displayOffers = useMemo(() => {
+    const sourceData = (offers && offers.length > 0) ? (offers as OfferStrategy[]) : mockOfferStrategies;
+    if (!searchTerm) return sourceData;
+    return sourceData.filter(o => 
+      o.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      o.id?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [offers, searchTerm]);
 
@@ -85,26 +123,30 @@ export default function AirlineOffersPage() {
   const handleFormSubmit = async (data: OfferStrategy) => {
     if (!firestore) return;
     try {
-      if (editingOffer?.id) {
+      if (editingOffer?.id && !editingOffer.id.startsWith('OFR-STRAT')) {
         const ref = doc(firestore, 'offers', editingOffer.id);
         await setDoc(ref, { ...data, updatedAt: serverTimestamp() }, { merge: true });
-        toast({ title: 'Strategy Updated', description: `Successfully updated ${data.name}.` });
+        toast({ title: 'Strategy Synchronized', description: `Successfully updated ${data.name}.` });
       } else {
         await addDoc(collection(firestore, 'offers'), { 
           ...data, 
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp() 
         });
-        toast({ title: 'Strategy Created', description: `New retailing offer ${data.name} is now live.` });
+        toast({ title: 'New Strategy Published', description: `Retailing offer ${data.name} is now live.` });
       }
       setIsDialogOpen(false);
     } catch (e: any) {
-      toast({ variant: 'destructive', title: 'Error', description: e.message });
+      toast({ variant: 'destructive', title: 'Sync Error', description: e.message });
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!firestore) return;
+    if (id.startsWith('OFR-STRAT')) {
+        toast({ title: 'System Record', description: 'Mock records cannot be deleted from live storage.' });
+        return;
+    }
     try {
       await deleteDoc(doc(firestore, 'offers', id));
       toast({ title: 'Strategy Removed', variant: 'destructive' });
@@ -117,22 +159,22 @@ export default function AirlineOffersPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-black tracking-tight text-primary">Airline Offers Cockpit</h1>
-          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest">Unified Carrier Retailing & Dynamic Pricing</p>
+          <h1 className="text-3xl font-black tracking-tight text-primary uppercase">Airline Offers Cockpit</h1>
+          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest">Carrier Retailing & Dynamic Monetization Engine</p>
         </div>
-        <Button onClick={() => handleOpenDialog()} className="font-bold shadow-lg">
+        <Button onClick={() => handleOpenDialog()} className="font-bold shadow-lg h-11 px-8">
           <PlusCircle className="mr-2 h-4 w-4" /> Create Offer Strategy
         </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: 'Active Offers', value: filteredOffers.filter(o => o.status === 'Active').length, icon: Tag, color: 'text-primary' },
-          { label: 'Dynamic Rules', value: filteredOffers.filter(o => o.dynamicPricing?.enabled).length, icon: Zap, color: 'text-amber-500' },
-          { label: 'Cohort Targets', value: filteredOffers.filter(o => o.cohortIds && o.cohortIds.length > 0).length, icon: Users, color: 'text-blue-600' },
-          { label: 'Sync Health', value: 'Live', icon: ShieldCheck, color: 'text-emerald-500' }
+          { label: 'Active Strategies', value: displayOffers.filter(o => o.status === 'Active').length, icon: Tag, color: 'text-primary' },
+          { label: 'Dynamic Flex Enabled', value: displayOffers.filter(o => o.dynamicPricing?.enabled).length, icon: Zap, color: 'text-amber-500' },
+          { label: 'Segmented Targeting', value: displayOffers.filter(o => o.cohortIds && o.cohortIds.length > 0).length, icon: Users, color: 'text-blue-600' },
+          { label: 'Commercial Sync', value: '100%', icon: ShieldCheck, color: 'text-emerald-500' }
         ].map((kpi) => (
-          <Card key={kpi.label} className="p-6">
+          <Card key={kpi.label} className="p-6 bg-white shadow-sm border-primary/5">
             <div className="flex justify-between items-center mb-2">
               <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{kpi.label}</p>
               <kpi.icon className={cn("h-4 w-4", kpi.color)} />
@@ -142,51 +184,57 @@ export default function AirlineOffersPage() {
         ))}
       </div>
 
-      <Card className="shadow-sm border-primary/10 overflow-hidden">
-        <CardHeader className="bg-muted/30 border-b">
+      <Card className="shadow-xl border-primary/10 overflow-hidden">
+        <CardHeader className="bg-primary/5 border-b py-4">
           <div className="flex items-center justify-between">
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search strategies..."
+                placeholder="Search strategies by name or ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 bg-white"
+                className="pl-9 bg-white h-10"
               />
+            </div>
+            <div className="flex gap-2">
+                <Badge variant="outline" className="bg-white/50 text-[9px] font-bold h-6">TOTAL: {displayOffers.length}</Badge>
             </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          {loading ? (
-            <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+          {loading && offers?.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 gap-3">
+                <Loader2 className="h-10 w-10 animate-spin text-primary/40" />
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Syncing Global Strategies...</p>
+            </div>
           ) : (
             <Table>
-              <TableHeader className="bg-muted/10">
+              <TableHeader className="bg-muted/30">
                 <TableRow>
-                  <TableHead className="text-[10px] uppercase font-black">Strategy Identity</TableHead>
-                  <TableHead className="text-[10px] uppercase font-black">Composition</TableHead>
-                  <TableHead className="text-[10px] uppercase font-black">Pricing Layer</TableHead>
-                  <TableHead className="text-[10px] uppercase font-black">Targeting</TableHead>
-                  <TableHead className="text-[10px] uppercase font-black">Status</TableHead>
-                  <TableHead className="text-right text-[10px] uppercase font-black">Actions</TableHead>
+                  <TableHead className="text-[10px] uppercase font-black py-4">Strategy Identity</TableHead>
+                  <TableHead className="text-[10px] uppercase font-black py-4">Structure</TableHead>
+                  <TableHead className="text-[10px] uppercase font-black py-4">Commercial Layer</TableHead>
+                  <TableHead className="text-[10px] uppercase font-black py-4">Retailing Cohorts</TableHead>
+                  <TableHead className="text-[10px] uppercase font-black py-4">Status</TableHead>
+                  <TableHead className="text-right text-[10px] uppercase font-black py-4 pr-6">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredOffers.map((offer) => (
+                {displayOffers.map((offer) => (
                   <TableRow key={offer.id} className="group hover:bg-muted/50 transition-colors">
-                    <TableCell>
+                    <TableCell className="py-4">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-primary/10 rounded-xl group-hover:scale-110 transition-transform">
                           {offer.type === 'Bundle' ? <Package className="h-4 w-4 text-primary" /> : <Tag className="h-4 w-4 text-primary" />}
                         </div>
                         <div>
-                          <div className="font-bold text-sm">{offer.name}</div>
-                          <div className="text-[10px] text-muted-foreground font-mono uppercase tracking-tighter">ID: {offer.id?.slice(0, 8)}</div>
+                          <div className="font-bold text-sm text-primary">{offer.name}</div>
+                          <div className="text-[10px] text-muted-foreground font-mono uppercase tracking-tighter">ID: {offer.id?.slice(0, 12)}</div>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="text-[10px] uppercase font-bold">
+                      <Badge variant="outline" className="text-[10px] uppercase font-bold bg-white">
                         {offer.type} • {offer.ancillaryIds?.length || 1} SKUs
                       </Badge>
                     </TableCell>
@@ -199,42 +247,49 @@ export default function AirlineOffersPage() {
                         </div>
                         {offer.dynamicPricing?.enabled && (
                           <div className="flex items-center gap-1 text-[9px] text-amber-600 font-black uppercase">
-                            <Zap className="h-2.5 w-2.5" /> Dynamic Adjustment Active
+                            <Zap className="h-2.5 w-2.5 fill-current" /> Dynamic Adjust Active
                           </div>
                         )}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-wrap gap-1 max-w-[200px]">
                         {offer.cohortIds?.length ? offer.cohortIds.map(c => (
-                          <Badge key={c} variant="secondary" className="text-[9px] px-1.5 font-mono">{c}</Badge>
-                        )) : <span className="text-[10px] text-muted-foreground italic">Global Access</span>}
+                          <Badge key={c} variant="secondary" className="text-[9px] px-1.5 font-mono bg-indigo-50 text-indigo-700 border-indigo-100">{c}</Badge>
+                        )) : <span className="text-[10px] text-muted-foreground italic font-medium flex items-center gap-1"><TrendingUp className="h-3 w-3" /> Global Reach</span>}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={offer.status === 'Active' ? 'default' : 'secondary'} className="text-[9px] font-black uppercase tracking-wider">
+                      <Badge variant={offer.status === 'Active' ? 'default' : 'secondary'} className={cn("text-[9px] font-black uppercase tracking-wider", offer.status === 'Active' ? "bg-emerald-600" : "")}>
                         {offer.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right pr-6">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button size="icon" variant="ghost"><MoreHorizontal className="h-4 w-4" /></Button>
+                          <Button size="icon" variant="ghost" className="hover:bg-muted h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56">
-                          <DropdownMenuLabel className="text-[10px] uppercase font-black text-muted-foreground">Operations</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => handleOpenDialog(offer)}><Edit className="mr-2 h-4 w-4"/>Modify Strategy</DropdownMenuItem>
-                          <DropdownMenuItem><Zap className="mr-2 h-4 w-4"/>Simulate Execution</DropdownMenuItem>
+                          <DropdownMenuLabel className="text-[10px] uppercase font-black text-muted-foreground">Monetization Operations</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => handleOpenDialog(offer)} className="font-bold"><Edit className="mr-2 h-4 w-4"/>Modify Strategy</DropdownMenuItem>
+                          <DropdownMenuItem><Zap className="mr-2 h-4 w-4"/>Run Simulation Trace</DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive font-bold" onClick={() => handleDelete(offer.id!)}><Trash2 className="mr-2 h-4 w-4"/>Archive Offer</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive font-bold" onClick={() => offer.id && handleDelete(offer.id)}>
+                            <Trash2 className="mr-2 h-4 w-4"/>Archive Offer
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
-                {filteredOffers.length === 0 && (
+                {displayOffers.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-32 text-center text-muted-foreground italic">No offer strategies configured.</TableCell>
+                    <TableCell colSpan={6} className="h-48 text-center">
+                        <div className="flex flex-col items-center gap-2 opacity-40">
+                            <AlertCircle className="h-10 w-10" />
+                            <p className="font-bold uppercase text-xs tracking-widest">No active retailing strategies found</p>
+                        </div>
+                    </TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -244,7 +299,7 @@ export default function AirlineOffersPage() {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden border-none shadow-2xl">
+        <DialogContent className="max-w-5xl p-0 overflow-hidden border-none shadow-2xl rounded-3xl">
           <OfferStrategyForm 
             offer={editingOffer} 
             onSubmit={handleFormSubmit} 
