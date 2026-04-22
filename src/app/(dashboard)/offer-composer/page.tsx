@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -19,7 +20,6 @@ import {
   User, 
   Ticket, 
   Clock, 
-  Package, 
   Building2,
   ChevronRight,
   ShieldCheck,
@@ -30,16 +30,28 @@ import {
   Star,
   MonitorDot,
   Sparkles,
-  Hotel,
   Truck,
   Gauge,
   CalendarDays,
-  Layers
+  Layers,
+  Filter,
+  Trash2,
+  Info,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  ChevronDown,
+  Trophy,
+  Accessibility,
+  Store,
+  DollarSign,
+  TrendingUp,
+  ShoppingCart
 } from 'lucide-react';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormDescription, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -48,665 +60,923 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useFirestore } from '@/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
-// --- TYPES & SCHEMAS ---
+// --- SIMULATION SCHEMAS ---
 
-type ComposerStep = 
-  | 'identification' 
-  | 'itinerary' 
-  | 'boarding_pass_gen' 
-  | 'boarding_pass_qr' 
-  | 'personalized_offers' 
-  | 'airline_payment' 
-  | 'airport_payment' 
-  | 'confirmation' 
-  | 'final_summary';
+const simulationSchema = z.object({
+  // A. Flight / Journey
+  airline: z.string().min(1, 'Required'),
+  flightNumber: z.string().min(1, 'Required').toUpperCase(),
+  travelDate: z.string().min(1, 'Required'),
+  origin: z.string().length(3).toUpperCase(),
+  destination: z.string().length(3).toUpperCase(),
+  tripType: z.enum(['one_way', 'return']),
+  geography: z.enum(['Domestic', 'International']),
+  durationBand: z.enum(['Short-haul', 'Medium-haul', 'Long-haul']),
+  daysToDeparture: z.coerce.number().min(0),
+  bookingStage: z.enum(['At booking', 'Post-booking', 'Check-in', 'Airport', 'Gate']),
+  channel: z.enum(['Web', 'App', 'NDC', 'CUSS', 'CUTE-CUPPS', 'Agent']),
 
-const identificationSchema = z.object({
-  airline: z.string().min(1, 'Select an airline.'),
-  pnr: z.string().min(6, 'PNR must be 6 characters.').max(6).toUpperCase(),
-  generateOffers: z.boolean().default(true),
+  // B. Passenger Counts
+  adults: z.coerce.number().min(1),
+  children: z.coerce.number().min(0),
+  infants: z.coerce.number().min(0),
+
+  // C. Passenger Profile
+  paxType: z.enum(['Solo', 'Family', 'Group', 'Corporate', 'VIP']),
+  purpose: z.enum(['Business', 'Leisure']),
+  isFrequent: z.boolean().default(false),
+  isFirstTime: z.boolean().default(false),
+  isLastMinute: z.boolean().default(false),
+  isConnecting: z.boolean().default(false),
+
+  // D. Loyalty
+  isLoyaltyMember: z.boolean().default(false),
+  loyaltyTier: z.enum(['None', 'Silver', 'Gold', 'Platinum']),
+  isLoungeMember: z.boolean().default(false),
+  hasCoBrandedCard: z.boolean().default(false),
+
+  // E. Booking / Fare
+  cabinClass: z.enum(['Economy', 'Premium Economy', 'Business', 'First']),
+  fareFamily: z.enum(['Basic', 'Standard', 'Flex', 'Premium']),
+  bookingClass: z.string().length(1).toUpperCase(),
+  ticketType: z.enum(['Paid', 'Award']),
+  isGroupBooking: z.boolean().default(false),
+
+  // F. Preferences
+  seatPref: z.enum(['Window', 'Aisle', 'No preference']),
+  mealPref: z.enum(['Veg', 'Non-veg', 'Special meal', 'No preference']),
+  baggagePref: z.enum(['Light', 'Standard', 'Heavy']),
+  premiumPref: z.enum(['Low', 'Medium', 'High']),
+  priceSensitivity: z.enum(['Low', 'Medium', 'High']),
+
+  // G. Assistance / SSR
+  withInfant: z.boolean().default(false),
+  wheelchair: z.boolean().default(false),
+  specialMeal: z.boolean().default(false),
+  petTraveler: z.boolean().default(false),
+  medicalRequired: z.boolean().default(false),
+
+  // H. Existing Purchases
+  hasPurchasedSeat: z.boolean().default(false),
+  hasPurchasedBaggage: z.boolean().default(false),
+  hasPurchasedMeal: z.boolean().default(false),
+  hasPurchasedUpgrade: z.boolean().default(false),
+  hasPurchasedPriority: z.boolean().default(false),
+  hasPurchasedLounge: z.boolean().default(false),
+
+  // I. Inventory / Operational
+  aircraftType: z.string().default('A350-900'),
+  remSeatInv: z.coerce.number().default(12),
+  remUpgradeInv: z.coerce.number().default(2),
+  remBagInv: z.coerce.number().default(50),
+  loadFactor: z.coerce.number().min(0).max(100).default(82),
+  isCheckInOpen: z.boolean().default(true),
+  isAirportStage: z.boolean().default(false),
+
+  // J. Controls
+  genAirlineOffers: z.boolean().default(true),
+  genAirportOffers: z.boolean().default(true),
+  runExplanation: z.boolean().default(true),
 });
 
-type OfferItem = {
-    id: string;
-    name: string;
-    description: string;
-    basePrice: number;
-    adjustment: number;
-    finalPrice: number;
-    domain: 'Airline' | 'Airport' | 'ThirdParty' | 'Core';
-};
+type SimulationData = z.infer<typeof simulationSchema>;
 
-// --- MOCK DATA ---
+type Step = 
+    | 'INPUT' 
+    | 'SUMMARY' 
+    | 'COHORTS' 
+    | 'UNIVERSE' 
+    | 'FILTERING' 
+    | 'PRICING' 
+    | 'RANKING' 
+    | 'LIMITING' 
+    | 'DISPLAY' 
+    | 'STOCK' 
+    | 'PAYMENT' 
+    | 'UPDATE' 
+    | 'FINAL';
 
-const mockAirlines = [
-    { code: 'GAB', name: 'Global Airways' },
-    { code: 'SBA', name: 'SkyBridge Airlines' },
-    { code: 'MLN', name: 'MetroLink Air' }
+// --- MOCK CONSTANTS ---
+
+const ALL_OFFERS = [
+    { id: 'O-A1', name: 'Preferred Seat', domain: 'Airline', basePrice: 20, type: 'Seat' },
+    { id: 'O-A2', name: 'Extra Legroom Seat', domain: 'Airline', basePrice: 50, type: 'Seat' },
+    { id: 'O-A3', name: 'Extra Baggage (23kg)', domain: 'Airline', basePrice: 45, type: 'Baggage' },
+    { id: 'O-A4', name: 'Priority Boarding', domain: 'Airline', basePrice: 15, type: 'Priority' },
+    { id: 'O-A5', name: 'Gourmet Meal Upgrade', domain: 'Airline', basePrice: 25, type: 'Meal' },
+    { id: 'O-A6', name: 'In-flight Wi-Fi', domain: 'Airline', basePrice: 10, type: 'Digital' },
+    { id: 'O-A7', name: 'Lounge Access (Carrier)', domain: 'Airline', basePrice: 40, type: 'Lounge' },
+    { id: 'O-A8', name: 'Business Class Upgrade', domain: 'Airline', basePrice: 250, type: 'Upgrade' },
+    { id: 'O-P1', name: 'Executive Lounge Access', domain: 'Airport', basePrice: 55, type: 'Lounge' },
+    { id: 'O-P2', name: 'Security Fast Track', domain: 'Airport', basePrice: 12, type: 'Priority' },
+    { id: 'O-P3', name: 'Meet & Greet Assist', domain: 'Airport', basePrice: 80, type: 'Service' },
+    { id: 'O-P4', name: 'VIP Buggy Service', domain: 'Airport', basePrice: 30, type: 'Service' },
 ];
 
-const mockPassengers = [
-    { id: 'PAX-1', name: 'John Smith', checkedIn: false },
-    { id: 'PAX-2', name: 'Jane Smith', checkedIn: false }
-];
-
-const mockOffers: OfferItem[] = [
-    { id: 'OFR-A1', name: 'Premium Cabin Upgrade', description: 'Move to Business Class for maximum comfort.', basePrice: 250, adjustment: -25, finalPrice: 225, domain: 'Airline' },
-    { id: 'OFR-A2', name: 'Extra Baggage Allowance', description: '+23kg hold luggage for your journey.', basePrice: 45, adjustment: 0, finalPrice: 45, domain: 'Airline' },
-    { id: 'OFR-A3', name: 'Priority Boarding', description: 'Be the first to board and secure overhead space.', basePrice: 15, adjustment: 5, finalPrice: 20, domain: 'Airline' },
-    { id: 'OFR-P1', name: 'Executive Lounge Access', description: 'LHR T5 North Plaza - Food, Drinks & Wi-Fi.', basePrice: 55, adjustment: -10, finalPrice: 45, domain: 'Airport' },
-    { id: 'OFR-P2', name: 'Security Fast Track', description: 'Skip the queues at T5 security checkpoints.', basePrice: 12, adjustment: 3, finalPrice: 15, domain: 'Airport' },
-    { id: 'OFR-P3', name: 'Meet & Greet Assist', description: 'Personal concierge assistant from gate to curb.', basePrice: 80, adjustment: 0, finalPrice: 80, domain: 'Airport' },
-];
-
-export default function OffersenseComposerPage() {
-  const [step, setStep] = useState<ComposerStep>('identification');
+export default function OffersenseSimulatorPage() {
+  const [currentStep, setCurrentStep] = useState<Step>('INPUT');
+  const [simulationData, setSimulationData] = useState<SimulationData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [pnrContext, setPnrContext] = useState<any>(null);
-  const [selectedPax, setSelectedPax] = useState<string[]>([]);
-  const [selectedAirlineOffers, setSelectedAirlineOffers] = useState<string[]>([]);
-  const [selectedAirportOffers, setSelectedAirportOffers] = useState<string[]>([]);
-  const [orderId, setOrderId] = useState<string | null>(null);
-
+  const [selectedOffers, setSelectedOffers] = useState<string[]>([]);
   const { toast } = useToast();
-  const firestore = useFirestore();
 
-  const identificationForm = useForm<z.infer<typeof identificationSchema>>({
-    resolver: zodResolver(identificationSchema),
+  const form = useForm<SimulationData>({
+    resolver: zodResolver(simulationSchema),
     defaultValues: {
-      airline: 'GAB',
-      pnr: 'L8Y2N3',
-      generateOffers: true,
+        airline: 'GAB',
+        flightNumber: 'AC101',
+        travelDate: '2025-10-28',
+        origin: 'LHR',
+        destination: 'JFK',
+        tripType: 'one_way',
+        geography: 'International',
+        durationBand: 'Long-haul',
+        daysToDeparture: 2,
+        bookingStage: 'Check-in',
+        channel: 'CUSS',
+        adults: 2,
+        children: 1,
+        infants: 0,
+        paxType: 'Family',
+        purpose: 'Leisure',
+        isFrequent: true,
+        loyaltyTier: 'Gold',
+        isLoyaltyMember: true,
+        cabinClass: 'Economy',
+        fareFamily: 'Flex',
+        bookingClass: 'Y',
+        ticketType: 'Paid',
+        seatPref: 'No preference',
+        mealPref: 'Veg',
+        baggagePref: 'Heavy',
+        premiumPref: 'Medium',
+        priceSensitivity: 'Medium',
+        loadFactor: 82,
+        aircraftType: 'A350-900',
+        genAirlineOffers: true,
+        genAirportOffers: true,
+        runExplanation: true,
     },
   });
 
-  // --- ACTIONS ---
+  const next = () => {
+    const steps: Step[] = ['INPUT', 'SUMMARY', 'COHORTS', 'UNIVERSE', 'FILTERING', 'PRICING', 'RANKING', 'LIMITING', 'DISPLAY', 'STOCK', 'PAYMENT', 'UPDATE', 'FINAL'];
+    const idx = steps.indexOf(currentStep);
+    if (idx < steps.length - 1) setCurrentStep(steps[idx + 1]);
+  };
 
-  const handleFetchItinerary = async (values: z.infer<typeof identificationSchema>) => {
+  const back = () => {
+    const steps: Step[] = ['INPUT', 'SUMMARY', 'COHORTS', 'UNIVERSE', 'FILTERING', 'PRICING', 'RANKING', 'LIMITING', 'DISPLAY', 'STOCK', 'PAYMENT', 'UPDATE', 'FINAL'];
+    const idx = steps.indexOf(currentStep);
+    if (idx > 0) setCurrentStep(steps[idx - 1]);
+  };
+
+  const handleRunSimulation = (data: SimulationData) => {
     setIsLoading(true);
-    await new Promise(r => setTimeout(r, 1200));
+    setSimulationData(data);
+    setTimeout(() => {
+        setIsLoading(false);
+        setCurrentStep('SUMMARY');
+    }, 1200);
+  };
+
+  // --- LOGIC HELPERS ---
+
+  const evaluatedCohorts = useMemo(() => {
+    if (!simulationData) return [];
+    const results = [
+        { id: 'C1', name: 'Frequent Traveler', matched: simulationData.isFrequent || simulationData.loyaltyTier !== 'None', reason: simulationData.isFrequent ? 'Marked as frequent traveler.' : 'Loyalty tier is active.' },
+        { id: 'C2', name: 'Family Traveler', matched: simulationData.children > 0 || simulationData.infants > 0 || simulationData.paxType === 'Family', reason: 'Traveling with dependents or marked as family.' },
+        { id: 'C3', name: 'Premium Upsell', matched: simulationData.cabinClass === 'Economy' && simulationData.loyaltyTier === 'Platinum', reason: 'High-tier member in standard cabin.' },
+        { id: 'C4', name: 'Last-Minute Traveler', matched: simulationData.daysToDeparture <= 1 || simulationData.isLastMinute, reason: 'Booking/Session detected near departure.' },
+        { id: 'C5', name: 'Price Sensitive', matched: simulationData.priceSensitivity === 'High' || simulationData.fareFamily === 'Basic', reason: 'Explicit preference or restricted fare family.' },
+    ];
+    return results;
+  }, [simulationData]);
+
+  const filteredOffers = useMemo(() => {
+    if (!simulationData) return { remaining: [], removed: [] };
     
-    setPnrContext({
-        ...values,
-        flight: 'AC101',
-        route: 'LHR - JFK',
-        date: '28 OCT 2025',
-        time: '14:20',
-        aircraft: 'Airbus A350-900',
-        influencers: {
-            loadFactor: '82%',
-            leadTime: '2 Days (T-2)',
-            haulType: 'Long-Haul',
-            paxCount: '2 Adults'
-        },
-        passengers: mockPassengers
+    let removed: any[] = [];
+    let current = [...ALL_OFFERS];
+
+    // Filter 1: Already Purchased
+    const purchased = current.filter(o => 
+        (o.type === 'Baggage' && simulationData.hasPurchasedBaggage) ||
+        (o.type === 'Meal' && simulationData.hasPurchasedMeal) ||
+        (o.type === 'Seat' && simulationData.hasPurchasedSeat) ||
+        (o.type === 'Upgrade' && simulationData.hasPurchasedUpgrade) ||
+        (o.type === 'Priority' && simulationData.hasPurchasedPriority) ||
+        (o.type === 'Lounge' && simulationData.hasPurchasedLounge)
+    );
+    removed.push({ step: 'Already Purchased', items: purchased });
+    current = current.filter(o => !purchased.includes(o));
+
+    // Filter 2: Ineligible Products
+    const ineligible = current.filter(o => 
+        (o.name === 'Extra Legroom Seat' && simulationData.infants > 0) || // Exit row restriction
+        (o.name === 'Business Class Upgrade' && simulationData.fareFamily === 'Basic') // Fare restriction
+    );
+    removed.push({ step: 'Ineligible Products', items: ineligible });
+    current = current.filter(o => !ineligible.includes(o));
+
+    // Filter 3: Inventory Unavailable
+    const unavailable = current.filter(o => 
+        (o.type === 'Lounge' && simulationData.remSeatInv === 0) || // Mocking lounge outage
+        (o.name === 'Extra Legroom Seat' && simulationData.remSeatInv < 2)
+    );
+    removed.push({ step: 'Inventory Unavailable', items: unavailable });
+    current = current.filter(o => !unavailable.includes(o));
+
+    // Filter 4: Rule Violations
+    const rules = current.filter(o => 
+        (o.name === 'Priority Boarding' && simulationData.loyaltyTier === 'Platinum') || // Already included
+        (o.name === 'In-flight Wi-Fi' && simulationData.aircraftType === 'B737-800') // Aircraft not enabled
+    );
+    removed.push({ step: 'Rule Violations', items: rules });
+    current = current.filter(o => !rules.includes(o));
+
+    // Filter 5: Channel/Stage
+    const stage = current.filter(o => 
+        (o.name === 'Gourmet Meal Upgrade' && simulationData.bookingStage === 'Gate') // Too late
+    );
+    removed.push({ step: 'Channel / Stage Rules', items: stage });
+    current = current.filter(o => !stage.includes(o));
+
+    return { remaining: current, removed };
+  }, [simulationData]);
+
+  const pricedOffers = useMemo(() => {
+    if (!simulationData) return [];
+    return filteredOffers.remaining.map(o => {
+        let adjustment = 0;
+        let reasons: string[] = [];
+
+        // Cohort Discount
+        if (evaluatedCohorts.find(c => c.name === 'Family Traveler' && c.matched)) {
+            adjustment -= 0.15;
+            reasons.push('Family Traveler Discount (-15%)');
+        }
+
+        // Inventory Adjustment
+        if (simulationData.loadFactor > 90) {
+            adjustment += 0.10;
+            reasons.push('High Load Factor Surcharge (+10%)');
+        }
+
+        const finalPrice = o.basePrice * (1 + adjustment);
+        return { ...o, finalPrice, reasons };
     });
-    
-    setIsLoading(false);
-    setStep('itinerary');
-  };
+  }, [simulationData, filteredOffers.remaining, evaluatedCohorts]);
 
-  const handleCheckIn = async () => {
-    if (selectedPax.length === 0) {
-        toast({ title: "No Passengers Selected", description: "Please select at least one passenger.", variant: 'destructive' });
-        return;
-    }
-    setIsLoading(true);
-    await new Promise(r => setTimeout(r, 1000));
-    setIsLoading(false);
-    setStep('boarding_pass_gen');
-  };
+  const rankedOffers = useMemo(() => {
+      return [...pricedOffers].sort((a, b) => {
+          // Mock ranking: Priority to high margin or high relevance
+          if (a.type === 'Upgrade') return -1;
+          if (b.type === 'Upgrade') return 1;
+          return b.finalPrice - a.finalPrice;
+      });
+  }, [pricedOffers]);
 
-  const handleViewBoardingPass = async () => {
-    setIsLoading(true);
-    await new Promise(r => setTimeout(r, 800));
-    setIsLoading(false);
-    setStep('boarding_pass_qr');
-  };
+  const limitedOffers = useMemo(() => {
+      return rankedOffers.slice(0, 4); // Max 4 for simulation
+  }, [rankedOffers]);
 
-  const triggerOfferEngine = async () => {
-    setIsLoading(true);
-    await new Promise(r => setTimeout(r, 1500)); // Simulated AI Engine processing
-    setIsLoading(false);
-    setStep('personalized_offers');
-  };
+  // --- RENDER SCREENS ---
 
-  const handleProceedToAirlinePayment = () => {
-      setStep('airline_payment');
-  };
-
-  const handleCompleteAirlinePayment = async () => {
-      setIsLoading(true);
-      await new Promise(r => setTimeout(r, 1000));
-      setIsLoading(false);
-      setStep('airport_payment');
-  };
-
-  const handleCompleteAirportPayment = async () => {
-      setIsLoading(true);
-      // Simulated processing time
-      await new Promise(r => setTimeout(r, 1200));
-      
-      const newId = `ORD-${Math.floor(Math.random() * 90000) + 10000}`;
-      setOrderId(newId);
-
-      // Persist to Firestore for the unified order view
-      if (firestore && pnrContext) {
-            const finalTotal = [...selectedAirlineOffers, ...selectedAirportOffers].reduce((sum, id) => {
-                const offer = mockOffers.find(o => o.id === id);
-                return sum + (offer?.finalPrice || 0);
-            }, 0);
-
-            const orderData = {
-                id: newId,
-                customer: pnrContext.passengers[0]?.name || 'Demo Passenger',
-                pnr: pnrContext.pnr,
-                route: pnrContext.route,
-                amount: finalTotal,
-                status: 'Fulfilled',
-                date: new Date().toISOString().split('T')[0],
-                source: 'CUSS_Kiosk',
-                paymentStatus: 'Paid',
-                isSimulated: true,
-                createdAt: serverTimestamp()
-            };
-
-            addDoc(collection(firestore, 'orders'), orderData)
-                .catch(err => console.error("Firestore persistence skipped (demo mode):", err));
-      }
-
-      setIsLoading(false);
-      setStep('confirmation');
-  };
-
-  const toggleOffer = (id: string, domain: 'Airline' | 'Airport') => {
-      if (domain === 'Airline') {
-          setSelectedAirlineOffers(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-      } else {
-          setSelectedAirportOffers(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-      }
-  };
-
-  // --- RENDERING HELPERS ---
-
-  const TreeItem = ({ label, price, isLast = false, isCategory = false, children }: any) => (
-      <div className="relative pl-6">
-          {!isCategory && (
-              <div className="absolute left-0 top-0 bottom-0 w-px bg-slate-200" />
-          )}
-          <div className="flex items-center gap-3 py-2">
-              <div className={cn(
-                  "relative flex items-center h-4 w-4",
-                  isCategory ? "" : "before:absolute before:left-[-1.5rem] before:top-1/2 before:w-4 before:h-px before:bg-slate-200"
-              )}>
-                   {isCategory ? (
-                        <div className="h-2 w-2 rounded-full bg-slate-300" />
-                   ) : (
-                        <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
-                   )}
-              </div>
-              <div className="flex-1 flex justify-between items-center pr-4">
-                  <span className={cn("text-sm", isCategory ? "font-black text-slate-700 uppercase tracking-widest text-[10px]" : "font-bold text-slate-500")}>{label}</span>
-                  {price !== undefined && (
-                      <span className="font-mono text-xs font-black text-slate-900">${price.toFixed(2)}</span>
-                  )}
-              </div>
-          </div>
-          {children}
-          {isCategory && !isLast && (
-              <div className="absolute left-0 top-4 bottom-0 w-px bg-slate-200" />
-          )}
+  const renderHeader = (title: string, desc: string, icon?: any) => (
+      <div className="flex flex-col gap-1 mb-6 border-b pb-4">
+          <h2 className="text-xl font-black text-primary uppercase flex items-center gap-2">
+            {icon && <span className="p-1.5 bg-primary/10 rounded-lg">{icon}</span>}
+            {title}
+          </h2>
+          <p className="text-sm text-muted-foreground font-medium">{desc}</p>
       </div>
   );
 
   return (
-    <div className="flex flex-col gap-6 max-w-6xl mx-auto w-full min-h-[80vh]">
+    <div className="flex flex-col gap-6 max-w-6xl mx-auto w-full min-h-[85vh]">
       <div className="flex items-center justify-between border-b pb-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-black tracking-tight text-primary uppercase">Offersense Composer</h1>
+          <h1 className="text-2xl font-black tracking-tight text-primary uppercase flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-emerald-500" />
+            Offersense Simulator
+          </h1>
           <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-widest bg-primary/5">
-                {step.replace('_', ' ')}
+              <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest bg-primary/5">
+                Stage: {currentStep}
               </Badge>
-              {step !== 'identification' && (
-                  <Button variant="ghost" size="sm" onClick={() => window.location.reload()} className="h-6 text-[10px] font-bold uppercase underline">Restart Demo</Button>
+              {currentStep !== 'INPUT' && (
+                  <Button variant="ghost" size="sm" onClick={() => setCurrentStep('INPUT')} className="h-6 text-[10px] font-bold uppercase underline">Reset Simulation</Button>
               )}
           </div>
         </div>
-        <div className="flex items-center gap-2 text-muted-foreground">
-            <MonitorDot className="h-4 w-4" />
-            <span className="text-[10px] font-black uppercase tracking-widest">SITA CUSS Node: LHR-T5-K04</span>
+        <div className="flex items-center gap-3">
+             {currentStep !== 'INPUT' && (
+                <Button variant="outline" size="sm" onClick={back} className="h-9 font-bold"><ArrowLeft className="mr-2 h-4 w-4" /> Back</Button>
+             )}
+             {['SUMMARY', 'COHORTS', 'UNIVERSE', 'FILTERING', 'PRICING', 'RANKING', 'LIMITING'].includes(currentStep) && (
+                <Button size="sm" onClick={next} className="h-9 font-bold">Next <ArrowRight className="ml-2 h-4 w-4" /></Button>
+             )}
         </div>
       </div>
 
-      <div className="flex-grow flex items-center justify-center py-6">
+      <div className="flex-grow flex items-start justify-center py-4">
         
-        {/* STEP 1: IDENTIFICATION */}
-        {step === 'identification' && (
-            <Card className="w-full max-w-md shadow-2xl border-primary/20">
-                <CardHeader className="bg-primary/5 border-b text-center">
-                    <CardTitle className="text-xl font-black text-primary uppercase">Passenger Identification</CardTitle>
-                    <CardDescription>Enter your flight details to begin check-in.</CardDescription>
+        {/* STEP 1: INPUT SCREEN */}
+        {currentStep === 'INPUT' && (
+            <Card className="w-full shadow-2xl border-primary/10 overflow-hidden">
+                <CardHeader className="bg-primary/5 border-b text-center py-8">
+                    <CardTitle className="text-2xl font-black text-primary uppercase">Simulator Context Configuration</CardTitle>
+                    <CardDescription className="max-w-xl mx-auto">Define the exhaustive journey and passenger context to test the retailing engine logic.</CardDescription>
                 </CardHeader>
-                <CardContent className="pt-8 pb-8">
-                    <Form {...identificationForm}>
-                        <form onSubmit={identificationForm.handleSubmit(handleFetchItinerary)} className="space-y-6">
-                            <FormField control={identificationForm.control} name="airline" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className="text-[10px] font-black uppercase text-muted-foreground">Select Airline</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                        <FormControl><SelectTrigger className="h-12"><SelectValue /></SelectTrigger></FormControl>
-                                        <SelectContent>
-                                            {mockAirlines.map(a => <SelectItem key={a.code} value={a.code}>{a.name}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                </FormItem>
-                            )} />
-                            <FormField control={identificationForm.control} name="pnr" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className="text-[10px] font-black uppercase text-muted-foreground">Booking Reference (PNR)</FormLabel>
-                                    <FormControl><Input className="h-12 font-mono font-bold text-xl uppercase tracking-[0.3em]" placeholder="XXXXXX" maxLength={6} {...field} /></FormControl>
-                                </FormItem>
-                            )} />
-                            <FormField control={identificationForm.control} name="generateOffers" render={({ field }) => (
-                                <FormItem className="flex items-start space-x-3 space-y-0 rounded-xl border p-4 bg-emerald-50/30 border-emerald-100">
-                                    <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                                    <div className="space-y-1 leading-none">
-                                        <FormLabel className="text-sm font-bold text-emerald-800 flex items-center gap-1.5">
-                                            <Zap className="h-3.5 w-3.5 fill-emerald-600 text-emerald-600" />
-                                            Generate real-time offers
-                                        </FormLabel>
-                                        <p className="text-[10px] text-emerald-600/70 font-medium">Activate Offersense engine for personalized bundles.</p>
-                                    </div>
-                                </FormItem>
-                            )} />
-                            <Button type="submit" disabled={isLoading} className="w-full h-14 font-black uppercase text-xs tracking-widest shadow-xl">
-                                {isLoading ? <Loader2 className="mr-2 animate-spin h-5 w-5" /> : <Search className="mr-2 h-5 w-5" />}
-                                Fetch Itinerary
-                            </Button>
+                <CardContent className="p-0">
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(handleRunSimulation)}>
+                            <div className="grid grid-cols-1 md:grid-cols-12">
+                                {/* Left Sidebar: Navigation tabs for form sections if needed, or just scrolling */}
+                                <div className="md:col-span-12 p-8 space-y-10">
+                                    <Accordion type="multiple" defaultValue={['journey', 'pax', 'profile', 'purchases']} className="w-full">
+                                        
+                                        {/* A. JOURNEY */}
+                                        <AccordionItem value="journey" className="border-none">
+                                            <AccordionTrigger className="hover:no-underline py-4 bg-slate-50 px-4 rounded-xl mb-4">
+                                                <div className="flex items-center gap-3 text-primary font-black uppercase text-xs tracking-widest">
+                                                    <Plane className="h-4 w-4" /> A. Flight & Journey Context
+                                                </div>
+                                            </AccordionTrigger>
+                                            <AccordionContent className="px-4 pb-8">
+                                                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pt-2">
+                                                    <FormField control={form.control} name="airline" render={({field}) => (
+                                                        <FormItem><FormLabel>Airline</FormLabel>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                                        <SelectContent><SelectItem value="GAB">Global Airways</SelectItem><SelectItem value="SBA">SkyBridge Airlines</SelectItem></SelectContent></Select></FormItem>
+                                                    )} />
+                                                    <FormField control={form.control} name="flightNumber" render={({field}) => (<FormItem><FormLabel>Flight #</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)} />
+                                                    <FormField control={form.control} name="travelDate" render={({field}) => (<FormItem><FormLabel>Travel Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl></FormItem>)} />
+                                                    <FormField control={form.control} name="bookingStage" render={({field}) => (
+                                                        <FormItem><FormLabel>Booking Stage</FormLabel>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                                        <SelectContent><SelectItem value="At booking">At booking</SelectItem><SelectItem value="Check-in">Check-in</SelectItem><SelectItem value="Airport">Airport</SelectItem><SelectItem value="Gate">Gate</SelectItem></SelectContent></Select></FormItem>
+                                                    )} />
+                                                </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
+                                                    <FormField control={form.control} name="origin" render={({field}) => (<FormItem><FormLabel>Origin (IATA)</FormLabel><FormControl><Input maxLength={3} {...field} /></FormControl></FormItem>)} />
+                                                    <FormField control={form.control} name="destination" render={({field}) => (<FormItem><FormLabel>Destination (IATA)</FormLabel><FormControl><Input maxLength={3} {...field} /></FormControl></FormItem>)} />
+                                                    <FormField control={form.control} name="geography" render={({field}) => (
+                                                        <FormItem><FormLabel>Geography</FormLabel>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                                        <SelectContent><SelectItem value="Domestic">Domestic</SelectItem><SelectItem value="International">International</SelectItem></SelectContent></Select></FormItem>
+                                                    )} />
+                                                    <FormField control={form.control} name="channel" render={({field}) => (
+                                                        <FormItem><FormLabel>Sales Channel</FormLabel>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                                        <SelectContent><SelectItem value="Web">Web</SelectItem><SelectItem value="App">App</SelectItem><SelectItem value="CUSS">CUSS Kiosk</SelectItem><SelectItem value="Agent">Agent Desktop</SelectItem></SelectContent></Select></FormItem>
+                                                    )} />
+                                                </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
+
+                                        {/* B & C. PASSENGERS */}
+                                        <AccordionItem value="pax" className="border-none">
+                                            <AccordionTrigger className="hover:no-underline py-4 bg-slate-50 px-4 rounded-xl mb-4">
+                                                <div className="flex items-center gap-3 text-primary font-black uppercase text-xs tracking-widest">
+                                                    <Users className="h-4 w-4" /> B & C. Passenger Profile
+                                                </div>
+                                            </AccordionTrigger>
+                                            <AccordionContent className="px-4 pb-8">
+                                                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pt-2">
+                                                    <FormField control={form.control} name="adults" render={({field}) => (<FormItem><FormLabel>Adults</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
+                                                    <FormField control={form.control} name="children" render={({field}) => (<FormItem><FormLabel>Children</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
+                                                    <FormField control={form.control} name="paxType" render={({field}) => (
+                                                        <FormItem><FormLabel>Group Category</FormLabel>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                                        <SelectContent><SelectItem value="Solo">Solo</SelectItem><SelectItem value="Family">Family</SelectItem><SelectItem value="Corporate">Corporate</SelectItem><SelectItem value="VIP">VIP</SelectItem></SelectContent></Select></FormItem>
+                                                    )} />
+                                                    <FormField control={form.control} name="purpose" render={({field}) => (
+                                                        <FormItem><FormLabel>Travel Purpose</FormLabel>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                                        <SelectContent><SelectItem value="Business">Business</SelectItem><SelectItem value="Leisure">Leisure</SelectItem></SelectContent></Select></FormItem>
+                                                    )} />
+                                                </div>
+                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                                                    <FormField control={form.control} name="isFrequent" render={({field}) => (<FormItem className="flex items-center gap-2 space-y-0 rounded-lg border p-3"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="text-xs">Frequent Traveler</FormLabel></FormItem>)} />
+                                                    <FormField control={form.control} name="isConnecting" render={({field}) => (<FormItem className="flex items-center gap-2 space-y-0 rounded-lg border p-3"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="text-xs">Connecting Trip</FormLabel></FormItem>)} />
+                                                    <FormField control={form.control} name="wheelchair" render={({field}) => (<FormItem className="flex items-center gap-2 space-y-0 rounded-lg border p-3"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="text-xs">Wheelchair Required</FormLabel></FormItem>)} />
+                                                    <FormField control={form.control} name="petTraveler" render={({field}) => (<FormItem className="flex items-center gap-2 space-y-0 rounded-lg border p-3"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="text-xs">Traveling with Pet</FormLabel></FormItem>)} />
+                                                </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
+
+                                        {/* D & E. LOYALTY & BOOKING */}
+                                        <AccordionItem value="profile" className="border-none">
+                                            <AccordionTrigger className="hover:no-underline py-4 bg-slate-50 px-4 rounded-xl mb-4">
+                                                <div className="flex items-center gap-3 text-primary font-black uppercase text-xs tracking-widest">
+                                                    <Trophy className="h-4 w-4" /> D & E. Loyalty & Fare Integrity
+                                                </div>
+                                            </AccordionTrigger>
+                                            <AccordionContent className="px-4 pb-8">
+                                                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pt-2">
+                                                    <FormField control={form.control} name="loyaltyTier" render={({field}) => (
+                                                        <FormItem><FormLabel>Loyalty Tier</FormLabel>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                                        <SelectContent><SelectItem value="None">None</SelectItem><SelectItem value="Silver">Silver</SelectItem><SelectItem value="Gold">Gold</SelectItem><SelectItem value="Platinum">Platinum</SelectItem></SelectContent></Select></FormItem>
+                                                    )} />
+                                                    <FormField control={form.control} name="cabinClass" render={({field}) => (
+                                                        <FormItem><FormLabel>Cabin Class</FormLabel>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                                        <SelectContent><SelectItem value="Economy">Economy</SelectItem><SelectItem value="Business">Business</SelectItem><SelectItem value="First">First</SelectItem></SelectContent></Select></FormItem>
+                                                    )} />
+                                                    <FormField control={form.control} name="fareFamily" render={({field}) => (
+                                                        <FormItem><FormLabel>Fare Brand</FormLabel>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                                        <SelectContent><SelectItem value="Basic">Basic</SelectItem><SelectItem value="Standard">Standard</SelectItem><SelectItem value="Flex">Flex</SelectItem><SelectItem value="Premium">Premium</SelectItem></SelectContent></Select></FormItem>
+                                                    )} />
+                                                    <FormField control={form.control} name="priceSensitivity" render={({field}) => (
+                                                        <FormItem><FormLabel>Price Sensitivity</FormLabel>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                                        <SelectContent><SelectItem value="Low">Low</SelectItem><SelectItem value="Medium">Medium</SelectItem><SelectItem value="High">High</SelectItem></SelectContent></Select></FormItem>
+                                                    )} />
+                                                </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
+
+                                        {/* H. EXISTING PURCHASES */}
+                                        <AccordionItem value="purchases" className="border-none">
+                                            <AccordionTrigger className="hover:no-underline py-4 bg-slate-50 px-4 rounded-xl mb-4">
+                                                <div className="flex items-center gap-3 text-primary font-black uppercase text-xs tracking-widest">
+                                                    <ShoppingCart className="h-4 w-4" /> H. Existing PSS State (Inventory Filtration)
+                                                </div>
+                                            </AccordionTrigger>
+                                            <AccordionContent className="px-4 pb-8">
+                                                <p className="text-xs text-muted-foreground mb-4 font-medium italic">Checked items will be filtered out from the final simulation stream to prevent double-selling.</p>
+                                                <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+                                                    <FormField control={form.control} name="hasPurchasedSeat" render={({field}) => (<FormItem className="flex items-center gap-2 space-y-0 rounded-lg border p-3"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="text-xs">Seat</FormLabel></FormItem>)} />
+                                                    <FormField control={form.control} name="hasPurchasedBaggage" render={({field}) => (<FormItem className="flex items-center gap-2 space-y-0 rounded-lg border p-3"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="text-xs">Baggage</FormLabel></FormItem>)} />
+                                                    <FormField control={form.control} name="hasPurchasedMeal" render={({field}) => (<FormItem className="flex items-center gap-2 space-y-0 rounded-lg border p-3"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="text-xs">Meal</FormLabel></FormItem>)} />
+                                                    <FormField control={form.control} name="hasPurchasedUpgrade" render={({field}) => (<FormItem className="flex items-center gap-2 space-y-0 rounded-lg border p-3"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="text-xs">Upgrade</FormLabel></FormItem>)} />
+                                                    <FormField control={form.control} name="hasPurchasedPriority" render={({field}) => (<FormItem className="flex items-center gap-2 space-y-0 rounded-lg border p-3"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="text-xs">Priority</FormLabel></FormItem>)} />
+                                                    <FormField control={form.control} name="hasPurchasedLounge" render={({field}) => (<FormItem className="flex items-center gap-2 space-y-0 rounded-lg border p-3"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="text-xs">Lounge</FormLabel></FormItem>)} />
+                                                </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
+
+                                    </Accordion>
+                                </div>
+                            </div>
+
+                            <CardFooter className="bg-primary/5 border-t p-8 flex justify-between items-center">
+                                <div className="flex items-center gap-6">
+                                    <FormField control={form.control} name="runExplanation" render={({field}) => (<FormItem className="flex items-center gap-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="text-xs font-black uppercase">Run Logic Explanation Trace</FormLabel></FormItem>)} />
+                                </div>
+                                <Button type="submit" disabled={isLoading} className="h-14 px-12 font-black uppercase tracking-widest shadow-xl">
+                                    {isLoading ? <Loader2 className="mr-2 animate-spin h-5 w-5" /> : <Zap className="mr-2 h-5 w-5 fill-current" />}
+                                    Initiate Engine Simulation
+                                </Button>
+                            </CardFooter>
                         </form>
                     </Form>
                 </CardContent>
             </Card>
         )}
 
-        {/* STEP 2: ITINERARY & PAX SELECTION */}
-        {step === 'itinerary' && pnrContext && (
-            <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in fade-in zoom-in-95 duration-500">
-                <div className="lg:col-span-8 space-y-6">
-                    <Card className="border-primary/20 shadow-xl overflow-hidden">
-                        <CardHeader className="bg-primary/5 border-b flex flex-row items-center justify-between">
-                            <div>
-                                <CardTitle className="text-lg font-black text-primary uppercase">Itinerary Details</CardTitle>
-                                <CardDescription>Review your flight and select passengers for check-in.</CardDescription>
+        {/* STEP 2: SUMMARY SCREEN */}
+        {currentStep === 'SUMMARY' && simulationData && (
+            <Card className="w-full max-w-4xl shadow-xl animate-in fade-in zoom-in-95 duration-500">
+                <CardHeader className="bg-slate-50 border-b">
+                    <CardTitle className="text-lg font-black uppercase">Simulation Context Captured</CardTitle>
+                    <CardDescription>Reviewing understood parameters before executing retailing logic.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="space-y-4">
+                            <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Journey</p>
+                            <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
+                                <p className="font-black text-primary text-xl">{simulationData.origin} → {simulationData.destination}</p>
+                                <p className="text-xs font-bold text-slate-500 mt-1">{simulationData.flightNumber} • {simulationData.travelDate}</p>
+                                <Badge variant="outline" className="mt-2 text-[8px] bg-white">{simulationData.channel} Channel</Badge>
                             </div>
-                            <Badge variant="secondary" className="font-mono font-bold">{pnrContext.pnr}</Badge>
-                        </CardHeader>
-                        <CardContent className="pt-6 pb-6">
-                            <div className="flex items-center justify-between p-6 bg-muted/30 rounded-2xl border border-muted-foreground/10 mb-8">
+                        </div>
+                        <div className="space-y-4">
+                            <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Passenger</p>
+                            <div className="p-4 rounded-xl bg-slate-50 border space-y-1">
+                                <p className="font-bold text-sm">{simulationData.adults} Adults, {simulationData.children} Children</p>
+                                <p className="text-xs text-muted-foreground">{simulationData.paxType} • {simulationData.purpose}</p>
+                                <div className="flex items-center gap-1.5 mt-2">
+                                    <Trophy className="h-3 w-3 text-amber-500" />
+                                    <span className="text-[10px] font-black uppercase">{simulationData.loyaltyTier} Member</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="space-y-4">
+                            <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Operational Pulse</p>
+                            <div className="p-4 rounded-xl bg-emerald-50/50 border border-emerald-100">
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[10px] font-bold text-emerald-800 uppercase">Load Factor</span>
+                                    <span className="font-mono font-black text-emerald-700">{simulationData.loadFactor}%</span>
+                                </div>
+                                <div className="w-full bg-emerald-200 rounded-full h-1">
+                                    <div className="bg-emerald-600 h-1 rounded-full" style={{ width: `${simulationData.loadFactor}%` }} />
+                                </div>
+                                <p className="text-[9px] text-emerald-600 font-bold mt-2 uppercase tracking-tighter">{simulationData.aircraftType} Aircraft</p>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        )}
+
+        {/* STEP 3: COHORTS EVALUATION */}
+        {currentStep === 'COHORTS' && (
+             <Card className="w-full max-w-4xl shadow-xl animate-in slide-in-from-right-4 duration-500">
+                <CardHeader className="bg-primary/5 border-b">
+                    <CardTitle className="text-lg font-black uppercase flex items-center gap-2">
+                        <Target className="h-5 w-5" /> 3. Ecosystem Cohort Evaluation
+                    </CardTitle>
+                    <CardDescription>Offersense evaluates over 50+ signals to group passengers into high-conversion segments.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-8 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                             <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Signals Considered</p>
+                             <div className="flex flex-wrap gap-2">
+                                {['Loyalty', 'Family Size', 'Fare Flex', 'Lead Time', 'Spend Pattern'].map(s => (
+                                    <Badge key={s} variant="secondary" className="bg-slate-100 text-slate-700 font-bold">{s}</Badge>
+                                ))}
+                             </div>
+                        </div>
+                        <div className="space-y-4">
+                             <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Selection Logic</p>
+                             <p className="text-xs text-muted-foreground leading-relaxed italic">"Dynamic Request-time evaluation uses Boolean logic trees to prioritize high-yield opportunities while maintaining relevance."</p>
+                        </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="space-y-3">
+                        {evaluatedCohorts.map(cohort => (
+                            <div key={cohort.id} className={cn(
+                                "flex items-center justify-between p-4 rounded-xl border transition-all",
+                                cohort.matched ? "bg-emerald-50 border-emerald-200" : "bg-white opacity-50 grayscale"
+                            )}>
                                 <div className="flex items-center gap-4">
-                                    <div className="h-12 w-12 rounded-xl bg-white border flex items-center justify-center text-primary shadow-sm"><Plane className="h-6 w-6" /></div>
+                                    <div className={cn(
+                                        "h-10 w-10 rounded-full flex items-center justify-center",
+                                        cohort.matched ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-400"
+                                    )}>
+                                        {cohort.matched ? <CheckCircle2 className="h-6 w-6" /> : <XCircle className="h-6 w-6" />}
+                                    </div>
                                     <div>
-                                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{pnrContext.flight}</p>
-                                        <p className="font-black text-lg text-primary">{pnrContext.route}</p>
-                                        <p className="text-[10px] font-bold text-slate-500 flex items-center gap-1 mt-1">
-                                            <Building2 className="h-3 w-3" /> {pnrContext.aircraft}
-                                        </p>
+                                        <p className="font-black text-sm uppercase">{cohort.name}</p>
+                                        <p className="text-xs text-muted-foreground">{cohort.reason}</p>
                                     </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{pnrContext.date}</p>
-                                    <p className="font-bold flex items-center gap-1.5 justify-end"><Clock className="h-3 w-3" /> {pnrContext.time}</p>
-                                    <Badge variant="outline" className="text-[8px] mt-1 bg-white">Gate B45</Badge>
+                                <Badge variant={cohort.matched ? "default" : "outline"} className={cn(cohort.matched && "bg-emerald-600")}>
+                                    {cohort.matched ? 'MATCHED' : 'NOT MATCHED'}
+                                </Badge>
+                            </div>
+                        ))}
+                    </div>
+                </CardContent>
+             </Card>
+        )}
+
+        {/* STEP 4: OFFER UNIVERSE */}
+        {currentStep === 'UNIVERSE' && (
+            <Card className="w-full max-w-4xl shadow-xl animate-in slide-in-from-right-4 duration-500">
+                <CardHeader className="bg-primary/5 border-b">
+                    <CardTitle className="text-lg font-black uppercase flex items-center gap-2">
+                        <Layers className="h-5 w-5" /> 4. Global Offer Universe
+                    </CardTitle>
+                    <CardDescription>Initial pool of all retailable SKUs from Airline and Airport Ecosystems.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                        <div className="space-y-6">
+                            <h4 className="font-black uppercase text-xs text-blue-600 flex items-center gap-2"><Plane className="h-4 w-4" /> Airline SKUs ({ALL_OFFERS.filter(o => o.domain === 'Airline').length})</h4>
+                            <div className="grid grid-cols-1 gap-2">
+                                {ALL_OFFERS.filter(o => o.domain === 'Airline').map(o => (
+                                    <div key={o.id} className="p-3 bg-white border rounded-xl flex justify-between items-center text-xs font-bold">
+                                        <span>{o.name}</span>
+                                        <span className="text-muted-foreground font-mono">${o.basePrice}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="space-y-6">
+                            <h4 className="font-black uppercase text-xs text-amber-600 flex items-center gap-2"><Building2 className="h-4 w-4" /> Airport Hub SKUs ({ALL_OFFERS.filter(o => o.domain === 'Airport').length})</h4>
+                            <div className="grid grid-cols-1 gap-2">
+                                {ALL_OFFERS.filter(o => o.domain === 'Airport').map(o => (
+                                    <div key={o.id} className="p-3 bg-white border rounded-xl flex justify-between items-center text-xs font-bold">
+                                        <span>{o.name}</span>
+                                        <span className="text-muted-foreground font-mono">${o.basePrice}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        )}
+
+        {/* STEP 5: FILTERING SCREEN */}
+        {currentStep === 'FILTERING' && (
+            <Card className="w-full max-w-5xl shadow-xl animate-in slide-in-from-right-4 duration-500">
+                <CardHeader className="bg-primary/5 border-b">
+                    <CardTitle className="text-lg font-black uppercase flex items-center gap-2">
+                        <Filter className="h-5 w-5" /> 5. Offer Eligibility & Filtering
+                    </CardTitle>
+                    <CardDescription>Sequential filtration based on PSS state, regulatory safety, and technical availability.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-8">
+                    <div className="relative pl-8 space-y-12">
+                        <div className="absolute left-3 top-0 bottom-0 w-px bg-slate-200" />
+                        {filteredOffers.removed.map((stage, idx) => (
+                            <div key={idx} className="relative">
+                                <div className="absolute -left-[1.35rem] top-1 h-3 w-3 rounded-full bg-slate-200 border-2 border-white" />
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <h4 className="font-black uppercase text-xs text-slate-800">Filter {idx + 1}: {stage.step}</h4>
+                                        <Badge variant="outline" className="text-[10px] text-rose-600 border-rose-100 bg-rose-50">-{stage.items.length} SKUs Removed</Badge>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {stage.items.length > 0 ? stage.items.map((o: any) => (
+                                            <div key={o.id} className="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-[10px] font-bold text-slate-400 line-through">
+                                                {o.name}
+                                            </div>
+                                        )) : <p className="text-[10px] text-muted-foreground italic">No SKUs removed in this filter pass.</p>}
+                                    </div>
                                 </div>
                             </div>
-
+                        ))}
+                        <div className="relative">
+                            <div className="absolute -left-[1.35rem] top-1 h-3 w-3 rounded-full bg-emerald-500 border-2 border-white animate-pulse" />
                             <div className="space-y-4">
-                                <div className="flex items-center justify-between px-2">
-                                    <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Passenger List</h4>
-                                    <Button variant="link" size="sm" onClick={() => setSelectedPax(pnrContext.passengers.map((p: any) => p.id))} className="h-auto p-0 text-[10px] font-black uppercase">Select All</Button>
-                                </div>
-                                <div className="space-y-3">
-                                    {pnrContext.passengers.map((pax: any) => (
-                                        <div key={pax.id} className={cn(
-                                            "flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer",
-                                            selectedPax.includes(pax.id) ? "bg-primary/5 border-primary ring-1 ring-primary" : "bg-white"
-                                        )} onClick={() => setSelectedPax(prev => prev.includes(pax.id) ? prev.filter(i => i !== pax.id) : [...prev, pax.id])}>
-                                            <div className="flex items-center gap-3">
-                                                <Checkbox checked={selectedPax.includes(pax.id)} onCheckedChange={() => {}} />
-                                                <span className="font-bold text-sm">{pax.name}</span>
-                                            </div>
-                                            <Badge variant="outline" className="text-[9px] font-black uppercase tracking-tighter">Economy Flex</Badge>
+                                <h4 className="font-black uppercase text-xs text-emerald-600">Final Stage: Eligible Offers</h4>
+                                <div className="flex flex-wrap gap-2">
+                                    {filteredOffers.remaining.map((o: any) => (
+                                        <div key={o.id} className="px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-100 text-xs font-black text-emerald-800 shadow-sm">
+                                            {o.name}
                                         </div>
                                     ))}
                                 </div>
                             </div>
-                        </CardContent>
-                        <CardFooter className="bg-muted/5 border-t py-6 flex justify-end gap-3">
-                            <Button variant="outline" onClick={() => setStep('identification')} className="font-bold">Back</Button>
-                            <Button onClick={handleCheckIn} disabled={isLoading || selectedPax.length === 0} className="px-10 font-black uppercase text-xs tracking-widest">
-                                {isLoading ? <Loader2 className="mr-2 animate-spin h-4 w-4" /> : <Check className="mr-2 h-4 w-4" />}
-                                Check-in
-                            </Button>
-                        </CardFooter>
-                    </Card>
-                </div>
-
-                <div className="lg:col-span-4 space-y-6">
-                    <Card className="bg-slate-900 text-white border-none shadow-xl rounded-2xl overflow-hidden">
-                        <CardHeader className="bg-white/10 pb-4">
-                            <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                                <Zap className="h-4 w-4 text-emerald-400" /> Retailing Context Signals
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="pt-6 space-y-4">
-                            <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
-                                The following parameters are currently influencing the Offersense engine results for this session:
-                            </p>
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/10">
-                                    <div className="flex items-center gap-2">
-                                        <Gauge className="h-3.5 w-3.5 text-blue-400" />
-                                        <span className="text-[10px] font-bold uppercase tracking-tight text-slate-300">Load Factor</span>
-                                    </div>
-                                    <span className="text-xs font-black text-white">{pnrContext.influencers.loadFactor}</span>
-                                </div>
-                                <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/10">
-                                    <div className="flex items-center gap-2">
-                                        <Clock className="h-3.5 w-3.5 text-amber-400" />
-                                        <span className="text-[10px] font-bold uppercase tracking-tight text-slate-300">Lead Time</span>
-                                    </div>
-                                    <span className="text-xs font-black text-white">{pnrContext.influencers.leadTime}</span>
-                                </div>
-                                <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/10">
-                                    <div className="flex items-center gap-2">
-                                        <MapPin className="h-3.5 w-3.5 text-emerald-400" />
-                                        <span className="text-[10px] font-bold uppercase tracking-tight text-slate-300">Haul Type</span>
-                                    </div>
-                                    <span className="text-xs font-black text-white">{pnrContext.influencers.haulType}</span>
-                                </div>
-                                <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/10">
-                                    <div className="flex items-center gap-2">
-                                        <User className="h-3.5 w-3.5 text-indigo-400" />
-                                        <span className="text-[10px] font-bold uppercase tracking-tight text-slate-300">Composition</span>
-                                    </div>
-                                    <span className="text-xs font-black text-white">{pnrContext.influencers.paxCount}</span>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
-        )}
-
-        {/* STEP 3: BP GENERATION */}
-        {step === 'boarding_pass_gen' && (
-            <div className="text-center space-y-8 animate-in fade-in zoom-in-95 duration-700">
-                <div className="relative">
-                    <div className="absolute inset-0 animate-ping rounded-full bg-primary/20 scale-150"></div>
-                    <div className="h-24 w-24 bg-primary rounded-full flex items-center justify-center relative z-10 shadow-2xl">
-                        <Loader2 className="h-12 w-12 text-white animate-spin" />
-                    </div>
-                </div>
-                <div className="space-y-2">
-                    <h2 className="text-3xl font-black text-primary uppercase tracking-tighter">Issuing Boarding Pass</h2>
-                    <p className="text-muted-foreground font-medium">Synchronizing with Departure Control System (DCS)...</p>
-                </div>
-                <Button onClick={handleViewBoardingPass} className="h-14 px-12 text-md font-black uppercase tracking-widest shadow-xl">
-                    View Boarding Pass
-                </Button>
-            </div>
-        )}
-
-        {/* STEP 4: QR & TRIGGER */}
-        {step === 'boarding_pass_qr' && (
-             <Card className="w-full max-w-sm shadow-2xl border-slate-200 overflow-hidden animate-in slide-in-from-bottom-6 duration-500">
-                <CardHeader className="bg-slate-900 text-white p-6 pb-4">
-                    <div className="flex justify-between items-center mb-4">
-                         <div className="h-8 w-16 bg-white/20 rounded-md flex items-center justify-center font-black text-xs">GAB</div>
-                         <Badge variant="outline" className="border-white/40 text-white font-mono">LHR - JFK</Badge>
-                    </div>
-                    <CardTitle className="text-xl font-black">John Smith</CardTitle>
-                    <div className="flex justify-between mt-2 text-[10px] font-black uppercase text-white/60 tracking-widest">
-                        <div><span>Seat</span><p className="text-white text-base">14C</p></div>
-                        <div><span>Group</span><p className="text-white text-base">B</p></div>
-                        <div><span>Gate</span><p className="text-white text-base">B45</p></div>
-                    </div>
-                </CardHeader>
-                <CardContent className="flex flex-col items-center py-10 bg-white">
-                    <div className="p-4 bg-slate-50 rounded-3xl border-2 border-slate-100 mb-6 shadow-inner">
-                        <Image 
-                            src="https://picsum.photos/seed/bp-qr/250/250" 
-                            alt="Boarding Pass QR" 
-                            width={200} 
-                            height={200} 
-                            className="rounded-xl opacity-90 mix-blend-multiply" 
-                            data-ai-hint="qr code"
-                        />
-                    </div>
-                    <div className="text-center space-y-1">
-                        <p className="font-mono text-xs font-bold text-slate-400">SITA_DCS_TOKEN_88912</p>
-                        <p className="text-[10px] text-slate-300 font-bold uppercase tracking-widest">Digital Boarding Pass Issued</p>
+                        </div>
                     </div>
                 </CardContent>
-                <CardFooter className="p-0 border-t">
-                    <Button onClick={triggerOfferEngine} variant="ghost" className="w-full h-20 rounded-none bg-emerald-600 hover:bg-emerald-700 text-white flex flex-col items-center justify-center gap-1 group">
-                        <div className="flex items-center gap-2">
-                             <Zap className="h-5 w-5 fill-white animate-pulse" />
-                             <span className="text-sm font-black uppercase tracking-widest">View Personalized Offers</span>
+            </Card>
+        )}
+
+        {/* STEP 6: PRICING EVALUATION */}
+        {currentStep === 'PRICING' && (
+             <Card className="w-full max-w-4xl shadow-xl animate-in slide-in-from-right-4 duration-500">
+                <CardHeader className="bg-primary/5 border-b">
+                    <CardTitle className="text-lg font-black uppercase flex items-center gap-2">
+                        <Calculator className="h-5 w-5" /> 6. Dynamic Pricing Evaluation
+                    </CardTitle>
+                    <CardDescription>Calculating final sellable prices based on cohort adjustments and operational surcharges.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-8 space-y-6">
+                    {pricedOffers.map((offer, idx) => (
+                        <div key={offer.id} className="p-6 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                            <div className="flex justify-between items-start mb-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-primary font-black text-xs">{idx + 1}</div>
+                                    <h4 className="font-black uppercase text-md">{offer.name}</h4>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-2xl font-black text-primary font-mono">${offer.finalPrice.toFixed(2)}</p>
+                                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Final Price</p>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                    <span>Calculation Steps</span>
+                                    <span>Base: ${offer.basePrice}</span>
+                                </div>
+                                <div className="p-3 rounded-xl bg-slate-50 space-y-2">
+                                    {offer.reasons.length > 0 ? offer.reasons.map((r, i) => (
+                                        <div key={i} className="flex justify-between text-xs items-center">
+                                            <span className="text-slate-600 font-medium flex items-center gap-2">
+                                                <div className="h-1 w-1 rounded-full bg-slate-400" /> {r}
+                                            </span>
+                                            <Badge variant="outline" className="bg-white text-[9px]">Adjusted</Badge>
+                                        </div>
+                                    )) : <p className="text-[10px] italic text-muted-foreground">Standard pricing applied.</p>}
+                                </div>
+                            </div>
                         </div>
-                        <span className="text-[10px] font-bold text-white/70 group-hover:translate-x-1 transition-transform flex items-center gap-1">Exclusive Airline & Airport Upgrades <ArrowRight className="h-3 w-3" /></span>
-                    </Button>
-                </CardFooter>
+                    ))}
+                    <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center gap-3">
+                        <ShieldCheck className="h-5 w-5 text-emerald-600" />
+                        <p className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest">All prices within commercial guardrails for {simulationData?.airline} pos.</p>
+                    </div>
+                </CardContent>
              </Card>
         )}
 
-        {/* STEP 5: PERSONALIZED OFFERS */}
-        {step === 'personalized_offers' && (
-            <div className="w-full max-w-5xl space-y-8 animate-in fade-in duration-700">
-                <div className="flex flex-col items-center text-center space-y-2 mb-4">
-                    <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 border border-emerald-200 mb-2">
-                        <Sparkles className="h-6 w-6" />
+        {/* STEP 7: RANKING SCREEN */}
+        {currentStep === 'RANKING' && (
+             <Card className="w-full max-w-2xl shadow-xl animate-in zoom-in-95 duration-500">
+                <CardHeader className="bg-primary/5 border-b">
+                    <CardTitle className="text-lg font-black uppercase flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5" /> 7. Offer Ranking & Re-Ordering
+                    </CardTitle>
+                    <CardDescription>Sorting by conversion probability and business priority.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-8 space-y-4">
+                    <div className="grid grid-cols-2 gap-4 mb-4 text-[10px] font-black uppercase text-muted-foreground tracking-widest">
+                        <span>Ranked Offer</span>
+                        <span className="text-right">Ranking Signal</span>
                     </div>
-                    <h2 className="text-3xl font-black text-primary uppercase tracking-tighter">Your Personalized Retailing Stream</h2>
-                    <p className="text-muted-foreground max-w-xl">Our engine has tailored these offers based on your profile, itinerary, and current terminal context.</p>
+                    {rankedOffers.map((offer, idx) => (
+                        <div key={offer.id} className="flex justify-between items-center p-4 rounded-xl bg-white border border-slate-100 shadow-sm relative overflow-hidden group">
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/20 group-hover:bg-primary transition-colors" />
+                            <div className="flex items-center gap-4">
+                                <span className="text-xs font-black text-slate-300">#0{idx + 1}</span>
+                                <span className="font-black text-sm">{offer.name}</span>
+                            </div>
+                            <div className="text-right">
+                                <Badge variant="secondary" className="text-[9px]">{idx === 0 ? 'Highest Uplift' : 'High Relevance'}</Badge>
+                            </div>
+                        </div>
+                    ))}
+                </CardContent>
+             </Card>
+        )}
+
+        {/* STEP 8: LIMITING SCREEN */}
+        {currentStep === 'LIMITING' && (
+             <Card className="w-full max-w-lg shadow-xl animate-in zoom-in-95 duration-500">
+                <CardHeader className="bg-primary/5 border-b">
+                    <CardTitle className="text-lg font-black uppercase flex items-center gap-2">
+                        <MonitorDot className="h-5 w-5" /> 8. UI Display Limiting
+                    </CardTitle>
+                    <CardDescription>Enforcing channel-specific UX constraints for {simulationData?.channel}.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-8 space-y-6">
+                    <div className="flex justify-between items-center p-4 rounded-xl bg-slate-900 text-white">
+                        <div className="flex items-center gap-3">
+                            <QrCode className="h-5 w-5 text-primary" />
+                            <span className="text-xs font-black uppercase tracking-widest">Kiosk Display Cap</span>
+                        </div>
+                        <span className="text-lg font-black font-mono">4</span>
+                    </div>
+                    <div className="space-y-2">
+                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Final Display Selection</p>
+                        {limitedOffers.map(o => (
+                            <div key={o.id} className="flex justify-between items-center p-3 rounded-lg border bg-emerald-50/50 border-emerald-100">
+                                <span className="text-xs font-bold">{o.name}</span>
+                                <Check className="h-3 w-3 text-emerald-600" />
+                            </div>
+                        ))}
+                    </div>
+                </CardContent>
+             </Card>
+        )}
+
+        {/* STEP 9: FINAL OFFER DISPLAY */}
+        {currentStep === 'DISPLAY' && (
+            <div className="w-full max-w-5xl space-y-8 animate-in fade-in duration-700">
+                <div className="text-center space-y-2">
+                    <h2 className="text-4xl font-black text-primary uppercase tracking-tighter">Your Personalized Upgrades</h2>
+                    <p className="text-muted-foreground">Hand-picked by Offersense for your trip to {simulationData?.destination}.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Airline Offers Section */}
-                    <div className="space-y-6">
-                        <div className="flex items-center gap-3 px-2">
-                            <div className="p-2 bg-blue-600 rounded-xl text-white"><Plane className="h-5 w-5" /></div>
-                            <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">Airline Offers</h3>
-                        </div>
-                        <div className="space-y-4">
-                            {mockOffers.filter(o => o.domain === 'Airline').map(offer => (
+                    <section className="space-y-6">
+                        <h3 className="text-sm font-black uppercase text-blue-600 flex items-center gap-2"><Plane className="h-4 w-4" /> Airline Offers</h3>
+                        <div className="grid grid-cols-1 gap-4">
+                            {limitedOffers.filter(o => o.domain === 'Airline').map(offer => (
                                 <Card key={offer.id} className={cn(
-                                    "transition-all cursor-pointer group hover:shadow-lg",
-                                    selectedAirlineOffers.includes(offer.id) ? "border-blue-600 ring-1 ring-blue-600 bg-blue-50/30" : "bg-white"
-                                )} onClick={() => toggleOffer(offer.id, 'Airline')}>
-                                    <CardContent className="p-5 flex justify-between items-start gap-4">
-                                        <div className="flex-grow space-y-1">
-                                            <div className="flex items-center gap-2">
-                                                <h4 className="font-black text-sm uppercase">{offer.name}</h4>
-                                                {selectedAirlineOffers.includes(offer.id) && <Badge className="h-4 px-1.5 bg-blue-600"><Check className="h-2.5 w-2.5" /></Badge>}
-                                            </div>
-                                            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{offer.description}</p>
+                                    "transition-all cursor-pointer border-2 hover:shadow-lg",
+                                    selectedOffers.includes(offer.id) ? "border-blue-600 bg-blue-50/20" : "border-slate-100"
+                                )} onClick={() => setSelectedOffers(prev => prev.includes(offer.id) ? prev.filter(i => i !== offer.id) : [...prev, offer.id])}>
+                                    <CardContent className="p-6 flex justify-between items-center">
+                                        <div className="space-y-1">
+                                            <h4 className="font-black uppercase text-sm">{offer.name}</h4>
+                                            <p className="text-xs text-muted-foreground">Tailored for {simulationData?.loyaltyTier} member.</p>
                                         </div>
-                                        <div className="text-right flex flex-col items-end">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-[10px] text-muted-foreground line-through opacity-50">${offer.basePrice}</span>
-                                                <span className="text-xl font-black text-blue-600 font-mono">${offer.finalPrice}</span>
-                                            </div>
-                                            {offer.adjustment < 0 && <Badge variant="outline" className="text-[8px] border-emerald-200 bg-emerald-50 text-emerald-700 font-black">-{Math.abs(offer.adjustment)}% SAVING</Badge>}
+                                        <div className="text-right">
+                                            <p className="text-2xl font-black text-blue-600 font-mono">${offer.finalPrice.toFixed(2)}</p>
+                                            <Checkbox checked={selectedOffers.includes(offer.id)} onCheckedChange={() => {}} className="mt-2" />
                                         </div>
                                     </CardContent>
                                 </Card>
                             ))}
                         </div>
-                    </div>
-
-                    {/* Airport Offers Section */}
-                    <div className="space-y-6">
-                        <div className="flex items-center gap-3 px-2">
-                            <div className="p-2 bg-amber-600 rounded-xl text-white"><Building2 className="h-5 w-5" /></div>
-                            <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">Airport Offers</h3>
-                        </div>
-                        <div className="space-y-4">
-                             {mockOffers.filter(o => o.domain === 'Airport').map(offer => (
+                    </section>
+                    <section className="space-y-6">
+                        <h3 className="text-sm font-black uppercase text-amber-600 flex items-center gap-2"><Building2 className="h-4 w-4" /> Airport Offers</h3>
+                        <div className="grid grid-cols-1 gap-4">
+                            {limitedOffers.filter(o => o.domain === 'Airport').map(offer => (
                                 <Card key={offer.id} className={cn(
-                                    "transition-all cursor-pointer group hover:shadow-lg",
-                                    selectedAirportOffers.includes(offer.id) ? "border-amber-600 ring-1 ring-amber-600 bg-amber-50/30" : "bg-white"
-                                )} onClick={() => toggleOffer(offer.id, 'Airport')}>
-                                    <CardContent className="p-5 flex justify-between items-start gap-4">
-                                        <div className="flex-grow space-y-1">
-                                            <div className="flex items-center gap-2">
-                                                <h4 className="font-black text-sm uppercase">{offer.name}</h4>
-                                                {selectedAirportOffers.includes(offer.id) && <Badge className="h-4 px-1.5 bg-amber-600"><Check className="h-2.5 w-2.5" /></Badge>}
-                                            </div>
-                                            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{offer.description}</p>
+                                    "transition-all cursor-pointer border-2 hover:shadow-lg",
+                                    selectedOffers.includes(offer.id) ? "border-amber-600 bg-amber-50/20" : "border-slate-100"
+                                )} onClick={() => setSelectedOffers(prev => prev.includes(offer.id) ? prev.filter(i => i !== offer.id) : [...prev, offer.id])}>
+                                    <CardContent className="p-6 flex justify-between items-center">
+                                        <div className="space-y-1">
+                                            <h4 className="font-black uppercase text-sm">{offer.name}</h4>
+                                            <p className="text-xs text-muted-foreground">LHR T5 Exclusives.</p>
                                         </div>
-                                        <div className="text-right flex flex-col items-end">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-[10px] text-muted-foreground line-through opacity-50">${offer.basePrice}</span>
-                                                <span className="text-xl font-black text-amber-600 font-mono">${offer.finalPrice}</span>
-                                            </div>
-                                             {offer.adjustment !== 0 && (
-                                                 <Badge variant="outline" className={cn(
-                                                     "text-[8px] font-black",
-                                                     offer.adjustment < 0 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"
-                                                 )}>
-                                                     {offer.adjustment < 0 ? `-$${Math.abs(offer.adjustment)} BUNDLE SAVING` : `+$${offer.adjustment} PEAK SURCHARGE`}
-                                                 </Badge>
-                                             )}
+                                        <div className="text-right">
+                                            <p className="text-2xl font-black text-amber-600 font-mono">${offer.finalPrice.toFixed(2)}</p>
+                                            <Checkbox checked={selectedOffers.includes(offer.id)} onCheckedChange={() => {}} className="mt-2" />
                                         </div>
                                     </CardContent>
                                 </Card>
                             ))}
                         </div>
-                    </div>
+                    </section>
                 </div>
 
-                <div className="flex justify-center pt-10 pb-20">
+                <div className="flex justify-center pt-8 pb-12">
                     <Button 
                         size="lg" 
-                        onClick={handleProceedToAirlinePayment} 
-                        disabled={selectedAirlineOffers.length === 0 && selectedAirportOffers.length === 0}
+                        disabled={selectedOffers.length === 0} 
+                        onClick={next}
                         className="h-16 px-16 text-lg font-black uppercase tracking-widest shadow-2xl bg-slate-900"
                     >
-                        Proceed to Payment
+                        Proceed to Checkout
                         <ArrowRight className="ml-3 h-5 w-5" />
                     </Button>
                 </div>
             </div>
         )}
 
-        {/* STEP 6: AIRLINE PAYMENT */}
-        {step === 'airline_payment' && (
-            <Card className="w-full max-w-2xl shadow-2xl border-blue-200 overflow-hidden animate-in zoom-in-95 duration-300">
-                <div className="bg-blue-600 p-6 text-white flex justify-between items-center">
-                    <div>
-                        <CardTitle className="text-white uppercase font-black tracking-tight">Airline Offers Settlement</CardTitle>
-                        <p className="text-xs text-white/70 font-medium">Update PSS & Issue Virtual EMDs</p>
-                    </div>
-                    <Plane className="h-8 w-8 text-white/50" />
+        {/* STEP 10: STOCK VALIDATION */}
+        {currentStep === 'STOCK' && (
+            <div className="text-center space-y-12 animate-in fade-in duration-700 max-w-lg w-full">
+                <div className="space-y-4">
+                    <h2 className="text-3xl font-black text-primary uppercase tracking-tighter">Stock Verification</h2>
+                    <p className="text-muted-foreground font-medium">Validating selected SKU availability across ecosystem stock keepers.</p>
+                </div>
+                <div className="space-y-4">
+                    {selectedOffers.map((id, idx) => {
+                        const offer = ALL_OFFERS.find(o => o.id === id);
+                        return (
+                            <div key={id} className="p-4 rounded-xl border bg-white flex justify-between items-center animate-in slide-in-from-bottom-4" style={{ animationDelay: `${idx * 200}ms` }}>
+                                <div className="flex items-center gap-3">
+                                    <Store className="h-4 w-4 text-primary" />
+                                    <div className="text-left">
+                                        <p className="text-sm font-black">{offer?.name}</p>
+                                        <p className="text-[10px] text-muted-foreground uppercase">{offer?.domain === 'Airline' ? 'PSS / Offersense Inventory' : 'Airport Stock Keeper'}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2 text-emerald-600 font-black text-[10px] uppercase">
+                                    <ShieldCheck className="h-4 w-4" /> Available
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+                <Button onClick={next} className="h-14 px-12 text-md font-black uppercase tracking-widest shadow-xl w-full">
+                    Confirm & Settle
+                </Button>
+            </div>
+        )}
+
+        {/* STEP 11: PAYMENT */}
+        {currentStep === 'PAYMENT' && (
+             <Card className="w-full max-w-md shadow-2xl border-primary/20 overflow-hidden animate-in zoom-in-95 duration-300">
+                <div className="bg-slate-900 p-8 text-white text-center space-y-2">
+                    <CardTitle className="text-white uppercase font-black tracking-tight text-xl">Order Settlement</CardTitle>
+                    <p className="text-xs text-white/50 font-medium tracking-widest uppercase">Cross-Domain Unified Payment</p>
                 </div>
                 <CardContent className="p-8 space-y-6">
                     <div className="space-y-4">
-                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Selected Carrier Ancillaries</p>
-                        <div className="space-y-2">
-                            {selectedAirlineOffers.map(id => {
-                                const offer = mockOffers.find(o => o.id === id);
-                                return (
-                                    <div key={id} className="flex justify-between items-center p-4 bg-blue-50/50 rounded-xl border border-blue-100">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-8 w-8 rounded-lg bg-white border flex items-center justify-center text-blue-600"><Star className="h-4 w-4" /></div>
-                                            <span className="font-bold text-sm uppercase">{offer?.name}</span>
-                                        </div>
-                                        <span className="font-mono font-black text-blue-700">${offer?.finalPrice.toFixed(2)}</span>
-                                    </div>
-                                );
-                            })}
-                             {selectedAirlineOffers.length === 0 && <p className="text-sm italic text-muted-foreground py-4 text-center">No carrier ancillaries selected.</p>}
-                        </div>
+                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Selected Add-ons</p>
+                        {selectedOffers.map(id => {
+                            const offer = limitedOffers.find(o => o.id === id);
+                            return (
+                                <div key={id} className="flex justify-between items-center text-sm font-bold">
+                                    <span className="text-slate-600">{offer?.name}</span>
+                                    <span className="font-mono">${offer?.finalPrice.toFixed(2)}</span>
+                                </div>
+                            );
+                        })}
                     </div>
                     <Separator />
-                    <div className="flex justify-between items-center py-2">
-                        <span className="text-lg font-black uppercase text-slate-700">Airline Settlement</span>
-                        <span className="text-4xl font-black text-blue-600 font-mono tracking-tighter">
-                            ${selectedAirlineOffers.reduce((sum, id) => sum + (mockOffers.find(o => o.id === id)?.finalPrice || 0), 0).toFixed(2)}
+                    <div className="flex justify-between items-center">
+                        <span className="text-lg font-black uppercase">Total Due</span>
+                        <span className="text-3xl font-black text-primary font-mono">
+                            ${selectedOffers.reduce((sum, id) => sum + (limitedOffers.find(o => o.id === id)?.finalPrice || 0), 0).toFixed(2)}
                         </span>
                     </div>
-                    <div className="p-4 bg-slate-900 rounded-2xl flex items-center gap-4 text-white border-2 border-blue-500/20">
-                        <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white"><ShieldCheck className="h-6 w-6" /></div>
-                        <p className="text-xs font-medium leading-tight">Settlement authorized via SITA Broker. Carrier SSRs will be committed to Global PSS on approval.</p>
-                    </div>
-                </CardContent>
-                <CardFooter className="p-8 bg-slate-50 border-t flex justify-end">
-                     <Button onClick={handleCompleteAirlinePayment} disabled={isLoading} className="w-full h-14 text-md font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-700 shadow-xl">
-                        {isLoading ? <Loader2 className="animate-spin mr-2" /> : <CreditCard className="mr-2 h-5 w-5" />}
-                        Complete Airline Payment
+                    <Button onClick={next} className="w-full h-14 text-md font-black uppercase tracking-widest shadow-xl">
+                        <CreditCard className="mr-2 h-5 w-5" /> Pay Now
                     </Button>
-                </CardFooter>
-            </Card>
+                </CardContent>
+             </Card>
         )}
 
-        {/* STEP 7: AIRPORT PAYMENT */}
-        {step === 'airport_payment' && (
-            <Card className="w-full max-w-2xl shadow-2xl border-amber-200 overflow-hidden animate-in zoom-in-95 duration-300">
-                <div className="bg-amber-600 p-6 text-white flex justify-between items-center">
-                    <div>
-                        <CardTitle className="text-white uppercase font-black tracking-tight">Airport Offers Settlement</CardTitle>
-                        <p className="text-xs text-white/70 font-medium">Trigger Hub Supplier Fulfillment</p>
-                    </div>
-                    <Building2 className="h-8 w-8 text-white/50" />
-                </div>
-                <CardContent className="p-8 space-y-6">
-                    <div className="space-y-4">
-                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Selected Ecosystem Services</p>
-                        <div className="space-y-2">
-                            {selectedAirportOffers.map(id => {
-                                const offer = mockOffers.find(o => o.id === id);
-                                return (
-                                    <div key={id} className="flex justify-between items-center p-4 bg-amber-50/50 rounded-xl border border-amber-100">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-8 w-8 rounded-lg bg-white border flex items-center justify-center text-amber-600"><Package className="h-4 w-4" /></div>
-                                            <span className="font-bold text-sm uppercase">{offer?.name}</span>
-                                        </div>
-                                        <span className="font-mono font-black text-amber-700">${offer?.finalPrice.toFixed(2)}</span>
-                                    </div>
-                                );
-                            })}
-                            {selectedAirportOffers.length === 0 && <p className="text-sm italic text-muted-foreground py-4 text-center">No airport services selected.</p>}
-                        </div>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center py-2">
-                        <span className="text-lg font-black uppercase text-slate-700">Airport Settlement</span>
-                        <span className="text-4xl font-black text-amber-600 font-mono tracking-tighter">
-                            ${selectedAirportOffers.reduce((sum, id) => sum + (mockOffers.find(o => o.id === id)?.finalPrice || 0), 0).toFixed(2)}
-                        </span>
-                    </div>
-                    <div className="p-4 bg-slate-900 rounded-2xl flex items-center gap-4 text-white border-2 border-blue-500/20">
-                        <div className="h-10 w-10 rounded-full bg-amber-500 flex items-center justify-center text-white"><ShieldCheck className="h-6 w-6" /></div>
-                        <p className="text-xs font-medium leading-tight">Supplier fulfillment tokens will be issued for terminal-side redemption via SITA hardware.</p>
-                    </div>
-                </CardContent>
-                <CardFooter className="p-8 bg-slate-50 border-t flex justify-end">
-                     <Button onClick={handleCompleteAirportPayment} disabled={isLoading} className="w-full h-14 text-md font-black uppercase tracking-widest bg-amber-600 hover:bg-amber-700 shadow-xl">
-                        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
-                        Complete Airport Payment
-                    </Button>
-                </CardFooter>
-            </Card>
-        )}
-
-        {/* STEP 8: CONFIRMATION */}
-        {step === 'confirmation' && (
-            <div className="text-center space-y-8 animate-in zoom-in-50 duration-700">
+        {/* STEP 12: ORDER UPDATE */}
+        {currentStep === 'UPDATE' && (
+             <div className="text-center space-y-8 animate-in zoom-in-50 duration-700">
                 <div className="relative mx-auto w-fit">
                     <div className="absolute inset-0 animate-ping rounded-full bg-emerald-500/20 scale-150"></div>
                     <div className="h-24 w-24 bg-emerald-500 rounded-full flex items-center justify-center relative z-10 shadow-2xl">
@@ -714,151 +984,113 @@ export default function OffersenseComposerPage() {
                     </div>
                 </div>
                 <div className="space-y-2">
-                    <h2 className="text-4xl font-black text-primary uppercase tracking-tighter">Transaction Successful</h2>
-                    <p className="text-muted-foreground font-medium text-lg">Airline & Airport services have been confirmed.</p>
+                    <h2 className="text-4xl font-black text-primary uppercase tracking-tighter">Order Successfully Updated</h2>
+                    <p className="text-muted-foreground font-medium text-lg">PSS Commit & Ecosystem Tokens Issued.</p>
                 </div>
-                <div className="flex justify-center gap-4">
-                    <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full font-bold text-xs border border-blue-100">
-                        <Plane className="h-3 w-3" /> PSS Updated
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl mx-auto">
+                    <div className="p-4 rounded-xl bg-blue-50 text-blue-700 border border-blue-100 flex items-center gap-3">
+                        <Plane className="h-5 w-5" />
+                        <div className="text-left">
+                            <p className="text-[10px] font-black uppercase">Carrier PSS</p>
+                            <p className="text-xs font-bold">SSR COMMITTED</p>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 rounded-full font-bold text-xs border border-amber-100">
-                        <Building2 className="h-3 w-3" /> Supplier Notified
+                    <div className="p-4 rounded-xl bg-amber-50 text-amber-700 border border-amber-100 flex items-center gap-3">
+                        <Building2 className="h-5 w-5" />
+                        <div className="text-left">
+                            <p className="text-[10px] font-black uppercase">Airport Hub</p>
+                            <p className="text-xs font-bold">VOUCHERS ISSUED</p>
+                        </div>
                     </div>
                 </div>
-                <Button onClick={() => setStep('final_summary')} className="h-14 px-12 text-md font-black uppercase tracking-widest shadow-xl">
-                    View Unified Order Summary
+                <Button onClick={next} className="h-14 px-12 text-md font-black uppercase tracking-widest shadow-xl">
+                    View Final Updated Order
                 </Button>
             </div>
         )}
 
-        {/* STEP 9: FINAL UNIFIED SUMMARY */}
-        {step === 'final_summary' && pnrContext && (
+        {/* STEP 13: FINAL ORDER SCREEN */}
+        {currentStep === 'FINAL' && simulationData && (
              <div className="w-full max-w-4xl space-y-8 animate-in slide-in-from-bottom-8 duration-700 pb-20">
                 <div className="flex justify-between items-end">
                     <div className="space-y-1">
-                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em]">Unified Ecosystem Receipt</p>
-                        <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">{orderId || 'ORD-99999'}</h2>
+                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em]">Simulation Result: Final Order</p>
+                        <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">ORD-SIM-{Math.floor(Math.random() * 90000) + 10000}</h2>
                     </div>
-                    <div className="text-right space-y-1">
-                        <Badge className="bg-emerald-600 px-4 py-1 font-mono tracking-widest text-[10px]">TRANSACTION_SETTLED</Badge>
-                        <p className="text-[10px] text-muted-foreground font-bold">Processed at {new Date().toLocaleTimeString()}</p>
-                    </div>
+                    <Badge className="bg-emerald-600 px-6 py-2 font-mono tracking-widest text-[10px]">FULFILLED_ECOSYSTEM</Badge>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
                     <div className="md:col-span-8 space-y-6">
-                        {/* THE MASTER ORDER TREE */}
                         <Card className="rounded-3xl border-slate-200 shadow-xl overflow-hidden bg-white">
                             <CardHeader className="bg-slate-900 py-4 px-6 text-white">
                                 <CardTitle className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
                                     <Layers className="h-4 w-4 text-emerald-400" /> Unified Order Structure
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="p-8">
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-3 mb-2">
+                            <CardContent className="p-8 space-y-8">
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3">
                                         <div className="h-2 w-2 rounded-full bg-slate-900" />
-                                        <h3 className="text-lg font-black uppercase text-slate-900">Order</h3>
+                                        <h3 className="text-lg font-black uppercase text-slate-900">Flight: {simulationData.origin} → {simulationData.destination}</h3>
                                     </div>
-
-                                    {/* FLIGHT SECTION */}
-                                    <TreeItem label="Flight (core product)" isCategory>
-                                        <TreeItem label={`${pnrContext.route} • ${pnrContext.flight}`} price={890} />
-                                    </TreeItem>
-
-                                    {/* AIRLINE ANCILLARIES */}
-                                    <TreeItem label="Airline Ancillaries" isCategory>
-                                        {selectedAirlineOffers.map((id, idx) => {
-                                            const offer = mockOffers.find(o => o.id === id);
-                                            return (
-                                                <TreeItem 
-                                                    key={id} 
-                                                    label={offer?.name} 
-                                                    price={offer?.finalPrice} 
-                                                />
-                                            );
-                                        })}
-                                        {selectedAirlineOffers.length === 0 && <TreeItem label="No Airline Services" />}
-                                    </TreeItem>
-
-                                    {/* AIRPORT ANCILLARIES */}
-                                    <TreeItem label="Airport Ancillaries" isCategory isLast>
-                                        {selectedAirportOffers.map((id, idx) => {
-                                            const offer = mockOffers.find(o => o.id === id);
-                                            return (
-                                                <TreeItem 
-                                                    key={id} 
-                                                    label={offer?.name} 
-                                                    price={offer?.finalPrice} 
-                                                />
-                                            );
-                                        })}
-                                        {selectedAirportOffers.length === 0 && <TreeItem label="No Airport Services" />}
-                                    </TreeItem>
+                                    <div className="pl-6 space-y-4 border-l">
+                                        <div className="space-y-2">
+                                             <p className="text-[10px] font-black uppercase text-slate-400">Airline Ancillaries</p>
+                                             {selectedOffers.filter(id => ALL_OFFERS.find(o => o.id === id)?.domain === 'Airline').length > 0 ? selectedOffers.filter(id => ALL_OFFERS.find(o => o.id === id)?.domain === 'Airline').map(id => (
+                                                 <div key={id} className="flex justify-between text-sm font-bold">
+                                                     <span className="text-slate-700">{ALL_OFFERS.find(o => o.id === id)?.name}</span>
+                                                     <span className="font-mono">${pricedOffers.find(o => o.id === id)?.finalPrice.toFixed(2)}</span>
+                                                 </div>
+                                             )) : <p className="text-xs italic text-muted-foreground">None added.</p>}
+                                        </div>
+                                        <div className="space-y-2">
+                                             <p className="text-[10px] font-black uppercase text-slate-400">Airport Services</p>
+                                             {selectedOffers.filter(id => ALL_OFFERS.find(o => o.id === id)?.domain === 'Airport').length > 0 ? selectedOffers.filter(id => ALL_OFFERS.find(o => o.id === id)?.domain === 'Airport').map(id => (
+                                                 <div key={id} className="flex justify-between text-sm font-bold">
+                                                     <span className="text-slate-700">{ALL_OFFERS.find(o => o.id === id)?.name}</span>
+                                                     <span className="font-mono">${pricedOffers.find(o => o.id === id)?.finalPrice.toFixed(2)}</span>
+                                                 </div>
+                                             )) : <p className="text-xs italic text-muted-foreground">None added.</p>}
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div className="mt-10 p-8 bg-slate-50 rounded-3xl border border-slate-100">
-                                     <div className="flex justify-between items-center">
-                                        <div>
-                                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Total Settled Value</p>
-                                            <div className="flex items-center gap-2 mt-1">
-                                                <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                                                <span className="text-xs font-bold text-slate-600">Cross-domain Settlement Finalized</span>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-5xl font-black font-mono tracking-tighter text-slate-900">
-                                                ${(
-                                                    890 + // Base flight
-                                                    [...selectedAirlineOffers, ...selectedAirportOffers].reduce((sum, id) => sum + (mockOffers.find(o => o.id === id)?.finalPrice || 0), 0)
-                                                ).toFixed(2)}
-                                            </p>
-                                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">USD Combined Sum</p>
-                                        </div>
-                                    </div>
+                                <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 flex justify-between items-center">
+                                    <p className="font-black text-primary uppercase text-sm">Ecosystem Order Value</p>
+                                    <p className="text-4xl font-black font-mono tracking-tighter text-slate-900">
+                                        ${selectedOffers.reduce((sum, id) => sum + (pricedOffers.find(o => o.id === id)?.finalPrice || 0), 0).toFixed(2)}
+                                    </p>
                                 </div>
                             </CardContent>
                         </Card>
                     </div>
 
                     <div className="md:col-span-4 space-y-6">
-                        <Card className="rounded-3xl border-slate-200 shadow-sm p-6 space-y-6">
-                            <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Ecosystem Fulfillment Tokens</p>
-                            <div className="space-y-4">
-                                <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center">
-                                    <div className="relative w-[150px] h-[150px] mix-blend-multiply opacity-80 grayscale">
-                                         <Image 
-                                            src="https://picsum.photos/seed/final-qr/200/200" 
-                                            alt="Unified Token" 
-                                            fill 
-                                            className="rounded-lg"
-                                            data-ai-hint="qr code"
-                                        />
-                                    </div>
-                                    <p className="mt-4 font-mono text-[10px] font-black text-slate-400 uppercase tracking-widest">ECO_TOKEN_{orderId?.slice(-5)}</p>
-                                </div>
-                                <div className="space-y-2">
-                                     <div className="flex items-center gap-2 text-[10px] font-black text-blue-600 bg-blue-50 p-2 rounded-lg border border-blue-100">
-                                        <Plane className="h-3 w-3" /> PSS SSR: COMMITTED
-                                    </div>
-                                    <div className="flex items-center gap-2 text-[10px] font-black text-amber-600 bg-amber-50 p-2 rounded-lg border border-amber-100">
-                                        <Building2 className="h-3 w-3" /> HUB VOUCHERS: ISSUED
-                                    </div>
-                                    <div className="flex items-center gap-2 text-[10px] font-black text-indigo-600 bg-indigo-50 p-2 rounded-lg border border-indigo-100">
-                                        <Truck className="h-3 w-3" /> LOGISTICS: DISPATCHED
-                                    </div>
-                                </div>
-                            </div>
+                        <Card className="rounded-3xl p-6 space-y-4">
+                             <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest text-center">Digital Fulfillment Tokens</p>
+                             <div className="p-4 bg-slate-50 rounded-2xl flex flex-col items-center">
+                                 <Image 
+                                    src="https://picsum.photos/seed/final-qr/200/200" 
+                                    alt="Unified Token" 
+                                    width={120} 
+                                    height={120} 
+                                    className="rounded-lg opacity-80 mix-blend-multiply"
+                                    data-ai-hint="qr code"
+                                />
+                             </div>
+                             <div className="space-y-2">
+                                 <div className="flex items-center gap-2 text-[9px] font-black text-blue-600 bg-blue-50 p-2 rounded-lg border border-blue-100 uppercase">
+                                    <ShieldCheck className="h-3 w-3" /> PSS Sync: Completed
+                                 </div>
+                                 <div className="flex items-center gap-2 text-[9px] font-black text-amber-600 bg-amber-50 p-2 rounded-lg border border-amber-100 uppercase">
+                                    <Store className="h-3 w-3" /> Hub Stocks: Reduced
+                                 </div>
+                             </div>
                         </Card>
-
-                        <div className="flex flex-col gap-3">
-                            <Button className="w-full h-12 font-black uppercase text-xs tracking-widest" onClick={() => window.print()}>
-                                <ReceiptText className="mr-2 h-4 w-4" /> Print Full Audit
-                            </Button>
-                            <Button variant="outline" className="w-full h-12 font-black uppercase text-xs tracking-widest" onClick={() => window.location.reload()}>
-                                Start New Session
-                            </Button>
-                        </div>
+                        <Button className="w-full h-14 font-black uppercase text-xs tracking-widest" onClick={() => setCurrentStep('INPUT')}>
+                             Run New Simulation
+                        </Button>
                     </div>
                 </div>
              </div>
