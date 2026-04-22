@@ -1,16 +1,24 @@
 'use client';
 
 import * as React from 'react';
-import { X } from 'lucide-react';
+import { X, Check, ChevronsUpDown } from 'lucide-react';
 
+import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Command,
+  CommandEmpty,
   CommandGroup,
+  CommandInput,
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
-import { Command as CommandPrimitive } from 'cmdk';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 type Option = Record<'value' | 'label', string>;
 
@@ -24,111 +32,92 @@ interface MultiSelectProps {
 
 export function MultiSelect({
   options,
-  selected = [], // Default to empty array to prevent 'includes' error on undefined
+  selected = [],
   onChange,
   placeholder = 'Select options...',
   className,
-  ...props
 }: MultiSelectProps) {
-  const inputRef = React.useRef<HTMLInputElement>(null);
   const [open, setOpen] = React.useState(false);
-  const [inputValue, setInputValue] = React.useState('');
 
   const handleUnselect = (value: string) => {
     onChange(selected.filter((s) => s !== value));
   };
 
   const handleSelect = (value: string) => {
-    setInputValue('');
-    onChange([...selected, value]);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const input = inputRef.current;
-    if (input) {
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (input.value === '') {
-          const newSelected = [...selected];
-          newSelected.pop();
-          onChange(newSelected);
-        }
-      }
-      if (e.key === 'Escape') {
-        input.blur();
-      }
+    if (selected.includes(value)) {
+      onChange(selected.filter((s) => s !== value));
+    } else {
+      onChange([...selected, value]);
     }
   };
 
-  const filteredOptions = options.filter(
-    (option) => !selected.includes(option.value)
-  );
-
   return (
-    <Command
-      onKeyDown={handleKeyDown}
-      className="overflow-visible bg-transparent"
-    >
-      <div className="group rounded-md border border-input px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-        <div className="flex flex-wrap gap-1">
-          {selected.map((value) => {
-            const label = options.find((o) => o.value === value)?.label || value;
-            return (
-              <Badge key={value} variant="secondary">
-                {label}
-                <button
-                  className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleUnselect(value);
-                    }
-                  }}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  onClick={() => handleUnselect(value)}
-                >
-                  <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                </button>
-              </Badge>
-            );
-          })}
-          <CommandPrimitive.Input
-            ref={inputRef}
-            value={inputValue}
-            onValueChange={setInputValue}
-            onBlur={() => setOpen(false)}
-            onFocus={() => setOpen(true)}
-            placeholder={placeholder}
-            className="ml-2 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
-          />
-        </div>
-      </div>
-      <div className="relative mt-2">
-        {open && filteredOptions.length > 0 ? (
-          <div className="absolute top-0 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
-            <CommandList>
-              <CommandGroup className="h-full overflow-auto">
-                {filteredOptions.map((option) => {
-                  return (
-                    <CommandItem
-                      key={option.value}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className={cn(
+            "w-full justify-between h-auto min-h-10 py-2 px-3 text-left font-normal hover:bg-background",
+            className
+          )}
+        >
+          <div className="flex flex-wrap gap-1">
+            {selected.length > 0 ? (
+              selected.map((value) => {
+                const option = options.find((o) => o.value === value);
+                return (
+                  <Badge
+                    key={value}
+                    variant="secondary"
+                    className="mr-1 mb-1 font-medium"
+                    onClick={(e) => {
                         e.stopPropagation();
-                      }}
-                      onSelect={() => handleSelect(option.value)}
-                      className={'cursor-pointer'}
-                    >
-                      {option.label}
-                    </CommandItem>
-                  );
-                })}
-              </CommandGroup>
-            </CommandList>
+                        handleUnselect(value);
+                    }}
+                  >
+                    {option?.label || value}
+                    <X className="ml-1 h-3 w-3 text-muted-foreground hover:text-foreground" />
+                  </Badge>
+                );
+              })
+            ) : (
+              <span className="text-muted-foreground">{placeholder}</span>
+            )}
           </div>
-        ) : null}
-      </div>
-    </Command>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command className="w-full">
+          <CommandInput placeholder="Search options..." className="h-9" />
+          <CommandList>
+            <CommandEmpty>No results found.</CommandEmpty>
+            <CommandGroup className="max-h-64 overflow-auto">
+              {options.map((option) => (
+                <CommandItem
+                  key={option.value}
+                  onSelect={() => handleSelect(option.value)}
+                  className="cursor-pointer"
+                >
+                  <div
+                    className={cn(
+                      "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                      selected.includes(option.value)
+                        ? "bg-primary text-primary-foreground"
+                        : "opacity-50 [&_svg]:invisible"
+                    )}
+                  >
+                    <Check className={cn("h-4 w-4")} />
+                  </div>
+                  <span>{option.label}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }

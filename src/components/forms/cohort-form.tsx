@@ -130,6 +130,7 @@ const tierOpts = [
 
 const cabinOpts = [
   { value: 'Economy', label: 'Economy' },
+  { value: 'Premium Economy', label: 'Premium Economy' },
   { value: 'Business', label: 'Business' },
   { value: 'First', label: 'First' }
 ];
