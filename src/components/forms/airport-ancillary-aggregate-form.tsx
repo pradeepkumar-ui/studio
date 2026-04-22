@@ -24,7 +24,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection } from 'firebase/firestore';
-import { Building2, Info, CheckCircle2 } from 'lucide-react';
+import { Building2, Info, CheckCircle2, DollarSign } from 'lucide-react';
 
 const dropdownOptions: Record<string, string[]> = {
   'Aircraft type': ['A320neo', 'A350-900', 'A380-800', 'B737 MAX', 'B777-300ER', 'B787-9'],
@@ -52,11 +52,13 @@ const airportAggregateSchema = z.object({
   id: z.string().optional(),
   configName: z.string().min(5, 'Configuration name is required.'),
   ancillaryId: z.string().min(1, 'Please select an airport ancillary.'),
+  basePrice: z.coerce.number().min(0, 'Base price must be a non-negative number.'),
+  currency: z.string().length(3, 'Currency must be a 3-letter code.').toUpperCase().default('USD'),
   status: z.enum(['Draft', 'Active', 'Archived']).default('Draft'),
   parameters: z.record(z.string(), z.string()).default({}),
 });
 
-export type AirportAncillaryAggregate = z.infer<typeof airportAggregateSchema>;
+export type AirportAncillaryAggregate = z.infer<typeof airportAggregateSchema> & { ancillaryName?: string, category?: string };
 
 interface AirportAncillaryAggregateFormProps {
   aggregate: any | null;
@@ -90,6 +92,8 @@ export function AirportAncillaryAggregateForm({ aggregate, onSubmit, onCancel }:
     defaultValues: aggregate || {
       configName: '',
       ancillaryId: '',
+      basePrice: 0,
+      currency: 'USD',
       status: 'Draft',
       parameters: {},
     },
@@ -147,6 +151,26 @@ export function AirportAncillaryAggregateForm({ aggregate, onSubmit, onCancel }:
                     <FormMessage />
                 </FormItem>
             )} />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField control={form.control} name="basePrice" render={({ field }) => (
+                  <FormItem>
+                      <FormLabel>Base Price (Per Unit)*</FormLabel>
+                      <div className="relative">
+                          <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <FormControl><Input type="number" placeholder="0.00" className="pl-9 font-bold" {...field} /></FormControl>
+                      </div>
+                      <FormMessage />
+                  </FormItem>
+              )} />
+              <FormField control={form.control} name="currency" render={({ field }) => (
+                  <FormItem>
+                      <FormLabel>ISO Currency*</FormLabel>
+                      <FormControl><Input placeholder="USD" className="font-mono uppercase" {...field} maxLength={3} /></FormControl>
+                      <FormMessage />
+                  </FormItem>
+              )} />
+            </div>
         </section>
 
         <Separator />

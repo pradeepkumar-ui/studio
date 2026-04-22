@@ -32,7 +32,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, PlusCircle, Loader2, Building2, Search, History, Trash2, Edit } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2, Building2, Search, History, Trash2, Edit, DollarSign } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -41,8 +41,8 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
 const initialMockAggregates: any[] = [
-    { id: 'HUB-AGG-001', configName: 'LHR T5 Lounge Optimization', ancillaryName: 'Executive Lounge Access', category: 'Lounge', status: 'Active' },
-    { id: 'HUB-AGG-002', configName: 'JFK Security Pacing Logic', ancillaryName: 'Fast Track Security', category: 'Priority service', status: 'Active' },
+    { id: 'HUB-AGG-001', configName: 'LHR T5 Lounge Optimization', ancillaryName: 'Executive Lounge Access', category: 'Lounge', basePrice: 45.00, currency: 'USD', status: 'Active' },
+    { id: 'HUB-AGG-002', configName: 'JFK Security Pacing Logic', ancillaryName: 'Fast Track Security', category: 'Priority service', basePrice: 15.00, currency: 'USD', status: 'Active' },
 ];
 
 export default function AirportAncillaryAggregatesPage() {
@@ -134,7 +134,7 @@ export default function AirportAncillaryAggregatesPage() {
                 <TableRow>
                   <TableHead className="text-[10px] uppercase font-black">Hub Logic Identity</TableHead>
                   <TableHead className="text-[10px] uppercase font-black">Linked Hub Service</TableHead>
-                  <TableHead className="text-[10px] uppercase font-black">Category</TableHead>
+                  <TableHead className="text-[10px] uppercase font-black">Base Price</TableHead>
                   <TableHead className="text-[10px] uppercase font-black">Status</TableHead>
                   <TableHead className="text-right text-[10px] uppercase font-black">Actions</TableHead>
                 </TableRow>
@@ -151,10 +151,17 @@ export default function AirportAncillaryAggregatesPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                        <div className="text-xs font-semibold">{item.ancillaryName}</div>
+                        <div className="flex flex-col gap-0.5">
+                            <div className="text-xs font-semibold">{item.ancillaryName}</div>
+                            <Badge variant="outline" className="text-[9px] uppercase font-black w-fit">{item.category}</Badge>
+                        </div>
                     </TableCell>
                     <TableCell>
-                        <Badge variant="outline" className="text-[9px] uppercase font-black">{item.category}</Badge>
+                        <div className="flex items-center gap-1 font-mono font-black text-primary">
+                            <DollarSign className="h-3 w-3" />
+                            {new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(item.basePrice || 0)}
+                            <span className="text-[9px] text-muted-foreground ml-1">{item.currency || 'USD'}</span>
+                        </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant={item.status === 'Active' ? 'default' : 'secondary'} className="text-[9px] font-black uppercase tracking-wider">{item.status}</Badge>
