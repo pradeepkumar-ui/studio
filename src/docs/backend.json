@@ -101,7 +101,7 @@
     },
     "airlineInventory": {
       "title": "Airline Stock Registry",
-      "description": "Operational inventory tracking for ancillaries including soft-holds and fulfillment source logic.",
+      "description": "Operational inventory tracking for airline ancillaries including soft-holds and fulfillment source logic.",
       "type": "object",
       "properties": {
         "sku": { "type": "string" },
@@ -115,6 +115,24 @@
         "type": { "type": "string", "enum": ["Physical", "Digital", "Service_Capacity"] },
         "status": { "type": "string", "enum": ["In Stock", "Low Stock", "Out of Stock"] }
       }
+    },
+    "airportInventory": {
+      "title": "Airport Stock Registry",
+      "description": "Operational inventory tracking for hub services including slot-based and capacity-based logic.",
+      "type": "object",
+      "properties": {
+        "sku": { "type": "string" },
+        "airportCode": { "type": "string" },
+        "terminal": { "type": "string" },
+        "category": { "type": "string" },
+        "fulfillmentSource": { "type": "string", "enum": ["Offersense", "Supplier_API"] },
+        "protocol": { "type": "string", "enum": ["Slot-based", "Capacity-based", "Resource-count"] },
+        "available": { "type": "number" },
+        "reserved": { "type": "number" },
+        "threshold": { "type": "number" },
+        "realTimeSync": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["In Stock", "Low Stock", "Out of Stock"] }
+      }
     }
   },
   "auth": { "providers": [] },
@@ -126,6 +144,7 @@
     "/bundles/{bundleId}": { "schema": { "$ref": "#/entities/bundle" }, "description": "Core monetization engine offers." },
     "/airlineAncillaries/{ancillaryId}": { "schema": { "$ref": "#/entities/airlineAncillary" }, "description": "Airline skus." },
     "/airportServices/{ancillaryId}": { "schema": { "$ref": "#/entities/airportAncillary" }, "description": "Airport ecosystem skus." },
-    "/airlineInventory/{inventoryId}": { "schema": { "$ref": "#/entities/airlineInventory" }, "description": "Operational stock keeping records." }
+    "/airlineInventory/{inventoryId}": { "schema": { "$ref": "#/entities/airlineInventory" }, "description": "Airline operational stock keeper." },
+    "/airportInventory/{inventoryId}": { "schema": { "$ref": "#/entities/airportInventory" }, "description": "Airport operational stock keeper." }
   }
 }

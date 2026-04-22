@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,7 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '../ui/separator';
-import { Store, ShieldCheck, Clock, Tag, Building2, Zap, MonitorDot } from 'lucide-react';
+import { Store, ShieldCheck, Clock, Tag, RefreshCw, Zap } from 'lucide-react';
 import { Checkbox } from '../ui/checkbox';
 
 const airportStockItemSchema = z.object({
@@ -38,6 +39,7 @@ const airportStockItemSchema = z.object({
   reserved: z.coerce.number().int().min(0, 'Reserved cannot be negative.'),
   threshold: z.coerce.number().int().min(0, 'Threshold required.'),
   isSlotActive: z.boolean().default(false),
+  realTimeSync: z.boolean().default(false),
 });
 
 export type AirportStockItem = z.infer<typeof airportStockItemSchema>;
@@ -63,8 +65,11 @@ export function AirportStockItemForm({ item, onSubmit, onCancel }: AirportStockI
       reserved: 0,
       threshold: 5,
       isSlotActive: false,
+      realTimeSync: false,
     },
   });
+
+  const watchFulfillmentSource = form.watch('fulfillmentSource');
 
   return (
     <Form {...form}>
@@ -108,6 +113,29 @@ export function AirportStockItemForm({ item, onSubmit, onCancel }: AirportStockI
                   )}
                 />
             </div>
+
+            {watchFulfillmentSource === 'Offersense' && (
+              <FormField
+                control={form.control}
+                name="realTimeSync"
+                render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 bg-primary/5 border-primary/10">
+                        <FormControl>
+                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                            <FormLabel className="flex items-center gap-1.5">
+                                <RefreshCw className="h-3 w-3 text-primary animate-spin-slow" />
+                                Enable Real-time Hub Sync
+                            </FormLabel>
+                            <FormDescription className="text-[10px]">
+                                Automatically synchronize stock balances and reservations with external airport/vendor systems.
+                            </FormDescription>
+                        </div>
+                    </FormItem>
+                )}
+              />
+            )}
 
             <div className="grid grid-cols-2 gap-4">
                 <FormField
@@ -244,8 +272,7 @@ export function AirportStockItemForm({ item, onSubmit, onCancel }: AirportStockI
         <div className="flex justify-end gap-4 pt-6 border-t">
             <Button type="button" variant="outline" onClick={onCancel}>Discard</Button>
             <Button type="submit" className="font-bold px-8">
-                <MonitorDot className="mr-2 h-4 w-4" />
-                {item ? 'Update Node Balance' : 'Initialize Hub Node'}
+                Confirm Hub Balance
             </Button>
         </div>
       </form>

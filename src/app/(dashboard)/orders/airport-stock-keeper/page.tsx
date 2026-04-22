@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -56,10 +57,10 @@ import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp, query, ord
 import { Progress } from '@/components/ui/progress';
 
 const initialMockStock: any[] = [
-    { id: '1', sku: 'LOU-LHR-T5-EXP', airportCode: 'LHR', terminal: 'T5', category: 'Lounge', available: 12, reserved: 4, threshold: 5, status: 'In Stock', fulfillmentSource: 'Offersense', protocol: 'Slot-based', isSlotActive: true },
+    { id: '1', sku: 'LOU-LHR-T5-EXP', airportCode: 'LHR', terminal: 'T5', category: 'Lounge', available: 12, reserved: 4, threshold: 5, status: 'In Stock', fulfillmentSource: 'Offersense', protocol: 'Slot-based', isSlotActive: true, realTimeSync: true },
     { id: '2', sku: 'FST-JFK-T4-PEAK', airportCode: 'JFK', terminal: 'T4', category: 'Fast-track', available: 45, reserved: 10, threshold: 10, status: 'In Stock', fulfillmentSource: 'Supplier_API', protocol: 'Capacity-based' },
-    { id: '3', sku: 'BUGGY-SIN-T3', airportCode: 'SIN', terminal: 'T3', category: 'Ground Transport', available: 2, reserved: 1, threshold: 2, status: 'Low Stock', fulfillmentSource: 'Offersense', protocol: 'Resource-count' },
-    { id: '4', sku: 'ASSIST-DXB-T3', airportCode: 'DXB', terminal: 'T3', category: 'Meet & Assist', available: 8, reserved: 0, threshold: 2, status: 'In Stock', fulfillmentSource: 'Offersense', protocol: 'Resource-count' },
+    { id: '3', sku: 'BUGGY-SIN-T3', airportCode: 'SIN', terminal: 'T3', category: 'Ground Transport', available: 2, reserved: 1, threshold: 2, status: 'Low Stock', fulfillmentSource: 'Offersense', protocol: 'Resource-count', realTimeSync: false },
+    { id: '4', sku: 'ASSIST-DXB-T3', airportCode: 'DXB', terminal: 'T3', category: 'Meet & Assist', available: 8, reserved: 0, threshold: 2, status: 'In Stock', fulfillmentSource: 'Offersense', protocol: 'Resource-count', realTimeSync: true },
 ];
 
 export default function AirportStockKeeperPage() {
@@ -95,11 +96,11 @@ export default function AirportStockKeeperPage() {
     try {
       if (editingItem?.id) {
         const ref = doc(firestore, 'airportInventory', editingItem.id);
-        await setDoc(ref, { ...data, status, updatedAt: serverTimestamp() }, { merge: true });
-        toast({ title: 'Hub Balance Updated', description: `SKU ${data.sku} synchronized.` });
+        setDoc(ref, { ...data, status, updatedAt: serverTimestamp() }, { merge: true })
+          .then(() => toast({ title: 'Hub Balance Updated', description: `SKU ${data.sku} synchronized.` }));
       } else {
-        await addDoc(collection(firestore, 'airportInventory'), { ...data, status, createdAt: serverTimestamp() });
-        toast({ title: 'Node SKU Registered', description: `Hub resource ${data.sku} committed.` });
+        addDoc(collection(firestore, 'airportInventory'), { ...data, status, createdAt: serverTimestamp() })
+          .then(() => toast({ title: 'Node SKU Registered', description: `Hub resource ${data.sku} committed.` }));
       }
     } catch (e: any) {
         toast({ variant: 'destructive', title: 'Error', description: e.message });
@@ -110,8 +111,8 @@ export default function AirportStockKeeperPage() {
   const handleDelete = async (id: string) => {
     if (!firestore) return;
     try {
-        await deleteDoc(doc(firestore, 'airportInventory', id));
-        toast({ title: 'Hub Node Decommissioned', variant: 'destructive' });
+        deleteDoc(doc(firestore, 'airportInventory', id))
+          .then(() => toast({ title: 'Hub Node Decommissioned', variant: 'destructive' }));
     } catch (e: any) {
         toast({ variant: 'destructive', title: 'Error', description: e.message });
     }
@@ -213,8 +214,11 @@ export default function AirportStockKeeperPage() {
                         <div className="flex flex-col gap-0.5">
                             <div className="text-[10px] font-black text-slate-700 uppercase tracking-tighter">{item.fulfillmentSource?.replace('_', ' ')}</div>
                             <div className="flex items-center gap-1.5">
-                                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                <span className="text-[9px] font-black uppercase text-muted-foreground">Hub Sync Active</span>
+                                <div className={cn("h-1.5 w-1.5 rounded-full", item.realTimeSync ? "bg-emerald-500 animate-pulse" : "bg-slate-300")} />
+                                <span className="text-[9px] font-black uppercase text-muted-foreground">
+                                    {item.realTimeSync ? 'Hub-Sync Active' : 'Offline Mode'}
+                                </span>
+                                {item.realTimeSync && <Badge variant="secondary" className="text-[8px] h-3.5 bg-emerald-50 text-emerald-700 border-emerald-100 font-black uppercase tracking-tighter">LIVE</Badge>}
                             </div>
                         </div>
                     </TableCell>
@@ -269,4 +273,8 @@ export default function AirportStockKeeperPage() {
       </Dialog>
     </div>
   );
+}
+
+function cn(...inputs: any[]) {
+    return inputs.filter(Boolean).join(' ');
 }
