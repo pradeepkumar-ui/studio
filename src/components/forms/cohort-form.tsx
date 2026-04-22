@@ -26,17 +26,13 @@ import { MultiSelect } from '@/components/ui/multi-select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Plane, 
-  Building2, 
   Settings, 
   Globe, 
-  Laptop, 
-  Target, 
   Activity, 
   Users,
   Trophy,
   Ticket,
   DollarSign,
-  Clock,
   Heart,
   Sparkles,
   Accessibility,
@@ -49,7 +45,7 @@ const cohortSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(5, 'Cohort name is required.'),
   cohortId: z.string().min(3, 'Cohort ID required.').toUpperCase().regex(/^[A-Z0-9_]+$/),
-  domain: z.enum(['Airline', 'Airport']).default('Airline'),
+  domain: z.literal('Airline').default('Airline'),
   description: z.string().min(10, 'Logical description required.'),
   type: z.enum(['static', 'dynamic', 'predictive']).default('static'),
   status: z.enum(['Active', 'Inactive']).default('Active'),
@@ -58,12 +54,12 @@ const cohortSchema = z.object({
   // --- EXHAUSTIVE AIRLINE PARAMETERS ---
   airlineParams: z.object({
     // Passenger Type
-    paxTypes: z.array(z.string()).default([]), // Adult, Child, Infant
-    compositions: z.array(z.string()).default([]), // Solo, Family, Group
+    paxTypes: z.array(z.string()).default([]),
+    compositions: z.array(z.string()).default([]),
     isCorporate: z.boolean().default(false),
     
     // Loyalty
-    loyaltyTiers: z.array(z.string()).default([]), // Silver, Gold, Platinum
+    loyaltyTiers: z.array(z.string()).default([]),
     membershipStatus: z.string().optional(),
     
     // Fare / Booking
@@ -77,7 +73,7 @@ const cohortSchema = z.object({
     haulLength: z.enum(['Any', 'Short', 'Long']).default('Any'),
     
     // Purchase History
-    pastAncillaries: z.array(z.string()).default([]), // seat, baggage, meals, upgrades
+    pastAncillaries: z.array(z.string()).default([]),
     
     // Commercial Sensitivity
     priceSensitivity: z.enum(['Any', 'High', 'Low']).default('Any'),
@@ -85,7 +81,7 @@ const cohortSchema = z.object({
     
     // Journey
     geography: z.enum(['Any', 'Domestic', 'International']).default('Any'),
-    tripType: z.array(z.string()).default([]), // one-way, round-trip, connecting
+    tripType: z.array(z.string()).default([]),
     bookingWindow: z.enum(['Any', 'Early', 'Last-minute']).default('Any'),
     
     // Preferences
@@ -101,23 +97,15 @@ const cohortSchema = z.object({
     isMultiPaxPnr: z.boolean().default(false),
     
     // SSR
-    specialNeeds: z.array(z.string()).default([]), // wheelchair, special meal
-  }).optional(),
-
-  // --- AIRPORT PARAMETERS ---
-  airportParams: z.object({
-    airportCodes: z.array(z.string()).default([]),
-    terminals: z.array(z.string()).default([]),
-    minWaitTime: z.coerce.number().optional(),
-    locationContext: z.enum(['Anywhere', 'Departure', 'Arrival', 'Lounge', 'Gate']).default('Anywhere'),
-  }).optional(),
+    specialNeeds: z.array(z.string()).default([]),
+  }),
 });
 
 export type Cohort = z.infer<typeof cohortSchema>;
 
 interface CohortFormProps {
   cohort: Cohort | null;
-  domain: 'Airline' | 'Airport';
+  domain: 'Airline';
   onSubmit: (data: Cohort) => void;
   onCancel: () => void;
 }
@@ -154,7 +142,7 @@ const ancillaryHistoryOpts = [
 ];
 
 const tripTypeOpts = [
-  { value: 'one-way', label: 'One-Way' },
+  { value: 'one_way', label: 'One-Way' },
   { value: 'round-trip', label: 'Round-Trip' },
   { value: 'connecting', label: 'Connecting' }
 ];
@@ -165,13 +153,13 @@ const ssrOpts = [
   { value: 'infant-ssr', label: 'Infant / Bassinet' }
 ];
 
-export function CohortForm({ cohort, domain, onSubmit, onCancel }: CohortFormProps) {
+export function CohortForm({ cohort, onSubmit, onCancel }: CohortFormProps) {
   const form = useForm<Cohort>({
     resolver: zodResolver(cohortSchema),
     defaultValues: cohort || {
       name: '',
       cohortId: '',
-      domain: domain,
+      domain: 'Airline',
       description: '',
       type: 'static',
       status: 'Active',
@@ -193,11 +181,6 @@ export function CohortForm({ cohort, domain, onSubmit, onCancel }: CohortFormPro
         geography: 'Any',
         bookingWindow: 'Any',
       },
-      airportParams: {
-        airportCodes: [],
-        terminals: [],
-        locationContext: 'Anywhere',
-      }
     },
   });
 
@@ -275,255 +258,220 @@ export function CohortForm({ cohort, domain, onSubmit, onCancel }: CohortFormPro
         <Separator />
 
         {/* --- SECTION 2: AIRLINE PARAMETERS --- */}
-        {domain === 'Airline' && (
-            <section className="space-y-4">
-                <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-[0.2em]">
-                    <Plane className="h-3.5 w-3.5" /> 2. Airline Retailing Parameters
-                </div>
-                
-                <Accordion type="multiple" className="w-full">
-                    {/* PASSENGER TYPE */}
-                    <AccordionItem value="pax">
-                        <AccordionTrigger className="text-sm font-bold"><Users className="h-4 w-4 mr-2" /> Passenger Type & Composition</AccordionTrigger>
-                        <AccordionContent className="space-y-4 pt-2">
-                            <div className="grid grid-cols-2 gap-4">
-                                <FormField control={form.control} name="airlineParams.paxTypes" render={({ field }) => (
-                                    <FormItem><FormLabel className="text-xs">Pax Type</FormLabel>
-                                    <MultiSelect options={paxTypeOpts} selected={field.value} onChange={field.onChange} placeholder="Adult, Child..." /></FormItem>
-                                )} />
-                                <FormField control={form.control} name="airlineParams.compositions" render={({ field }) => (
-                                    <FormItem><FormLabel className="text-xs">PNR Composition</FormLabel>
-                                    <MultiSelect options={compositionOpts} selected={field.value} onChange={field.onChange} placeholder="Solo, Family..." /></FormItem>
-                                )} />
-                            </div>
-                            <FormField control={form.control} name="airlineParams.isCorporate" render={({ field }) => (
-                                <FormItem className="flex items-center gap-2 space-y-0 rounded-md border p-3 bg-muted/20">
-                                    <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                                    <FormLabel className="text-xs font-bold">Is Corporate Traveler</FormLabel>
-                                </FormItem>
+        <section className="space-y-4">
+            <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-[0.2em]">
+                <Plane className="h-3.5 w-3.5" /> 2. Airline Retailing Parameters
+            </div>
+            
+            <Accordion type="multiple" className="w-full">
+                {/* PASSENGER TYPE */}
+                <AccordionItem value="pax">
+                    <AccordionTrigger className="text-sm font-bold"><Users className="h-4 w-4 mr-2" /> Passenger Type & Composition</AccordionTrigger>
+                    <AccordionContent className="space-y-4 pt-2">
+                        <div className="grid grid-cols-2 gap-4">
+                            <FormField control={form.control} name="airlineParams.paxTypes" render={({ field }) => (
+                                <FormItem><FormLabel className="text-xs">Pax Type</FormLabel>
+                                <MultiSelect options={paxTypeOpts} selected={field.value} onChange={field.onChange} placeholder="Adult, Child..." /></FormItem>
                             )} />
-                        </AccordionContent>
-                    </AccordionItem>
+                            <FormField control={form.control} name="airlineParams.compositions" render={({ field }) => (
+                                <FormItem><FormLabel className="text-xs">PNR Composition</FormLabel>
+                                <MultiSelect options={compositionOpts} selected={field.value} onChange={field.onChange} placeholder="Solo, Family..." /></FormItem>
+                            )} />
+                        </div>
+                        <FormField control={form.control} name="airlineParams.isCorporate" render={({ field }) => (
+                            <FormItem className="flex items-center gap-2 space-y-0 rounded-md border p-3 bg-muted/20">
+                                <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                <FormLabel className="text-xs font-bold">Is Corporate Traveler</FormLabel>
+                            </FormItem>
+                        )} />
+                    </AccordionContent>
+                </AccordionItem>
 
-                    {/* LOYALTY */}
-                    <AccordionItem value="loyalty">
-                        <AccordionTrigger className="text-sm font-bold"><Trophy className="h-4 w-4 mr-2" /> Loyalty & Membership</AccordionTrigger>
-                        <AccordionContent className="space-y-4 pt-2">
-                            <FormField control={form.control} name="airlineParams.loyaltyTiers" render={({ field }) => (
-                                <FormItem><FormLabel className="text-xs">Frequent Flyer Tier</FormLabel>
-                                <MultiSelect options={tierOpts} selected={field.value} onChange={field.onChange} placeholder="Select tiers..." /></FormItem>
-                            )} />
-                            <FormField control={form.control} name="airlineParams.membershipStatus" render={({ field }) => (
-                                <FormItem><FormLabel className="text-xs">Membership Status</FormLabel>
-                                <FormControl><Input placeholder="e.g., Lifetime, Active, VIP" {...field} /></FormControl></FormItem>
-                            )} />
-                        </AccordionContent>
-                    </AccordionItem>
+                {/* LOYALTY */}
+                <AccordionItem value="loyalty">
+                    <AccordionTrigger className="text-sm font-bold"><Trophy className="h-4 w-4 mr-2" /> Loyalty & Membership</AccordionTrigger>
+                    <AccordionContent className="space-y-4 pt-2">
+                        <FormField control={form.control} name="airlineParams.loyaltyTiers" render={({ field }) => (
+                            <FormItem><FormLabel className="text-xs">Frequent Flyer Tier</FormLabel>
+                            <MultiSelect options={tierOpts} selected={field.value} onChange={field.onChange} placeholder="Select tiers..." /></FormItem>
+                        )} />
+                        <FormField control={form.control} name="airlineParams.membershipStatus" render={({ field }) => (
+                            <FormItem><FormLabel className="text-xs">Membership Status</FormLabel>
+                            <FormControl><Input placeholder="e.g., Lifetime, Active, VIP" {...field} /></FormControl></FormItem>
+                        )} />
+                    </AccordionContent>
+                </AccordionItem>
 
-                    {/* FARE & BOOKING */}
-                    <AccordionItem value="fare">
-                        <AccordionTrigger className="text-sm font-bold"><Ticket className="h-4 w-4 mr-2" /> Fare & Booking Context</AccordionTrigger>
-                        <AccordionContent className="space-y-4 pt-2">
-                             <FormField control={form.control} name="airlineParams.cabinClasses" render={({ field }) => (
-                                <FormItem><FormLabel className="text-xs">Cabin Class</FormLabel>
-                                <MultiSelect options={cabinOpts} selected={field.value} onChange={field.onChange} placeholder="Economy, Business..." /></FormItem>
+                {/* FARE & BOOKING */}
+                <AccordionItem value="fare">
+                    <AccordionTrigger className="text-sm font-bold"><Ticket className="h-4 w-4 mr-2" /> Fare & Booking Context</AccordionTrigger>
+                    <AccordionContent className="space-y-4 pt-2">
+                         <FormField control={form.control} name="airlineParams.cabinClasses" render={({ field }) => (
+                            <FormItem><FormLabel className="text-xs">Cabin Class</FormLabel>
+                            <MultiSelect options={cabinOpts} selected={field.value} onChange={field.onChange} placeholder="Economy, Business..." /></FormItem>
+                        )} />
+                        <div className="grid grid-cols-2 gap-4">
+                            <FormField control={form.control} name="airlineParams.fareFamilies" render={({ field }) => (
+                                <FormItem><FormLabel className="text-xs">Fare Family / Brand</FormLabel>
+                                <FormControl><Input placeholder="e.g., Flex, Saver" value={field.value?.join(', ')} onChange={(e) => field.onChange(e.target.value.split(',').map(v => v.trim()))} /></FormControl></FormItem>
                             )} />
-                            <div className="grid grid-cols-2 gap-4">
-                                <FormField control={form.control} name="airlineParams.fareFamilies" render={({ field }) => (
-                                    <FormItem><FormLabel className="text-xs">Fare Family / Brand</FormLabel>
-                                    <FormControl><Input placeholder="e.g., Flex, Saver" value={field.value?.join(', ')} onChange={(e) => field.onChange(e.target.value.split(',').map(v => v.trim()))} /></FormControl></FormItem>
-                                )} />
-                                <FormField control={form.control} name="airlineParams.bookingClasses" render={({ field }) => (
-                                    <FormItem><FormLabel className="text-xs">Booking Class (RBD)</FormLabel>
-                                    <FormControl><Input placeholder="e.g., Y, J, F" value={field.value?.join(', ')} onChange={(e) => field.onChange(e.target.value.split(',').map(v => v.trim()))} /></FormControl></FormItem>
-                                )} />
-                            </div>
-                        </AccordionContent>
-                    </AccordionItem>
+                            <FormField control={form.control} name="airlineParams.bookingClasses" render={({ field }) => (
+                                <FormItem><FormLabel className="text-xs">Booking Class (RBD)</FormLabel>
+                                <FormControl><Input placeholder="e.g., Y, J, F" value={field.value?.join(', ')} onChange={(e) => field.onChange(e.target.value.split(',').map(v => v.trim()))} /></FormControl></FormItem>
+                            )} />
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
 
-                    {/* TRAVEL BEHAVIOR */}
-                    <AccordionItem value="behavior">
-                        <AccordionTrigger className="text-sm font-bold"><Activity className="h-4 w-4 mr-2" /> Travel Behavior & Intent</AccordionTrigger>
-                        <AccordionContent className="grid grid-cols-3 gap-4 pt-2">
-                             <FormField control={form.control} name="airlineParams.travelPurpose" render={({ field }) => (
-                                <FormItem><FormLabel className="text-xs">Purpose</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                    <SelectContent><SelectItem value="Any">Any</SelectItem><SelectItem value="Business">Business</SelectItem><SelectItem value="Leisure">Leisure</SelectItem></SelectContent>
-                                </Select></FormItem>
-                            )} />
-                            <FormField control={form.control} name="airlineParams.haulLength" render={({ field }) => (
-                                <FormItem><FormLabel className="text-xs">Flight Duration</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                    <SelectContent><SelectItem value="Any">Any</SelectItem><SelectItem value="Short">Short-Haul</SelectItem><SelectItem value="Long">Long-Haul</SelectItem></SelectContent>
-                                </Select></FormItem>
-                            )} />
-                            <FormField control={form.control} name="airlineParams.isFrequentTraveler" render={({ field }) => (
-                                <FormItem className="flex items-center gap-2 pt-8">
-                                    <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                                    <FormLabel className="text-xs">Frequent Traveler</FormLabel>
-                                </FormItem>
-                            )} />
-                        </AccordionContent>
-                    </AccordionItem>
-
-                    {/* ANCILLARY HISTORY */}
-                    <AccordionItem value="history">
-                        <AccordionTrigger className="text-sm font-bold"><History className="h-4 w-4 mr-2" /> Ancillary Purchase History</AccordionTrigger>
-                        <AccordionContent className="pt-2">
-                            <FormField control={form.control} name="airlineParams.pastAncillaries" render={({ field }) => (
-                                <FormItem><FormLabel className="text-xs">Historical Product Preferences</FormLabel>
-                                <MultiSelect options={ancillaryHistoryOpts} selected={field.value} onChange={field.onChange} placeholder="What have they bought before?" /></FormItem>
-                            )} />
-                        </AccordionContent>
-                    </AccordionItem>
-
-                    {/* PRICE SENSITIVITY */}
-                    <AccordionItem value="sensitivity">
-                        <AccordionTrigger className="text-sm font-bold"><DollarSign className="h-4 w-4 mr-2" /> Commercial & Price Sensitivity</AccordionTrigger>
-                        <AccordionContent className="grid grid-cols-2 gap-4 pt-2">
-                            <FormField control={form.control} name="airlineParams.priceSensitivity" render={({ field }) => (
-                                <FormItem><FormLabel className="text-xs">Price Sensitivity Score</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                    <SelectContent><SelectItem value="Any">Any</SelectItem><SelectItem value="High">High (Price Conscious)</SelectItem><SelectItem value="Low">Low (Yield Focused)</SelectItem></SelectContent>
-                                </Select></FormItem>
-                            )} />
-                             <FormField control={form.control} name="airlineParams.discountUsage" render={({ field }) => (
-                                <FormItem><FormLabel className="text-xs">Discount Usage Pattern</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                    <SelectContent><SelectItem value="Any">Any</SelectItem><SelectItem value="Frequent">Frequent User</SelectItem><SelectItem value="Rare">Rarely Uses Promos</SelectItem></SelectContent>
-                                </Select></FormItem>
-                            )} />
-                        </AccordionContent>
-                    </AccordionItem>
-
-                    {/* JOURNEY LOGIC */}
-                    <AccordionItem value="journey">
-                        <AccordionTrigger className="text-sm font-bold"><Globe className="h-4 w-4 mr-2" /> Journey & Trip Type</AccordionTrigger>
-                        <AccordionContent className="space-y-4 pt-2">
-                             <div className="grid grid-cols-3 gap-4">
-                                <FormField control={form.control} name="airlineParams.geography" render={({ field }) => (
-                                    <FormItem><FormLabel className="text-xs">Geography</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                        <SelectContent><SelectItem value="Any">Any</SelectItem><SelectItem value="Domestic">Domestic Only</SelectItem><SelectItem value="International">International Only</SelectItem></SelectContent>
-                                    </Select></FormItem>
-                                )} />
-                                <FormField control={form.control} name="airlineParams.bookingWindow" render={({ field }) => (
-                                    <FormItem><FormLabel className="text-xs">Time to Departure</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                        <SelectContent><SelectItem value="Any">Any</SelectItem><SelectItem value="Early">Early Booker</SelectItem><SelectItem value="Last-minute">Last-minute Traveler</SelectItem></SelectContent>
-                                    </Select></FormItem>
-                                )} />
-                                <FormField control={form.control} name="airlineParams.tripType" render={({ field }) => (
-                                    <FormItem className="col-span-1"><FormLabel className="text-xs">Trip Cycle</FormLabel>
-                                    <MultiSelect options={tripTypeOpts} selected={field.value} onChange={field.onChange} placeholder="One-way..." /></FormItem>
-                                )} />
-                             </div>
-                        </AccordionContent>
-                    </AccordionItem>
-
-                    {/* PREFERENCES */}
-                    <AccordionItem value="preferences">
-                        <AccordionTrigger className="text-sm font-bold"><Heart className="h-4 w-4 mr-2" /> Preferences & Profiles</AccordionTrigger>
-                        <AccordionContent className="grid grid-cols-2 gap-4 pt-2">
-                            <FormField control={form.control} name="airlineParams.seatPreference" render={({ field }) => (
-                                <FormItem><FormLabel className="text-xs">Seat Attribute</FormLabel><FormControl><Input placeholder="Window, Aisle, Extra Legroom" {...field} /></FormControl></FormItem>
-                            )} />
-                            <FormField control={form.control} name="airlineParams.mealPreference" render={({ field }) => (
-                                <FormItem><FormLabel className="text-xs">Dietary / Meal</FormLabel><FormControl><Input placeholder="Vegetarian, Kosher, Gourmet" {...field} /></FormControl></FormItem>
-                            )} />
-                        </AccordionContent>
-                    </AccordionItem>
-
-                    {/* PREMIUM BEHAVIOR */}
-                    <AccordionItem value="premium">
-                        <AccordionTrigger className="text-sm font-bold"><Sparkles className="h-4 w-4 mr-2" /> Premium Travel Tendencies</AccordionTrigger>
-                        <AccordionContent className="grid grid-cols-2 gap-4 pt-2">
-                             <FormField control={form.control} name="airlineParams.hasUpgradeHistory" render={({ field }) => (
-                                <FormItem className="flex items-center gap-2 space-y-0 rounded-md border p-3 bg-muted/20">
-                                    <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                                    <FormLabel className="text-xs">History of Upgrading</FormLabel>
-                                </FormItem>
-                            )} />
-                             <FormField control={form.control} name="airlineParams.hasLoungeHistory" render={({ field }) => (
-                                <FormItem className="flex items-center gap-2 space-y-0 rounded-md border p-3 bg-muted/20">
-                                    <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                                    <FormLabel className="text-xs">Historical Lounge Usage</FormLabel>
-                                </FormItem>
-                            )} />
-                        </AccordionContent>
-                    </AccordionItem>
-
-                    {/* PNR METADATA */}
-                    <AccordionItem value="metadata">
-                        <AccordionTrigger className="text-sm font-bold"><Users className="h-4 w-4 mr-2" /> PNR Indicators</AccordionTrigger>
-                        <AccordionContent className="grid grid-cols-2 gap-4 pt-2">
-                             <FormField control={form.control} name="airlineParams.isMultiPaxPnr" render={({ field }) => (
-                                <FormItem className="flex items-center gap-2 space-y-0 rounded-md border p-3">
-                                    <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                                    <FormLabel className="text-xs">Multiple Passengers in PNR</FormLabel>
-                                </FormItem>
-                            )} />
-                             <FormField control={form.control} name="airlineParams.hasChildren" render={({ field }) => (
-                                <FormItem className="flex items-center gap-2 space-y-0 rounded-md border p-3">
-                                    <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                                    <FormLabel className="text-xs">Children Present in PNR</FormLabel>
-                                </FormItem>
-                            )} />
-                        </AccordionContent>
-                    </AccordionItem>
-
-                    {/* SSR */}
-                    <AccordionItem value="ssr">
-                        <AccordionTrigger className="text-sm font-bold"><Accessibility className="h-4 w-4 mr-2" /> Special Needs (SSR)</AccordionTrigger>
-                        <AccordionContent className="pt-2">
-                            <FormField control={form.control} name="airlineParams.specialNeeds" render={({ field }) => (
-                                <FormItem><FormLabel className="text-xs">Authorized SSR Toggles</FormLabel>
-                                <MultiSelect options={ssrOpts} selected={field.value} onChange={field.onChange} placeholder="Identify special assistance..." /></FormItem>
-                            )} />
-                        </AccordionContent>
-                    </AccordionItem>
-                </Accordion>
-            </section>
-        )}
-
-        {/* --- SECTION 3: AIRPORT PARAMETERS --- */}
-        {domain === 'Airport' && (
-            <section className="space-y-4">
-                <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-[0.2em]">
-                    <Building2 className="h-3.5 w-3.5" /> 2. Airport Context Rules
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField control={form.control} name="airportParams.locationContext" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Node Context</FormLabel>
+                {/* TRAVEL BEHAVIOR */}
+                <AccordionItem value="behavior">
+                    <AccordionTrigger className="text-sm font-bold"><Activity className="h-4 w-4 mr-2" /> Travel Behavior & Intent</AccordionTrigger>
+                    <AccordionContent className="grid grid-cols-3 gap-4 pt-2">
+                         <FormField control={form.control} name="airlineParams.travelPurpose" render={({ field }) => (
+                            <FormItem><FormLabel className="text-xs">Purpose</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                            <SelectContent>
-                                <SelectItem value="Anywhere">Anywhere</SelectItem>
-                                <SelectItem value="Departure">Pre-Departure</SelectItem>
-                                <SelectItem value="Arrival">On-Arrival</SelectItem>
-                                <SelectItem value="Lounge">In-Lounge</SelectItem>
-                                <SelectItem value="Gate">At Gate</SelectItem>
-                            </SelectContent>
-                            </Select>
-                        </FormItem>
-                    )} />
-                    <FormField control={form.control} name="airportParams.minWaitTime" render={({ field }) => (
-                        <FormItem><FormLabel>Security Wait Time &gt; (Min)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>
-                    )} />
-                </div>
-                <FormField control={form.control} name="airportParams.airportCodes" render={({ field }) => (
-                    <FormItem><FormLabel>Target Airport Nodes (IATA)</FormLabel>
-                    <FormControl><Input placeholder="e.g., LHR, JFK, SIN" value={field.value?.join(', ')} onChange={(e) => field.onChange(e.target.value.split(',').map(v => v.trim()))} /></FormControl></FormItem>
-                )} />
-            </section>
-        )}
+                                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                <SelectContent><SelectItem value="Any">Any</SelectItem><SelectItem value="Business">Business</SelectItem><SelectItem value="Leisure">Leisure</SelectItem></SelectContent>
+                            </Select></FormItem>
+                        )} />
+                        <FormField control={form.control} name="airlineParams.haulLength" render={({ field }) => (
+                            <FormItem><FormLabel className="text-xs">Flight Duration</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                <SelectContent><SelectItem value="Any">Any</SelectItem><SelectItem value="Short">Short-Haul</SelectItem><SelectItem value="Long">Long-Haul</SelectItem></SelectContent>
+                            </Select></FormItem>
+                        )} />
+                        <FormField control={form.control} name="airlineParams.isFrequentTraveler" render={({ field }) => (
+                            <FormItem className="flex items-center gap-2 pt-8">
+                                <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                <FormLabel className="text-xs">Frequent Traveler</FormLabel>
+                            </FormItem>
+                        )} />
+                    </AccordionContent>
+                </AccordionItem>
+
+                {/* ANCILLARY HISTORY */}
+                <AccordionItem value="history">
+                    <AccordionTrigger className="text-sm font-bold"><History className="h-4 w-4 mr-2" /> Ancillary Purchase History</AccordionTrigger>
+                    <AccordionContent className="pt-2">
+                        <FormField control={form.control} name="airlineParams.pastAncillaries" render={({ field }) => (
+                            <FormItem><FormLabel className="text-xs">Historical Product Preferences</FormLabel>
+                            <MultiSelect options={ancillaryHistoryOpts} selected={field.value} onChange={field.onChange} placeholder="What have they bought before?" /></FormItem>
+                        )} />
+                    </AccordionContent>
+                </AccordionItem>
+
+                {/* PRICE SENSITIVITY */}
+                <AccordionItem value="sensitivity">
+                    <AccordionTrigger className="text-sm font-bold"><DollarSign className="h-4 w-4 mr-2" /> Commercial & Price Sensitivity</AccordionTrigger>
+                    <AccordionContent className="grid grid-cols-2 gap-4 pt-2">
+                        <FormField control={form.control} name="airlineParams.priceSensitivity" render={({ field }) => (
+                            <FormItem><FormLabel className="text-xs">Price Sensitivity Score</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                <SelectContent><SelectItem value="Any">Any</SelectItem><SelectItem value="High">High (Price Conscious)</SelectItem><SelectItem value="Low">Low (Yield Focused)</SelectItem></SelectContent>
+                            </Select></FormItem>
+                        )} />
+                         <FormField control={form.control} name="airlineParams.discountUsage" render={({ field }) => (
+                            <FormItem><FormLabel className="text-xs">Discount Usage Pattern</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                <SelectContent><SelectItem value="Any">Any</SelectItem><SelectItem value="Frequent">Frequent User</SelectItem><SelectItem value="Rare">Rarely Uses Promos</SelectItem></SelectContent>
+                            </Select></FormItem>
+                        )} />
+                    </AccordionContent>
+                </AccordionItem>
+
+                {/* JOURNEY LOGIC */}
+                <AccordionItem value="journey">
+                    <AccordionTrigger className="text-sm font-bold"><Globe className="h-4 w-4 mr-2" /> Journey & Trip Type</AccordionTrigger>
+                    <AccordionContent className="space-y-4 pt-2">
+                         <div className="grid grid-cols-3 gap-4">
+                            <FormField control={form.control} name="airlineParams.geography" render={({ field }) => (
+                                <FormItem><FormLabel className="text-xs">Geography</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                    <SelectContent><SelectItem value="Any">Any</SelectItem><SelectItem value="Domestic">Domestic Only</SelectItem><SelectItem value="International">International Only</SelectItem></SelectContent>
+                                </Select></FormItem>
+                            )} />
+                            <FormField control={form.control} name="airlineParams.bookingWindow" render={({ field }) => (
+                                <FormItem><FormLabel className="text-xs">Time to Departure</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                    <SelectContent><SelectItem value="Any">Any</SelectItem><SelectItem value="Early">Early Booker</SelectItem><SelectItem value="Last-minute">Last-minute Traveler</SelectItem></SelectContent>
+                                </Select></FormItem>
+                            )} />
+                            <FormField control={form.control} name="airlineParams.tripType" render={({ field }) => (
+                                <FormItem className="col-span-1"><FormLabel className="text-xs">Trip Cycle</FormLabel>
+                                <MultiSelect options={tripTypeOpts} selected={field.value} onChange={field.onChange} placeholder="One-way..." /></FormItem>
+                            )} />
+                         </div>
+                    </AccordionContent>
+                </AccordionItem>
+
+                {/* PREFERENCES */}
+                <AccordionItem value="preferences">
+                    <AccordionTrigger className="text-sm font-bold"><Heart className="h-4 w-4 mr-2" /> Preferences & Profiles</AccordionTrigger>
+                    <AccordionContent className="grid grid-cols-2 gap-4 pt-2">
+                        <FormField control={form.control} name="airlineParams.seatPreference" render={({ field }) => (
+                            <FormItem><FormLabel className="text-xs">Seat Attribute</FormLabel><FormControl><Input placeholder="Window, Aisle, Extra Legroom" {...field} /></FormControl></FormItem>
+                        )} />
+                        <FormField control={form.control} name="airlineParams.mealPreference" render={({ field }) => (
+                            <FormItem><FormLabel className="text-xs">Dietary / Meal</FormLabel><FormControl><Input placeholder="Vegetarian, Kosher, Gourmet" {...field} /></FormControl></FormItem>
+                        )} />
+                    </AccordionContent>
+                </AccordionItem>
+
+                {/* PREMIUM BEHAVIOR */}
+                <AccordionItem value="premium">
+                    <AccordionTrigger className="text-sm font-bold"><Sparkles className="h-4 w-4 mr-2" /> Premium Travel Tendencies</AccordionTrigger>
+                    <AccordionContent className="grid grid-cols-2 gap-4 pt-2">
+                         <FormField control={form.control} name="airlineParams.hasUpgradeHistory" render={({ field }) => (
+                            <FormItem className="flex items-center gap-2 space-y-0 rounded-md border p-3 bg-muted/20">
+                                <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                <FormLabel className="text-xs">History of Upgrading</FormLabel>
+                            </FormItem>
+                        )} />
+                         <FormField control={form.control} name="airlineParams.hasLoungeHistory" render={({ field }) => (
+                            <FormItem className="flex items-center gap-2 space-y-0 rounded-md border p-3 bg-muted/20">
+                                <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                <FormLabel className="text-xs">Historical Lounge Usage</FormLabel>
+                            </FormItem>
+                        )} />
+                    </AccordionContent>
+                </AccordionItem>
+
+                {/* PNR METADATA */}
+                <AccordionItem value="metadata">
+                    <AccordionTrigger className="text-sm font-bold"><Users className="h-4 w-4 mr-2" /> PNR Indicators</AccordionTrigger>
+                    <AccordionContent className="grid grid-cols-2 gap-4 pt-2">
+                         <FormField control={form.control} name="airlineParams.isMultiPaxPnr" render={({ field }) => (
+                            <FormItem className="flex items-center gap-2 space-y-0 rounded-md border p-3">
+                                <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                <FormLabel className="text-xs">Multiple Passengers in PNR</FormLabel>
+                            </FormItem>
+                        )} />
+                         <FormField control={form.control} name="airlineParams.hasChildren" render={({ field }) => (
+                            <FormItem className="flex items-center gap-2 space-y-0 rounded-md border p-3">
+                                <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                <FormLabel className="text-xs">Children Present in PNR</FormLabel>
+                            </FormItem>
+                        )} />
+                    </AccordionContent>
+                </AccordionItem>
+
+                {/* SSR */}
+                <AccordionItem value="ssr">
+                    <AccordionTrigger className="text-sm font-bold"><Accessibility className="h-4 w-4 mr-2" /> Special Needs (SSR)</AccordionTrigger>
+                    <AccordionContent className="pt-2">
+                        <FormField control={form.control} name="airlineParams.specialNeeds" render={({ field }) => (
+                            <FormItem><FormLabel className="text-xs">Authorized SSR Toggles</FormLabel>
+                            <MultiSelect options={ssrOpts} selected={field.value} onChange={field.onChange} placeholder="Identify special assistance..." /></FormItem>
+                        )} />
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
+        </section>
 
         <div className="flex justify-end gap-3 pt-6 border-t sticky bottom-0 bg-background py-4">
           <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
