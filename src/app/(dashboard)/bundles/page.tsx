@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -43,7 +42,8 @@ import {
   Edit,
   Zap,
   TrendingUp,
-  AlertCircle
+  AlertCircle,
+  Calendar
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -187,7 +187,7 @@ export default function AirlineOffersPage() {
       <Card className="shadow-xl border-primary/10 overflow-hidden">
         <CardHeader className="bg-primary/5 border-b py-4">
           <div className="flex items-center justify-between">
-            <div className="relative flex-1 max-w-sm">
+            <div className="relative flex-1 max-sm:w-full max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search strategies by name or ID..."
@@ -213,7 +213,7 @@ export default function AirlineOffersPage() {
                 <TableRow>
                   <TableHead className="text-[10px] uppercase font-black py-4">Strategy Identity</TableHead>
                   <TableHead className="text-[10px] uppercase font-black py-4">Structure</TableHead>
-                  <TableHead className="text-[10px] uppercase font-black py-4">Commercial Layer</TableHead>
+                  <TableHead className="text-[10px] uppercase font-black py-4">Validity Period</TableHead>
                   <TableHead className="text-[10px] uppercase font-black py-4">Retailing Cohorts</TableHead>
                   <TableHead className="text-[10px] uppercase font-black py-4">Status</TableHead>
                   <TableHead className="text-right text-[10px] uppercase font-black py-4 pr-6">Actions</TableHead>
@@ -239,18 +239,10 @@ export default function AirlineOffersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-col gap-1">
-                        <div className="text-xs font-black text-primary">
-                          {offer.pricing.type === 'PercentageDiscount' ? `${offer.pricing.value}% OFF` : 
-                           offer.pricing.type === 'FixedDiscount' ? `$${offer.pricing.value} OFF` : 
-                           `FIXED: $${offer.pricing.value}`}
+                        <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-muted-foreground">
+                            <Calendar className="h-3 w-3" />
+                            {offer.validity.from} → {offer.validity.to}
                         </div>
-                        {offer.dynamicPricing?.enabled && (
-                          <div className="flex items-center gap-1 text-[9px] text-amber-600 font-black uppercase">
-                            <Zap className="h-2.5 w-2.5 fill-current" /> Dynamic Adjust Active
-                          </div>
-                        )}
-                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1 max-w-[200px]">

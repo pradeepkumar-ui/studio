@@ -36,17 +36,23 @@ import {
   Boxes,
   ArrowRight,
   Info,
-  PlusCircle
+  PlusCircle,
+  Eye,
+  Calendar as CalendarIcon,
+  Ticket
 } from 'lucide-react';
+import { 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  Dialog,
+  DialogContent,
+  DialogFooter
+} from '@/components/ui/dialog';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, orderBy, Timestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
 const offerStrategySchema = z.object({
@@ -86,13 +92,14 @@ interface OfferStrategyFormProps {
 }
 
 const mockAncillariesFallback = [
-    { id: 'AGG-001', configName: 'Premium Route Baggage', ancillaryName: '1st Checked Bag', basePrice: 35.00 },
-    { id: 'AGG-002', configName: 'Long-Haul Seat', ancillaryName: 'Extra Legroom Seat', basePrice: 50.00 },
-    { id: 'AGG-003', configName: 'Hub Lounge LHR', ancillaryName: 'Executive Lounge', basePrice: 45.00 },
+    { id: 'AGG-001', configName: 'Premium Route Baggage', ancillaryName: '1st Checked Bag', basePrice: 35.00, currency: 'USD' },
+    { id: 'AGG-002', configName: 'Long-Haul Seat', ancillaryName: 'Extra Legroom Seat', basePrice: 50.00, currency: 'USD' },
+    { id: 'AGG-003', configName: 'Hub Lounge LHR', ancillaryName: 'Executive Lounge', basePrice: 45.00, currency: 'USD' },
 ];
 
 export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFormProps) {
   const firestore = useFirestore();
+  const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
   
   const aggregatesQuery = React.useMemo(() => 
     firestore ? query(collection(firestore, 'airlineAncillaryAggregates'), orderBy('createdAt', 'desc')) : undefined
@@ -115,7 +122,7 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
       type: 'Single',
       ancillaryIds: [],
       status: 'Draft',
-      validity: { from: new Date().toISOString().split('T')[0], to: '' },
+      validity: { from: new Date().toISOString().split('T')[0], to: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0] },
       cohortIds: [],
       pricing: { type: 'PercentageDiscount', value: 10, currency: 'USD' },
       dynamicPricing: { enabled: false, ruleType: 'TimeBased', threshold: 'T-7 Days', adjustmentPercent: 10 },
@@ -155,7 +162,8 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
         offerAdjusted,
         finalCalculated,
         cappedPrice,
-        wasCapped
+        wasCapped,
+        selectedProducts: selected
     };
   }, [watchAncillaryIds, watchPricing, watchDynamic, watchGuardRails, aggregates]);
 
@@ -210,18 +218,37 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
                           </FormItem>
                       )} />
                   </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField control={form.control} name="validity.from" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Valid From*</FormLabel>
+                            <FormControl><Input type="date" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                    <FormField control={form.control} name="validity.to" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Valid Until*</FormLabel>
+                            <FormControl><Input type="date" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                  </div>
                   <FormField control={form.control} name="ancillaryIds" render={({ field }) => (
                       <FormItem>
                           <FormLabel>Linked Products (from Aggregate Registry)*</FormLabel>
                           <FormControl>
                               <MultiSelect 
-                                options={aggregates.map((a: any) => ({ value: a.id, label: `${a.configName} ($${a.basePrice})` }))}
+                                options={aggregates.map((a: any) => ({ 
+                                    value: a.id, 
+                                    label: `${a.configName} (${new Intl.NumberFormat('en-US', { style: 'currency', currency: a.currency || 'USD' }).format(a.basePrice || 0)})` 
+                                }))}
                                 selected={field.value}
                                 onChange={(v) => field.onChange(watchType === 'Single' ? v.slice(-1) : v)}
-                                placeholder="Select SKUs..."
+                                placeholder="Search Airline Aggregate SKUs..."
                               />
                           </FormControl>
-                          <FormDescription>Pricing pulls base values directly from aggregate configurations.</FormDescription>
+                          <FormDescription>Pricing pulls base values directly from carrier aggregate configurations.</FormDescription>
                           <FormMessage />
                       </FormItem>
                   )} />
@@ -257,16 +284,16 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
                       </div>
                       <FormField control={form.control} name="cohortIds" render={({ field }) => (
                           <FormItem>
-                              <FormLabel>Active Cohorts</FormLabel>
+                              <FormLabel>Active Retailing Cohorts</FormLabel>
                               <FormControl>
                                   <MultiSelect 
                                     options={cohorts.map((c: any) => ({ value: c.cohortId || c.id, label: c.name }))}
                                     selected={field.value}
                                     onChange={field.onChange}
-                                    placeholder="Global (Default)"
+                                    placeholder="Search Configured Cohorts..."
                                   />
                               </FormControl>
-                              <FormDescription>Leave empty for global network availability.</FormDescription>
+                              <FormDescription>Offer is only available if passenger matches these segments.</FormDescription>
                           </FormItem>
                       )} />
                   </div>
@@ -372,10 +399,20 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
                                 <Info className="h-3 w-3" /> Runtime Context
                              </div>
                              <div className="space-y-1">
-                                <p className="text-[10px] text-slate-300">Valid: {form.watch('validity.from')} → {form.watch('validity.to') || 'Open'}</p>
+                                <p className="text-[10px] text-slate-300">Valid: {form.watch('validity.from')} → {form.watch('validity.to')}</p>
                                 <p className="text-[10px] text-slate-300">Segments: {form.watch('cohortIds').length || 'Global'}</p>
                              </div>
                         </div>
+
+                        <Button 
+                            type="button" 
+                            variant="outline" 
+                            className="w-full bg-white/10 border-white/20 hover:bg-white/20 text-white font-black uppercase text-xs h-12 tracking-widest"
+                            onClick={() => setIsPreviewOpen(true)}
+                        >
+                            <Eye className="mr-2 h-4 w-4" />
+                            Generate Offer Summary
+                        </Button>
                     </CardContent>
                 </Card>
             </div>
@@ -406,6 +443,67 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
                 </Button>
             </div>
         </div>
+
+        {/* --- OFFER PREVIEW MODAL --- */}
+        <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+            <DialogContent className="max-w-xl">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2 text-xl font-black">
+                        <Ticket className="h-5 w-5 text-primary" />
+                        Retailing Offer Preview
+                    </DialogTitle>
+                    <DialogDescription>This is how the final offer will be structured in the retailing stream.</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-6 py-4">
+                    <div className="p-6 rounded-3xl bg-primary/5 border border-primary/10">
+                        <div className="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 className="text-lg font-black text-primary uppercase">{form.getValues('name')}</h3>
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{form.getValues('type')} Strategy</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-3xl font-black text-primary font-mono">${calculation.cappedPrice.toFixed(2)}</p>
+                                <p className="text-[9px] font-bold text-muted-foreground uppercase">Inc. Dynamic Adjustments</p>
+                            </div>
+                        </div>
+                        <Separator className="my-4" />
+                        <div className="space-y-3">
+                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Included Products</p>
+                            <div className="grid grid-cols-1 gap-2">
+                                {calculation.selectedProducts.map((p: any) => (
+                                    <div key={p.id} className="flex items-center gap-2 p-2 rounded-xl bg-white border shadow-sm">
+                                        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><Package className="h-4 w-4" /></div>
+                                        <div className="flex-1">
+                                            <p className="text-xs font-bold">{p.ancillaryName}</p>
+                                            <p className="text-[9px] text-muted-foreground uppercase font-mono">{p.configName}</p>
+                                        </div>
+                                        <Badge variant="outline" className="text-[9px] font-mono">${p.basePrice}</Badge>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Targeting Context</p>
+                            <div className="flex flex-wrap gap-1">
+                                {form.getValues('cohortIds').length > 0 ? form.getValues('cohortIds').map(cid => (
+                                    <Badge key={cid} variant="secondary" className="text-[9px] font-mono bg-indigo-50 text-indigo-700">{cid}</Badge>
+                                )) : <Badge variant="outline" className="text-[9px]">Global Reach</Badge>}
+                            </div>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Validity Range</p>
+                            <p className="text-xs font-bold font-mono">{form.getValues('validity.from')} → {form.getValues('validity.to')}</p>
+                        </div>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button onClick={() => setIsPreviewOpen(false)} className="w-full font-black uppercase">Close Preview</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
       </form>
     </Form>
   );
