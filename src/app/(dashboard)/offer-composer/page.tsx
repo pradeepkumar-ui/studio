@@ -27,7 +27,9 @@ import {
   ArrowLeft,
   Utensils,
   Armchair,
-  Star
+  Star,
+  MonitorDot,
+  Sparkles
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -43,6 +45,7 @@ import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useFirestore } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 // --- TYPES & SCHEMAS ---
 
@@ -795,4 +798,3 @@ export default function OffersenseComposerPage() {
     </div>
   );
 }
-
