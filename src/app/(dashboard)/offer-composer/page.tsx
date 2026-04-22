@@ -29,7 +29,11 @@ import {
   Armchair,
   Star,
   MonitorDot,
-  Sparkles
+  Sparkles,
+  Hotel,
+  Truck,
+  Gauge,
+  CalendarDays
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -73,7 +77,7 @@ type OfferItem = {
     basePrice: number;
     adjustment: number;
     finalPrice: number;
-    type: 'Airline' | 'Airport';
+    domain: 'Airline' | 'Airport' | 'ThirdParty' | 'Core';
 };
 
 // --- MOCK DATA ---
@@ -90,12 +94,12 @@ const mockPassengers = [
 ];
 
 const mockOffers: OfferItem[] = [
-    { id: 'OFR-A1', name: 'Premium Cabin Upgrade', description: 'Move to Business Class for maximum comfort.', basePrice: 250, adjustment: -25, finalPrice: 225, type: 'Airline' },
-    { id: 'OFR-A2', name: 'Extra Baggage Allowance', description: '+23kg hold luggage for your journey.', basePrice: 45, adjustment: 0, finalPrice: 45, type: 'Airline' },
-    { id: 'OFR-A3', name: 'Priority Boarding', description: 'Be the first to board and secure overhead space.', basePrice: 15, adjustment: 5, finalPrice: 20, type: 'Airline' },
-    { id: 'OFR-P1', name: 'Executive Lounge Access', description: 'LHR T5 North Plaza - Food, Drinks & Wi-Fi.', basePrice: 55, adjustment: -10, finalPrice: 45, type: 'Airport' },
-    { id: 'OFR-P2', name: 'Security Fast Track', description: 'Skip the queues at T5 security checkpoints.', basePrice: 12, adjustment: 3, finalPrice: 15, type: 'Airport' },
-    { id: 'OFR-P3', name: 'Meet & Greet Assist', description: 'Personal concierge assistant from gate to curb.', basePrice: 80, adjustment: 0, finalPrice: 80, type: 'Airport' },
+    { id: 'OFR-A1', name: 'Premium Cabin Upgrade', description: 'Move to Business Class for maximum comfort.', basePrice: 250, adjustment: -25, finalPrice: 225, domain: 'Airline' },
+    { id: 'OFR-A2', name: 'Extra Baggage Allowance', description: '+23kg hold luggage for your journey.', basePrice: 45, adjustment: 0, finalPrice: 45, domain: 'Airline' },
+    { id: 'OFR-A3', name: 'Priority Boarding', description: 'Be the first to board and secure overhead space.', basePrice: 15, adjustment: 5, finalPrice: 20, domain: 'Airline' },
+    { id: 'OFR-P1', name: 'Executive Lounge Access', description: 'LHR T5 North Plaza - Food, Drinks & Wi-Fi.', basePrice: 55, adjustment: -10, finalPrice: 45, domain: 'Airport' },
+    { id: 'OFR-P2', name: 'Security Fast Track', description: 'Skip the queues at T5 security checkpoints.', basePrice: 12, adjustment: 3, finalPrice: 15, domain: 'Airport' },
+    { id: 'OFR-P3', name: 'Meet & Greet Assist', description: 'Personal concierge assistant from gate to curb.', basePrice: 80, adjustment: 0, finalPrice: 80, domain: 'Airport' },
 ];
 
 export default function OffersenseComposerPage() {
@@ -131,6 +135,13 @@ export default function OffersenseComposerPage() {
         route: 'LHR - JFK',
         date: '28 OCT 2025',
         time: '14:20',
+        aircraft: 'Airbus A350-900',
+        influencers: {
+            loadFactor: '82%',
+            leadTime: '2 Days (T-2)',
+            haulType: 'Long-Haul',
+            paxCount: '2 Adults'
+        },
         passengers: mockPassengers
     });
     
@@ -182,10 +193,8 @@ export default function OffersenseComposerPage() {
       const newId = `ORD-${Math.floor(Math.random() * 90000) + 10000}`;
       setOrderId(newId);
 
-      // Persist to Firestore for the unified order view in other modules
-      // GUIDELINE: We do NOT await mutation calls directly to avoid blocking the demo flow
+      // Persist to Firestore for the unified order view
       if (firestore && pnrContext) {
-          try {
             const finalTotal = [...selectedAirlineOffers, ...selectedAirportOffers].reduce((sum, id) => {
                 const offer = mockOffers.find(o => o.id === id);
                 return sum + (offer?.finalPrice || 0);
@@ -207,24 +216,51 @@ export default function OffersenseComposerPage() {
 
             addDoc(collection(firestore, 'orders'), orderData)
                 .catch(err => console.error("Firestore persistence skipped (demo mode):", err));
-          } catch (e) {
-            console.warn("Could not save demo order to registry:", e);
-          }
       }
 
       setIsLoading(false);
       setStep('confirmation');
   };
 
-  const toggleOffer = (id: string, type: 'Airline' | 'Airport') => {
-      if (type === 'Airline') {
+  const toggleOffer = (id: string, domain: 'Airline' | 'Airport') => {
+      if (domain === 'Airline') {
           setSelectedAirlineOffers(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
       } else {
           setSelectedAirportOffers(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
       }
   };
 
-  // --- RENDERING ---
+  // --- RENDERING HELPERS ---
+
+  const TreeItem = ({ label, price, isLast = false, isCategory = false, children }: any) => (
+      <div className="relative pl-6">
+          {!isCategory && (
+              <div className="absolute left-0 top-0 bottom-0 w-px bg-slate-200" />
+          )}
+          <div className="flex items-center gap-3 py-2">
+              <div className={cn(
+                  "relative flex items-center h-4 w-4",
+                  isCategory ? "" : "before:absolute before:left-[-1.5rem] before:top-1/2 before:w-4 before:h-px before:bg-slate-200"
+              )}>
+                   {isCategory ? (
+                        <div className="h-2 w-2 rounded-full bg-slate-300" />
+                   ) : (
+                        <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
+                   )}
+              </div>
+              <div className="flex-1 flex justify-between items-center pr-4">
+                  <span className={cn("text-sm", isCategory ? "font-black text-slate-700 uppercase tracking-widest text-[10px]" : "font-bold text-slate-500")}>{label}</span>
+                  {price !== undefined && (
+                      <span className="font-mono text-xs font-black text-slate-900">${price.toFixed(2)}</span>
+                  )}
+              </div>
+          </div>
+          {children}
+          {isCategory && !isLast && (
+              <div className="absolute left-0 top-4 bottom-0 w-px bg-slate-200" />
+          )}
+      </div>
+  );
 
   return (
     <div className="flex flex-col gap-6 max-w-6xl mx-auto w-full min-h-[80vh]">
@@ -299,59 +335,110 @@ export default function OffersenseComposerPage() {
 
         {/* STEP 2: ITINERARY & PAX SELECTION */}
         {step === 'itinerary' && pnrContext && (
-            <div className="w-full max-w-2xl space-y-6 animate-in fade-in zoom-in-95 duration-500">
-                <Card className="border-primary/20 shadow-xl overflow-hidden">
-                    <CardHeader className="bg-primary/5 border-b flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle className="text-lg font-black text-primary uppercase">Itinerary Details</CardTitle>
-                            <CardDescription>Review your flight and select passengers for check-in.</CardDescription>
-                        </div>
-                        <Badge variant="secondary" className="font-mono font-bold">{pnrContext.pnr}</Badge>
-                    </CardHeader>
-                    <CardContent className="pt-6 pb-6">
-                        <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-muted-foreground/10 mb-8">
-                            <div className="flex items-center gap-4">
-                                <div className="h-12 w-12 rounded-xl bg-white border flex items-center justify-center text-primary shadow-sm"><Plane className="h-6 w-6" /></div>
-                                <div>
-                                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{pnrContext.flight}</p>
-                                    <p className="font-black text-lg text-primary">{pnrContext.route}</p>
+            <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in fade-in zoom-in-95 duration-500">
+                <div className="lg:col-span-8 space-y-6">
+                    <Card className="border-primary/20 shadow-xl overflow-hidden">
+                        <CardHeader className="bg-primary/5 border-b flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle className="text-lg font-black text-primary uppercase">Itinerary Details</CardTitle>
+                                <CardDescription>Review your flight and select passengers for check-in.</CardDescription>
+                            </div>
+                            <Badge variant="secondary" className="font-mono font-bold">{pnrContext.pnr}</Badge>
+                        </CardHeader>
+                        <CardContent className="pt-6 pb-6">
+                            <div className="flex items-center justify-between p-6 bg-muted/30 rounded-2xl border border-muted-foreground/10 mb-8">
+                                <div className="flex items-center gap-4">
+                                    <div className="h-12 w-12 rounded-xl bg-white border flex items-center justify-center text-primary shadow-sm"><Plane className="h-6 w-6" /></div>
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{pnrContext.flight}</p>
+                                        <p className="font-black text-lg text-primary">{pnrContext.route}</p>
+                                        <p className="text-[10px] font-bold text-slate-500 flex items-center gap-1 mt-1">
+                                            <Building2 className="h-3 w-3" /> {pnrContext.aircraft}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{pnrContext.date}</p>
+                                    <p className="font-bold flex items-center gap-1.5 justify-end"><Clock className="h-3 w-3" /> {pnrContext.time}</p>
+                                    <Badge variant="outline" className="text-[8px] mt-1 bg-white">Gate B45</Badge>
                                 </div>
                             </div>
-                            <div className="text-right">
-                                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{pnrContext.date}</p>
-                                <p className="font-bold flex items-center gap-1.5"><Clock className="h-3 w-3" /> {pnrContext.time}</p>
-                            </div>
-                        </div>
 
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between px-2">
-                                <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Passenger List</h4>
-                                <Button variant="link" size="sm" onClick={() => setSelectedPax(pnrContext.passengers.map((p: any) => p.id))} className="h-auto p-0 text-[10px] font-black uppercase">Select All</Button>
-                            </div>
-                            <div className="space-y-3">
-                                {pnrContext.passengers.map((pax: any) => (
-                                    <div key={pax.id} className={cn(
-                                        "flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer",
-                                        selectedPax.includes(pax.id) ? "bg-primary/5 border-primary ring-1 ring-primary" : "bg-white"
-                                    )} onClick={() => setSelectedPax(prev => prev.includes(pax.id) ? prev.filter(i => i !== pax.id) : [...prev, pax.id])}>
-                                        <div className="flex items-center gap-3">
-                                            <Checkbox checked={selectedPax.includes(pax.id)} onCheckedChange={() => {}} />
-                                            <span className="font-bold text-sm">{pax.name}</span>
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between px-2">
+                                    <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Passenger List</h4>
+                                    <Button variant="link" size="sm" onClick={() => setSelectedPax(pnrContext.passengers.map((p: any) => p.id))} className="h-auto p-0 text-[10px] font-black uppercase">Select All</Button>
+                                </div>
+                                <div className="space-y-3">
+                                    {pnrContext.passengers.map((pax: any) => (
+                                        <div key={pax.id} className={cn(
+                                            "flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer",
+                                            selectedPax.includes(pax.id) ? "bg-primary/5 border-primary ring-1 ring-primary" : "bg-white"
+                                        )} onClick={() => setSelectedPax(prev => prev.includes(pax.id) ? prev.filter(i => i !== pax.id) : [...prev, pax.id])}>
+                                            <div className="flex items-center gap-3">
+                                                <Checkbox checked={selectedPax.includes(pax.id)} onCheckedChange={() => {}} />
+                                                <span className="font-bold text-sm">{pax.name}</span>
+                                            </div>
+                                            <Badge variant="outline" className="text-[9px] font-black uppercase tracking-tighter">Economy Flex</Badge>
                                         </div>
-                                        <Badge variant="outline" className="text-[9px] font-black uppercase tracking-tighter">Economy Flex</Badge>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    </CardContent>
-                    <CardFooter className="bg-muted/5 border-t py-6 flex justify-end gap-3">
-                        <Button variant="outline" onClick={() => setStep('identification')} className="font-bold">Back</Button>
-                        <Button onClick={handleCheckIn} disabled={isLoading || selectedPax.length === 0} className="px-10 font-black uppercase text-xs tracking-widest">
-                            {isLoading ? <Loader2 className="mr-2 animate-spin h-4 w-4" /> : <Check className="mr-2 h-4 w-4" />}
-                            Check-in
-                        </Button>
-                    </CardFooter>
-                </Card>
+                        </CardContent>
+                        <CardFooter className="bg-muted/5 border-t py-6 flex justify-end gap-3">
+                            <Button variant="outline" onClick={() => setStep('identification')} className="font-bold">Back</Button>
+                            <Button onClick={handleCheckIn} disabled={isLoading || selectedPax.length === 0} className="px-10 font-black uppercase text-xs tracking-widest">
+                                {isLoading ? <Loader2 className="mr-2 animate-spin h-4 w-4" /> : <Check className="mr-2 h-4 w-4" />}
+                                Check-in
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                </div>
+
+                <div className="lg:col-span-4 space-y-6">
+                    <Card className="bg-slate-900 text-white border-none shadow-xl rounded-2xl overflow-hidden">
+                        <CardHeader className="bg-white/10 pb-4">
+                            <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                                <Zap className="h-4 w-4 text-emerald-400" /> Retailing Context Signals
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-6 space-y-4">
+                            <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
+                                The following parameters are currently influencing the Offersense engine results for this session:
+                            </p>
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/10">
+                                    <div className="flex items-center gap-2">
+                                        <Gauge className="h-3.5 w-3.5 text-blue-400" />
+                                        <span className="text-[10px] font-bold uppercase tracking-tight text-slate-300">Load Factor</span>
+                                    </div>
+                                    <span className="text-xs font-black text-white">{pnrContext.influencers.loadFactor}</span>
+                                </div>
+                                <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/10">
+                                    <div className="flex items-center gap-2">
+                                        <Clock className="h-3.5 w-3.5 text-amber-400" />
+                                        <span className="text-[10px] font-bold uppercase tracking-tight text-slate-300">Lead Time</span>
+                                    </div>
+                                    <span className="text-xs font-black text-white">{pnrContext.influencers.leadTime}</span>
+                                </div>
+                                <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/10">
+                                    <div className="flex items-center gap-2">
+                                        <MapPin className="h-3.5 w-3.5 text-emerald-400" />
+                                        <span className="text-[10px] font-bold uppercase tracking-tight text-slate-300">Haul Type</span>
+                                    </div>
+                                    <span className="text-xs font-black text-white">{pnrContext.influencers.haulType}</span>
+                                </div>
+                                <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/10">
+                                    <div className="flex items-center gap-2">
+                                        <User className="h-3.5 w-3.5 text-indigo-400" />
+                                        <span className="text-[10px] font-bold uppercase tracking-tight text-slate-300">Composition</span>
+                                    </div>
+                                    <span className="text-xs font-black text-white">{pnrContext.influencers.paxCount}</span>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         )}
 
@@ -436,7 +523,7 @@ export default function OffersenseComposerPage() {
                             <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">Airline Offers</h3>
                         </div>
                         <div className="space-y-4">
-                            {mockOffers.filter(o => o.type === 'Airline').map(offer => (
+                            {mockOffers.filter(o => o.domain === 'Airline').map(offer => (
                                 <Card key={offer.id} className={cn(
                                     "transition-all cursor-pointer group hover:shadow-lg",
                                     selectedAirlineOffers.includes(offer.id) ? "border-blue-600 ring-1 ring-blue-600 bg-blue-50/30" : "bg-white"
@@ -469,7 +556,7 @@ export default function OffersenseComposerPage() {
                             <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">Airport Offers</h3>
                         </div>
                         <div className="space-y-4">
-                             {mockOffers.filter(o => o.type === 'Airport').map(offer => (
+                             {mockOffers.filter(o => o.domain === 'Airport').map(offer => (
                                 <Card key={offer.id} className={cn(
                                     "transition-all cursor-pointer group hover:shadow-lg",
                                     selectedAirportOffers.includes(offer.id) ? "border-amber-600 ring-1 ring-amber-600 bg-amber-50/30" : "bg-white"
@@ -649,7 +736,7 @@ export default function OffersenseComposerPage() {
              <div className="w-full max-w-4xl space-y-8 animate-in slide-in-from-bottom-8 duration-700 pb-20">
                 <div className="flex justify-between items-end">
                     <div className="space-y-1">
-                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em]">Master Order Receipt</p>
+                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em]">Unified Ecosystem Receipt</p>
                         <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">{orderId || 'ORD-99999'}</h2>
                     </div>
                     <div className="text-right space-y-1">
@@ -660,104 +747,80 @@ export default function OffersenseComposerPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
                     <div className="md:col-span-8 space-y-6">
-                        {/* Master Itinerary & Pax */}
-                        <Card className="rounded-3xl border-slate-200 shadow-sm overflow-hidden">
-                             <CardHeader className="bg-slate-50 py-4 px-6 border-b">
-                                <CardTitle className="text-xs font-black uppercase text-slate-500 tracking-widest flex items-center gap-2">
-                                    <Plane className="h-3.5 w-3.5" /> 1. Flight & Passenger Context
+                        {/* THE MASTER ORDER TREE */}
+                        <Card className="rounded-3xl border-slate-200 shadow-xl overflow-hidden bg-white">
+                            <CardHeader className="bg-slate-900 py-4 px-6 text-white">
+                                <CardTitle className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <Layers className="h-4 w-4 text-emerald-400" /> Unified Order Structure
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="p-8 space-y-8">
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                                    <div className="col-span-2">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Itinerary</p>
-                                        <p className="text-lg font-black text-primary uppercase">{pnrContext.route}</p>
-                                        <p className="text-xs font-bold text-muted-foreground">{pnrContext.date} • {pnrContext.flight}</p>
+                            <CardContent className="p-8">
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="h-2 w-2 rounded-full bg-slate-900" />
+                                        <h3 className="text-lg font-black uppercase text-slate-900">Order</h3>
                                     </div>
-                                    <div>
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">PNR</p>
-                                        <p className="text-lg font-mono font-black uppercase tracking-widest">{pnrContext.pnr}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Gate</p>
-                                        <p className="text-lg font-black uppercase">B45</p>
-                                    </div>
-                                </div>
-                                <Separator />
-                                <div>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Checked-in Passengers</p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {selectedPax.map(id => {
-                                            const p = pnrContext.passengers.find((px: any) => px.id === id);
-                                            return <Badge key={id} variant="secondary" className="px-3 py-1.5 font-bold text-sm bg-slate-100 text-slate-700">{p?.name || 'Passenger'}</Badge>;
-                                        })}
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
 
-                        {/* Retail breakdown */}
-                        <Card className="rounded-3xl border-slate-200 shadow-sm overflow-hidden">
-                            <CardHeader className="bg-slate-50 py-4 px-6 border-b">
-                                <CardTitle className="text-xs font-black uppercase text-slate-500 tracking-widest flex items-center gap-2">
-                                    <ReceiptText className="h-3.5 w-3.5" /> 2. Retailing Breakdown
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-0">
-                                <Table>
-                                    <TableHeader className="bg-slate-50/50">
-                                        <TableRow>
-                                            <TableHead className="text-[10px] uppercase font-black pl-8 h-10">Ecosystem Item</TableHead>
-                                            <TableHead className="text-[10px] uppercase font-black h-10 text-center">Domain</TableHead>
-                                            <TableHead className="text-[10px] uppercase font-black h-10 text-right pr-8">Price</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {[...selectedAirlineOffers, ...selectedAirportOffers].map(id => {
+                                    {/* FLIGHT SECTION */}
+                                    <TreeItem label="Flight (core product)" isCategory>
+                                        <TreeItem label={`${pnrContext.route} • ${pnrContext.flight}`} price={890} />
+                                    </TreeItem>
+
+                                    {/* AIRLINE ANCILLARIES */}
+                                    <TreeItem label="Airline Ancillaries" isCategory>
+                                        {selectedAirlineOffers.map((id, idx) => {
                                             const offer = mockOffers.find(o => o.id === id);
                                             return (
-                                                <TableRow key={id}>
-                                                    <TableCell className="pl-8 py-5">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className={cn(
-                                                                "h-10 w-10 rounded-xl flex items-center justify-center border",
-                                                                offer?.type === 'Airline' ? "text-blue-600 bg-blue-50 border-blue-100" : "text-amber-600 bg-amber-50 border-amber-100"
-                                                            )}>
-                                                                {offer?.type === 'Airline' ? <Star className="h-5 w-5" /> : <Package className="h-5 w-5" />}
-                                                            </div>
-                                                            <div>
-                                                                <p className="font-black text-sm uppercase">{offer?.name}</p>
-                                                                <p className="text-[10px] text-muted-foreground">{offer?.description}</p>
-                                                            </div>
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell className="text-center">
-                                                        <Badge variant="outline" className={cn(
-                                                            "text-[9px] font-black uppercase",
-                                                            offer?.type === 'Airline' ? "text-blue-600 border-blue-100" : "text-amber-600 border-amber-100"
-                                                        )}>{offer?.type}</Badge>
-                                                    </TableCell>
-                                                    <TableCell className="text-right pr-8 font-mono font-black text-sm">
-                                                        ${offer?.finalPrice.toFixed(2)}
-                                                    </TableCell>
-                                                </TableRow>
+                                                <TreeItem 
+                                                    key={id} 
+                                                    label={offer?.name} 
+                                                    price={offer?.finalPrice} 
+                                                />
                                             );
                                         })}
-                                    </TableBody>
-                                </Table>
-                                <div className="p-8 bg-slate-900 text-white flex justify-between items-center">
-                                    <div>
-                                        <p className="text-[10px] font-black uppercase text-white/50 tracking-widest">Total Settled Value</p>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <ShieldCheck className="h-4 w-4 text-emerald-400" />
-                                            <span className="text-xs font-bold text-white/80">PCI-DSS Compliant • Settlement finalized</span>
+                                        {selectedAirlineOffers.length === 0 && <TreeItem label="No Airline Services" />}
+                                    </TreeItem>
+
+                                    {/* AIRPORT ANCILLARIES */}
+                                    <TreeItem label="Airport Ancillaries" isCategory>
+                                        {selectedAirportOffers.map((id, idx) => {
+                                            const offer = mockOffers.find(o => o.id === id);
+                                            return (
+                                                <TreeItem 
+                                                    key={id} 
+                                                    label={offer?.name} 
+                                                    price={offer?.finalPrice} 
+                                                />
+                                            );
+                                        })}
+                                        {selectedAirportOffers.length === 0 && <TreeItem label="No Airport Services" />}
+                                    </TreeItem>
+
+                                    {/* THIRD PARTY SERVICES (Mocked for structure) */}
+                                    <TreeItem label="Third-party Services" isCategory isLast>
+                                        <TreeItem label="City Transfer (Chauffeur)" price={45} />
+                                        <TreeItem label="Airport Hotel (Pod)" price={80} isLast />
+                                    </TreeItem>
+                                </div>
+
+                                <div className="mt-10 p-8 bg-slate-50 rounded-3xl border border-slate-100">
+                                     <div className="flex justify-between items-center">
+                                        <div>
+                                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Total Settled Value</p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                                                <span className="text-xs font-bold text-slate-600">Cross-domain Settlement Finalized</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-5xl font-black font-mono tracking-tighter text-emerald-400">
-                                            ${[...selectedAirlineOffers, ...selectedAirportOffers].reduce((sum, id) => sum + (mockOffers.find(o => o.id === id)?.finalPrice || 0), 0).toFixed(2)}
-                                        </p>
-                                        <p className="text-[10px] font-black uppercase text-white/50 tracking-widest">USD (Converted at Source)</p>
+                                        <div className="text-right">
+                                            <p className="text-5xl font-black font-mono tracking-tighter text-slate-900">
+                                                ${(
+                                                    890 + 45 + 80 + // Base/Third party
+                                                    [...selectedAirlineOffers, ...selectedAirportOffers].reduce((sum, id) => sum + (mockOffers.find(o => o.id === id)?.finalPrice || 0), 0)
+                                                ).toFixed(2)}
+                                            </p>
+                                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">USD Combined Sum</p>
+                                        </div>
                                     </div>
                                 </div>
                             </CardContent>
@@ -766,7 +829,7 @@ export default function OffersenseComposerPage() {
 
                     <div className="md:col-span-4 space-y-6">
                         <Card className="rounded-3xl border-slate-200 shadow-sm p-6 space-y-6">
-                            <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Digital Service Tokens</p>
+                            <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Ecosystem Fulfillment Tokens</p>
                             <div className="space-y-4">
                                 <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center">
                                     <div className="relative w-[150px] h-[150px] mix-blend-multiply opacity-80 grayscale">
@@ -778,14 +841,17 @@ export default function OffersenseComposerPage() {
                                             data-ai-hint="qr code"
                                         />
                                     </div>
-                                    <p className="mt-4 font-mono text-[10px] font-black text-slate-400 uppercase tracking-widest">UNIFIED_RETAIL_TOKEN_{orderId?.slice(-5)}</p>
+                                    <p className="mt-4 font-mono text-[10px] font-black text-slate-400 uppercase tracking-widest">ECO_TOKEN_{orderId?.slice(-5)}</p>
                                 </div>
                                 <div className="space-y-2">
-                                     <div className="flex items-center gap-2 text-[10px] font-black text-emerald-600 bg-emerald-50 p-2 rounded-lg border border-emerald-100">
-                                        <Check className="h-3 w-3" /> PSS SSR: COMMITTED
+                                     <div className="flex items-center gap-2 text-[10px] font-black text-blue-600 bg-blue-50 p-2 rounded-lg border border-blue-100">
+                                        <Plane className="h-3 w-3" /> PSS SSR: COMMITTED
                                     </div>
-                                    <div className="flex items-center gap-2 text-[10px] font-black text-emerald-600 bg-emerald-50 p-2 rounded-lg border border-emerald-100">
-                                        <Check className="h-3 w-3" /> HUB VOUCHERS: ISSUED
+                                    <div className="flex items-center gap-2 text-[10px] font-black text-amber-600 bg-amber-50 p-2 rounded-lg border border-amber-100">
+                                        <Building2 className="h-3 w-3" /> HUB VOUCHERS: ISSUED
+                                    </div>
+                                    <div className="flex items-center gap-2 text-[10px] font-black text-indigo-600 bg-indigo-50 p-2 rounded-lg border border-indigo-100">
+                                        <Truck className="h-3 w-3" /> LOGISTICS: DISPATCHED
                                     </div>
                                 </div>
                             </div>
@@ -793,7 +859,7 @@ export default function OffersenseComposerPage() {
 
                         <div className="flex flex-col gap-3">
                             <Button className="w-full h-12 font-black uppercase text-xs tracking-widest" onClick={() => window.print()}>
-                                <ReceiptText className="mr-2 h-4 w-4" /> Print Receipt
+                                <ReceiptText className="mr-2 h-4 w-4" /> Print Full Audit
                             </Button>
                             <Button variant="outline" className="w-full h-12 font-black uppercase text-xs tracking-widest" onClick={() => window.location.reload()}>
                                 Start New Session
