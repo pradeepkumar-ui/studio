@@ -107,6 +107,8 @@
         "ancillaryName": { "type": "string" },
         "category": { "type": "string" },
         "configName": { "type": "string" },
+        "basePrice": { "type": "number" },
+        "currency": { "type": "string" },
         "parameters": { "type": "object" },
         "status": { "type": "string", "enum": ["Draft", "Active", "Archived"] }
       }

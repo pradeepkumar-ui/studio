@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -33,7 +32,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, PlusCircle, Loader2, Layers, Search, History, Trash2, Edit } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2, Layers, Search, History, Trash2, Edit, DollarSign } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -42,8 +41,8 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
 const initialMockAggregates: any[] = [
-    { id: 'AGG-001', configName: 'Premium Route Baggage Logic', ancillaryName: '1st Checked Bag', category: 'Baggage', status: 'Active' },
-    { id: 'AGG-002', configName: 'Long-Haul Seat Strategy', ancillaryName: 'Extra Legroom Seat', category: 'Seat', status: 'Active' },
+    { id: 'AGG-001', configName: 'Premium Route Baggage Logic', ancillaryName: '1st Checked Bag', category: 'Baggage', basePrice: 35.00, currency: 'USD', status: 'Active' },
+    { id: 'AGG-002', configName: 'Long-Haul Seat Strategy', ancillaryName: 'Extra Legroom Seat', category: 'Seat', basePrice: 50.00, currency: 'USD', status: 'Active' },
 ];
 
 export default function AncillaryAggregatesPage() {
@@ -135,7 +134,7 @@ export default function AncillaryAggregatesPage() {
                 <TableRow>
                   <TableHead className="text-[10px] uppercase font-black">Logic Identity</TableHead>
                   <TableHead className="text-[10px] uppercase font-black">Linked Product</TableHead>
-                  <TableHead className="text-[10px] uppercase font-black">Category</TableHead>
+                  <TableHead className="text-[10px] uppercase font-black">Base Price</TableHead>
                   <TableHead className="text-[10px] uppercase font-black">Status</TableHead>
                   <TableHead className="text-right text-[10px] uppercase font-black">Actions</TableHead>
                 </TableRow>
@@ -152,10 +151,17 @@ export default function AncillaryAggregatesPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                        <div className="text-xs font-semibold">{item.ancillaryName}</div>
+                        <div className="flex flex-col gap-0.5">
+                            <div className="text-xs font-semibold">{item.ancillaryName}</div>
+                            <Badge variant="outline" className="text-[9px] uppercase font-black w-fit">{item.category}</Badge>
+                        </div>
                     </TableCell>
                     <TableCell>
-                        <Badge variant="outline" className="text-[9px] uppercase font-black">{item.category}</Badge>
+                        <div className="flex items-center gap-1 font-mono font-black text-primary">
+                            <DollarSign className="h-3 w-3" />
+                            {new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(item.basePrice || 0)}
+                            <span className="text-[9px] text-muted-foreground ml-1">{item.currency || 'USD'}</span>
+                        </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant={item.status === 'Active' ? 'default' : 'secondary'} className="text-[9px] font-black uppercase tracking-wider">{item.status}</Badge>
