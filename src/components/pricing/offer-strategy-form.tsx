@@ -38,9 +38,9 @@ import {
   Info
 } from 'lucide-react';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
-import { Card, CardContent } from '../ui/card';
-import { Badge } from '../ui/badge';
+import { collection, query, orderBy, Timestamp } from 'firebase/firestore';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   DialogHeader,
   DialogTitle,
@@ -94,11 +94,11 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
   const firestore = useFirestore();
   
   const aggregatesQuery = React.useMemo(() => 
-    firestore ? query(collection(firestore, 'airlineAncillaryAggregates')) : undefined
+    firestore ? query(collection(firestore, 'airlineAncillaryAggregates'), orderBy('createdAt', 'desc')) : undefined
   , [firestore]);
   
   const cohortsQuery = React.useMemo(() => 
-    firestore ? query(collection(firestore, 'cohorts')) : undefined
+    firestore ? query(collection(firestore, 'cohorts'), orderBy('createdAt', 'desc')) : undefined
   , [firestore]);
 
   const { data: aggregatesData } = useCollection(aggregatesQuery);
