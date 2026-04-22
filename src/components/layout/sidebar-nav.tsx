@@ -90,6 +90,7 @@ const menuItems: MenuItem[] = [
       { href: '/offers/cohorts', label: 'Airline Cohorts', icon: Target },
       { href: '/offers/airport-cohorts', label: 'Airport Cohorts', icon: MapPin },
       { href: '/bundles', label: 'Airline Offers and Dynamic pricing', icon: Package },
+      { href: '/offers/airport-bundles', label: 'Airport Offers and Dynamic pricing', icon: Building2 },
       { href: '/offer-composer', label: 'Airport Offer Composer', icon: QrCode },
     ],
   },
