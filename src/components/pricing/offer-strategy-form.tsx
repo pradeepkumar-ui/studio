@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -42,6 +41,12 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { Card, CardContent } from '../ui/card';
 import { Badge } from '../ui/badge';
+import {
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 const offerStrategySchema = z.object({
   id: z.string().optional(),
@@ -88,7 +93,6 @@ const mockAncillariesFallback = [
 export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFormProps) {
   const firestore = useFirestore();
   
-  // Memoize collections to prevent infinite re-renders
   const aggregatesQuery = React.useMemo(() => 
     firestore ? query(collection(firestore, 'airlineAncillaryAggregates')) : undefined
   , [firestore]);
@@ -124,7 +128,6 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
   const watchDynamic = form.watch('dynamicPricing');
   const watchGuardRails = form.watch('guardRails');
 
-  // Real-time calculation logic
   const calculation = React.useMemo(() => {
     const selected = aggregates.filter((a: any) => watchAncillaryIds.includes(a.id));
     const baseTotal = selected.reduce((sum, item) => sum + (Number(item.basePrice) || 0), 0);
@@ -143,7 +146,6 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
         finalCalculated = offerAdjusted * (1 + watchDynamic.adjustmentPercent / 100);
     }
 
-    // Enforce Guard Rails
     const cappedPrice = Math.min(Math.max(finalCalculated, watchGuardRails.minPrice), watchGuardRails.maxPrice);
     const wasCapped = cappedPrice !== finalCalculated;
 
@@ -179,27 +181,32 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-8 space-y-8">
               
-              {/* --- 1. CORE SETUP --- */}
               <section className="space-y-4">
                   <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-widest">
                       <Tag className="h-3.5 w-3.5" /> 1. Offer Identity & Scope
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                       <FormField control={form.control} name="name" render={({ field }) => (
-                          <FormItem><FormLabel>Offer Display Name*</FormLabel><FormControl><Input placeholder="e.g., Summer Early Bird" {...field} /></FormControl><FormMessage /></FormItem>
+                          <FormItem>
+                            <FormLabel>Offer Display Name*</FormLabel>
+                            <FormControl><Input placeholder="e.g., Summer Early Bird" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
                       )} />
                       <FormField control={form.control} name="type" render={({ field }) => (
-                          <FormItem><FormLabel>Strategy Type</FormLabel>
-                          <Select onValueChange={(v) => {
-                              field.onChange(v);
-                              form.setValue('ancillaryIds', []); // Reset on type change
-                          }} value={field.value}>
-                              <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                              <SelectContent>
-                                  <SelectItem value="Single">Single Ancillary Offer</SelectItem>
-                                  <SelectItem value="Bundle">Multi-Product Bundle</SelectItem>
-                              </SelectContent>
-                          </Select></FormItem>
+                          <FormItem>
+                            <FormLabel>Strategy Type</FormLabel>
+                            <Select onValueChange={(v) => {
+                                field.onChange(v);
+                                form.setValue('ancillaryIds', []);
+                            }} value={field.value}>
+                                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                <SelectContent>
+                                    <SelectItem value="Single">Single Ancillary Offer</SelectItem>
+                                    <SelectItem value="Bundle">Multi-Product Bundle</SelectItem>
+                                </SelectContent>
+                            </Select>
+                          </FormItem>
                       )} />
                   </div>
                   <FormField control={form.control} name="ancillaryIds" render={({ field }) => (
@@ -221,22 +228,23 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
 
               <Separator />
 
-              {/* --- 2. PRICING & TARGETING --- */}
               <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-4">
                       <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-widest">
                           <Calculator className="h-3.5 w-3.5" /> 2. Pricing Layer
                       </div>
                       <FormField control={form.control} name="pricing.type" render={({ field }) => (
-                          <FormItem><FormLabel>Adjustment Mode</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                              <SelectContent>
-                                  <SelectItem value="PercentageDiscount">Percentage Discount (%)</SelectItem>
-                                  <SelectItem value="FixedDiscount">Fixed Discount ($)</SelectItem>
-                                  <SelectItem value="FixedPrice">Override: Fixed Price</SelectItem>
-                              </SelectContent>
-                          </Select></FormItem>
+                          <FormItem>
+                            <FormLabel>Adjustment Mode</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                <SelectContent>
+                                    <SelectItem value="PercentageDiscount">Percentage Discount (%)</SelectItem>
+                                    <SelectItem value="FixedDiscount">Fixed Discount ($)</SelectItem>
+                                    <SelectItem value="FixedPrice">Override: Fixed Price</SelectItem>
+                                </SelectContent>
+                            </Select>
+                          </FormItem>
                       )} />
                       <FormField control={form.control} name="pricing.value" render={({ field }) => (
                           <FormItem><FormLabel>Adjustment Value</FormLabel><FormControl><Input type="number" {...field} className="font-bold text-primary" /></FormControl></FormItem>
@@ -265,7 +273,6 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
 
               <Separator />
 
-              {/* --- 3. DYNAMIC & GUARDRAILS --- */}
               <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-4 p-4 border rounded-xl bg-amber-50/30">
                       <div className="flex items-center justify-between">
@@ -278,14 +285,16 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
                       </div>
                       <div className={cn("space-y-3", !watchDynamic.enabled && "opacity-30 pointer-events-none")}>
                         <FormField control={form.control} name="dynamicPricing.ruleType" render={({ field }) => (
-                            <FormItem><FormLabel className="text-xs">Driver</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl><SelectTrigger className="h-8"><SelectValue /></SelectTrigger></FormControl>
-                                <SelectContent>
-                                    <SelectItem value="TimeBased">Time to Departure (T-minus)</SelectItem>
-                                    <SelectItem value="InventoryBased">Inventory Threshold</SelectItem>
-                                </SelectContent>
-                            </Select></FormItem>
+                            <FormItem>
+                              <FormLabel className="text-xs">Driver</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                  <FormControl><SelectTrigger className="h-8"><SelectValue /></SelectTrigger></FormControl>
+                                  <SelectContent>
+                                      <SelectItem value="TimeBased">Time to Departure (T-minus)</SelectItem>
+                                      <SelectItem value="InventoryBased">Inventory Threshold</SelectItem>
+                                  </SelectContent>
+                              </Select>
+                            </FormItem>
                         )} />
                         <FormField control={form.control} name="dynamicPricing.threshold" render={({ field }) => (
                             <FormItem><FormLabel className="text-xs">Threshold (Condition)</FormLabel><FormControl><Input placeholder="e.g., < 48 Hours" className="h-8 text-xs" {...field} /></FormControl></FormItem>
@@ -310,7 +319,6 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
               </section>
             </div>
 
-            {/* --- RIGHT: REAL-TIME CALCULATION PREVIEW --- */}
             <div className="lg:col-span-4">
                 <Card className="sticky top-0 bg-slate-900 text-white border-none shadow-2xl rounded-2xl overflow-hidden">
                     <CardHeader className="bg-white/10 pb-4">
