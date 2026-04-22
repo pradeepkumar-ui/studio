@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -124,7 +123,7 @@ export default function BundlesPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight text-primary">Offers & Dynamic pricing</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-primary">Airline Offers and Dynamic pricing</h1>
           <p className="text-muted-foreground font-medium">Configure cohort-driven monetization strategies for airline and airport services.</p>
         </div>
         <Button onClick={() => handleOpenDialog()} className="font-bold h-11 px-8 shadow-indigo-100 shadow-xl">
