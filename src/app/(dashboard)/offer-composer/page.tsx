@@ -33,7 +33,8 @@ import {
   Hotel,
   Truck,
   Gauge,
-  CalendarDays
+  CalendarDays,
+  Layers
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -49,7 +50,6 @@ import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useFirestore } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 // --- TYPES & SCHEMAS ---
 
@@ -690,7 +690,7 @@ export default function OffersenseComposerPage() {
                             ${selectedAirportOffers.reduce((sum, id) => sum + (mockOffers.find(o => o.id === id)?.finalPrice || 0), 0).toFixed(2)}
                         </span>
                     </div>
-                    <div className="p-4 bg-slate-900 rounded-2xl flex items-center gap-4 text-white border-2 border-amber-500/20">
+                    <div className="p-4 bg-slate-900 rounded-2xl flex items-center gap-4 text-white border-2 border-blue-500/20">
                         <div className="h-10 w-10 rounded-full bg-amber-500 flex items-center justify-center text-white"><ShieldCheck className="h-6 w-6" /></div>
                         <p className="text-xs font-medium leading-tight">Supplier fulfillment tokens will be issued for terminal-side redemption via SITA hardware.</p>
                     </div>
