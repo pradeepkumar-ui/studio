@@ -91,7 +91,7 @@ const menuItems: MenuItem[] = [
       { href: '/offers/airport-cohorts', label: 'Airport Cohorts', icon: MapPin },
       { href: '/bundles', label: 'Airline Offers and Dynamic pricing', icon: Package },
       { href: '/offers/airport-bundles', label: 'Airport Offers and Dynamic pricing', icon: Building2 },
-      { href: '/offer-composer', label: 'Airport Offer Composer', icon: QrCode },
+      { href: '/offer-composer', label: 'Offersense Composer', icon: QrCode },
     ],
   },
   {

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -47,7 +46,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 
 type ComposerStep = 'pnr_discovery' | 'offer_generation' | 'results' | 'checkout' | 'confirmation';
 
@@ -92,7 +91,7 @@ const mockBundlesFallback = [
     },
 ];
 
-export default function AirportOfferComposerPage() {
+export default function OffersenseComposerPage() {
   const [step, setStep] = useState<ComposerStep>('pnr_discovery');
   const [isLoading, setIsLoading] = useState(false);
   const [discoveryLog, setDiscoveryLog] = useState<string[]>([]);
@@ -102,14 +101,14 @@ export default function AirportOfferComposerPage() {
   const [selectedOffer, setSelectedOffer] = useState<any>(null);
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
   
-  // Two-stage checkout states
   const [isPaid, setIsPaid] = useState(false);
   const [isSynced, setIsSynced] = useState(false);
 
   const { toast } = useToast();
   const firestore = useFirestore();
 
-  const { data: allBundles } = useCollection(firestore ? collection(firestore, 'bundles') : undefined);
+  const bundlesQuery = useMemo(() => firestore ? query(collection(firestore, 'bundles'), orderBy('createdAt', 'desc')) : undefined, [firestore]);
+  const { data: allBundles } = useCollection(bundlesQuery);
 
   const form = useForm<z.infer<typeof discoverySchema>>({
     resolver: zodResolver(discoverySchema),
@@ -277,7 +276,7 @@ export default function AirportOfferComposerPage() {
     <div className="flex flex-col gap-6 max-w-7xl mx-auto w-full">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-black tracking-tight text-primary">Airport Offer Composer</h1>
+          <h1 className="text-3xl font-black tracking-tight text-primary uppercase">Offersense Composer</h1>
           <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest">REAL-TIME OFFER DECISION & DELIVERY SIMULATOR</p>
         </div>
         <Button variant="ghost" onClick={resetSimulation} className="text-muted-foreground">
@@ -286,7 +285,6 @@ export default function AirportOfferComposerPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* --- LEFT: CONTEXT & ENGINE TRACE --- */}
         <div className="lg:col-span-4 space-y-6">
           <Card className="border-primary/20 shadow-lg">
             <CardHeader className="bg-primary/5 pb-4">
@@ -334,7 +332,6 @@ export default function AirportOfferComposerPage() {
             </CardContent>
           </Card>
 
-          {/* ENGINE TRACE LOG */}
           {(discoveryLog.length > 0) && (
             <Card className="bg-slate-900 border-none shadow-xl">
                 <CardHeader className="py-3 border-b border-white/10">
@@ -357,9 +354,7 @@ export default function AirportOfferComposerPage() {
           )}
         </div>
 
-        {/* --- RIGHT: SIMULATED UI & RESULTS --- */}
         <div className="lg:col-span-8">
-            {/* STEP 1: Search Initial State */}
             {step === 'pnr_discovery' && !pnrData && (
                 <div className="flex flex-col items-center justify-center min-h-[500px] border-2 border-dashed rounded-2xl bg-muted/20">
                     <Workflow className="h-16 w-16 text-muted-foreground/20 mb-4" />
@@ -368,7 +363,6 @@ export default function AirportOfferComposerPage() {
                 </div>
             )}
 
-            {/* STEP 2: PNR Found - Show Discovery Card */}
             {pnrData && (step === 'pnr_discovery' || step === 'offer_generation') && (
                 <div className="space-y-6">
                     <Card className="border-emerald-200 bg-emerald-50/20 shadow-md">
@@ -397,7 +391,6 @@ export default function AirportOfferComposerPage() {
                 </div>
             )}
 
-            {/* STEP 3: Results Display */}
             {step === 'results' && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="flex justify-between items-center">
@@ -461,7 +454,6 @@ export default function AirportOfferComposerPage() {
                 </div>
             )}
 
-            {/* STEP 4: Checkout */}
             {step === 'checkout' && selectedOffer && (
                 <div className="space-y-6 animate-in zoom-in-95 duration-300">
                     <div className="flex items-center gap-2 text-primary font-black uppercase text-sm tracking-widest">
@@ -563,7 +555,6 @@ export default function AirportOfferComposerPage() {
                 </div>
             )}
 
-            {/* STEP 5: Confirmation */}
             {step === 'confirmation' && (
                 <div className="space-y-8 animate-in zoom-in-50 duration-700 pb-20">
                     <div className="flex flex-col items-center justify-center text-center space-y-4 py-10">
