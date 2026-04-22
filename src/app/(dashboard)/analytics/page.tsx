@@ -80,6 +80,14 @@ const airportOffers = [
     { name: 'DXB Sleep Pods (Peak)', sales: 4200, conv: '19.2%', status: 'Stable' },
 ];
 
+// --- Vendor Performance Data ---
+const vendorPerformance = [
+  { partner: 'SkyCafe Gourmet', category: 'F&B', revenue: 450000, commission: 54000, attach: '12.5%' },
+  { partner: 'Global Duty Free', category: 'Retail', revenue: 850000, commission: 127500, attach: '18.2%' },
+  { partner: 'Lounge Stars', category: 'Services', revenue: 320000, commission: 32000, attach: '9.8%' },
+  { partner: 'Changi Valet', category: 'Parking', revenue: 180000, commission: 27000, attach: '15.1%' },
+];
+
 // --- Recent Ecosystem Transactions ---
 const recentTransactions = [
     { id: 'ORD-982', domain: 'Airline', provider: 'GAB', route: 'LHR-JFK', amount: 1250, status: 'Settled' },

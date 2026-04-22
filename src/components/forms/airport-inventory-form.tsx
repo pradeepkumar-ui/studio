@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -27,7 +26,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useFirestore, useCollection } from '@/firebase';
 import { useMemo } from 'react';
 import { collection } from 'firebase/firestore';
-import { Store, MapPin, Clock, Signal, QrCode, Smartphone, UserCheck, ShieldCheck, Briefcase, Zap } from 'lucide-react';
+import { Store, MapPin, Clock, Signal, QrCode, Smartphone, UserCheck, ShieldCheck, Briefcase, Zap, RefreshCw } from 'lucide-react';
 
 const airportInventorySchema = z.object({
   id: z.string().optional(),
@@ -41,6 +40,8 @@ const airportInventorySchema = z.object({
   available: z.coerce.number().min(0),
   bufferLimit: z.coerce.number().min(0).default(5),
   timeSlotBased: z.boolean().default(false),
+  fulfillmentSource: z.enum(['Offersense', 'Supplier_API']).default('Offersense'),
+  realTimeSync: z.boolean().default(false),
   resourceType: z.enum(['Seat', 'Staff', 'Vehicle', 'Bay']).default('Seat'),
   fulfillmentMode: z.enum(['Instant', 'Request']).default('Instant'),
   entitlementType: z.enum(['QR_Code', 'Virtual_Token', 'Agent_Direct']).default('QR_Code'),
@@ -87,6 +88,8 @@ export function AirportInventoryForm({ inventory, onSubmit, onCancel }: AirportI
       available: 50,
       bufferLimit: 5,
       timeSlotBased: false,
+      fulfillmentSource: 'Offersense',
+      realTimeSync: false,
       resourceType: 'Seat',
       fulfillmentMode: 'Instant',
       entitlementType: 'QR_Code',
@@ -95,6 +98,8 @@ export function AirportInventoryForm({ inventory, onSubmit, onCancel }: AirportI
       quotas: { CUSS: 10, CUTE: 10, Mobile: 30 },
     },
   });
+
+  const watchFulfillmentSource = form.watch('fulfillmentSource');
 
   const handleFinalSubmit = (data: AirportInventory) => {
       const selected = availableServices.find(s => s.id === data.ancillaryId);
@@ -111,10 +116,9 @@ export function AirportInventoryForm({ inventory, onSubmit, onCancel }: AirportI
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFinalSubmit)} className="space-y-6 max-h-[80vh] overflow-y-auto pr-4">
         
-        {/* --- 1. SETUP & LOCATION --- */}
         <section className="space-y-4">
             <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-widest">
-                <Store className="h-3.5 w-3.5" /> 1. Setup & Service Point
+                <Store className="h-3.5 w-3.5" /> 1. Fulfillment Control
             </div>
             <FormField
                 control={form.control}
@@ -135,11 +139,42 @@ export function AirportInventoryForm({ inventory, onSubmit, onCancel }: AirportI
                     </FormItem>
                 )}
             />
+            <div className="grid grid-cols-2 gap-4">
+                 <FormField
+                    control={form.control}
+                    name="fulfillmentSource"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Source Control*</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                            <SelectContent>
+                                <SelectItem value="Offersense">Local Hub Control</SelectItem>
+                                <SelectItem value="Supplier_API">External Vendor API</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        </FormItem>
+                    )}
+                />
+                {watchFulfillmentSource === 'Offersense' && (
+                    <FormField
+                        control={form.control}
+                        name="realTimeSync"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 bg-emerald-50/30">
+                                <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                <div className="space-y-1 leading-none">
+                                    <FormLabel className="text-xs font-bold flex items-center gap-1.5"><RefreshCw className="h-3 w-3" /> Real-time Hub Sync</FormLabel>
+                                </div>
+                            </FormItem>
+                        )}
+                    />
+                )}
+            </div>
             <FormField control={form.control} name="zone" render={({ field }) => (
                 <FormItem>
                     <FormLabel>Service Zone / Gate*</FormLabel>
                     <FormControl><Input placeholder="e.g., North Concourse / Gate B-22" {...field} /></FormControl>
-                    <FormDescription>The physical point of consumption.</FormDescription>
                     <FormMessage />
                 </FormItem>
             )} />
@@ -147,10 +182,9 @@ export function AirportInventoryForm({ inventory, onSubmit, onCancel }: AirportI
 
         <Separator />
 
-        {/* --- 2. CAPACITY & RESOURCES --- */}
         <section className="space-y-4">
             <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-widest">
-                <ShieldCheck className="h-3.5 w-3.5" /> 2. Resource & Capacity Logic
+                <ShieldCheck className="h-3.5 w-3.5" /> 2. Resource & Capacity
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <FormField control={form.control} name="resourceType" render={({ field }) => (
@@ -159,10 +193,10 @@ export function AirportInventoryForm({ inventory, onSubmit, onCancel }: AirportI
                         <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                             <SelectContent>
-                                <SelectItem value="Seat">Seats (Lounge/Pod)</SelectItem>
-                                <SelectItem value="Staff">Staff (Porter/Concierge)</SelectItem>
-                                <SelectItem value="Vehicle">Vehicles (Valet/Transfer)</SelectItem>
-                                <SelectItem value="Bay">Bays (EV Charging)</SelectItem>
+                                <SelectItem value="Seat">Seats</SelectItem>
+                                <SelectItem value="Staff">Staff</SelectItem>
+                                <SelectItem value="Vehicle">Vehicles</SelectItem>
+                                <SelectItem value="Bay">Bays</SelectItem>
                             </SelectContent>
                         </Select>
                     </FormItem>
@@ -171,7 +205,6 @@ export function AirportInventoryForm({ inventory, onSubmit, onCancel }: AirportI
                     <FormItem>
                         <FormLabel>Safety Buffer</FormLabel>
                         <FormControl><Input type="number" {...field} /></FormControl>
-                        <FormDescription>Reserved for operational use.</FormDescription>
                     </FormItem>
                 )} />
             </div>
@@ -197,7 +230,6 @@ export function AirportInventoryForm({ inventory, onSubmit, onCancel }: AirportI
                     <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                     <div className="space-y-1 leading-none">
                         <FormLabel className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> Time-Slot Orchestration</FormLabel>
-                        <FormDescription>Allocate capacity per specific departure/arrival windows.</FormDescription>
                     </div>
                     </FormItem>
                 )}
@@ -206,10 +238,9 @@ export function AirportInventoryForm({ inventory, onSubmit, onCancel }: AirportI
 
         <Separator />
 
-        {/* --- 3. CHANNELS & PARTNERS --- */}
         <section className="space-y-4">
             <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-widest">
-                <Signal className="h-3.5 w-3.5" /> 3. Ecosystem Channels & Partners
+                <Signal className="h-3.5 w-3.5" /> 3. SITA Touchpoint Quotas
             </div>
             <div className="grid grid-cols-3 gap-4">
                 <FormField control={form.control} name="quotas.CUSS" render={({ field }) => (
@@ -222,56 +253,6 @@ export function AirportInventoryForm({ inventory, onSubmit, onCancel }: AirportI
                     <FormItem><FormLabel className="flex items-center gap-1"><Smartphone className="h-3 w-3" /> App</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>
                 )} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-                <FormField control={form.control} name="fulfillmentMode" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Supplier Protocol</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                            <SelectContent>
-                                <SelectItem value="Instant">Instant (Auto-Sync)</SelectItem>
-                                <SelectItem value="Request">Partner-Request Required</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </FormItem>
-                )} />
-                <FormField control={form.control} name="entitlementType" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Entitlement Type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                            <SelectContent>
-                                <SelectItem value="QR_Code">Virtual QR Code</SelectItem>
-                                <SelectItem value="Virtual_Token">NFC / Digital Token</SelectItem>
-                                <SelectItem value="Agent_Direct">Manual Manifest</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </FormItem>
-                )} />
-            </div>
-        </section>
-
-        <Separator />
-
-        {/* --- 4. OPERATIONS & DISRUPTION --- */}
-        <section className="space-y-4">
-            <div className="flex items-center gap-2 text-destructive font-bold uppercase text-[10px] tracking-widest">
-                <Zap className="h-3.5 w-3.5" /> 4. Operational Guardrails
-            </div>
-            <FormField control={form.control} name="operationalMode" render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Operational State</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
-                            <SelectItem value="NORMAL">Normal Operations</SelectItem>
-                            <SelectItem value="CONGESTION">Congestion-Mode (Auto-Cap)</SelectItem>
-                            <SelectItem value="DISRUPTION">Disruption-Mode (Priority Protection)</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <FormDescription>Changes availability logic based on airport operating signals.</FormDescription>
-                </FormItem>
-            )} />
         </section>
 
         <div className="flex justify-end gap-2 pt-4 border-t sticky bottom-0 bg-background py-4 z-20">

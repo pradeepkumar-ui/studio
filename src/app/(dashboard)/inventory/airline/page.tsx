@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Search, Plane, MoreHorizontal, Loader2, Gauge, ShieldCheck, Zap, AlertTriangle } from 'lucide-react';
+import { PlusCircle, Search, Plane, MoreHorizontal, Loader2, Gauge, ShieldCheck, Zap, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
@@ -29,13 +29,9 @@ import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'fir
 import { cn } from '@/lib/utils';
 
 const mockAirlineInventory: any[] = [
-    { id: '1', ancillaryName: 'Extra Legroom Seat', pssCode: 'EXLG', flightNumber: 'AC101', totalCapacity: 12, available: 4, reserved: 2, status: 'Open', aircraftType: 'A350', quotas: { Direct: 8, OTA: 2, GDS: 2 } },
-    { id: '2', ancillaryName: 'Gourmet Meal', pssCode: 'MEAL', flightNumber: 'LH450', totalCapacity: 50, available: 5, reserved: 10, status: 'Waitlist', aircraftType: 'B787', quotas: { Direct: 40, OTA: 10, GDS: 0 } },
-    { id: '3', ancillaryName: 'Premium Wi-Fi', pssCode: 'WIFI', flightNumber: 'Global', totalCapacity: 500, available: 450, reserved: 5, status: 'Open', aircraftType: 'All', quotas: { Direct: 300, OTA: 100, GDS: 100 } },
-    { id: '4', ancillaryName: '1st Checked Bag', pssCode: 'BAG1', flightNumber: 'EK202', totalCapacity: 250, available: 12, reserved: 0, status: 'Open', aircraftType: 'B777', quotas: { Direct: 200, OTA: 50, GDS: 0 } },
-    { id: '5', ancillaryName: 'Pet in Cabin', pssCode: 'PETC', flightNumber: 'UA812', totalCapacity: 4, available: 0, reserved: 1, status: 'Closed', aircraftType: 'B787', quotas: { Direct: 4, OTA: 0, GDS: 0 } },
-    { id: '6', ancillaryName: 'Standby Upgrade (J)', pssCode: 'UPGS', flightNumber: 'SQ317', totalCapacity: 10, available: 10, reserved: 0, status: 'Open', aircraftType: 'A380', quotas: { Direct: 10, OTA: 0, GDS: 0 } },
-    { id: '7', ancillaryName: 'Preferred Zone Seat', pssCode: 'PFRD', flightNumber: 'BA287', totalCapacity: 30, available: 2, reserved: 5, status: 'Waitlist', aircraftType: 'B787', quotas: { Direct: 20, OTA: 5, GDS: 5 } },
+    { id: '1', ancillaryName: 'Extra Legroom Seat', pssCode: 'EXLG', flightNumber: 'AC101', totalCapacity: 12, available: 4, reserved: 2, status: 'Open', aircraftType: 'A350', quotas: { Direct: 8, OTA: 2, GDS: 2 }, realTimePssSync: true },
+    { id: '2', ancillaryName: 'Gourmet Meal', pssCode: 'MEAL', flightNumber: 'LH450', totalCapacity: 50, available: 5, reserved: 10, status: 'Waitlist', aircraftType: 'B787', quotas: { Direct: 40, OTA: 10, GDS: 0 }, realTimePssSync: false },
+    { id: '3', ancillaryName: 'Premium Wi-Fi', pssCode: 'WIFI', flightNumber: 'Global', totalCapacity: 500, available: 450, reserved: 5, status: 'Open', aircraftType: 'All', quotas: { Direct: 300, OTA: 100, GDS: 100 }, realTimePssSync: true },
 ];
 
 export default function AirlineInventoryPage() {
@@ -93,7 +89,7 @@ export default function AirlineInventoryPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-primary">Airline Ancillary Inventory</h1>
-                    <p className="text-muted-foreground font-medium">Exhaustive stock control for carrier-specific ancillaries, fleet assets, and flight segments.</p>
+                    <p className="text-muted-foreground font-medium">Exhaustive stock control for carrier-specific ancillaries and real-time PSS synchronization.</p>
                 </div>
                 <Button onClick={() => handleOpenDialog()} className="font-bold"><PlusCircle className="mr-2 h-4 w-4" /> Define Stock Unit</Button>
             </div>
@@ -102,7 +98,7 @@ export default function AirlineInventoryPage() {
                 {[
                     { title: 'Total SKUs', value: displayInventory.length, icon: Gauge, color: 'text-primary' },
                     { title: 'Waitlisted', value: displayInventory.filter(i => i.status === 'Waitlist').length, icon: AlertTriangle, color: 'text-amber-500' },
-                    { title: 'Critical Holds', value: displayInventory.reduce((acc, curr) => acc + (curr.reserved || 0), 0), icon: ShieldCheck, color: 'text-blue-600' },
+                    { title: 'Active Holds', value: displayInventory.reduce((acc, curr) => acc + (curr.reserved || 0), 0), icon: ShieldCheck, color: 'text-blue-600' },
                     { title: 'PSS Sync Health', value: '100%', icon: Zap, color: 'text-emerald-500' }
                 ].map((kpi) => (
                     <Card key={kpi.title} className="p-6">
@@ -118,7 +114,7 @@ export default function AirlineInventoryPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Carrier Stock Matrix</CardTitle>
-                    <CardDescription>Live real-time visibility of flight-specific capacity and multi-channel quotas.</CardDescription>
+                    <CardDescription>Live visibility of flight capacity and multi-channel quotas.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center gap-2 mb-4">
@@ -138,10 +134,10 @@ export default function AirlineInventoryPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Ancillary & Context</TableHead>
-                                    <TableHead>Flight / Fleet</TableHead>
+                                    <TableHead>Ancillary & Sync</TableHead>
+                                    <TableHead>Flight Scope</TableHead>
                                     <TableHead>Capacity Logic</TableHead>
-                                    <TableHead>Channel Quotas</TableHead>
+                                    <TableHead>Quotas</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
@@ -156,7 +152,15 @@ export default function AirlineInventoryPage() {
                                                 </div>
                                                 <div>
                                                   <div className="font-bold text-sm">{item.ancillaryName}</div>
-                                                  <div className="font-mono text-[10px] text-muted-foreground uppercase">{item.pssCode}</div>
+                                                  <div className="flex items-center gap-1.5 mt-1">
+                                                      {item.realTimePssSync ? (
+                                                          <Badge variant="secondary" className="text-[8px] h-3.5 bg-indigo-50 text-indigo-700 border-indigo-100 font-black uppercase tracking-tighter">
+                                                              <RefreshCw className="h-2 w-2 mr-1 animate-spin-slow" /> PSS Sync Active
+                                                          </Badge>
+                                                      ) : (
+                                                          <span className="text-[9px] font-mono text-muted-foreground uppercase">{item.pssCode}</span>
+                                                      )}
+                                                  </div>
                                                 </div>
                                             </div>
                                         </TableCell>
@@ -196,7 +200,6 @@ export default function AirlineInventoryPage() {
                                                     <DropdownMenuLabel>Inventory Actions</DropdownMenuLabel>
                                                     <DropdownMenuItem onClick={() => handleOpenDialog(item)}>Adjust Capacity</DropdownMenuItem>
                                                     <DropdownMenuItem>Manage Channel Quotas</DropdownMenuItem>
-                                                    <DropdownMenuItem>Exception Reallocation</DropdownMenuItem>
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuItem className="text-destructive font-bold" onClick={() => handleDelete(item.id!)}>Close Stock</DropdownMenuItem>
                                                 </DropdownMenuContent>
@@ -214,7 +217,7 @@ export default function AirlineInventoryPage() {
                 <DialogContent className="max-w-3xl">
                     <DialogHeader>
                         <DialogTitle>{editingInventory ? 'Update Stock Configuration' : 'Register New Ancillary Stock'}</DialogTitle>
-                        <DialogDescription>Define precise capacity limits, fleet compatibility, and multi-channel synchronization rules.</DialogDescription>
+                        <DialogDescription>Define precise capacity limits and real-time synchronization rules for this carrier SKU.</DialogDescription>
                     </DialogHeader>
                     <AirlineInventoryForm 
                         inventory={editingInventory} 

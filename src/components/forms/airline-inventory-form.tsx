@@ -25,7 +25,8 @@ import { Separator } from '../ui/separator';
 import { useFirestore, useCollection } from '@/firebase';
 import { useMemo } from 'react';
 import { collection } from 'firebase/firestore';
-import { Plane, ShieldCheck, Zap, Globe, Laptop } from 'lucide-react';
+import { Plane, ShieldCheck, Zap, Globe, Laptop, RefreshCw } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const airlineInventorySchema = z.object({
   id: z.string().optional(),
@@ -38,6 +39,8 @@ const airlineInventorySchema = z.object({
   available: z.coerce.number().min(0),
   reserved: z.coerce.number().min(0).default(0),
   status: z.enum(['Open', 'Waitlist', 'Closed']),
+  fulfillmentSource: z.enum(['Offersense', 'PSS']).default('Offersense'),
+  realTimePssSync: z.boolean().default(false),
   quotas: z.object({
     Direct: z.coerce.number().min(0),
     OTA: z.coerce.number().min(0),
@@ -88,9 +91,13 @@ export function AirlineInventoryForm({ inventory, onSubmit, onCancel }: AirlineI
       available: 10,
       reserved: 0,
       status: 'Open',
+      fulfillmentSource: 'Offersense',
+      realTimePssSync: false,
       quotas: { Direct: 5, OTA: 3, GDS: 2 },
     },
   });
+
+  const watchFulfillmentSource = form.watch('fulfillmentSource');
 
   const handleFinalSubmit = (data: AirlineInventory) => {
       const selected = availableAncillaries.find(a => a.id === data.ancillaryId);
@@ -107,7 +114,7 @@ export function AirlineInventoryForm({ inventory, onSubmit, onCancel }: AirlineI
         
         <section className="space-y-4">
             <div className="flex items-center gap-2 text-primary font-bold uppercase text-[10px] tracking-widest">
-                <Plane className="h-3.5 w-3.5" /> Product & Scoping
+                <Plane className="h-3.5 w-3.5" /> Product & Fulfillment
             </div>
             <FormField
                 control={form.control}
@@ -128,6 +135,38 @@ export function AirlineInventoryForm({ inventory, onSubmit, onCancel }: AirlineI
                 )}
             />
             <div className="grid grid-cols-2 gap-4">
+                 <FormField
+                    control={form.control}
+                    name="fulfillmentSource"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Fulfillment Source*</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                            <SelectContent>
+                                <SelectItem value="Offersense">Local (Offersense)</SelectItem>
+                                <SelectItem value="PSS">Host System (PSS)</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        </FormItem>
+                    )}
+                />
+                {watchFulfillmentSource === 'Offersense' && (
+                    <FormField
+                        control={form.control}
+                        name="realTimePssSync"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 bg-primary/5">
+                                <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                <div className="space-y-1 leading-none">
+                                    <FormLabel className="text-xs font-bold flex items-center gap-1.5"><RefreshCw className="h-3 w-3" /> Real-time PSS Sync</FormLabel>
+                                </div>
+                            </FormItem>
+                        )}
+                    />
+                )}
+            </div>
+            <div className="grid grid-cols-2 gap-4">
                 <FormField
                     control={form.control}
                     name="flightNumber"
@@ -135,7 +174,6 @@ export function AirlineInventoryForm({ inventory, onSubmit, onCancel }: AirlineI
                         <FormItem>
                         <FormLabel>Flight Scope*</FormLabel>
                         <FormControl><Input placeholder="e.g., AC101 or Global" {...field} /></FormControl>
-                        <FormDescription>Use 'Global' for fleet-wide stock.</FormDescription>
                         <FormMessage />
                         </FormItem>
                     )}
@@ -190,7 +228,6 @@ export function AirlineInventoryForm({ inventory, onSubmit, onCancel }: AirlineI
                         <FormItem>
                         <FormLabel>Active Holds</FormLabel>
                         <FormControl><Input type="number" {...field} className="text-blue-600 font-bold" /></FormControl>
-                        <FormDescription>In-cart reservations.</FormDescription>
                         </FormItem>
                     )}
                 />
@@ -252,7 +289,6 @@ export function AirlineInventoryForm({ inventory, onSubmit, onCancel }: AirlineI
                     )}
                 />
             </div>
-            <p className="text-[10px] text-muted-foreground italic">Quotas are enforced per-channel to ensure commercial priority.</p>
         </section>
 
         <div className="flex justify-end gap-2 pt-4 border-t sticky bottom-0 bg-background py-4">
