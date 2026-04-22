@@ -114,12 +114,10 @@ const menuItems: MenuItem[] = [
     label: 'Orders & Fulfillment',
     icon: ShoppingCart,
     subItems: [
-      { href: '/orders', label: 'Order Dashboard', icon: LayoutDashboard },
       { href: '/orders/stock-keeper', label: 'Stock Keeper (Airline)', icon: Archive },
       { href: '/orders/airport-stock-keeper', label: 'Stock Keeper (Airport)', icon: Store },
+      { href: '/orders', label: 'Order Dashboard', icon: LayoutDashboard },
       { href: '/orders/servicing', label: 'Order Servicing', icon: Settings },
-      { href: '/orders/delivery', label: 'Fulfillment Queue', icon: Truck },
-      { href: '/service-consumption', label: 'Service Consumption', icon: Signal },
     ],
   },
   {
