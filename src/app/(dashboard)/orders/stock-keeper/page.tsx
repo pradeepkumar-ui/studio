@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -56,6 +55,7 @@ import { StockItemForm, type StockItem } from '@/components/forms/stock-item-for
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
 
 const initialMockStock: any[] = [
     { id: '1', sku: 'LOU-LHR-T5-01', category: 'Lounge', supplier: 'Lounge Stars', available: 12, reserved: 4, threshold: 5, status: 'In Stock', fulfillmentSource: 'Offersense', type: 'Service_Capacity', realTimePssSync: true },
@@ -90,7 +90,6 @@ export default function AirlineStockKeeperPage() {
   const handleFormSubmit = async (data: StockItem) => {
     if (!firestore) return;
     
-    // Logic for calculating status based on threshold
     let status: 'In Stock' | 'Low Stock' | 'Out of Stock' = 'In Stock';
     if (data.available <= 0) status = 'Out of Stock';
     else if (data.available <= data.threshold) status = 'Low Stock';

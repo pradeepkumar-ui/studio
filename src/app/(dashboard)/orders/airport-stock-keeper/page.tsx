@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -29,6 +28,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
@@ -55,6 +55,7 @@ import { AirportStockItemForm, type AirportStockItem } from '@/components/forms/
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
 
 const initialMockStock: any[] = [
     { id: '1', sku: 'LOU-LHR-T5-EXP', airportCode: 'LHR', terminal: 'T5', category: 'Lounge', available: 12, reserved: 4, threshold: 5, status: 'In Stock', fulfillmentSource: 'Offersense', protocol: 'Slot-based', isSlotActive: true, realTimeSync: true },
@@ -96,11 +97,11 @@ export default function AirportStockKeeperPage() {
     try {
       if (editingItem?.id) {
         const ref = doc(firestore, 'airportInventory', editingItem.id);
-        setDoc(ref, { ...data, status, updatedAt: serverTimestamp() }, { merge: true })
-          .then(() => toast({ title: 'Hub Balance Updated', description: `SKU ${data.sku} synchronized.` }));
+        await setDoc(ref, { ...data, status, updatedAt: serverTimestamp() }, { merge: true });
+        toast({ title: 'Hub Balance Updated', description: `SKU ${data.sku} synchronized.` });
       } else {
-        addDoc(collection(firestore, 'airportInventory'), { ...data, status, createdAt: serverTimestamp() })
-          .then(() => toast({ title: 'Node SKU Registered', description: `Hub resource ${data.sku} committed.` }));
+        await addDoc(collection(firestore, 'airportInventory'), { ...data, status, createdAt: serverTimestamp() });
+        toast({ title: 'Node SKU Registered', description: `Hub resource ${data.sku} committed.` });
       }
     } catch (e: any) {
         toast({ variant: 'destructive', title: 'Error', description: e.message });
@@ -111,8 +112,8 @@ export default function AirportStockKeeperPage() {
   const handleDelete = async (id: string) => {
     if (!firestore) return;
     try {
-        deleteDoc(doc(firestore, 'airportInventory', id))
-          .then(() => toast({ title: 'Hub Node Decommissioned', variant: 'destructive' }));
+        await deleteDoc(doc(firestore, 'airportInventory', id));
+        toast({ title: 'Hub Node Decommissioned', variant: 'destructive' });
     } catch (e: any) {
         toast({ variant: 'destructive', title: 'Error', description: e.message });
     }
@@ -145,7 +146,7 @@ export default function AirportStockKeeperPage() {
           <Card key={kpi.label} className="p-6 bg-white shadow-sm border-primary/5">
             <div className="flex justify-between items-center mb-2">
               <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{kpi.label}</p>
-              <kpi.icon className={kpi.color + " h-4 w-4"} />
+              <kpi.icon className={cn(kpi.color, "h-4 w-4")} />
             </div>
             <p className="text-2xl font-black">{kpi.value}</p>
           </Card>
@@ -218,7 +219,7 @@ export default function AirportStockKeeperPage() {
                                 <span className="text-[9px] font-black uppercase text-muted-foreground">
                                     {item.realTimeSync ? 'Hub-Sync Active' : 'Offline Mode'}
                                 </span>
-                                {item.realTimeSync && <Badge variant="secondary" className="text-[8px] h-3.5 bg-emerald-50 text-emerald-700 border-emerald-100 font-black uppercase tracking-tighter">LIVE</Badge>}
+                                {item.realTimeSync && <Badge variant="secondary" className="text-[8px] h-3.5 bg-emerald-50 text-emerald-700 border-emerald-200 font-black uppercase tracking-tighter">LIVE</Badge>}
                             </div>
                         </div>
                     </TableCell>
@@ -273,8 +274,4 @@ export default function AirportStockKeeperPage() {
       </Dialog>
     </div>
   );
-}
-
-function cn(...inputs: any[]) {
-    return inputs.filter(Boolean).join(' ');
 }
