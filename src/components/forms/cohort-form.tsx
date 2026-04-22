@@ -12,7 +12,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
@@ -40,7 +39,8 @@ import {
   Clock,
   Heart,
   Sparkles,
-  Accessibility
+  Accessibility,
+  History
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
