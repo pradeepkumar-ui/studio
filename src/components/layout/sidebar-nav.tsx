@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -35,6 +36,7 @@ import {
   KeyRound,
   Boxes,
   Layers,
+  Archive,
 } from 'lucide-react';
 import { CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import React from 'react';
@@ -114,6 +116,7 @@ const menuItems: MenuItem[] = [
     icon: ShoppingCart,
     subItems: [
       { href: '/orders', label: 'Order Dashboard', icon: LayoutDashboard },
+      { href: '/orders/stock-keeper', label: 'Stock Keeper (Airline)', icon: Archive },
       { href: '/orders/servicing', label: 'Order Servicing', icon: Settings },
       { href: '/orders/delivery', label: 'Fulfillment Queue', icon: Truck },
       { href: '/service-consumption', label: 'Service Consumption', icon: Signal },
