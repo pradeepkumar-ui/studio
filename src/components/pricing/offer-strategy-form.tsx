@@ -35,7 +35,8 @@ import {
   Clock, 
   Boxes,
   ArrowRight,
-  Info
+  Info,
+  PlusCircle
 } from 'lucide-react';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, orderBy, Timestamp } from 'firebase/firestore';
