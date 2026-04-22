@@ -111,6 +111,7 @@
         "reserved": { "type": "number" },
         "threshold": { "type": "number" },
         "fulfillmentSource": { "type": "string", "enum": ["Offersense", "PSS"] },
+        "realTimePssSync": { "type": "boolean" },
         "type": { "type": "string", "enum": ["Physical", "Digital", "Service_Capacity"] },
         "status": { "type": "string", "enum": ["In Stock", "Low Stock", "Out of Stock"] }
       }

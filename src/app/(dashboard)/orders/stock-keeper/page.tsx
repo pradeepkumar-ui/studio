@@ -46,7 +46,8 @@ import {
   TrendingDown,
   Zap,
   Boxes,
-  Truck
+  Truck,
+  Activity
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -57,10 +58,10 @@ import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp, query, ord
 import { Progress } from '@/components/ui/progress';
 
 const initialMockStock: any[] = [
-    { id: '1', sku: 'LOU-LHR-T5-01', category: 'Lounge', supplier: 'Lounge Stars', available: 12, reserved: 4, threshold: 5, status: 'In Stock', fulfillmentSource: 'Offersense', type: 'Service_Capacity' },
-    { id: '2', sku: 'MEAL-PRE-VEG', category: 'Catering', supplier: 'SkyCafe', available: 3, reserved: 2, threshold: 5, status: 'Low Stock', fulfillmentSource: 'Offersense', type: 'Physical' },
-    { id: '3', sku: 'SEAT-EX-LG', category: 'Seats', supplier: 'Carrier', available: 450, reserved: 22, threshold: 50, status: 'In Stock', fulfillmentSource: 'PSS', type: 'Service_Capacity' },
-    { id: '4', sku: 'WIFI-PREM-PASS', category: 'Connectivity', supplier: 'Carrier', available: 1000, reserved: 12, threshold: 100, status: 'In Stock', fulfillmentSource: 'PSS', type: 'Digital' },
+    { id: '1', sku: 'LOU-LHR-T5-01', category: 'Lounge', supplier: 'Lounge Stars', available: 12, reserved: 4, threshold: 5, status: 'In Stock', fulfillmentSource: 'Offersense', type: 'Service_Capacity', realTimePssSync: true },
+    { id: '2', sku: 'MEAL-PRE-VEG', category: 'Catering', supplier: 'SkyCafe', available: 3, reserved: 2, threshold: 5, status: 'Low Stock', fulfillmentSource: 'Offersense', type: 'Physical', realTimePssSync: false },
+    { id: '3', sku: 'SEAT-EX-LG', category: 'Seats', supplier: 'Carrier', available: 450, reserved: 22, threshold: 50, status: 'In Stock', fulfillmentSource: 'PSS', type: 'Service_Capacity', realTimePssSync: false },
+    { id: '4', sku: 'WIFI-PREM-PASS', category: 'Connectivity', supplier: 'Carrier', available: 1000, reserved: 12, threshold: 100, status: 'In Stock', fulfillmentSource: 'PSS', type: 'Digital', realTimePssSync: false },
 ];
 
 export default function AirlineStockKeeperPage() {
@@ -197,7 +198,15 @@ export default function AirlineStockKeeperPage() {
                             <div>
                                 <div className="font-bold text-sm text-primary">{item.sku}</div>
                                 <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">{item.category} • {item.supplier}</div>
-                                <Badge variant="outline" className="text-[8px] h-3.5 mt-1 bg-white uppercase font-black tracking-tighter">SOURCE: {item.fulfillmentSource}</Badge>
+                                <div className="flex items-center gap-1.5 mt-1">
+                                    <Badge variant="outline" className="text-[8px] h-3.5 bg-white uppercase font-black tracking-tighter">SOURCE: {item.fulfillmentSource}</Badge>
+                                    {item.realTimePssSync && (
+                                        <Badge variant="secondary" className="text-[8px] h-3.5 bg-indigo-50 text-indigo-700 border-indigo-100 font-black uppercase tracking-tighter">
+                                            <RefreshCw className="h-2 w-2 mr-1 animate-spin-slow" />
+                                            PSS-Sync
+                                        </Badge>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </TableCell>
@@ -217,8 +226,10 @@ export default function AirlineStockKeeperPage() {
                         <div className="flex flex-col gap-0.5">
                             <div className="text-[10px] font-bold text-slate-700">{item.type?.replace('_', ' ')}</div>
                             <div className="flex items-center gap-1.5">
-                                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                <span className="text-[9px] font-black uppercase text-muted-foreground">Fulfillment Active</span>
+                                <div className={cn("h-1.5 w-1.5 rounded-full", item.fulfillmentSource === 'PSS' || item.realTimePssSync ? "bg-indigo-500" : "bg-emerald-500 animate-pulse")} />
+                                <span className="text-[9px] font-black uppercase text-muted-foreground">
+                                    {item.fulfillmentSource === 'PSS' ? 'Direct PSS Link' : (item.realTimePssSync ? 'Async PSS Push' : 'Fulfillment Active')}
+                                </span>
                             </div>
                         </div>
                     </TableCell>

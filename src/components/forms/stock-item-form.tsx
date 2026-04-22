@@ -23,7 +23,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '../ui/separator';
-import { Package, ShieldCheck, Truck, Tag, Store, Info, Zap } from 'lucide-react';
+import { Package, ShieldCheck, Truck, Tag, Store, Info, Zap, RefreshCw } from 'lucide-react';
+import { Checkbox } from '../ui/checkbox';
 
 const stockItemSchema = z.object({
   id: z.string().optional(),
@@ -36,6 +37,7 @@ const stockItemSchema = z.object({
   status: z.enum(['In Stock', 'Low Stock', 'Out of Stock']).optional(),
   fulfillmentSource: z.enum(['Offersense', 'PSS']).default('Offersense'),
   type: z.enum(['Physical', 'Digital', 'Service_Capacity']).default('Digital'),
+  realTimePssSync: z.boolean().default(false),
 });
 
 export type StockItem = z.infer<typeof stockItemSchema>;
@@ -58,8 +60,11 @@ export function StockItemForm({ item, onSubmit, onCancel }: StockItemFormProps) 
       threshold: 10,
       fulfillmentSource: 'Offersense',
       type: 'Digital',
+      realTimePssSync: false,
     },
   });
+
+  const watchFulfillmentSource = form.watch('fulfillmentSource');
 
   return (
     <Form {...form}>
@@ -104,6 +109,29 @@ export function StockItemForm({ item, onSubmit, onCancel }: StockItemFormProps) 
                   )}
                 />
             </div>
+
+            {watchFulfillmentSource === 'Offersense' && (
+              <FormField
+                control={form.control}
+                name="realTimePssSync"
+                render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 bg-primary/5 border-primary/10">
+                        <FormControl>
+                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                            <FormLabel className="flex items-center gap-1.5">
+                                <RefreshCw className="h-3 w-3 text-primary animate-spin-slow" />
+                                Enable Real-time PSS Sync
+                            </FormLabel>
+                            <FormDescription className="text-[10px]">
+                                Automatically push inventory updates and reservations back to the carrier PSS host.
+                            </FormDescription>
+                        </div>
+                    </FormItem>
+                )}
+              />
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
