@@ -97,7 +97,6 @@ export function AncillaryAggregateForm({ aggregate, onSubmit, onCancel }: Ancill
       : mockAncillariesFallback;
   }, [ancillariesCollection]);
 
-  // Transform existing record-style parameters to array if editing an old record
   const initialParameters = React.useMemo(() => {
     if (!aggregate?.parameters) return [];
     if (Array.isArray(aggregate.parameters)) return aggregate.parameters;
