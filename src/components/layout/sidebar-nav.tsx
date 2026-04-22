@@ -85,12 +85,26 @@ const menuItems: MenuItem[] = [
     label: 'Offers & Retailing',
     icon: Ticket,
     subItems: [
-      { href: '/offers/ancillary-aggregates', label: 'Airline Ancillary Aggregator', icon: Layers },
-      { href: '/offers/airport-ancillary-aggregates', label: 'Airport Ancillary Aggregator', icon: Building2 },
-      { href: '/offers/cohorts', label: 'Airline Cohorts', icon: Target },
-      { href: '/offers/airport-cohorts', label: 'Airport Cohorts', icon: MapPin },
-      { href: '/bundles', label: 'Airline Offers and Dynamic pricing', icon: Package },
-      { href: '/offers/airport-bundles', label: 'Airport Offers and Dynamic pricing', icon: Building2 },
+      {
+        href: '/offers/airline-group',
+        label: 'Airline',
+        icon: Plane,
+        subItems: [
+          { href: '/offers/ancillary-aggregates', label: 'Ancillary Aggregator', icon: Layers },
+          { href: '/offers/cohorts', label: 'Cohorts', icon: Target },
+          { href: '/bundles', label: 'Offers and Dynamic pricing', icon: Package },
+        ]
+      },
+      {
+        href: '/offers/airport-group',
+        label: 'Airport',
+        icon: Building2,
+        subItems: [
+          { href: '/offers/airport-ancillary-aggregates', label: 'Ancillary Aggregator', icon: Building2 },
+          { href: '/offers/airport-cohorts', label: 'Cohorts', icon: MapPin },
+          { href: '/offers/airport-bundles', label: 'Offers and Dynamic pricing', icon: Package },
+        ]
+      },
       { href: '/offer-composer', label: 'Offersense Composer', icon: QrCode },
     ],
   },
