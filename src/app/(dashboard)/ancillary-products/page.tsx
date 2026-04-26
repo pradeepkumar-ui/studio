@@ -1,3 +1,222 @@
+// 'use client';
+
+// import { useState, useMemo } from 'react';
+// import {
+//   Table,
+//   TableBody,
+//   TableCell,
+//   TableHead,
+//   TableHeader,
+//   TableRow,
+// } from '@/components/ui/table';
+// import { Button } from '@/components/ui/button';
+// import {
+//   Card,
+//   CardContent,
+//   CardDescription,
+//   CardHeader,
+//   CardTitle,
+// } from '@/components/ui/card';
+// import {
+//   DropdownMenu,
+//   DropdownMenuContent,
+//   DropdownMenuItem,
+//   DropdownMenuLabel,
+//   DropdownMenuSeparator,
+//   DropdownMenuTrigger,
+// } from '@/components/ui/dropdown-menu';
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogHeader,
+//   DialogTitle,
+//   DialogDescription,
+// } from '@/components/ui/dialog';
+// import { MoreHorizontal, PlusCircle, Store, MapPin, Loader2, Tag, ShieldCheck, Briefcase, Search, Terminal, Building2, Globe } from 'lucide-react';
+// import { Badge } from '@/components/ui/badge';
+// import { Input } from '@/components/ui/input';
+// import { useToast } from '@/hooks/use-toast';
+// import { AncillaryProductForm, type AirportAncillary } from '@/components/forms/ancillary-product-form';
+// import { useFirestore, useCollection } from '@/firebase';
+// import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+
+// const initialAirportServices: any[] = [
+//     { id: '1', ancillaryCode: 'LOU01', name: 'Executive Lounge Access', shortName: 'LHR Lounge', category: 'Lounge', subcategory: 'Lounge day pass', status: 'Active', version: 1, airportCode: 'LHR', providerName: 'Lounge Stars', terminals: 'T5', journeyStage: 'Departure' },
+//     { id: '2', ancillaryCode: 'VALET', name: 'VIP Valet Parking', shortName: 'VIP Valet', category: 'Parking', subcategory: 'Valet parking', status: 'Active', version: 1, airportCode: 'JFK', providerName: 'Changi Valet', terminals: 'T4', journeyStage: 'Arrival' },
+// ]
+
+// export default function AirportAncillaryCataloguePage() {
+//   const firestore = useFirestore();
+//   const servicesQuery = useMemo(() => firestore ? collection(firestore, 'airportServices') : undefined, [firestore]);
+//   const { data: servicesCollection, loading } = useCollection(servicesQuery);
+  
+//   const [searchTerm, setSearchTerm] = useState('');
+//   const [isDialogOpen, setIsDialogOpen] = useState(false);
+//   const [editingService, setEditingService] = useState<AirportAncillary | null>(null);
+//   const { toast } = useToast();
+
+//   const displayServices = (servicesCollection && servicesCollection.length > 0) 
+//     ? (servicesCollection as any[]) 
+//     : initialAirportServices;
+
+//   const filteredServices = displayServices.filter((s) =>
+//     s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+//     s.ancillaryCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//     s.airportCode?.toLowerCase().includes(searchTerm.toLowerCase())
+//   );
+
+//   const handleOpenDialog = (service: any | null = null) => {
+//     setEditingService(service);
+//     setIsDialogOpen(true);
+//   };
+
+//   const handleFormSubmit = async (data: AirportAncillary) => {
+//     if (!firestore) return;
+//     try {
+//       if (editingService?.id) {
+//         const ref = doc(firestore, 'airportServices', editingService.id);
+//         await setDoc(ref, { ...data, updatedAt: serverTimestamp() }, { merge: true });
+//         toast({ title: 'Hub Master Updated', description: `${data.name} saved successfully.` });
+//       } else {
+//         await addDoc(collection(firestore, 'airportServices'), { ...data, createdAt: serverTimestamp() });
+//         toast({ title: 'New Hub SKU Published', description: `${data.name} initialized in ecosystem catalogue.` });
+//       }
+//     } catch (e: any) {
+//         toast({ variant: 'destructive', title: 'Error', description: e.message });
+//     }
+//     setIsDialogOpen(false);
+//   };
+
+//   const handleDelete = async (id: string) => {
+//     if (!firestore) return;
+//     try {
+//         await deleteDoc(doc(firestore, 'airportServices', id));
+//         toast({ title: 'Service Offboarded', variant: 'destructive' });
+//     } catch (e: any) {
+//         toast({ variant: 'destructive', title: 'Error', description: e.message });
+//     }
+//   }
+
+//   return (
+//     <div className="flex flex-col gap-6">
+//       <div className="flex items-center justify-between">
+//         <div className="flex flex-col gap-2">
+//           <h1 className="text-3xl font-bold tracking-tight text-primary">Airport Ancillary Catalogue</h1>
+//           <p className="text-muted-foreground">Manage exhaustive partner-driven hub services, terminal placement, and SLA governance.</p>
+//         </div>
+//         <Button onClick={() => handleOpenDialog()} className="font-bold">
+//             <PlusCircle className="mr-2 h-4 w-4" />
+//             Initialize Hub Master
+//         </Button>
+//       </div>
+
+//       <Card className="shadow-lg border-primary/10">
+//         <CardHeader className="bg-primary/5">
+//             <CardTitle className="text-lg">Hub Service Registry</CardTitle>
+//             <CardDescription>Centralized governance for authorized ecosystem services and localized hub configuration.</CardDescription>
+//         </CardHeader>
+//         <CardContent className="pt-6">
+//           <div className="flex items-center justify-between mb-6">
+//             <div className="relative flex-1 max-w-sm">
+//               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+//               <Input
+//                 placeholder="Search hub registry (name, code, airport)..."
+//                 value={searchTerm}
+//                 onChange={(event) => setSearchTerm(event.target.value)}
+//                 className="pl-9 bg-muted/20"
+//               />
+//             </div>
+//           </div>
+
+//           <div className="rounded-xl border border-muted/60 overflow-hidden">
+//             <Table>
+//                 <TableHeader className="bg-muted/30">
+//                 <TableRow>
+//                     <TableHead className="text-[10px] uppercase font-black tracking-widest">Master Identity</TableHead>
+//                     <TableHead className="text-[10px] uppercase font-black tracking-widest">Ecosystem Placement</TableHead>
+//                     <TableHead className="text-[10px] uppercase font-black tracking-widest">Provider Governance</TableHead>
+//                     <TableHead className="text-[10px] uppercase font-black tracking-widest">Status</TableHead>
+//                     <TableHead className="text-right">Actions</TableHead>
+//                 </TableRow>
+//                 </TableHeader>
+//                 <TableBody>
+//                 {filteredServices.map((service) => (
+//                     <TableRow key={service.id} className="group hover:bg-muted/50 transition-colors">
+//                     <TableCell>
+//                         <div className="flex items-center gap-3">
+//                             <div className="p-2 bg-primary/10 rounded-xl group-hover:scale-110 transition-transform">
+//                                 <Tag className="h-4 w-4 text-primary" />
+//                             </div>
+//                             <div>
+//                                 <div className="font-bold text-sm text-primary">{service.name}</div>
+//                                 <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">{service.ancillaryCode} • v{service.version || 1}</div>
+//                                 <Badge variant="outline" className="text-[8px] h-3.5 mt-1 bg-white uppercase">{service.category}</Badge>
+//                             </div>
+//                         </div>
+//                     </TableCell>
+//                     <TableCell>
+//                         <div className="flex flex-col gap-1">
+//                             <div className="flex items-center gap-1.5 font-bold text-xs">
+//                                 <MapPin className="h-3 w-3 text-emerald-600" /> {service.airportCode} / {service.terminals}
+//                             </div>
+//                             <div className="text-[10px] text-muted-foreground flex items-center gap-1 font-medium">
+//                                 <Globe className="h-2.5 w-2.5" /> Stage: {service.journeyStage}
+//                             </div>
+//                         </div>
+//                     </TableCell>
+//                     <TableCell>
+//                         <div className="flex flex-col gap-0.5">
+//                             <div className="flex items-center gap-1.5 text-xs font-bold">
+//                                 <Building2 className="h-3 w-3 text-muted-foreground" /> {service.providerName}
+//                             </div>
+//                             <div className="text-[10px] text-muted-foreground uppercase font-black flex items-center gap-1">
+//                                 <ShieldCheck className="h-2.5 w-2.5 text-blue-500" /> Protocol: {service.confirmationType || 'Instant'}
+//                             </div>
+//                         </div>
+//                     </TableCell>
+//                     <TableCell>
+//                         <Badge variant={service.status === 'Active' ? 'default' : 'secondary'} className="text-[9px] font-black uppercase tracking-wider">{service.status}</Badge>
+//                     </TableCell>
+//                     <TableCell className="text-right">
+//                         <DropdownMenu>
+//                         <DropdownMenuTrigger asChild>
+//                             <Button size="icon" variant="ghost" className="hover:bg-muted"><MoreHorizontal className="h-4 w-4" /></Button>
+//                         </DropdownMenuTrigger>
+//                         <DropdownMenuContent align="end" className="w-56">
+//                             <DropdownMenuLabel className="text-[10px] font-black uppercase text-muted-foreground">Master Operations</DropdownMenuLabel>
+//                             <DropdownMenuItem onClick={() => handleOpenDialog(service)}><Tag className="mr-2 h-4 w-4"/>Edit Master Details</DropdownMenuItem>
+//                             <DropdownMenuItem><Briefcase className="mr-2 h-4 w-4"/>Check Partner SLA</DropdownMenuItem>
+//                             <DropdownMenuSeparator />
+//                             <DropdownMenuItem className="text-destructive font-bold" onClick={() => service.id && handleDelete(service.id)}>Archive SKU</DropdownMenuItem>
+//                         </DropdownMenuContent>
+//                         </DropdownMenu>
+//                     </TableCell>
+//                     </TableRow>
+//                 ))}
+//                 </TableBody>
+//             </Table>
+//           </div>
+//         </CardContent>
+//       </Card>
+      
+//       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+//         <DialogContent className="max-w-4xl">
+//           <DialogHeader>
+//             <DialogTitle className="text-2xl font-black text-primary">Airport Ancillary Master SKU</DialogTitle>
+//             <DialogDescription className="font-medium">Define localized hub service logic, terminal placement, and partner commercial governance.</DialogDescription>
+//           </DialogHeader>
+//           <AncillaryProductForm
+//             product={editingService}
+//             onSubmit={handleFormSubmit}
+//             onCancel={() => setIsDialogOpen(false)}
+//           />
+//         </DialogContent>
+//       </Dialog>
+//     </div>
+//   );
+// }
+
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -32,38 +251,69 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, PlusCircle, Store, MapPin, Loader2, Tag, ShieldCheck, Briefcase, Search, Terminal, Building2, Globe } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Store, MapPin, Loader2, Tag, ShieldCheck, Briefcase, Search, Terminal, Building2, Globe, CheckCircle2, RefreshCw, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { AncillaryProductForm, type AirportAncillary } from '@/components/forms/ancillary-product-form';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { StatsCards } from '@/components/StatsCards/StatsCards';
+import { TableFilterBar } from '@/components/TableFilterbar/TableFilterBar';
+import { useTableFilters } from '@/hooks/useTableFilters';
 
 const initialAirportServices: any[] = [
     { id: '1', ancillaryCode: 'LOU01', name: 'Executive Lounge Access', shortName: 'LHR Lounge', category: 'Lounge', subcategory: 'Lounge day pass', status: 'Active', version: 1, airportCode: 'LHR', providerName: 'Lounge Stars', terminals: 'T5', journeyStage: 'Departure' },
     { id: '2', ancillaryCode: 'VALET', name: 'VIP Valet Parking', shortName: 'VIP Valet', category: 'Parking', subcategory: 'Valet parking', status: 'Active', version: 1, airportCode: 'JFK', providerName: 'Changi Valet', terminals: 'T4', journeyStage: 'Arrival' },
-]
+    { id: '3', ancillaryCode: 'FAST01', name: 'Fast Track Security', shortName: 'Fast Track', category: 'Security', subcategory: 'Fast track pass', status: 'Active', version: 1, airportCode: 'LHR', providerName: 'Security Plus', terminals: 'T2,T5', journeyStage: 'Departure' },
+    { id: '4', ancillaryCode: 'BAG01', name: 'Priority Baggage', shortName: 'Priority Bag', category: 'Baggage', subcategory: 'Priority handling', status: 'Onboarding', version: 1, airportCode: 'SIN', providerName: 'Baggage Pro', terminals: 'T1,T3', journeyStage: 'Arrival' },
+    { id: '5', ancillaryCode: 'MEET01', name: 'Meet & Greet Service', shortName: 'Meet & Greet', category: 'Concierge', subcategory: 'Personal assistant', status: 'Active', version: 2, airportCode: 'DXB', providerName: 'Executive Services', terminals: 'T1,T3', journeyStage: 'Both' },
+    { id: '6', ancillaryCode: 'SLEEP01', name: 'Nap Lounge Access', shortName: 'Nap Lounge', category: 'Lounge', subcategory: 'Sleep pod', status: 'Inactive', version: 1, airportCode: 'CDG', providerName: 'Rest Easy', terminals: 'T2E', journeyStage: 'Transit' },
+];
+
+const STATS = [
+  { label: "Total Hub Services", value: 42, color: "purple" as const, icon: <Globe /> },
+  { label: "Active",            value: 38, color: "green"  as const, icon: <CheckCircle2 /> },
+  { label: "Onboarding",        value: 3,  color: "amber"  as const, icon: <RefreshCw  /> },
+  { label: "Decommissioned",    value: 1,  color: "red"    as const, icon: <AlertCircle /> },
+];
+
+// ─── Filter Options ───────────────────────────────────────────────────────────
+const CATEGORY_OPTIONS = ["Lounge", "Parking", "Security", "Baggage", "Concierge"].map((v) => ({ label: v, value: v }));
+const STATUS_OPTIONS   = ["Active", "Onboarding", "Inactive"].map((v) => ({ label: v, value: v }));
+const AIRPORT_OPTIONS  = ["LHR", "JFK", "SIN", "DXB", "CDG"].map((v) => ({ label: v, value: v }));
+const JOURNEY_OPTIONS  = ["Departure", "Arrival", "Transit", "Both"].map((v) => ({ label: v, value: v }));
 
 export default function AirportAncillaryCataloguePage() {
   const firestore = useFirestore();
   const servicesQuery = useMemo(() => firestore ? collection(firestore, 'airportServices') : undefined, [firestore]);
   const { data: servicesCollection, loading } = useCollection(servicesQuery);
   
-  const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState<AirportAncillary | null>(null);
   const { toast } = useToast();
 
-  const displayServices = (servicesCollection && servicesCollection.length > 0) 
-    ? (servicesCollection as any[]) 
-    : initialAirportServices;
+  // Get source data
+  const sourceData = useMemo(() => {
+    return (servicesCollection && servicesCollection.length > 0) 
+      ? (servicesCollection as any[]) 
+      : initialAirportServices;
+  }, [servicesCollection]);
 
-  const filteredServices = displayServices.filter((s) =>
-    s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    s.ancillaryCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.airportCode?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // ─── Table Filters Hook ───────────────────────────────────────────────────────
+  const {
+    searchText,
+    setSearchText,
+    activeFilters,
+    setFilter,
+    removeFilter,
+    clearAll,
+    activeChips,
+    filtered,
+  } = useTableFilters(sourceData, {
+    searchFields: ["name", "ancillaryCode", "category", "airportCode", "providerName"],
+    filterFields: { status: "", category: "", airportCode: "", journeyStage: "" },
+  });
 
   const handleOpenDialog = (service: any | null = null) => {
     setEditingService(service);
@@ -98,102 +348,177 @@ export default function AirportAncillaryCataloguePage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight text-primary">Airport Ancillary Catalogue</h1>
-          <p className="text-muted-foreground">Manage exhaustive partner-driven hub services, terminal placement, and SLA governance.</p>
-        </div>
-        <Button onClick={() => handleOpenDialog()} className="font-bold">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Initialize Hub Master
-        </Button>
-      </div>
+    <div className="flex flex-col gap-6 min-h-screen">
+      <StatsCards cards={STATS} />
 
-      <Card className="shadow-lg border-primary/10">
-        <CardHeader className="bg-primary/5">
-            <CardTitle className="text-lg">Hub Service Registry</CardTitle>
-            <CardDescription>Centralized governance for authorized ecosystem services and localized hub configuration.</CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search hub registry (name, code, airport)..."
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                className="pl-9 bg-muted/20"
-              />
+      <TableFilterBar
+        searchText={searchText}
+        onSearchChange={setSearchText}
+        searchPlaceholder="Search hub registry (name, code, airport, provider)..."
+        dropdowns={[
+          {
+            key: "status",
+            label: "Status",
+            options: STATUS_OPTIONS,
+            value: activeFilters.status ?? "All",
+            onChange: (v) => setFilter("status", v),
+          },
+          {
+            key: "category",
+            label: "Category",
+            options: CATEGORY_OPTIONS,
+            value: activeFilters.category ?? "All",
+            onChange: (v) => setFilter("category", v),
+          },
+          {
+            key: "airportCode",
+            label: "Airport",
+            options: AIRPORT_OPTIONS,
+            value: activeFilters.airportCode ?? "All",
+            onChange: (v) => setFilter("airportCode", v),
+          },
+          {
+            key: "journeyStage",
+            label: "Journey Stage",
+            options: JOURNEY_OPTIONS,
+            value: activeFilters.journeyStage ?? "All",
+            onChange: (v) => setFilter("journeyStage", v),
+          },
+        ]}
+        activeChips={activeChips}
+        onRemoveChip={(k) => removeFilter(k as keyof any)}
+        onClearAll={clearAll}
+      />
+
+      <Card className="border-none bg-white shadow-[0_2px_6px_rgba(0,0,0,0.06),0_-2px_6px_rgba(0,0,0,0.04)]">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base font-bold text-gray-900">Hub Service Registry</CardTitle>
+              <CardDescription className="mt-0.5 text-xs text-gray-400">
+                Centralized governance for authorized ecosystem services and localized hub configuration.
+              </CardDescription>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {loading && <Loader2 className="h-4 w-4 animate-spin text-gray-400" />}
+              <button
+                onClick={() => handleOpenDialog()}
+                className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-[hsl(var(--primary))] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors duration-150 hover:bg-violet-700"
+              >
+                <PlusCircle className="h-4 w-4" />
+                Initialize Hub Master
+              </button>
             </div>
           </div>
+        </CardHeader>
 
-          <div className="rounded-xl border border-muted/60 overflow-hidden">
+        <CardContent className="pt-2">
+          <div className="rounded-xl border border-gray-200 overflow-hidden">
             <Table>
-                <TableHeader className="bg-muted/30">
-                <TableRow>
-                    <TableHead className="text-[10px] uppercase font-black tracking-widest">Master Identity</TableHead>
-                    <TableHead className="text-[10px] uppercase font-black tracking-widest">Ecosystem Placement</TableHead>
-                    <TableHead className="text-[10px] uppercase font-black tracking-widest">Provider Governance</TableHead>
-                    <TableHead className="text-[10px] uppercase font-black tracking-widest">Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+              <TableHeader className="bg-gray-100">
+                <TableRow className="border-b border-gray-200 hover:bg-gray-100">
+                  <TableHead className="py-3 text-[11px] font-bold uppercase tracking-wider text-gray-500">Master Identity</TableHead>
+                  <TableHead className="py-3 text-[11px] font-bold uppercase tracking-wider text-gray-500">Ecosystem Placement</TableHead>
+                  <TableHead className="py-3 text-[11px] font-bold uppercase tracking-wider text-gray-500">Provider Governance</TableHead>
+                  <TableHead className="py-3 text-[11px] font-bold uppercase tracking-wider text-gray-500">Status</TableHead>
+                  <TableHead className="py-3 text-right text-[11px] font-bold uppercase tracking-wider text-gray-500">Actions</TableHead>
                 </TableRow>
-                </TableHeader>
-                <TableBody>
-                {filteredServices.map((service) => (
-                    <TableRow key={service.id} className="group hover:bg-muted/50 transition-colors">
-                    <TableCell>
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-primary/10 rounded-xl group-hover:scale-110 transition-transform">
-                                <Tag className="h-4 w-4 text-primary" />
-                            </div>
-                            <div>
-                                <div className="font-bold text-sm text-primary">{service.name}</div>
-                                <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">{service.ancillaryCode} • v{service.version || 1}</div>
-                                <Badge variant="outline" className="text-[8px] h-3.5 mt-1 bg-white uppercase">{service.category}</Badge>
-                            </div>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((service) => (
+                  <TableRow key={service.id} className="transition-colors duration-100 hover:bg-violet-50/60">
+                    <TableCell className="py-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-violet-100">
+                          <Tag className="h-4 w-4 text-violet-600" />
                         </div>
-                    </TableCell>
-                    <TableCell>
-                        <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-1.5 font-bold text-xs">
-                                <MapPin className="h-3 w-3 text-emerald-600" /> {service.airportCode} / {service.terminals}
-                            </div>
-                            <div className="text-[10px] text-muted-foreground flex items-center gap-1 font-medium">
-                                <Globe className="h-2.5 w-2.5" /> Stage: {service.journeyStage}
-                            </div>
+                        <div>
+                          <div className="font-bold text-sm text-gray-900">{service.name}</div>
+                          <div className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">
+                            {service.ancillaryCode} • v{service.version || 1}
+                          </div>
+                          <Badge variant="outline" className="text-[8px] h-3.5 mt-1 bg-white border-gray-200 text-gray-600 uppercase">
+                            {service.category}
+                          </Badge>
                         </div>
+                      </div>
                     </TableCell>
-                    <TableCell>
-                        <div className="flex flex-col gap-0.5">
-                            <div className="flex items-center gap-1.5 text-xs font-bold">
-                                <Building2 className="h-3 w-3 text-muted-foreground" /> {service.providerName}
-                            </div>
-                            <div className="text-[10px] text-muted-foreground uppercase font-black flex items-center gap-1">
-                                <ShieldCheck className="h-2.5 w-2.5 text-blue-500" /> Protocol: {service.confirmationType || 'Instant'}
-                            </div>
+                    <TableCell className="py-3.5">
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-1.5 font-bold text-xs">
+                          <MapPin className="h-3 w-3 text-emerald-600" /> 
+                          <span className="text-gray-900">{service.airportCode}</span>
+                          <span className="text-gray-400">/</span>
+                          <span className="text-gray-700">{service.terminals}</span>
                         </div>
+                        <div className="text-[10px] text-gray-400 flex items-center gap-1 font-medium">
+                          <Globe className="h-2.5 w-2.5" /> Stage: {service.journeyStage}
+                        </div>
+                      </div>
                     </TableCell>
-                    <TableCell>
-                        <Badge variant={service.status === 'Active' ? 'default' : 'secondary'} className="text-[9px] font-black uppercase tracking-wider">{service.status}</Badge>
+                    <TableCell className="py-3.5">
+                      <div className="flex flex-col gap-0.5">
+                        <div className="flex items-center gap-1.5 text-xs font-bold">
+                          <Building2 className="h-3 w-3 text-gray-400" /> 
+                          <span className="text-gray-700">{service.providerName}</span>
+                        </div>
+                        <div className="text-[10px] text-gray-400 uppercase font-black flex items-center gap-1">
+                          <ShieldCheck className="h-2.5 w-2.5 text-blue-500" /> Protocol: {service.confirmationType || 'Instant'}
+                        </div>
+                      </div>
                     </TableCell>
-                    <TableCell className="text-right">
-                        <DropdownMenu>
+                    <TableCell className="py-3.5">
+                      {service.status === 'Active' ? (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700">
+                          <span className="h-2 w-2 rounded-full bg-green-500" />
+                          Active
+                        </span>
+                      ) : service.status === 'Onboarding' ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700">
+                          Onboarding
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
+                          Inactive
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-3.5 text-right">
+                      <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button size="icon" variant="ghost" className="hover:bg-muted"><MoreHorizontal className="h-4 w-4" /></Button>
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            className="h-7 w-7 rounded-lg border border-gray-200 bg-white text-gray-400 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-600"
+                          >
+                            <MoreHorizontal className="h-3.5 w-3.5" />
+                          </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56">
-                            <DropdownMenuLabel className="text-[10px] font-black uppercase text-muted-foreground">Master Operations</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleOpenDialog(service)}><Tag className="mr-2 h-4 w-4"/>Edit Master Details</DropdownMenuItem>
-                            <DropdownMenuItem><Briefcase className="mr-2 h-4 w-4"/>Check Partner SLA</DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive font-bold" onClick={() => service.id && handleDelete(service.id)}>Archive SKU</DropdownMenuItem>
+                        <DropdownMenuContent align="end" className="w-56 rounded-xl border border-gray-100 shadow-xl">
+                          <DropdownMenuLabel className="text-[10px] font-black uppercase text-gray-500">Master Operations</DropdownMenuLabel>
+                          <DropdownMenuItem 
+                            className="cursor-pointer text-xs font-semibold text-gray-600 hover:bg-violet-50 hover:text-violet-700"
+                            onClick={() => handleOpenDialog(service)}
+                          >
+                            <Tag className="mr-2 h-3.5 w-3.5" /> Edit Master Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="cursor-pointer text-xs font-semibold text-gray-600 hover:bg-amber-50 hover:text-amber-700">
+                            <Briefcase className="mr-2 h-3.5 w-3.5" /> Check Partner SLA
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="cursor-pointer text-xs font-semibold text-red-500 hover:bg-red-50 hover:text-red-600"
+                            onClick={() => service.id && handleDelete(service.id)}
+                          >
+                            Archive SKU
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
-                        </DropdownMenu>
+                      </DropdownMenu>
                     </TableCell>
-                    </TableRow>
+                  </TableRow>
                 ))}
-                </TableBody>
+              </TableBody>
             </Table>
           </div>
         </CardContent>

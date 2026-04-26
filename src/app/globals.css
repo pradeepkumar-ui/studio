@@ -10,7 +10,7 @@
     --card-foreground: 231 48% 18%;
     --popover: 0 0% 100%;
     --popover-foreground: 231 48% 18%;
-    --primary: 231 48% 48%; /* #3F51B5 */
+    --primary: 229 63% 30%; /* #1c2e7d */
     --primary-foreground: 0 0% 100%;
     --secondary: 210 20% 98%;
     --secondary-foreground: 231 48% 18%;
@@ -29,6 +29,7 @@
     --chart-4: 260 30% 66%;
     --chart-5: 231 20% 58%;
     --radius: 0.5rem;
+    --white:0 0% 100%; /*#ffffff*/
     
     /* Sidebar specific theme */
     --sidebar-background: 231 48% 18%; /* Dark blue */

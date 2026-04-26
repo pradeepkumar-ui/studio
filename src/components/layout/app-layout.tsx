@@ -10,7 +10,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </Sidebar>
       <SidebarInset>
         <Header />
-        <main className="p-4 lg:p-6">{children}</main>
+        <main className="p-4 lg:p-6 bg-[hsl(var(--white))]">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );
