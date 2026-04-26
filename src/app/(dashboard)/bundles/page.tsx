@@ -716,10 +716,10 @@ export default function AirlineOffersPage() {
         <CardHeader className="pb-2 pt-4 px-6">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-base font-bold text-gray-900">Airline Segment Registry</CardTitle>
+              {/* <CardTitle className="text-base font-bold text-gray-900">Airline Segment Registry</CardTitle>
               <CardDescription className="mt-0.5 text-xs text-gray-400">
                 Configure cohorts based on passenger type, loyalty status, and travel behavior signals.
-              </CardDescription>
+              </CardDescription> */}
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="bg-gray-50 text-gray-600 text-[9px] font-bold h-6 border-gray-200">
