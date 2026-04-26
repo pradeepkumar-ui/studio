@@ -205,8 +205,6 @@
 //   );
 // }
 
-
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -261,17 +259,10 @@ const initialMockAggregates: any[] = [
   { id: 'HUB-AGG-006', configName: 'BOM Fast Track Optimization', ancillaryName: 'Fast Track', category: 'Priority service', basePrice: 700, currency: 'INR', status: 'Inactive' },
 ];
 
-const STATS = [
-  { label: "Total Hub Aggregates", value: 42, color: "purple" as const, icon: <Globe /> },
-  { label: "Active",              value: 38, color: "green"  as const, icon: <CheckCircle2 /> },
-  { label: "Onboarding",          value: 3,  color: "amber"  as const, icon: <RefreshCw  /> },
-  { label: "Archived",            value: 1,  color: "red"    as const, icon: <AlertCircle /> },
-];
-
 // ─── Filter Options ───────────────────────────────────────────────────────────
-const CATEGORY_OPTIONS = ["Lounge", "Priority service", "Parking", "Concierge", "Baggage"].map((v) => ({ label: v, value: v }));
+const CATEGORY_OPTIONS = ["Lounge", "Priority service", "Parking", "Concierge", "Baggage", "Connectivity"].map((v) => ({ label: v, value: v }));
 const STATUS_OPTIONS   = ["Active", "Onboarding", "Inactive"].map((v) => ({ label: v, value: v }));
-const CURRENCY_OPTIONS = ["USD", "EUR", "GBP", "SGD"].map((v) => ({ label: v, value: v }));
+const CURRENCY_OPTIONS = ["USD", "EUR", "GBP", "SGD", "INR"].map((v) => ({ label: v, value: v }));
 
 // ─── Status Badge Component ───────────────────────────────────────────────────
 const StatusBadge = ({ status }: { status: string }) => {
@@ -312,6 +303,21 @@ export default function AirportAncillaryAggregatesPage() {
         ? aggregatesCollection as any[] 
         : initialMockAggregates;
   }, [aggregatesCollection]);
+
+  // ─── Dynamic Stats based on actual data ───────────────────────────────────────
+  const dynamicStats = useMemo(() => {
+    const total = sourceData.length;
+    const active = sourceData.filter((a) => a.status === 'Active').length;
+    const onboarding = sourceData.filter((a) => a.status === 'Onboarding').length;
+    const archived = sourceData.filter((a) => a.status === 'Inactive').length;
+    
+    return [
+      { label: "Total Hub Aggregates", value: total, color: "purple" as const, icon: <Globe /> },
+      { label: "Active", value: active, color: "green" as const, icon: <CheckCircle2 /> },
+      { label: "Onboarding", value: onboarding, color: "amber" as const, icon: <RefreshCw /> },
+      { label: "Archived", value: archived, color: "red" as const, icon: <AlertCircle /> },
+    ];
+  }, [sourceData]);
 
   // ─── Table Filters Hook ───────────────────────────────────────────────────────
   const {
@@ -362,7 +368,7 @@ export default function AirportAncillaryAggregatesPage() {
 
   return (
     <div className="flex flex-col gap-6 min-h-screen">
-      <StatsCards cards={STATS} />
+      <StatsCards cards={dynamicStats} />
 
       <TableFilterBar
         searchText={searchText}

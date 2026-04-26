@@ -277,8 +277,6 @@
 // }
 
 
-
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -320,13 +318,6 @@ const mockAirports: AirportOnboarding[] = [
     { id: '3', name: 'Changi Airport', iataCode: 'SIN', location: 'Singapore', status: 'Onboarding', sitaEnabled: true, terminals: 'T1, T2, T3, T4', hardwarePrefix: 'K-SIN', timeZone: 'SGT', technicalContact: 'support@changi.sg' },
 ];
 
-const STATS = [
-  { label: "Total Airports", value: 42, color: "purple" as const, icon: <Globe /> },
-  { label: "Active",         value: 38, color: "green"  as const, icon: <CheckCircle2 /> },
-  { label: "Onboarding",     value: 3,  color: "amber"  as const, icon: <RefreshCw  /> },
-  { label: "Failed Sync",    value: 1,  color: "red"    as const, icon: <AlertCircle /> },
-];
-
 // ─── Filter Options ───────────────────────────────────────────────────────────
 const CITY_OPTIONS    = ["London", "New York", "Singapore", "Dubai", "Paris", "Frankfurt", "Tokyo", "Hong Kong"].map((v) => ({ label: v, value: v }));
 const STATUS_OPTIONS  = ["Active", "Onboarding", "Inactive"].map((v) => ({ label: v, value: v }));
@@ -363,6 +354,21 @@ export default function AirportOnboardingPage() {
             ? airportsCollection as AirportOnboarding[] 
             : mockAirports;
     }, [airportsCollection]);
+
+    // ─── Dynamic Stats based on actual data ───────────────────────────────────────
+    const dynamicStats = useMemo(() => {
+        const total = sourceData.length;
+        const active = sourceData.filter((a) => a.status === 'Active').length;
+        const onboarding = sourceData.filter((a) => a.status === 'Onboarding').length;
+        const failedSync = sourceData.filter((a) => a.status === 'Inactive').length;
+        
+        return [
+            { label: "Total Airports", value: total, color: "purple" as const, icon: <Globe /> },
+            { label: "Active", value: active, color: "green" as const, icon: <CheckCircle2 /> },
+            { label: "Onboarding", value: onboarding, color: "amber" as const, icon: <RefreshCw /> },
+            { label: "Failed Sync", value: failedSync, color: "red" as const, icon: <AlertCircle /> },
+        ];
+    }, [sourceData]);
 
     // ─── Table Filters Hook ───────────────────────────────────────────────────────
     const {
@@ -442,7 +448,7 @@ export default function AirportOnboardingPage() {
 
     return (
         <div className="flex flex-col gap-6 min-h-screen">
-            <StatsCards cards={STATS} />
+            <StatsCards cards={dynamicStats} />
 
             <TableFilterBar
                 searchText={searchText}

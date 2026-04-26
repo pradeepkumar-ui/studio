@@ -216,7 +216,6 @@
 //   );
 // }
 
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -273,17 +272,10 @@ const initialAirportServices: any[] = [
   { id: '8', ancillaryCode: 'PARK', name: 'Parking', shortName: 'Parking', category: 'Parking', subcategory: 'Airport parking', basePrice: 600, currency: 'INR', status: 'Active', version: 1, airportCode: 'DEL', providerName: 'Airport Parking', terminals: 'T3', journeyStage: 'Departure' }
 ];
 
-const STATS = [
-  { label: "Total Hub Services", value: 42, color: "purple" as const, icon: <Globe /> },
-  { label: "Active",            value: 38, color: "green"  as const, icon: <CheckCircle2 /> },
-  { label: "Onboarding",        value: 3,  color: "amber"  as const, icon: <RefreshCw  /> },
-  { label: "Decommissioned",    value: 1,  color: "red"    as const, icon: <AlertCircle /> },
-];
-
 // ─── Filter Options ───────────────────────────────────────────────────────────
-const CATEGORY_OPTIONS = ["Lounge", "Parking", "Security", "Baggage", "Concierge"].map((v) => ({ label: v, value: v }));
+const CATEGORY_OPTIONS = ["Lounge", "Parking", "Security", "Baggage", "Concierge", "Connectivity"].map((v) => ({ label: v, value: v }));
 const STATUS_OPTIONS   = ["Active", "Onboarding", "Inactive"].map((v) => ({ label: v, value: v }));
-const AIRPORT_OPTIONS  = ["LHR", "JFK", "SIN", "DXB", "CDG"].map((v) => ({ label: v, value: v }));
+const AIRPORT_OPTIONS  = ["BOM", "DEL", "LHR", "JFK", "SIN", "DXB", "CDG"].map((v) => ({ label: v, value: v }));
 const JOURNEY_OPTIONS  = ["Departure", "Arrival", "Transit", "Both"].map((v) => ({ label: v, value: v }));
 
 export default function AirportAncillaryCataloguePage() {
@@ -301,6 +293,21 @@ export default function AirportAncillaryCataloguePage() {
       ? (servicesCollection as any[]) 
       : initialAirportServices;
   }, [servicesCollection]);
+
+  // ─── Dynamic Stats based on actual data ───────────────────────────────────────
+  const dynamicStats = useMemo(() => {
+    const total = sourceData.length;
+    const active = sourceData.filter((s) => s.status === 'Active').length;
+    const onboarding = sourceData.filter((s) => s.status === 'Onboarding').length;
+    const decommissioned = sourceData.filter((s) => s.status === 'Inactive').length;
+    
+    return [
+      { label: "Total Hub Services", value: total, color: "purple" as const, icon: <Globe /> },
+      { label: "Active", value: active, color: "green" as const, icon: <CheckCircle2 /> },
+      { label: "Onboarding", value: onboarding, color: "amber" as const, icon: <RefreshCw /> },
+      { label: "Decommissioned", value: decommissioned, color: "red" as const, icon: <AlertCircle /> },
+    ];
+  }, [sourceData]);
 
   // ─── Table Filters Hook ───────────────────────────────────────────────────────
   const {
@@ -351,7 +358,7 @@ export default function AirportAncillaryCataloguePage() {
 
   return (
     <div className="flex flex-col gap-6 min-h-screen">
-      <StatsCards cards={STATS} />
+      <StatsCards cards={dynamicStats} />
 
       <TableFilterBar
         searchText={searchText}

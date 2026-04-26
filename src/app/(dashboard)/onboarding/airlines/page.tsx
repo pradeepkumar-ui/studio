@@ -88,16 +88,16 @@
 
 //     return (
 //         <div className="flex flex-col gap-6">
-//             <div className="flex items-center justify-between">
-//                 <div className="flex flex-col gap-1">
-//                     <h1 className="text-3xl font-bold tracking-tight">Airline Onboarding</h1>
-//                     <p className="text-muted-foreground">Map carrier PSS systems to ecosystem airport nodes.</p>
-//                 </div>
-//                 <div className="flex items-center gap-2">
-//                     {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-//                     <Button onClick={() => handleOpenDialog()}><PlusCircle className="mr-2 h-4 w-4" /> Onboard Airline</Button>
-//                 </div>
-//             </div>
+            // <div className="flex items-center justify-between">
+            //     <div className="flex flex-col gap-1">
+            //         <h1 className="text-3xl font-bold tracking-tight">Airline Onboarding</h1>
+            //         <p className="text-muted-foreground">Map carrier PSS systems to ecosystem airport nodes.</p>
+            //     </div>
+            //     <div className="flex items-center gap-2">
+            //         {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+            //         <Button onClick={() => handleOpenDialog()}><PlusCircle className="mr-2 h-4 w-4" /> Onboard Airline</Button>
+            //     </div>
+            // </div>
 
 //             <Card>
 //                 <CardHeader>
@@ -196,6 +196,7 @@
 // }
 
 
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -238,13 +239,6 @@ const mockAirlines: any[] = [
   { id: '7', name: 'Sunrise Air',        icaoCode: 'SUN', pssType: 'Amadeus',   pnrMessagingType: 'REST',    status: 'Inactive',   contactEmail: 'admin@sunriseair.com',     operatingAirports: ['DXB', 'JFK'] },
   { id: '8', name: 'Northern Spirit',    icaoCode: 'NOS', pssType: 'Sabre',     pnrMessagingType: 'EDIFACT', status: 'Onboarding', contactEmail: 'info@northernspirit.com',  operatingAirports: ['LHR'] },
   { id: '9', name: 'AsiaLink',           icaoCode: 'ASL', pssType: 'Navitaire', pnrMessagingType: 'SOAP',    status: 'Active',     contactEmail: 'contact@asialink.com',     operatingAirports: ['SIN', 'HKG'] },
-];
-
-const STATS = [
-  { label: "Total Airlines", value: 42, color: "purple" as const, icon: <Globe /> },
-  { label: "Active",         value: 38, color: "green"  as const, icon: <CheckCircle2 /> },
-  { label: "Onboarding",     value: 3,  color: "amber"  as const, icon: <RefreshCw  /> },
-  { label: "Failed Sync",    value: 1,  color: "red"    as const, icon: <AlertCircle /> },
 ];
 
 // ─── Filter Options ───────────────────────────────────────────────────────────
@@ -314,6 +308,21 @@ export default function AirlineOnboardingPage() {
       : mockAirlines;
   }, [airlinesCollection]);
 
+  // ─── Dynamic Stats based on actual data ───────────────────────────────────────
+  const dynamicStats = useMemo(() => {
+    const total = sourceData.length;
+    const active = sourceData.filter((a) => a.status === 'Active').length;
+    const onboarding = sourceData.filter((a) => a.status === 'Onboarding').length;
+    const failedSync = sourceData.filter((a) => a.status === 'Inactive').length;
+    
+    return [
+      { label: "Total Airlines", value: total, color: "purple" as const, icon: <Globe /> },
+      { label: "Active", value: active, color: "green" as const, icon: <CheckCircle2 /> },
+      { label: "Onboarding", value: onboarding, color: "amber" as const, icon: <RefreshCw /> },
+      { label: "Failed Sync", value: failedSync, color: "red" as const, icon: <AlertCircle /> },
+    ];
+  }, [sourceData]);
+
   // ─── Table Filters Hook ───────────────────────────────────────────────────────
   const {
     searchText,
@@ -328,14 +337,6 @@ export default function AirlineOnboardingPage() {
     searchFields: ["name", "icaoCode", "pssType"],
     filterFields: { status: "", pssType: "", operatingAirports: "" },
   });
-
-  // ─── Derived stats ───────────────────────────────────────────────────────────
-  const stats = {
-    total:      sourceData.length,
-    active:     sourceData.filter((a) => a.status === 'Active').length,
-    onboarding: sourceData.filter((a) => a.status === 'Onboarding').length,
-    inactive:   sourceData.filter((a) => a.status === 'Inactive').length,
-  };
 
   // ─── Handlers ────────────────────────────────────────────────────────────────
   const handleOpenDialog = (airline: any | null = null) => {
@@ -372,7 +373,7 @@ export default function AirlineOnboardingPage() {
 
   return (
     <div className="flex flex-col bg-[hsl(var(--white))] min-h-screen">
-      <StatsCards cards={STATS} />
+      <StatsCards cards={dynamicStats} />
 
        <TableFilterBar
             searchText={searchText}
@@ -431,9 +432,6 @@ export default function AirlineOnboardingPage() {
         </CardHeader>
 
         <CardContent className="pt-2">
-          {/* ── Filter Bar ───────────────────────────────────────────────────── */}
-         
-
           <Table>
             <TableHeader>
               <TableRow className="border-b border-gray-200 bg-gray-100 hover:bg-gray-100">

@@ -191,7 +191,6 @@
 // }
 
 
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -235,13 +234,6 @@ const mockPartners: any[] = [
     { id: '8', name: 'Electronics Hub', airportCode: 'HKG', terminal: 'T1', category: 'Retail', status: 'Onboarding', contactEmail: 'info@electronicshub.com', commissionRate: 20 },
 ];
 
-const STATS = [
-  { label: "Total Partners", value: 42, color: "purple" as const, icon: <Globe /> },
-  { label: "Active",         value: 38, color: "green"  as const, icon: <CheckCircle2 /> },
-  { label: "Onboarding",     value: 3,  color: "amber"  as const, icon: <RefreshCw  /> },
-  { label: "Failed Sync",    value: 1,  color: "red"    as const, icon: <AlertCircle /> },
-];
-
 // ─── Filter Options ───────────────────────────────────────────────────────────
 const CATEGORY_OPTIONS = ["F&B", "Retail", "Services", "Tech"].map((v) => ({ label: v, value: v }));
 const STATUS_OPTIONS   = ["Active", "Onboarding", "Inactive"].map((v) => ({ label: v, value: v }));
@@ -262,6 +254,21 @@ export default function PartnerOnboardingPage() {
             ? partnersCollection as any[] 
             : mockPartners;
     }, [partnersCollection]);
+
+    // ─── Dynamic Stats based on actual data ───────────────────────────────────────
+    const dynamicStats = useMemo(() => {
+        const total = sourceData.length;
+        const active = sourceData.filter((p) => p.status === 'Active').length;
+        const onboarding = sourceData.filter((p) => p.status === 'Onboarding').length;
+        const failedSync = sourceData.filter((p) => p.status === 'Inactive').length;
+        
+        return [
+            { label: "Total Partners", value: total, color: "purple" as const, icon: <Globe /> },
+            { label: "Active", value: active, color: "green" as const, icon: <CheckCircle2 /> },
+            { label: "Onboarding", value: onboarding, color: "amber" as const, icon: <RefreshCw /> },
+            { label: "Failed Sync", value: failedSync, color: "red" as const, icon: <AlertCircle /> },
+        ];
+    }, [sourceData]);
 
     // ─── Table Filters Hook ───────────────────────────────────────────────────────
     const {
@@ -312,7 +319,7 @@ export default function PartnerOnboardingPage() {
 
     return (
         <div className="flex flex-col gap-6 min-h-screen">
-            <StatsCards cards={STATS} />
+            <StatsCards cards={dynamicStats} />
 
             <TableFilterBar
                 searchText={searchText}
