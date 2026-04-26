@@ -52,7 +52,7 @@ const initialMockOrder: GroupOrderDetails = {
     },
     payment: {
         totalAmount: 25000,
-        currency: 'USD',
+        currency: 'INR',
         depositAmount: 2500,
         depositStatus: 'Pending',
         finalPaymentStatus: 'Pending',

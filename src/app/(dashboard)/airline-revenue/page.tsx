@@ -46,15 +46,15 @@ type PostingEntry = {
 
 const mockPostings: PostingEntry[] = [
   { journalId: 'JRN_56098', orderId: 'ORD_90012', airline: 'INF123', amount: 1045.25, currency: 'EUR', status: 'Posted', timestamp: '3 mins ago' },
-  { journalId: 'JRN_56099', orderId: 'ORD_90013', airline: 'XYZ789', amount: 880.00, currency: 'USD', status: 'Posted', timestamp: '6 mins ago' },
+  { journalId: 'JRN_56099', orderId: 'ORD_90013', airline: 'XYZ789', amount: 880.00, currency: 'INR', status: 'Posted', timestamp: '6 mins ago' },
   { journalId: 'JRN_56100', orderId: 'ORD_90014', airline: 'INF123', amount: 450.00, currency: 'EUR', status: 'Pending', timestamp: '15 mins ago' },
   { journalId: 'JRN_56101', orderId: 'ORD_90015', airline: 'ABC456', amount: -210.00, currency: 'GBP', status: 'Posted', timestamp: '30 mins ago' },
-  { journalId: 'JRN_56102', orderId: 'ORD_90016', airline: 'XYZ789', amount: 3200.00, currency: 'USD', status: 'Failed', timestamp: '55 mins ago' },
+  { journalId: 'JRN_56102', orderId: 'ORD_90016', airline: 'XYZ789', amount: 3200.00, currency: 'INR', status: 'Failed', timestamp: '55 mins ago' },
   { journalId: 'JRN_56103', orderId: 'ORD_90017', airline: 'INF123', amount: 620.00, currency: 'EUR', status: 'Posted', timestamp: '1 hour ago' },
   { journalId: 'JRN_56104', orderId: 'ORD_90018', airline: 'ABC456', amount: 930.50, currency: 'GBP', status: 'Posted', timestamp: '1 hour ago' },
-  { journalId: 'JRN_56105', orderId: 'ORD_90019', airline: 'XYZ789', amount: 1250.00, currency: 'USD', status: 'Pending', timestamp: '2 hours ago' },
+  { journalId: 'JRN_56105', orderId: 'ORD_90019', airline: 'XYZ789', amount: 1250.00, currency: 'INR', status: 'Pending', timestamp: '2 hours ago' },
   { journalId: 'JRN_56106', orderId: 'ORD_90020', airline: 'INF123', amount: -150.00, currency: 'EUR', status: 'Posted', timestamp: '2 hours ago' },
-  { journalId: 'JRN_56107', orderId: 'ORD_90021', airline: 'XYZ789', amount: 4800.00, currency: 'USD', status: 'Failed', timestamp: '3 hours ago' },
+  { journalId: 'JRN_56107', orderId: 'ORD_90021', airline: 'XYZ789', amount: 4800.00, currency: 'INR', status: 'Failed', timestamp: '3 hours ago' },
 ];
 
 const getStatusBadgeVariant = (status: PostingEntry['status']) => {

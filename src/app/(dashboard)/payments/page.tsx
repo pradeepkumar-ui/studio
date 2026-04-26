@@ -46,15 +46,15 @@ const kpiData = [
 
 const initialMockPayments: Payment[] = [
     { id: 'PAY_77491', orderId: 'ORD_88213', amount: 320.50, currency: 'GBP', psp: 'Stripe', method: 'Card', status: 'Captured', timestamp: '5 mins ago' },
-    { id: 'PAY_77490', orderId: 'ORD_88212', amount: 1250.00, currency: 'USD', psp: 'Adyen', method: 'Card', status: 'Captured', timestamp: '8 mins ago' },
+    { id: 'PAY_77490', orderId: 'ORD_88212', amount: 1250.00, currency: 'INR', psp: 'Adyen', method: 'Card', status: 'Captured', timestamp: '8 mins ago' },
     { id: 'PAY_77489', orderId: 'ORD_88211', amount: 88.00, currency: 'EUR', psp: 'PayPal', method: 'Wallet', status: 'Authorized', timestamp: '15 mins ago' },
-    { id: 'PAY_77488', orderId: 'ORD_88210', amount: 450.00, currency: 'USD', psp: 'Stripe', method: 'Card', status: 'Failed', timestamp: '22 mins ago' },
-    { id: 'PAY_77487', orderId: 'ORD_88209', amount: 1800.00, currency: 'USD', psp: 'Adyen', method: 'Card', status: 'Captured', timestamp: '45 mins ago' },
-    { id: 'PAY_77486', orderId: 'ORD_88208', amount: 600.00, currency: 'USD', psp: 'Stripe', method: 'Card', status: 'Refunded', timestamp: '1 hour ago' },
+    { id: 'PAY_77488', orderId: 'ORD_88210', amount: 450.00, currency: 'INR', psp: 'Stripe', method: 'Card', status: 'Failed', timestamp: '22 mins ago' },
+    { id: 'PAY_77487', orderId: 'ORD_88209', amount: 1800.00, currency: 'INR', psp: 'Adyen', method: 'Card', status: 'Captured', timestamp: '45 mins ago' },
+    { id: 'PAY_77486', orderId: 'ORD_88208', amount: 600.00, currency: 'INR', psp: 'Stripe', method: 'Card', status: 'Refunded', timestamp: '1 hour ago' },
     { id: 'PAY_77485', orderId: 'ORD_88207', amount: 75.00, currency: 'EUR', psp: 'PayPal', method: 'Wallet', status: 'Captured', timestamp: '2 hours ago' },
-    { id: 'PAY_77484', orderId: 'ORD_88206', amount: 2200.00, currency: 'USD', psp: 'Adyen', method: 'Card', status: 'Authorized', timestamp: '2 hours ago' },
+    { id: 'PAY_77484', orderId: 'ORD_88206', amount: 2200.00, currency: 'INR', psp: 'Adyen', method: 'Card', status: 'Authorized', timestamp: '2 hours ago' },
     { id: 'PAY_77483', orderId: 'ORD_88205', amount: 99.99, currency: 'GBP', psp: 'Stripe', method: 'Card', status: 'Failed', timestamp: '3 hours ago' },
-    { id: 'PAY_77482', orderId: 'ORD_88204', amount: 3500.00, currency: 'USD', psp: 'Adyen', method: 'Card', status: 'Settled', timestamp: '4 hours ago' },
+    { id: 'PAY_77482', orderId: 'ORD_88204', amount: 3500.00, currency: 'INR', psp: 'Adyen', method: 'Card', status: 'Settled', timestamp: '4 hours ago' },
 ];
 
 export default function PaymentsPage() {

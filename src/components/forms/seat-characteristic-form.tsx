@@ -44,7 +44,7 @@ export function SeatCharacteristicForm({ characteristic, onSubmit, onCancel }: S
     defaultValues: characteristic || {
       type: '',
       defaultPrice: 0,
-      currency: 'USD',
+      currency: 'INR',
       attributes: '',
       status: 'Active',
     },

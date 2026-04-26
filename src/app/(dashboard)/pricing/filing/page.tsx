@@ -41,7 +41,7 @@ import { FareFilingForm, type FareFiling } from '@/components/forms/fare-filing-
 import type { Fare } from '@/components/forms/fare-form';
 
 const mockFares: Fare[] = [
-    { id: 'F-001', route: 'JFK-LAX', cabinClass: 'Economy', price: 350, currency: 'USD', status: 'Active', version: 1, fareBasisCode: 'YFLEX', validity: { effectiveDate: new Date(), expiryDate: new Date() }, tripTypes: [], passengerTypes: [] },
+    { id: 'F-001', route: 'JFK-LAX', cabinClass: 'Economy', price: 350, currency: 'INR', status: 'Active', version: 1, fareBasisCode: 'YFLEX', validity: { effectiveDate: new Date(), expiryDate: new Date() }, tripTypes: [], passengerTypes: [] },
     { id: 'F-002', route: 'LHR-DXB', cabinClass: 'Business', price: 2500, currency: 'GBP', status: 'Active', version: 2, fareBasisCode: 'JCLASS', validity: { effectiveDate: new Date(), expiryDate: new Date() }, tripTypes: [], passengerTypes: [] },
     { id: 'F-003', route: 'SIN-HKG', cabinClass: 'Economy', price: 280, currency: 'SGD', status: 'Active', version: 1, fareBasisCode: 'QFLEX', validity: { effectiveDate: new Date(), expiryDate: new Date() }, tripTypes: [], passengerTypes: [] },
 ];

@@ -48,10 +48,10 @@ import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
 const mockFares: Fare[] = [
-    { id: 'F-001', fareBasisCode: 'YFLEX', cabinClass: 'Economy', route: 'JFK → LAX, SFO', price: 350, currency: 'USD', status: 'Active', version: 1, scopes: [], tripTypes: ['one_way', 'return'], passengerTypes: ['ADT'] },
+    { id: 'F-001', fareBasisCode: 'YFLEX', cabinClass: 'Economy', route: 'JFK → LAX, SFO', price: 350, currency: 'INR', status: 'Active', version: 1, scopes: [], tripTypes: ['one_way', 'return'], passengerTypes: ['ADT'] },
     { id: 'F-002', fareBasisCode: 'JCLASS', cabinClass: 'Business', route: 'LHR → DXB', price: 2500, currency: 'GBP', status: 'Active', version: 2, scopes: [], tripTypes: ['one_way', 'return'], passengerTypes: ['ADT'] },
     { id: 'F-003', fareBasisCode: 'QFLEX', cabinClass: 'Economy', route: 'SIN → HKG', price: 280, currency: 'SGD', status: 'Active', version: 1, scopes: [], tripTypes: ['one_way'], passengerTypes: ['ADT', 'CHD'] },
-    { id: 'F-004', fareBasisCode: 'FFLEX', cabinClass: 'First', route: 'JFK → LHR', price: 5500, currency: 'USD', status: 'Draft', version: 1, scopes: [], tripTypes: ['return'], passengerTypes: ['ADT'] },
+    { id: 'F-004', fareBasisCode: 'FFLEX', cabinClass: 'First', route: 'JFK → LHR', price: 5500, currency: 'INR', status: 'Draft', version: 1, scopes: [], tripTypes: ['return'], passengerTypes: ['ADT'] },
 ];
 
 export default function FaresPage() {

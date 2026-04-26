@@ -47,7 +47,7 @@ export function RedemptionRuleForm({ rule, onSubmit, onCancel }: RedemptionRuleF
       scope: '',
       pointsCost: 10000,
       coPay: 0,
-      currency: 'USD',
+      currency: 'INR',
       status: 'Active',
     },
   });

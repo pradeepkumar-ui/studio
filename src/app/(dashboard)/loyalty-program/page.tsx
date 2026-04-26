@@ -53,11 +53,11 @@ const initialEarningRules: EarningRule[] = [
 ];
 
 const initialRedemptionRules: RedemptionRule[] = [
-    { id: 'RR-01', type: 'Award Ticket', scope: 'Domestic Economy (one-way)', pointsCost: 15000, coPay: 25, currency: 'USD', status: 'Active' },
-    { id: 'RR-02', type: 'Upgrade', scope: 'Domestic, Economy to Business', pointsCost: 10000, coPay: 50, currency: 'USD', status: 'Active' },
-    { id: 'RR-03', type: 'Ancillary', scope: '1st Checked Bag (23kg)', pointsCost: 5000, coPay: 0, currency: 'USD', status: 'Active' },
-    { id: 'RR-04', type: 'Award Ticket', scope: 'Europe to USA (Business, round-trip)', pointsCost: 120000, coPay: 250, currency: 'USD', status: 'Active' },
-    { id: 'RR-05', type: 'Ancillary', scope: 'Lounge Access (any airport)', pointsCost: 7500, coPay: 0, currency: 'USD', status: 'Inactive' },
+    { id: 'RR-01', type: 'Award Ticket', scope: 'Domestic Economy (one-way)', pointsCost: 15000, coPay: 25, currency: 'INR', status: 'Active' },
+    { id: 'RR-02', type: 'Upgrade', scope: 'Domestic, Economy to Business', pointsCost: 10000, coPay: 50, currency: 'INR', status: 'Active' },
+    { id: 'RR-03', type: 'Ancillary', scope: '1st Checked Bag (23kg)', pointsCost: 5000, coPay: 0, currency: 'INR', status: 'Active' },
+    { id: 'RR-04', type: 'Award Ticket', scope: 'Europe to USA (Business, round-trip)', pointsCost: 120000, coPay: 250, currency: 'INR', status: 'Active' },
+    { id: 'RR-05', type: 'Ancillary', scope: 'Lounge Access (any airport)', pointsCost: 7500, coPay: 0, currency: 'INR', status: 'Inactive' },
 ];
 
 export default function LoyaltyProgramPage() {

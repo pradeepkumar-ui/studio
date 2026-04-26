@@ -125,7 +125,7 @@
 //       configName: '',
 //       ancillaryId: '',
 //       basePrice: 0,
-//       currency: 'USD',
+//       currency: 'INR',
 //       status: 'Draft',
 //       parameters: [],
 //     },
@@ -419,12 +419,10 @@ interface AirportAncillaryAggregateFormProps {
   onCancel: () => void;
 }
 
-const mockAirportAncillariesFallback = [
-  { id: 'ap1', name: 'Executive Lounge Access', ancillaryCode: 'LOU', category: 'Lounge', airportCode: 'LHR' },
-  { id: 'ap2', name: 'Fast Track Security', ancillaryCode: 'FST', category: 'Priority service', airportCode: 'JFK' },
-  { id: 'ap3', name: 'VIP Valet Parking', ancillaryCode: 'VAL', category: 'Parking', airportCode: 'SIN' },
-  { id: 'ap4', name: 'Premium Sleeping Pod (6h)', ancillaryCode: 'POD', category: 'Inflight comfort', airportCode: 'DXB' },
-  { id: 'ap5', name: 'Porter Service (3 Bags)', ancillaryCode: 'PTR', category: 'Special service', airportCode: 'LHR' },
+const mockAirportInventory: any[] = [
+{ id: '1', ancillaryName: 'Executive Lounge Entry', airportCode: 'BOM', terminal: 'T5', zone: 'North Plaza', supplier: 'Lounge Stars', totalCapacity: 45, available: 12, syncStatus: 'Live', quotas: { CUSS: 10, CUTE: 5, Mobile: 30 }, timeSlotBased: true, operationalMode: 'NORMAL', realTimeSync: true, ancillaryCategory: 'Lounge', basePrice: 1800, currency: 'INR', timeSlot: '20:00 - 23:00', airportConfigMatch: true },
+{ id: '2', ancillaryName: 'Fast Track Security', airportCode: 'DEL', terminal: 'T4', zone: 'Terminal 4 East', supplier: 'Airport Authority', totalCapacity: 200, available: 45, syncStatus: 'Live', quotas: { CUSS: 50, CUTE: 50, Mobile: 100 }, timeSlotBased: false, operationalMode: 'CONGESTION', realTimeSync: false, ancillaryCategory: 'Fast Track', basePrice: 750, currency: 'INR', timeSlot: null, airportConfigMatch: true },
+{ id: '3', ancillaryName: 'VIP Valet Parking', airportCode: 'DEL', terminal: 'T1', zone: 'Carpark A', supplier: 'Changi Valet', totalCapacity: 20, available: 0, syncStatus: 'Critical', quotas: { CUSS: 2, CUTE: 2, Mobile: 16 }, timeSlotBased: true, operationalMode: 'NORMAL', realTimeSync: true, ancillaryCategory: 'Parking', basePrice: 600, currency: 'INR', timeSlot: '20:00 - 23:00', airportConfigMatch: true }
 ];
 
 // ─── Steps Config ─────────────────────────────────────────────────────────────
@@ -463,7 +461,7 @@ export function AirportAncillaryAggregateForm({ aggregate, onSubmit, onCancel }:
       configName: '',
       ancillaryId: '',
       basePrice: 0,
-      currency: 'USD',
+      currency: 'INR',
       status: 'Draft',
       parameters: [],
     },

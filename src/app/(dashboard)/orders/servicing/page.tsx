@@ -22,7 +22,7 @@ const mockOrder: OrderDetails = {
     status: 'Fulfilled',
     date: '2024-07-15',
     amount: 12500,
-    currency: 'USD',
+    currency: 'INR',
     payment: {
         method: 'Credit Card',
         last4: '4242',

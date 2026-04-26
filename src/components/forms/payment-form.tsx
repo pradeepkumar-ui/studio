@@ -48,7 +48,7 @@ export function PaymentForm({ payment, onSubmit, onCancel }: PaymentFormProps) {
     defaultValues: payment || {
       orderId: '',
       amount: 0,
-      currency: 'USD',
+      currency: 'INR',
       method: 'Card',
       psp: 'Stripe',
       status: 'Captured',

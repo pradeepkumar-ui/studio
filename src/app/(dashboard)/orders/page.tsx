@@ -487,13 +487,12 @@ export type Order = {
 };
 
 const mockRecentOrders: Order[] = [
-    { id: 'ORD-073', customer: 'John Smith', email: 'john.smith@example.com', status: 'Fulfilled', date: '2024-10-28', amount: 12500, source: 'Web', pnr: 'L8Y2N3', route: 'JFK-LHR', paymentStatus: 'Paid' },
-    { id: 'ORD-072', customer: 'Sarah Chen', email: 's.chen@corporate.com', status: 'Fulfilled', date: '2024-10-28', amount: 8400, source: 'CUTE', pnr: 'P4X5T6', route: 'SFO-HND', paymentStatus: 'Paid' },
-    { id: 'ORD-071', customer: 'Michael Smith', email: 'm.smith@voyage.co', status: 'Pending', date: '2024-10-27', amount: 450, source: 'CUSS', pnr: 'GRP923', route: 'LHR-FCO', paymentStatus: 'Pending' },
-    { id: 'ORD-070', customer: 'Alice Johnson', email: 'alice.j@web.com', status: 'Canceled', date: '2024-10-27', amount: 120, source: 'Mobile', pnr: 'M9Z1M2', route: 'SIN-HKG', paymentStatus: 'Refunded' },
-    { id: 'ORD-069', customer: 'Robert Brown', email: 'robert.b@travel.com', status: 'Partially Fulfilled', date: '2024-10-26', amount: 75, source: 'Web', pnr: 'K7L9P2', route: 'CDG-JFK', paymentStatus: 'Paid', isSimulated: true },
+  { id: 'ORD-073', customer: 'John Smith', email: 'john.smith@example.com', status: 'Fulfilled', date: '2024-10-28', amount: 12500, source: 'Web', pnr: 'L8Y2N3', route: 'BOM-DXB', paymentStatus: 'Paid' },
+  { id: 'ORD-072', customer: 'Sarah Chen', email: 's.chen@corporate.com', status: 'Fulfilled', date: '2024-10-28', amount: 8400, source: 'CUTE', pnr: 'P4X5T6', route: 'DEL-SIN', paymentStatus: 'Paid' },
+  { id: 'ORD-071', customer: 'Michael Smith', email: 'm.smith@voyage.co', status: 'Pending', date: '2024-10-27', amount: 450, source: 'CUSS', pnr: 'GRP923', route: 'BOM-DXB', paymentStatus: 'Pending' },
+  { id: 'ORD-070', customer: 'Alice Johnson', email: 'alice.j@web.com', status: 'Canceled', date: '2024-10-27', amount: 120, source: 'Mobile', pnr: 'M9Z1M2', route: 'DEL-SIN', paymentStatus: 'Refunded' },
+  { id: 'ORD-069', customer: 'Robert Brown', email: 'robert.b@travel.com', status: 'Partially Fulfilled', date: '2024-10-26', amount: 75, source: 'Web', pnr: 'K7L9P2', route: 'DEL-SIN', paymentStatus: 'Paid', isSimulated: true }
 ];
-
 const STATS = [
   { label: "Total Orders", value: 42, color: "purple" as const, icon: <ShoppingCart /> },
   { label: "Fulfilled",    value: 38, color: "green"  as const, icon: <CheckCircle2 /> },
@@ -612,7 +611,7 @@ export const columns: ColumnDef<Order>[] = [
     cell: ({ row }) => (
       <div className="flex flex-col items-end gap-1">
         <div className="text-right font-black font-mono text-primary">
-            {new Intl.NumberFormat('en-US', { style: 'currency', currency: row.original.currency || 'USD' }).format(row.original.amount)}
+            {new Intl.NumberFormat('en-US', { style: 'currency', currency: row.original.currency || 'INR' }).format(row.original.amount)}
         </div>
         <Badge variant={getPaymentStatusBadgeVariant(row.original.paymentStatus)} className="text-[8px] h-3.5">
             {row.original.paymentStatus}

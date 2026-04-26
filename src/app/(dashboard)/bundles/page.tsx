@@ -62,7 +62,7 @@
 //         status: 'Active',
 //         validity: { from: '2025-11-01', to: '2026-01-15' },
 //         cohortIds: ['FAMILY_TRIP', 'LEISURE_PROMO'],
-//         pricing: { type: 'PercentageDiscount', value: 20, currency: 'USD' },
+//         pricing: { type: 'PercentageDiscount', value: 20, currency: 'INR' },
 //         dynamicPricing: { enabled: true, ruleType: 'TimeBased', threshold: 'T-7 Days', adjustmentPercent: 10 },
 //         guardRails: { minPrice: 45, maxPrice: 120 }
 //     },
@@ -74,7 +74,7 @@
 //         status: 'Active',
 //         validity: { from: '2025-10-01', to: '2026-12-31' },
 //         cohortIds: ['PLAT_SOLO_BIZ', 'CORP_PREMIUM'],
-//         pricing: { type: 'FixedPrice', value: 85, currency: 'USD' },
+//         pricing: { type: 'FixedPrice', value: 85, currency: 'INR' },
 //         dynamicPricing: { enabled: false, ruleType: 'InventoryBased', adjustmentPercent: 0 },
 //         guardRails: { minPrice: 75, maxPrice: 150 }
 //     },
@@ -86,7 +86,7 @@
 //         status: 'Active',
 //         validity: { from: '2025-01-01', to: '2025-12-31' },
 //         cohortIds: [],
-//         pricing: { type: 'PercentageDiscount', value: 15, currency: 'USD' },
+//         pricing: { type: 'PercentageDiscount', value: 15, currency: 'INR' },
 //         dynamicPricing: { enabled: true, ruleType: 'TimeBased', threshold: '< 24 Hours', adjustmentPercent: 5 },
 //         guardRails: { minPrice: 5, maxPrice: 25 }
 //     },
@@ -98,7 +98,7 @@
 //         status: 'Active',
 //         validity: { from: '2025-06-01', to: '2025-09-30' },
 //         cohortIds: ['STUDENT_INTL'],
-//         pricing: { type: 'FixedDiscount', value: 25, currency: 'USD' },
+//         pricing: { type: 'FixedDiscount', value: 25, currency: 'INR' },
 //         dynamicPricing: { enabled: false, ruleType: 'TimeBased', adjustmentPercent: 0 },
 //         guardRails: { minPrice: 10, maxPrice: 50 }
 //     },
@@ -110,7 +110,7 @@
 //         status: 'Draft',
 //         validity: { from: '2025-01-01', to: '2025-03-31' },
 //         cohortIds: ['EARLY_BOOKER'],
-//         pricing: { type: 'PercentageDiscount', value: 30, currency: 'USD' },
+//         pricing: { type: 'PercentageDiscount', value: 30, currency: 'INR' },
 //         dynamicPricing: { enabled: false, ruleType: 'TimeBased', adjustmentPercent: 0 },
 //         guardRails: { minPrice: 20, maxPrice: 100 }
 //     },
@@ -122,7 +122,7 @@
 //         status: 'Active',
 //         validity: { from: '2025-01-01', to: '2025-12-31' },
 //         cohortIds: ['LONG_HAUL_TRANSIT'],
-//         pricing: { type: 'FixedPrice', value: 55, currency: 'USD' },
+//         pricing: { type: 'FixedPrice', value: 55, currency: 'INR' },
 //         dynamicPricing: { enabled: true, ruleType: 'InventoryBased', threshold: '< 20% Capacity', adjustmentPercent: 15 },
 //         guardRails: { minPrice: 50, maxPrice: 90 }
 //     },
@@ -134,7 +134,7 @@
 //         status: 'Active',
 //         validity: { from: '2025-01-01', to: '2025-12-31' },
 //         cohortIds: ['CORP_HEAVY_TRAVEL'],
-//         pricing: { type: 'FixedPrice', value: 30, currency: 'USD' },
+//         pricing: { type: 'FixedPrice', value: 30, currency: 'INR' },
 //         dynamicPricing: { enabled: true, ruleType: 'InventoryBased', threshold: 'Hold > 80%', adjustmentPercent: 20 },
 //         guardRails: { minPrice: 30, maxPrice: 60 }
 //     }
@@ -424,7 +424,7 @@ const mockOfferStrategies: OfferStrategy[] = [
         status: 'Active',
         validity: { from: '2025-11-01', to: '2026-01-15' },
         cohortIds: ['FAMILY_TRIP', 'LEISURE_PROMO'],
-        pricing: { type: 'PercentageDiscount', value: 20, currency: 'USD' },
+        pricing: { type: 'PercentageDiscount', value: 20, currency: 'INR' },
         dynamicPricing: { enabled: true, ruleType: 'TimeBased', threshold: 'T-7 Days', adjustmentPercent: 10 },
         guardRails: { minPrice: 45, maxPrice: 120 }
     },
@@ -436,7 +436,7 @@ const mockOfferStrategies: OfferStrategy[] = [
         status: 'Active',
         validity: { from: '2025-10-01', to: '2026-12-31' },
         cohortIds: ['PLAT_SOLO_BIZ', 'CORP_PREMIUM'],
-        pricing: { type: 'FixedPrice', value: 85, currency: 'USD' },
+        pricing: { type: 'FixedPrice', value: 85, currency: 'INR' },
         dynamicPricing: { enabled: false, ruleType: 'InventoryBased', adjustmentPercent: 0 },
         guardRails: { minPrice: 75, maxPrice: 150 }
     },
@@ -448,7 +448,7 @@ const mockOfferStrategies: OfferStrategy[] = [
         status: 'Active',
         validity: { from: '2025-01-01', to: '2025-12-31' },
         cohortIds: [],
-        pricing: { type: 'PercentageDiscount', value: 15, currency: 'USD' },
+        pricing: { type: 'PercentageDiscount', value: 15, currency: 'INR' },
         dynamicPricing: { enabled: true, ruleType: 'TimeBased', threshold: '< 24 Hours', adjustmentPercent: 5 },
         guardRails: { minPrice: 5, maxPrice: 25 }
     },
@@ -460,7 +460,7 @@ const mockOfferStrategies: OfferStrategy[] = [
         status: 'Onboarding',
         validity: { from: '2025-06-01', to: '2025-09-30' },
         cohortIds: ['STUDENT_INTL'],
-        pricing: { type: 'FixedDiscount', value: 25, currency: 'USD' },
+        pricing: { type: 'FixedDiscount', value: 25, currency: 'INR' },
         dynamicPricing: { enabled: false, ruleType: 'TimeBased', adjustmentPercent: 0 },
         guardRails: { minPrice: 10, maxPrice: 50 }
     },
@@ -472,7 +472,7 @@ const mockOfferStrategies: OfferStrategy[] = [
         status: 'Draft',
         validity: { from: '2025-01-01', to: '2025-03-31' },
         cohortIds: ['EARLY_BOOKER'],
-        pricing: { type: 'PercentageDiscount', value: 30, currency: 'USD' },
+        pricing: { type: 'PercentageDiscount', value: 30, currency: 'INR' },
         dynamicPricing: { enabled: false, ruleType: 'TimeBased', adjustmentPercent: 0 },
         guardRails: { minPrice: 20, maxPrice: 100 }
     },
@@ -484,7 +484,7 @@ const mockOfferStrategies: OfferStrategy[] = [
         status: 'Active',
         validity: { from: '2025-01-01', to: '2025-12-31' },
         cohortIds: ['LONG_HAUL_TRANSIT'],
-        pricing: { type: 'FixedPrice', value: 55, currency: 'USD' },
+        pricing: { type: 'FixedPrice', value: 55, currency: 'INR' },
         dynamicPricing: { enabled: true, ruleType: 'InventoryBased', threshold: '< 20% Capacity', adjustmentPercent: 15 },
         guardRails: { minPrice: 50, maxPrice: 90 }
     },
@@ -496,7 +496,7 @@ const mockOfferStrategies: OfferStrategy[] = [
         status: 'Inactive',
         validity: { from: '2025-01-01', to: '2025-12-31' },
         cohortIds: ['CORP_HEAVY_TRAVEL'],
-        pricing: { type: 'FixedPrice', value: 30, currency: 'USD' },
+        pricing: { type: 'FixedPrice', value: 30, currency: 'INR' },
         dynamicPricing: { enabled: true, ruleType: 'InventoryBased', threshold: 'Hold > 80%', adjustmentPercent: 20 },
         guardRails: { minPrice: 30, maxPrice: 60 }
     }

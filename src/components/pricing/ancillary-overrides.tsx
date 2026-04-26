@@ -22,10 +22,10 @@ type Override = {
 };
 
 const mockOverrides: Override[] = [
-  { id: 'OV-01', condition: 'Route: JFK-LAX', price: 40, currency: 'USD' },
-  { id: 'OV-02', condition: 'Channel: Airport', price: 50, currency: 'USD' },
-  { id: 'OV-03', condition: 'Brand: Economy Saver', price: 35, currency: 'USD' },
-  { id: 'OV-04', condition: 'Brand: Economy Flex', price: 0, currency: 'USD' },
+  { id: 'OV-01', condition: 'Route: JFK-LAX', price: 40, currency: 'INR' },
+  { id: 'OV-02', condition: 'Channel: Airport', price: 50, currency: 'INR' },
+  { id: 'OV-03', condition: 'Brand: Economy Saver', price: 35, currency: 'INR' },
+  { id: 'OV-04', condition: 'Brand: Economy Flex', price: 0, currency: 'INR' },
 ];
 
 interface AncillaryOverridesProps {

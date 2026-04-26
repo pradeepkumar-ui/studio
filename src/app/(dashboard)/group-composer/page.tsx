@@ -221,10 +221,10 @@ export default function GroupComposerPage() {
                                     <Separator />
                                     <div className="flex justify-between items-center text-lg font-bold">
                                         <span>Total Price:</span>
-                                        <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(offer.totalPrice)}</span>
+                                        <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'INR' }).format(offer.totalPrice)}</span>
                                     </div>
                                     <div className="text-right text-sm text-muted-foreground">
-                                        ({new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(offer.pricePerPassenger)} per passenger)
+                                        ({new Intl.NumberFormat('en-US', { style: 'currency', currency: 'INR' }).format(offer.pricePerPassenger)} per passenger)
                                     </div>
                                 </div>
                             </CardContent>

@@ -38,12 +38,12 @@ import { useToast } from '@/hooks/use-toast';
 import { SeatCharacteristicForm, type SeatCharacteristic } from '@/components/forms/seat-characteristic-form';
 
 const initialSeatCharacteristics: SeatCharacteristic[] = [
-    { id: 'SC-001', type: 'Extra Legroom', defaultPrice: 75, currency: 'USD', attributes: 'Forward Zone, Extra Space', status: 'Active' },
-    { id: 'SC-002', type: 'Forward Zone', defaultPrice: 40, currency: 'USD', attributes: 'Forward Zone', status: 'Active' },
-    { id: 'SC-003', type: 'Window', defaultPrice: 20, currency: 'USD', attributes: 'Window', status: 'Active' },
-    { id: 'SC-004', type: 'Aisle', defaultPrice: 20, currency: 'USD', attributes: 'Aisle', status: 'Active' },
-    { id: 'SC-005', type: 'Standard', defaultPrice: 0, currency: 'USD', attributes: 'Standard', status: 'Active' },
-    { id: 'SC-006', type: 'Bulkhead', defaultPrice: 60, currency: 'USD', attributes: 'Forward Zone, Bassinet', status: 'Inactive' },
+    { id: 'SC-001', type: 'Extra Legroom', defaultPrice: 75, currency: 'INR', attributes: 'Forward Zone, Extra Space', status: 'Active' },
+    { id: 'SC-002', type: 'Forward Zone', defaultPrice: 40, currency: 'INR', attributes: 'Forward Zone', status: 'Active' },
+    { id: 'SC-003', type: 'Window', defaultPrice: 20, currency: 'INR', attributes: 'Window', status: 'Active' },
+    { id: 'SC-004', type: 'Aisle', defaultPrice: 20, currency: 'INR', attributes: 'Aisle', status: 'Active' },
+    { id: 'SC-005', type: 'Standard', defaultPrice: 0, currency: 'INR', attributes: 'Standard', status: 'Active' },
+    { id: 'SC-006', type: 'Bulkhead', defaultPrice: 60, currency: 'INR', attributes: 'Forward Zone, Bassinet', status: 'Inactive' },
 ];
 
 const mockSeatMaps = [

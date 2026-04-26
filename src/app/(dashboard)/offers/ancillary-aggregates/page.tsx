@@ -41,8 +41,8 @@
 // import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
 // const initialMockAggregates: any[] = [
-//     { id: 'AGG-001', configName: 'Premium Route Baggage Logic', ancillaryName: '1st Checked Bag', category: 'Baggage', basePrice: 35.00, currency: 'USD', status: 'Active' },
-//     { id: 'AGG-002', configName: 'Long-Haul Seat Strategy', ancillaryName: 'Extra Legroom Seat', category: 'Seat', basePrice: 50.00, currency: 'USD', status: 'Active' },
+//     { id: 'AGG-001', configName: 'Premium Route Baggage Logic', ancillaryName: '1st Checked Bag', category: 'Baggage', basePrice: 35.00, currency: 'INR', status: 'Active' },
+//     { id: 'AGG-002', configName: 'Long-Haul Seat Strategy', ancillaryName: 'Extra Legroom Seat', category: 'Seat', basePrice: 50.00, currency: 'INR', status: 'Active' },
 // ];
 
 // export default function AncillaryAggregatesPage() {
@@ -253,12 +253,12 @@ import { TableFilterBar } from '@/components/TableFilterbar/TableFilterBar';
 import { useTableFilters } from '@/hooks/useTableFilters';
 
 const initialMockAggregates: any[] = [
-    { id: 'AGG-001', configName: 'Premium Route Baggage Logic', ancillaryName: '1st Checked Bag', category: 'Baggage', basePrice: 35.00, currency: 'USD', status: 'Active' },
-    { id: 'AGG-002', configName: 'Long-Haul Seat Strategy', ancillaryName: 'Extra Legroom Seat', category: 'Seat', basePrice: 50.00, currency: 'USD', status: 'Active' },
-    { id: 'AGG-003', configName: 'International Wi-Fi Package', ancillaryName: 'Premium Wi-Fi', category: 'Connectivity', basePrice: 19.99, currency: 'USD', status: 'Active' },
-    { id: 'AGG-004', configName: 'Short-Haul Meal Bundle', ancillaryName: 'Gourmet Meal', category: 'Meal', basePrice: 15.00, currency: 'USD', status: 'Onboarding' },
-    { id: 'AGG-005', configName: 'Premium Lounge Access', ancillaryName: 'Lounge Pass', category: 'Lounge', basePrice: 45.00, currency: 'USD', status: 'Active' },
-    { id: 'AGG-006', configName: 'Priority Boarding Logic', ancillaryName: 'Priority Boarding', category: 'Service', basePrice: 10.00, currency: 'USD', status: 'Inactive' },
+    { id: 'AGG-001', configName: 'Premium Route Baggage Logic', ancillaryName: '1st Checked Bag', category: 'Baggage', basePrice: 35.00, currency: 'INR', status: 'Active' },
+    { id: 'AGG-002', configName: 'Long-Haul Seat Strategy', ancillaryName: 'Extra Legroom Seat', category: 'Seat', basePrice: 50.00, currency: 'INR', status: 'Active' },
+    { id: 'AGG-003', configName: 'International Wi-Fi Package', ancillaryName: 'Premium Wi-Fi', category: 'Connectivity', basePrice: 19.99, currency: 'INR', status: 'Active' },
+    { id: 'AGG-004', configName: 'Short-Haul Meal Bundle', ancillaryName: 'Gourmet Meal', category: 'Meal', basePrice: 15.00, currency: 'INR', status: 'Onboarding' },
+    { id: 'AGG-005', configName: 'Premium Lounge Access', ancillaryName: 'Lounge Pass', category: 'Lounge', basePrice: 45.00, currency: 'INR', status: 'Active' },
+    { id: 'AGG-006', configName: 'Priority Boarding Logic', ancillaryName: 'Priority Boarding', category: 'Service', basePrice: 10.00, currency: 'INR', status: 'Inactive' },
 ];
 
 const STATS = [

@@ -95,22 +95,21 @@ interface AirportOfferStrategyFormProps {
 }
 
 const mockAirportAncillariesFallback = [
-    { id: 'HUB-AGG-001', configName: 'LHR T5 Lounge Logic', ancillaryName: 'Executive Lounge Access', basePrice: 45.00, currency: 'USD' },
-    { id: 'HUB-AGG-002', configName: 'JFK Fast Track Pacing', ancillaryName: 'Fast Track Security', basePrice: 15.00, currency: 'USD' },
-    { id: 'HUB-AGG-003', configName: 'SIN Valet Hub SKU', ancillaryName: 'VIP Valet Parking', basePrice: 20.00, currency: 'USD' },
-    { id: 'HUB-AGG-004', configName: 'LHR Priority Boarding', ancillaryName: 'Priority Boarding Hub', basePrice: 10.00, currency: 'USD' },
-    { id: 'HUB-AGG-005', configName: 'DXB Sleeping Pod Logic', ancillaryName: 'Sleeping Pod (6h)', basePrice: 60.00, currency: 'USD' },
-    { id: 'HUB-AGG-006', configName: 'FRA Chauffeur Service', ancillaryName: 'Airport Chauffeur', basePrice: 85.00, currency: 'USD' },
-    { id: 'HUB-AGG-007', configName: 'SIN Transit Comfort', ancillaryName: 'Amenity Kit Hub', basePrice: 15.00, currency: 'USD' },
+    { id: 'HUB-AGG-001', configName: 'LHR T5 Lounge Logic', ancillaryName: 'Executive Lounge Access', basePrice: 45.00, currency: 'INR' },
+    { id: 'HUB-AGG-002', configName: 'JFK Fast Track Pacing', ancillaryName: 'Fast Track Security', basePrice: 15.00, currency: 'INR' },
+    { id: 'HUB-AGG-003', configName: 'SIN Valet Hub SKU', ancillaryName: 'VIP Valet Parking', basePrice: 20.00, currency: 'INR' },
+    { id: 'HUB-AGG-004', configName: 'LHR Priority Boarding', ancillaryName: 'Priority Boarding Hub', basePrice: 10.00, currency: 'INR' },
+    { id: 'HUB-AGG-005', configName: 'DXB Sleeping Pod Logic', ancillaryName: 'Sleeping Pod (6h)', basePrice: 60.00, currency: 'INR' },
+    { id: 'HUB-AGG-006', configName: 'FRA Chauffeur Service', ancillaryName: 'Airport Chauffeur', basePrice: 85.00, currency: 'INR' },
+    { id: 'HUB-AGG-007', configName: 'SIN Transit Comfort', ancillaryName: 'Amenity Kit Hub', basePrice: 15.00, currency: 'INR' },
 ];
 
 const mockAirportCohortsFallback = [
-    { id: 'AC-001', cohortId: 'LHR_BIZ_WAIT', name: 'LHR High-Wait Business' },
-    { id: 'AC-002', cohortId: 'SIN_FAM_TRANSIT', name: 'SIN Transit Family' },
-    { id: 'AC-003', cohortId: 'JFK_ELITE_ARRIVE', name: 'JFK Elite Arrivals' },
-    { id: 'AC-004', cohortId: 'TRANSIT_LONG_HAUL', name: 'Global Long-Haul Transit' },
+    { id: 'AC-001', cohortId: 'BOM_BIZ_WAIT', name: 'BOM High-Wait Business' },
+    { id: 'AC-002', cohortId: 'DEL_FAM_TRANSIT', name: 'DEL Transit Family' },
+    { id: 'AC-003', cohortId: 'DEL_ELITE_ARRIVE', name: 'DEL Elite Arrivals' },
+    { id: 'AC-004', cohortId: 'TRANSIT_LONG_HAUL', name: 'Global Long-Haul Transit' }
 ];
-
 export function AirportOfferStrategyForm({ offer, onSubmit, onCancel }: AirportOfferStrategyFormProps) {
   const firestore = useFirestore();
   const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
@@ -138,7 +137,7 @@ export function AirportOfferStrategyForm({ offer, onSubmit, onCancel }: AirportO
       status: 'Draft',
       validity: { from: new Date().toISOString().split('T')[0], to: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0] },
       cohortIds: [],
-      pricing: { type: 'PercentageDiscount', value: 10, currency: 'USD' },
+      pricing: { type: 'PercentageDiscount', value: 10, currency: 'INR' },
       dynamicPricing: { enabled: false, ruleType: 'TimeBased', threshold: 'Peak Hour', adjustmentPercent: 10 },
       guardRails: { minPrice: 0, maxPrice: 1000 },
     },

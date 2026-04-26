@@ -287,56 +287,11 @@ import { TableFilterBar } from '@/components/TableFilterbar/TableFilterBar';
 import { useTableFilters } from '@/hooks/useTableFilters';
 
 const mockAirportCohorts: any[] = [
-    { 
-        id: 'AC-001', 
-        name: 'LHR High-Wait Business', 
-        cohortId: 'LHR_BIZ_WAIT', 
-        status: 'Active', 
-        airportCode: 'LHR',
-        description: 'Business class passengers at LHR with >4h layover.', 
-        type: 'dynamic',
-        priority: 90,
-    },
-    { 
-        id: 'AC-002', 
-        name: 'SIN Transit Family', 
-        cohortId: 'SIN_FAM_TRANSIT', 
-        status: 'Active', 
-        airportCode: 'SIN',
-        description: 'Families in transit at SIN requiring comfort services.', 
-        type: 'dynamic',
-        priority: 70,
-    },
-    { 
-        id: 'AC-003', 
-        name: 'JFK Premium Arrivals', 
-        cohortId: 'JFK_PRE_ARR', 
-        status: 'Active', 
-        airportCode: 'JFK',
-        description: 'First/Business class passengers arriving at JFK.', 
-        type: 'static',
-        priority: 85,
-    },
-    { 
-        id: 'AC-004', 
-        name: 'DXB Transit Premium', 
-        cohortId: 'DXB_TRANSIT_PRE', 
-        status: 'Onboarding', 
-        airportCode: 'DXB',
-        description: 'Premium cabin passengers with layover at DXB.', 
-        type: 'dynamic',
-        priority: 80,
-    },
-    { 
-        id: 'AC-005', 
-        name: 'CDG Student Travel', 
-        cohortId: 'CDG_STUDENT', 
-        status: 'Inactive', 
-        airportCode: 'CDG',
-        description: 'Student travelers departing from CDG.', 
-        type: 'static',
-        priority: 40,
-    },
+{ id: 'AC-001', name: 'BOM High-Wait Business', cohortId: 'BOM_BIZ_WAIT', status: 'Active', airportCode: 'BOM', description: 'Business class passengers at BOM with >4h layover.', type: 'dynamic', priority: 90 },
+{ id: 'AC-002', name: 'DEL Transit Family', cohortId: 'DEL_FAM_TRANSIT', status: 'Active', airportCode: 'DEL', description: 'Families in transit at DEL requiring comfort services.', type: 'dynamic', priority: 70 },
+{ id: 'AC-003', name: 'DEL Premium Arrivals', cohortId: 'DEL_PRE_ARR', status: 'Active', airportCode: 'DEL', description: 'First/Business class passengers arriving at DEL.', type: 'static', priority: 85 },
+{ id: 'AC-004', name: 'BOM Transit Premium', cohortId: 'BOM_TRANSIT_PRE', status: 'Onboarding', airportCode: 'BOM', description: 'Premium cabin passengers with layover at BOM.', type: 'dynamic', priority: 80 },
+{ id: 'AC-005', name: 'DEL Student Travel', cohortId: 'DEL_STUDENT', status: 'Inactive', airportCode: 'DEL', description: 'Student travelers departing from DEL.', type: 'static', priority: 40 }
 ];
 
 const STATS = [

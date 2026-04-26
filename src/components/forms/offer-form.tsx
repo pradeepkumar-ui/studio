@@ -112,7 +112,7 @@ export function OfferForm({ offer, onSubmit, onCancel }: OfferFormProps) {
       targetAncillaries: '',
       scope: 'Market',
       offerType: 'Discount',
-      currency: 'USD',
+      currency: 'INR',
       rounding: 'Round Half-Up',
       criteria: 'Market: US, EU',
       cohorts: [],

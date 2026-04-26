@@ -94,13 +94,13 @@ interface OfferStrategyFormProps {
 }
 
 const mockAncillariesFallback = [
-    { id: 'AGG-001', configName: 'Premium Route Baggage', ancillaryName: '1st Checked Bag', basePrice: 35.00, currency: 'USD' },
-    { id: 'AGG-002', configName: 'Long-Haul Seat', ancillaryName: 'Extra Legroom Seat', basePrice: 50.00, currency: 'USD' },
-    { id: 'AGG-003', configName: 'Hub Lounge LHR', ancillaryName: 'Executive Lounge', basePrice: 45.00, currency: 'USD' },
-    { id: 'AGG-004', configName: 'Fast Track Gate', ancillaryName: 'Priority Boarding', basePrice: 15.00, currency: 'USD' },
-    { id: 'AGG-005', configName: 'Inflight Connect', ancillaryName: 'Streaming Wi-Fi', basePrice: 20.00, currency: 'USD' },
-    { id: 'AGG-006', configName: 'Gourmet Selection', ancillaryName: 'Premium Hot Meal', basePrice: 25.00, currency: 'USD' },
-    { id: 'AGG-007', configName: 'Comfort Pack', ancillaryName: 'Amenity Kit', basePrice: 12.00, currency: 'USD' },
+    { id: 'AGG-001', configName: 'Premium Route Baggage', ancillaryName: '1st Checked Bag', basePrice: 35.00, currency: 'INR' },
+    { id: 'AGG-002', configName: 'Long-Haul Seat', ancillaryName: 'Extra Legroom Seat', basePrice: 50.00, currency: 'INR' },
+    { id: 'AGG-003', configName: 'Hub Lounge LHR', ancillaryName: 'Executive Lounge', basePrice: 45.00, currency: 'INR' },
+    { id: 'AGG-004', configName: 'Fast Track Gate', ancillaryName: 'Priority Boarding', basePrice: 15.00, currency: 'INR' },
+    { id: 'AGG-005', configName: 'Inflight Connect', ancillaryName: 'Streaming Wi-Fi', basePrice: 20.00, currency: 'INR' },
+    { id: 'AGG-006', configName: 'Gourmet Selection', ancillaryName: 'Premium Hot Meal', basePrice: 25.00, currency: 'INR' },
+    { id: 'AGG-007', configName: 'Comfort Pack', ancillaryName: 'Amenity Kit', basePrice: 12.00, currency: 'INR' },
 ];
 
 const mockCohortsFallback = [
@@ -138,7 +138,7 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
       status: 'Draft',
       validity: { from: new Date().toISOString().split('T')[0], to: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0] },
       cohortIds: [],
-      pricing: { type: 'PercentageDiscount', value: 10, currency: 'USD' },
+      pricing: { type: 'PercentageDiscount', value: 10, currency: 'INR' },
       dynamicPricing: { enabled: false, ruleType: 'TimeBased', threshold: 'T-7 Days', adjustmentPercent: 10 },
       guardRails: { minPrice: 0, maxPrice: 1000 },
     },

@@ -73,8 +73,8 @@ const mockAirportServices = [
 ];
 
 const mockCohorts = [
-    { cohortId: 'LHR_BIZ_WAIT', name: 'LHR High-Wait Business' },
-    { cohortId: 'IN_WEB_PROMO', name: 'India POS Web Promo' },
+{ cohortId: 'BOM_BIZ_WAIT', name: 'BOM High-Wait Business' },
+{ cohortId: 'IN_WEB_PROMO', name: 'India POS Web Promo' }
 ];
 
 const bundleSchema = z.object({

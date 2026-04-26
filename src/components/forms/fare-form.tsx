@@ -157,7 +157,7 @@ export function FareForm({ fare, onSubmit, onCancel }: FareFormProps) {
       bookingDate: {},
       bookingDaysOfWeek: [],
       price: 0,
-      currency: 'USD',
+      currency: 'INR',
       refundability: 'Allowed with Penalty',
       exchangeability: 'Allowed with Penalty',
       transferability: 'Not Allowed',

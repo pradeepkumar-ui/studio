@@ -41,8 +41,8 @@
 // import { collection, addDoc, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
 // const initialMockAggregates: any[] = [
-//     { id: 'HUB-AGG-001', configName: 'LHR T5 Lounge Optimization', ancillaryName: 'Executive Lounge Access', category: 'Lounge', basePrice: 45.00, currency: 'USD', status: 'Active' },
-//     { id: 'HUB-AGG-002', configName: 'JFK Security Pacing Logic', ancillaryName: 'Fast Track Security', category: 'Priority service', basePrice: 15.00, currency: 'USD', status: 'Active' },
+//     { id: 'HUB-AGG-001', configName: 'LHR T5 Lounge Optimization', ancillaryName: 'Executive Lounge Access', category: 'Lounge', basePrice: 45.00, currency: 'INR', status: 'Active' },
+//     { id: 'HUB-AGG-002', configName: 'JFK Security Pacing Logic', ancillaryName: 'Fast Track Security', category: 'Priority service', basePrice: 15.00, currency: 'INR', status: 'Active' },
 // ];
 
 // export default function AirportAncillaryAggregatesPage() {
@@ -253,12 +253,12 @@ import { TableFilterBar } from '@/components/TableFilterbar/TableFilterBar';
 import { useTableFilters } from '@/hooks/useTableFilters';
 
 const initialMockAggregates: any[] = [
-    { id: 'HUB-AGG-001', configName: 'LHR T5 Lounge Optimization', ancillaryName: 'Executive Lounge Access', category: 'Lounge', basePrice: 45.00, currency: 'USD', status: 'Active' },
-    { id: 'HUB-AGG-002', configName: 'JFK Security Pacing Logic', ancillaryName: 'Fast Track Security', category: 'Priority service', basePrice: 15.00, currency: 'USD', status: 'Active' },
-    { id: 'HUB-AGG-003', configName: 'SIN Premium Valet Parking', ancillaryName: 'VIP Valet Parking', category: 'Parking', basePrice: 35.00, currency: 'USD', status: 'Active' },
-    { id: 'HUB-AGG-004', configName: 'DXB Meet & Greet Service', ancillaryName: 'Meet & Greet', category: 'Concierge', basePrice: 75.00, currency: 'USD', status: 'Onboarding' },
-    { id: 'HUB-AGG-005', configName: 'CDG Priority Baggage', ancillaryName: 'Priority Baggage', category: 'Baggage', basePrice: 25.00, currency: 'EUR', status: 'Active' },
-    { id: 'HUB-AGG-006', configName: 'FRA Nap Lounge Access', ancillaryName: 'Nap Lounge Access', category: 'Lounge', basePrice: 30.00, currency: 'EUR', status: 'Inactive' },
+  { id: 'HUB-AGG-001', configName: 'BOM Lounge Optimization', ancillaryName: 'Lounge Access', category: 'Lounge', basePrice: 1800, currency: 'INR', status: 'Active' },
+  { id: 'HUB-AGG-002', configName: 'DEL Security Pacing Logic', ancillaryName: 'Fast Track', category: 'Priority service', basePrice: 750, currency: 'INR', status: 'Active' },
+  { id: 'HUB-AGG-003', configName: 'BOM Parking Optimization', ancillaryName: 'Parking', category: 'Parking', basePrice: 500, currency: 'INR', status: 'Active' },
+  { id: 'HUB-AGG-004', configName: 'DEL Wi-Fi Optimization', ancillaryName: 'Wi-Fi', category: 'Connectivity', basePrice: 300, currency: 'INR', status: 'Onboarding' },
+  { id: 'HUB-AGG-005', configName: 'DEL Lounge Optimization', ancillaryName: 'Lounge Access', category: 'Lounge', basePrice: 2000, currency: 'INR', status: 'Active' },
+  { id: 'HUB-AGG-006', configName: 'BOM Fast Track Optimization', ancillaryName: 'Fast Track', category: 'Priority service', basePrice: 700, currency: 'INR', status: 'Inactive' },
 ];
 
 const STATS = [
