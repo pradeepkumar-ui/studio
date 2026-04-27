@@ -1,0 +1,18 @@
+
+services:
+  offersensev2:
+    build: .
+    container_name: offersensev2
+    restart: always
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+    networks:
+      - offersense-network
+
+networks:
+  offersense-network:
+    driver: bridge
