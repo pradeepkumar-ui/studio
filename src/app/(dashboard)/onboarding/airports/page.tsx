@@ -312,12 +312,13 @@ import { StatsCards } from '@/components/StatsCards/StatsCards';
 import { TableFilterBar } from '@/components/TableFilterbar/TableFilterBar';
 import { useTableFilters } from '@/hooks/useTableFilters';
 
-const mockAirports: AirportOnboarding[] = [
-    { id: '1', name: 'Heathrow Airport', iataCode: 'LHR', location: 'London', status: 'Active', sitaEnabled: true, terminals: 'T2, T3, T4, T5', hardwarePrefix: 'K-LHR', timeZone: 'GMT', technicalContact: 'ops@heathrow.com' },
-    { id: '2', name: 'John F. Kennedy', iataCode: 'JFK', location: 'New York', status: 'Active', sitaEnabled: true, terminals: 'T1, T4, T5, T8', hardwarePrefix: 'K-JFK', timeZone: 'EST', technicalContact: 'it@panynj.gov' },
-    { id: '3', name: 'Changi Airport', iataCode: 'SIN', location: 'Singapore', status: 'Onboarding', sitaEnabled: true, terminals: 'T1, T2, T3, T4', hardwarePrefix: 'K-SIN', timeZone: 'SGT', technicalContact: 'support@changi.sg' },
-];
 
+const mockAirports: AirportOnboarding[] = [
+    { id: '1', name: 'Dubai International Airport', iataCode: 'DXB', location: 'Dubai', status: 'Active', sitaEnabled: true, terminals: 'T1, T2, T3', hardwarePrefix: 'K-DXB', timeZone: 'GST', technicalContact: 'it@dubaiairports.ae' },
+    { id: '2', name: 'Changi Airport', iataCode: 'SIN', location: 'Singapore', status: 'Onboarding', sitaEnabled: true, terminals: 'T1, T2, T3, T4', hardwarePrefix: 'K-SIN', timeZone: 'SGT', technicalContact: 'support@changi.sg' },
+    { id: '3', name: 'Chhatrapati Shivaji Maharaj International Airport', iataCode: 'BOM', location: 'Mumbai', status: 'Active', sitaEnabled: true, terminals: 'T1, T2', hardwarePrefix: 'K-BOM', timeZone: 'IST', technicalContact: 'ops@csmia.com' },
+    { id: '4', name: 'Indira Gandhi International Airport', iataCode: 'DEL', location: 'New Delhi', status: 'Active', sitaEnabled: true, terminals: 'T1, T2, T3', hardwarePrefix: 'K-DEL', timeZone: 'IST', technicalContact: 'it@igiairport.com' },
+];
 // ─── Filter Options ───────────────────────────────────────────────────────────
 const CITY_OPTIONS    = ["London", "New York", "Singapore", "Dubai", "Paris", "Frankfurt", "Tokyo", "Hong Kong"].map((v) => ({ label: v, value: v }));
 const STATUS_OPTIONS  = ["Active", "Onboarding", "Inactive"].map((v) => ({ label: v, value: v }));

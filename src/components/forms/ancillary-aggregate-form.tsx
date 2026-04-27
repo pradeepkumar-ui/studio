@@ -441,11 +441,9 @@ interface AncillaryAggregateFormProps {
 
 const mockAncillariesFallback = [
   { id: '1', name: 'Extra Legroom Seat', ancillaryCode: 'EXLG', category: 'Seat' },
-  { id: '2', name: 'Premium Wi-Fi (Unlimited)', ancillaryCode: 'WIFU', category: 'Wi-Fi / connectivity' },
-  { id: '3', name: 'Standby Upgrade (J Class)', ancillaryCode: 'UPGS', category: 'Upgrade' },
-  { id: '4', name: '1st Checked Bag (23kg)', ancillaryCode: 'BAG1', category: 'Baggage' },
-  { id: '5', name: 'Priority Boarding', ancillaryCode: 'PBDG', category: 'Priority service' },
-  { id: '6', name: 'Executive Lounge Access', ancillaryCode: 'LOUA', category: 'Lounge' },
+  { id: '2', name: 'Premium Wi-Fi (Unlimited)', ancillaryCode: 'WIFU', category: 'Wi-Fi' },
+  { id: '4', name: 'Priority Baggage', ancillaryCode: 'BAG1', category: 'Baggage' },
+  { id: '6', name: 'Extra Seats', ancillaryCode: 'LOUA', category: 'seat' },
 ];
 
 // ─── Steps Config ─────────────────────────────────────────────────────────────

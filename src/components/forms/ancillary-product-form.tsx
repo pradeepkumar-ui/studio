@@ -524,8 +524,10 @@ interface AirportAncillaryFormProps {
 }
 
 const mockAirportsFallback = [
-    { id: '1', name: 'Heathrow Airport', iataCode: 'LHR' },
-    { id: '2', name: 'John F. Kennedy', iataCode: 'JFK' },
+    { id: '1', name: 'Chhatrapati Shivaji Maharaj International Airport', iataCode: 'BOM' },
+    { id: '2', name: 'Dubai International Airport', iataCode: 'DXB' },
+    { id: '3', name: 'Indira Gandhi International Airport', iataCode: 'DEL' },
+    { id: '4', name: 'Singapore Changi Airport', iataCode: 'SIN' },
 ];
 
 // ─── Steps Config ─────────────────────────────────────────────────────────────

@@ -458,7 +458,7 @@ export default function AirportAncillaryAggregatesPage() {
                     </TableCell>
                     <TableCell className="py-3.5">
                       <div className="flex items-center gap-1 font-mono font-black text-violet-700">
-                        <DollarSign className="h-3 w-3" />
+                        {/* <DollarSign className="h-3 w-3" /> */}₹
                         {new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(item.basePrice || 0)}
                         <span className="text-[9px] text-gray-400 ml-1">{item.currency || 'USD'}</span>
                       </div>

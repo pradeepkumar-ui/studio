@@ -94,13 +94,13 @@ interface OfferStrategyFormProps {
 }
 
 const mockAncillariesFallback = [
-    { id: 'AGG-001', configName: 'Premium Route Baggage', ancillaryName: '1st Checked Bag', basePrice: 35.00, currency: 'INR' },
-    { id: 'AGG-002', configName: 'Long-Haul Seat', ancillaryName: 'Extra Legroom Seat', basePrice: 50.00, currency: 'INR' },
-    { id: 'AGG-003', configName: 'Hub Lounge LHR', ancillaryName: 'Executive Lounge', basePrice: 45.00, currency: 'INR' },
-    { id: 'AGG-004', configName: 'Fast Track Gate', ancillaryName: 'Priority Boarding', basePrice: 15.00, currency: 'INR' },
-    { id: 'AGG-005', configName: 'Inflight Connect', ancillaryName: 'Streaming Wi-Fi', basePrice: 20.00, currency: 'INR' },
-    { id: 'AGG-006', configName: 'Gourmet Selection', ancillaryName: 'Premium Hot Meal', basePrice: 25.00, currency: 'INR' },
-    { id: 'AGG-007', configName: 'Comfort Pack', ancillaryName: 'Amenity Kit', basePrice: 12.00, currency: 'INR' },
+    { id: 'AGG-001', configName: 'Premium Route Baggage', ancillaryName: '1st Checked Bag', basePrice: 1200, currency: 'INR' },
+    { id: 'AGG-002', configName: 'Long-Haul Seat', ancillaryName: 'Extra Legroom Seat', basePrice: 1500, currency: 'INR' },
+    { id: 'AGG-003', configName: 'Hub Lounge LHR', ancillaryName: 'Executive Lounge', basePrice: 1000, currency: 'INR' },
+    { id: 'AGG-004', configName: 'Fast Track Gate', ancillaryName: 'Priority Boarding', basePrice: 1500, currency: 'INR' },
+    { id: 'AGG-005', configName: 'Inflight Connect', ancillaryName: 'Streaming Wi-Fi', basePrice: 500, currency: 'INR' },
+    { id: 'AGG-006', configName: 'Gourmet Selection', ancillaryName: 'Premium Hot Meal', basePrice: 2500, currency: 'INR' },
+    { id: 'AGG-007', configName: 'Comfort Pack', ancillaryName: 'Amenity Kit', basePrice: 1200, currency: 'INR' },
 ];
 
 const mockCohortsFallback = [
@@ -255,7 +255,7 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
                               <MultiSelect 
                                 options={aggregates.map((a: any) => ({ 
                                     value: a.id, 
-                                    label: `${a.configName} (${new Intl.NumberFormat('en-US', { style: 'currency', currency: a.currency || 'USD' }).format(a.basePrice || 0)})` 
+                                    label: `${a.configName} (${new Intl.NumberFormat('en-US', { style: 'currency', currency: a.currency || 'INR' }).format(a.basePrice || 0)})` 
                                 }))}
                                 selected={field.value}
                                 onChange={(v) => field.onChange(watchType === 'Single' ? v.slice(-1) : v)}
@@ -271,7 +271,8 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
                   {calculation.selectedProducts.length > 0 && (
                       <div className="p-4 rounded-xl bg-white border border-slate-200 space-y-3">
                           <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1.5">
-                              <DollarSign className="h-3 w-3" /> Commercial Base Value (Read-Only)
+                              {/* <DollarSign className="h-3 w-3" />  */}₹
+                              Commercial Base Value (Read-Only)
                           </p>
                           <div className="space-y-2">
                               {calculation.selectedProducts.map((p: any) => (

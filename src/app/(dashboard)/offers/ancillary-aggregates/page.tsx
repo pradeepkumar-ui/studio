@@ -251,14 +251,11 @@ import { TableFilterBar } from '@/components/TableFilterbar/TableFilterBar';
 import { useTableFilters } from '@/hooks/useTableFilters';
 
 const initialMockAggregates: any[] = [
-    { id: 'AGG-001', configName: 'Premium Route Baggage Logic', ancillaryName: '1st Checked Bag', category: 'Baggage', basePrice: 35.00, currency: 'INR', status: 'Active' },
-    { id: 'AGG-002', configName: 'Long-Haul Seat Strategy', ancillaryName: 'Extra Legroom Seat', category: 'Seat', basePrice: 50.00, currency: 'INR', status: 'Active' },
-    { id: 'AGG-003', configName: 'International Wi-Fi Package', ancillaryName: 'Premium Wi-Fi', category: 'Connectivity', basePrice: 19.99, currency: 'INR', status: 'Active' },
-    { id: 'AGG-004', configName: 'Short-Haul Meal Bundle', ancillaryName: 'Gourmet Meal', category: 'Meal', basePrice: 15.00, currency: 'INR', status: 'Onboarding' },
-    { id: 'AGG-005', configName: 'Premium Lounge Access', ancillaryName: 'Lounge Pass', category: 'Lounge', basePrice: 45.00, currency: 'INR', status: 'Active' },
-    { id: 'AGG-006', configName: 'Priority Boarding Logic', ancillaryName: 'Priority Boarding', category: 'Service', basePrice: 10.00, currency: 'INR', status: 'Inactive' },
+    { id: 'AGG-001', configName: 'Extra Legroom Seat', ancillaryName: 'Long-Haul Seat Strategy', category: 'Seat', basePrice: 1500, currency: 'INR', status: 'Active' },
+    { id: 'AGG-002', configName: 'Premium Wi-Fi (Unlimited)', ancillaryName: 'Wi-Fi pass', category: 'Wi-Fi', basePrice: 500, currency: 'INR', status: 'Active' },
+    { id: 'AGG-003', configName: 'Priority Baggage', ancillaryName: 'Priority handling', category: 'Baggage', basePrice: 1200, currency: 'INR', status: 'Active' },
+    { id: 'AGG-005', configName: 'Extra Seats', ancillaryName: 'Extra seat', category: 'seat', basePrice: 800, currency: 'INR', status: 'Active' },
 ];
-
 // ─── Filter Options ───────────────────────────────────────────────────────────
 const CATEGORY_OPTIONS = ["Baggage", "Seat", "Connectivity", "Meal", "Lounge", "Service"].map((v) => ({ label: v, value: v }));
 const STATUS_OPTIONS   = ["Active", "Onboarding", "Inactive"].map((v) => ({ label: v, value: v }));
@@ -458,9 +455,9 @@ export default function AncillaryAggregatesPage() {
                     </TableCell>
                     <TableCell className="py-3.5">
                       <div className="flex items-center gap-1 font-mono font-black text-violet-700">
-                        <DollarSign className="h-3 w-3" />
-                        {new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(item.basePrice || 0)}
-                        <span className="text-[9px] text-gray-400 ml-1">{item.currency || 'USD'}</span>
+                        {/* <DollarSign className="h-3 w-3" /> */}₹
+                        {new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 }).format(item.basePrice || 'INR')}
+                        <span className="text-[9px] text-gray-400 ml-1">{item.currency}</span>
                       </div>
                     </TableCell>
                     <TableCell className="py-3.5">

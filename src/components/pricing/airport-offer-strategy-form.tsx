@@ -254,7 +254,7 @@ export function AirportOfferStrategyForm({ offer, onSubmit, onCancel }: AirportO
                               <MultiSelect 
                                 options={aggregates.map((a: any) => ({ 
                                     value: a.id, 
-                                    label: `${a.configName} (${new Intl.NumberFormat('en-US', { style: 'currency', currency: a.currency || 'USD' }).format(a.basePrice || 0)})` 
+                                    label: `${a.configName} (${new Intl.NumberFormat('en-US', { style: 'currency', currency: a.currency || 'INR' }).format(a.basePrice || 0)})` 
                                 }))}
                                 selected={field.value}
                                 onChange={(v) => field.onChange(watchType === 'Single' ? v.slice(-1) : v)}
@@ -269,7 +269,8 @@ export function AirportOfferStrategyForm({ offer, onSubmit, onCancel }: AirportO
                   {calculation.selectedProducts.length > 0 && (
                       <div className="p-4 rounded-xl bg-white border border-slate-200 space-y-3">
                           <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1.5">
-                              <DollarSign className="h-3 w-3" /> Registry Base Values (Read-Only)
+                              {/* <DollarSign className="h-3 w-3" />  */}₹
+                              Registry Base Values (Read-Only)
                           </p>
                           <div className="space-y-2">
                               {calculation.selectedProducts.map((p: any) => (

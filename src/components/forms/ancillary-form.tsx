@@ -444,8 +444,8 @@ interface AncillaryFormProps {
 }
 
 const mockAirlinesFallback = [
-    { id: '1', name: 'Global Airways', icaoCode: 'GAB' },
-    { id: '2', name: 'SkyBridge Airlines', icaoCode: 'SBA' },
+    { id: '1', name: 'IndiGo', icaoCode: 'IGO' },
+    { id: '2', name: 'Air India', icaoCode: 'AIC' },
 ];
 
 // ─── Steps Config ─────────────────────────────────────────────────────────────
