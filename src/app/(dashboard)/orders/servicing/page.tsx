@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { OrderDetailsView, type OrderDetails } from '@/components/orders/order-details-view';
+import  OrderDetailsView from '@/components/orders/order-details-view';
 
 const mockOrder: OrderDetails = {
     id: 'ORD-073',

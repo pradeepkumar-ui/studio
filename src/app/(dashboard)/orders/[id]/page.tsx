@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { OrderDetailsView, type OrderDetails } from '@/components/orders/order-details-view';
+import  OrderDetailsView  from '@/components/orders/order-details-view';
 import { Suspense } from 'react';
 
 const mockOrder: OrderDetails = {
@@ -19,7 +19,7 @@ const mockOrder: OrderDetails = {
     status: 'Fulfilled',
     date: '2024-07-15',
     amount: 12500,
-    currency: 'INR',
+    currency: 'USD',
     payment: {
         method: 'Credit Card',
         last4: '4242',
@@ -69,7 +69,7 @@ export default function OrderDetailsPage() {
     return (
         <Suspense fallback={<div>Loading...</div>}>
             <div className="flex flex-col gap-6">
-                <div className="flex items-center justify-between">
+                {/* <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Button variant="outline" size="icon" asChild>
                             <Link href="/orders">
@@ -87,7 +87,7 @@ export default function OrderDetailsPage() {
                         </Button>
                         <Button variant="destructive" onClick={handleCancel}><XCircle className="mr-2 h-4 w-4"/> Cancel Order</Button>
                     </div>
-                </div>
+                </div> */}
                 
                 <OrderDetailsView order={{...order, id: orderId}} />
             </div>
