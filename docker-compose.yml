@@ -5,7 +5,7 @@ services:
     container_name: offersensev2
     restart: always
     ports:
-      - "3000:3000"
+      - "8006:8006"
     env_file:
       - .env.production
     environment:
