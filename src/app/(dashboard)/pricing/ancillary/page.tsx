@@ -285,10 +285,10 @@ import { TableFilterBar } from '@/components/TableFilterbar/TableFilterBar';
 import { useTableFilters } from '@/hooks/useTableFilters';
 
 const mockAirlineAncillaries: any[] = [
-  { id: '1', ancillaryCode: 'EXLG', name: 'Extra Legroom Seat', shortName: 'Legroom+',              category: 'Seat', subcategory: 'Long-Haul Seat Strategy', status: 'Active', version: 1, airlineCode: 'IGO', owningBusinessUnit: 'Revenue', providerName: 'IndiGo' ,baseFare :'1500'},
+  { id: '1', ancillaryCode: 'EXLG', name: 'Extra Legroom', shortName: 'Legroom+',              category: 'Seat', subcategory: 'Long-Haul Seat Strategy', status: 'Active', version: 1, airlineCode: 'IGO', owningBusinessUnit: 'Revenue', providerName: 'IndiGo' ,baseFare :'1500'},
   { id: '2', ancillaryCode: 'WIFU', name: 'Premium Wi-Fi (Unlimited)', shortName: 'Ultra Wi-Fi',    category: 'Wi-Fi', subcategory: 'Wi-Fi pass', status: 'Active', version: 2, airlineCode: 'IGO', owningBusinessUnit: 'Inflight', providerName: 'IndiGo',baseFare :'500' },
   { id: '3', ancillaryCode: 'BAGG', name: 'Priority Baggage', shortName: 'Priority Bag',            category: 'Baggage', subcategory: 'Priority handling', status: 'Active', version: 1, airlineCode: 'AIC', owningBusinessUnit: 'Operations', providerName: 'Air India' ,baseFare :'1200'},
-  { id: '4', ancillaryCode: 'STND', name: 'Extra Seat', shortName: 'Std Seat', category: 'Seat', subcategory: 'Extra seat', status: 'Active', version: 1, airlineCode: 'AIC', owningBusinessUnit: 'Revenue', providerName: 'Air India',baseFare :'800' },
+  { id: '4', ancillaryCode: 'STND', name: 'Seat', shortName: 'Std Seat', category: 'Seat', subcategory: 'Extra seat', status: 'Active', version: 1, airlineCode: 'AIC', owningBusinessUnit: 'Revenue', providerName: 'Air India',baseFare :'800' },
 ];
 
 // ─── Filter Options ───────────────────────────────────────────────────────────

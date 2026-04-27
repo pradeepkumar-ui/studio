@@ -331,7 +331,7 @@ const mockCohorts: Cohort[] = [
         id: 'AC4', 
         name: 'Premium Upsell', 
         cohortId: 'PRE_LEISURE', 
-        status: 'Onboarding', 
+        status: 'Active', 
         domain: 'Airline',
         description: 'Loyalty Gold, open to premium upgrades', 
         type: 'dynamic',

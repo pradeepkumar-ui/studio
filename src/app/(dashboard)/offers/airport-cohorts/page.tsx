@@ -290,7 +290,7 @@ const mockAirportCohorts: any[] = [
 { id: 'APC1', name: 'Time Sensitive', cohortId: 'BOM_BIZ_WAIT', status: 'Active', airportCode: 'BOM',           description: 'Last-minute upgrades for business class passengers with 4+ hour layovers at BOM.',         type: 'dynamic', priority: 90 },
 { id: 'APC2', name: 'Premium Taveller', cohortId: 'DEL_FAM_TRANSIT', status: 'Active', airportCode: 'DEL',      description: 'Business & loyalty perks for families in transit at DEL.',     type: 'dynamic', priority: 70 },
 { id: 'APC3', name: 'Family', cohortId: 'DEL_PRE_ARR', status: 'Active', airportCode: 'DEL',                    description: 'Group benefits for First & Business class arrivals (3+ passengers) at DEL.',           type: 'static', priority: 85 },
-{ id: 'APC4', name: 'Leisure Traveller', cohortId: 'BOM_TRANSIT_PRE', status: 'Onboarding', airportCode: 'BOM', description: 'Premium cabin passengers with long layover at BOM.',              type: 'dynamic', priority: 80 },
+{ id: 'APC4', name: 'Leisure Traveller', cohortId: 'BOM_TRANSIT_PRE', status: 'Active', airportCode: 'BOM', description: 'Premium cabin passengers with long layover at BOM.',              type: 'dynamic', priority: 80 },
 ];
 
 const STATS = [
