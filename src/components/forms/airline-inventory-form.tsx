@@ -370,8 +370,8 @@ const mockAncillaries = [
   // { id: 'a12', name: 'Unaccompanied Minor', pssCode: 'UMNR' },
   // { id: 'a13', name: 'Priority Boarding', pssCode: 'PBDG' },
 
-    { id: 'a1', name: 'Extra Legroom seat', pssCode: 'EXLG' },
-    { id: 'a2', name: 'Extra Seat', pssCode: 'PFRD' },
+    { id: 'a1', name: 'Extra Legroom', pssCode: 'EXLG' },
+    { id: 'a2', name: 'Seat', pssCode: 'PFRD' },
     { id: 'a3', name: 'Premium Wi-Fi (Unlimited)', pssCode: 'WIFI' },
     { id: 'a4', name: 'Priority Baggage', pssCode: 'PBDG' },
 

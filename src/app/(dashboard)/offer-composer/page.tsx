@@ -163,8 +163,8 @@ type Step =
 // --- MOCK CONSTANTS ---
 
 const ALL_OFFERS = [
-    { id: 'O-A1', name: 'Preferred Seat', domain: 'Airline', basePrice: 720, type: 'Seat' },
-    { id: 'O-A2', name: 'Extra Legroom Seat', domain: 'Airline', basePrice: 1650, type: 'Seat' },
+    { id: 'O-A1', name: 'Seat', domain: 'Airline', basePrice: 720, type: 'Seat' },
+    { id: 'O-A2', name: 'Extra Legroom', domain: 'Airline', basePrice: 1650, type: 'Seat' },
     { id: 'O-A3', name: 'Extra Baggage (23kg)', domain: 'Airline', basePrice: 1140, type: 'Baggage' },
     { id: 'O-A6', name: 'In-flight Wi-Fi', domain: 'Airline', basePrice: 500, type: 'Digital' },
     { id: 'O-P1', name: 'Executive Lounge Access', domain: 'Airport', basePrice: 2070, type: 'Lounge' },
@@ -338,7 +338,7 @@ const QR_DOTS = [
 
     // Filter 2: Ineligible Products
     const ineligible = current.filter(o => 
-        (o.name === 'Extra Legroom Seat' && simulationData.infants > 0) || // Exit row restriction
+        (o.name === 'Extra Legroom' && simulationData.infants > 0) || // Exit row restriction
         (o.name === 'Business Class Upgrade' && simulationData.fareFamily === 'Basic') // Fare restriction
     );
     removed.push({ step: 'Ineligible Products', items: ineligible });
@@ -347,7 +347,7 @@ const QR_DOTS = [
     // Filter 3: Inventory Unavailable
     const unavailable = current.filter(o => 
         (o.type === 'Lounge' && simulationData.remSeatInv === 0) || // Mocking lounge outage
-        (o.name === 'Extra Legroom Seat' && simulationData.remSeatInv < 2)
+        (o.name === 'Extra Legroom' && simulationData.remSeatInv < 2)
     );
     removed.push({ step: 'Inventory Unavailable', items: unavailable });
     current = current.filter(o => !unavailable.includes(o));

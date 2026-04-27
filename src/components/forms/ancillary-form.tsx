@@ -365,7 +365,7 @@ import { Stepper, type StepItem } from '../Stepper/Stepper';
 
 const categorySubcategoryMap: Record<string, string[]> = {
   'Baggage': ['Extra bag', 'Overweight bag', 'Sports equipment', 'Special baggage'],
-  'Seat': ['Preferred seat', 'Extra legroom seat', 'Exit row seat', 'Twin-seat blocking'],
+  'Seat': ['Preferred seat', 'Extra legroom', 'Exit row seat', 'Twin-seat blocking'],
   'Upgrade': ['Upgrade to business', 'Upgrade to first', 'Instant upgrade'],
   'Priority service': ['Priority boarding', 'Fast track', 'Priority check-in', 'Priority baggage'],
   'Lounge': ['Lounge day pass', 'Lounge & Spa', 'Executive suite'],

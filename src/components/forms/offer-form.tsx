@@ -43,7 +43,7 @@ const ancillaryOptions = [
 
 const ancillaryProducts = [
   { id: 'ANC-001', name: '1st Checked Bag (23kg)' },
-  { id: 'ANC-002', name: 'Extra Legroom Seat' },
+  { id: 'ANC-002', name: 'Extra Legroom' },
   { id: 'ANC-003', name: 'In-flight Wi-Fi' },
   { id: 'ANC-004', name: 'Priority Boarding' },
   { id: 'ANC-005', name: 'Flight Change Fee' },

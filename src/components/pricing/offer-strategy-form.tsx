@@ -94,10 +94,10 @@ interface OfferStrategyFormProps {
 }
 
 const mockAncillariesFallback = [
-    { id: 'AGG-002', configName: 'Extra Legroom Seat', ancillaryName: 'Long-Haul Seat', basePrice: 1500, currency: 'INR' },
+    { id: 'AGG-002', configName: 'Extra Legroom', ancillaryName: 'Long-Haul Seat', basePrice: 1500, currency: 'INR' },
     { id: 'AGG-003', configName: 'Premium Wi-Fi (Unlimited)', ancillaryName: 'Wi-Fi Pass', basePrice: 500, currency: 'INR' },
     { id: 'AGG-001', configName: 'Priority Baggage', ancillaryName: 'Priority handling', basePrice: 1200, currency: 'INR' },
-    { id: 'AGG-004', configName: 'Extra Seats', ancillaryName: 'Extra seat', basePrice: 800, currency: 'INR' },
+    { id: 'AGG-004', configName: 'Seats', ancillaryName: 'Extra seat', basePrice: 800, currency: 'INR' },
 ];
 
 const mockCohortsFallback = [

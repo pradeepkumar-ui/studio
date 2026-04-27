@@ -251,10 +251,10 @@ import { TableFilterBar } from '@/components/TableFilterbar/TableFilterBar';
 import { useTableFilters } from '@/hooks/useTableFilters';
 
 const initialMockAggregates: any[] = [
-    { id: 'AGG-001', configName: 'Extra Legroom Seat', ancillaryName: 'Long-Haul Seat Strategy', category: 'Seat', basePrice: 1500, currency: 'INR', status: 'Active' },
+    { id: 'AGG-001', configName: 'Extra Legroom', ancillaryName: 'Long-Haul Seat Strategy', category: 'Seat', basePrice: 1500, currency: 'INR', status: 'Active' },
     { id: 'AGG-002', configName: 'Premium Wi-Fi (Unlimited)', ancillaryName: 'Wi-Fi pass', category: 'Wi-Fi', basePrice: 500, currency: 'INR', status: 'Active' },
     { id: 'AGG-003', configName: 'Priority Baggage', ancillaryName: 'Priority handling', category: 'Baggage', basePrice: 1200, currency: 'INR', status: 'Active' },
-    { id: 'AGG-005', configName: 'Extra Seats', ancillaryName: 'Extra seat', category: 'seat', basePrice: 800, currency: 'INR', status: 'Active' },
+    { id: 'AGG-005', configName: 'Seats', ancillaryName: 'Extra seat', category: 'seat', basePrice: 800, currency: 'INR', status: 'Active' },
 ];
 // ─── Filter Options ───────────────────────────────────────────────────────────
 const CATEGORY_OPTIONS = ["Baggage", "Seat", "Connectivity", "Meal", "Lounge", "Service"].map((v) => ({ label: v, value: v }));

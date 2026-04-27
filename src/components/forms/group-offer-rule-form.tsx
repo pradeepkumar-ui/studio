@@ -81,7 +81,7 @@ interface GroupOfferRuleFormProps {
 
 const ancillaryOptions = [
     { id: 'ANC-001', name: '1st Checked Bag (23kg)' },
-    { id: 'ANC-002', name: 'Extra Legroom Seat' },
+    { id: 'ANC-002', name: 'Extra Legroom' },
     { id: 'ANC-003', name: 'In-flight Wi-Fi' },
     { id: 'ANC-006', name: 'Lounge Access' },
     { id: 'ANC-010', name: 'Premium Meal' },

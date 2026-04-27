@@ -33,7 +33,7 @@ const ancillaryOptions = [
     { id: 'ANC-001', label: '1st Checked Bag (23kg)', price: 35 },
     { id: 'ANC-007', label: '2nd Checked Bag (23kg)', price: 50 },
     { id: 'ANC-008', label: 'Oversize Baggage', price: 100 },
-    { id: 'ANC-002', label: 'Extra Legroom Seat', price: 50 },
+    { id: 'ANC-002', label: 'Extra Legroom', price: 50 },
     { id: 'ANC-009', label: 'Up-front Seat', price: 25 },
     { id: 'ANC-003', label: 'In-flight Wi-Fi', price: 8 },
     { id: 'ANC-006', label: 'Lounge Access', price: 45 },

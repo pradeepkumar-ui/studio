@@ -440,10 +440,10 @@ interface AncillaryAggregateFormProps {
 }
 
 const mockAncillariesFallback = [
-  { id: '1', name: 'Extra Legroom Seat', ancillaryCode: 'EXLG', category: 'Seat' },
+  { id: '1', name: 'Extra Legroom', ancillaryCode: 'EXLG', category: 'Seat' },
   { id: '2', name: 'Premium Wi-Fi (Unlimited)', ancillaryCode: 'WIFU', category: 'Wi-Fi' },
   { id: '4', name: 'Priority Baggage', ancillaryCode: 'BAG1', category: 'Baggage' },
-  { id: '6', name: 'Extra Seats', ancillaryCode: 'LOUA', category: 'seat' },
+  { id: '6', name: 'Seats', ancillaryCode: 'LOUA', category: 'seat' },
 ];
 
 // ─── Steps Config ─────────────────────────────────────────────────────────────

@@ -19,7 +19,7 @@ const allAncillaries: Ancillary[] = [
   { id: 'ANC-001', name: '1st Checked Bag (23kg)', price: 35, currency: 'INR', category: 'Baggage', excludedFareBrands: ['Economy Flex', 'Business Saver', 'Business Flex'] },
   { id: 'ANC-007', name: '2nd Checked Bag (23kg)', price: 50, currency: 'INR', category: 'Baggage', excludedFareBrands: ['Business Saver', 'Business Flex'] },
   { id: 'ANC-008', name: 'Oversize Baggage', price: 100, currency: 'INR', category: 'Baggage' },
-  { id: 'ANC-002', name: 'Extra Legroom Seat', price: 50, currency: 'INR', category: 'Seats' },
+  { id: 'ANC-002', name: 'Extra Legroom', price: 50, currency: 'INR', category: 'Seats' },
   { id: 'ANC-009', name: 'Up-front Seat', price: 25, currency: 'INR', category: 'Seats' },
   { id: 'ANC-003', name: 'In-flight Wi-Fi', price: 8, currency: 'INR', category: 'On-board Services', excludedFareBrands: ['Business Flex'] },
   { id: 'ANC-006', name: 'Lounge Access', price: 45, currency: 'INR', category: 'On-board Services', excludedFareBrands: ['Business Saver', 'Business Flex'] },
