@@ -250,14 +250,28 @@ import { StatsCards } from '@/components/StatsCards/StatsCards';
 import { TableFilterBar } from '@/components/TableFilterbar/TableFilterBar';
 import { useTableFilters } from '@/hooks/useTableFilters';
 
+// const initialMockAggregates: any[] = [
+//   { id: 'HUB-AGG-001', configName: 'BOM Lounge Optimization', ancillaryName: 'Lounge Access', category: 'Lounge', basePrice: 1800, currency: 'INR', status: 'Active' },
+//   { id: 'HUB-AGG-002', configName: 'DEL Security Pacing Logic', ancillaryName: 'Fast Track', category: 'Priority service', basePrice: 750, currency: 'INR', status: 'Active' },
+//   { id: 'HUB-AGG-003', configName: 'BOM Parking Optimization', ancillaryName: 'Parking', category: 'Parking', basePrice: 500, currency: 'INR', status: 'Active' },
+//   { id: 'HUB-AGG-004', configName: 'DEL Wi-Fi Optimization', ancillaryName: 'Wi-Fi', category: 'Connectivity', basePrice: 300, currency: 'INR', status: 'Onboarding' },
+//   { id: 'HUB-AGG-005', configName: 'DEL Lounge Optimization', ancillaryName: 'Lounge Access', category: 'Lounge', basePrice: 2000, currency: 'INR', status: 'Active' },
+//   { id: 'HUB-AGG-006', configName: 'BOM Fast Track Optimization', ancillaryName: 'Fast Track', category: 'Priority service', basePrice: 700, currency: 'INR', status: 'Inactive' },
+// ];
+
 const initialMockAggregates: any[] = [
-  { id: 'HUB-AGG-001', configName: 'BOM Lounge Optimization', ancillaryName: 'Lounge Access', category: 'Lounge', basePrice: 1800, currency: 'INR', status: 'Active' },
-  { id: 'HUB-AGG-002', configName: 'DEL Security Pacing Logic', ancillaryName: 'Fast Track', category: 'Priority service', basePrice: 750, currency: 'INR', status: 'Active' },
-  { id: 'HUB-AGG-003', configName: 'BOM Parking Optimization', ancillaryName: 'Parking', category: 'Parking', basePrice: 500, currency: 'INR', status: 'Active' },
-  { id: 'HUB-AGG-004', configName: 'DEL Wi-Fi Optimization', ancillaryName: 'Wi-Fi', category: 'Connectivity', basePrice: 300, currency: 'INR', status: 'Onboarding' },
-  { id: 'HUB-AGG-005', configName: 'DEL Lounge Optimization', ancillaryName: 'Lounge Access', category: 'Lounge', basePrice: 2000, currency: 'INR', status: 'Active' },
-  { id: 'HUB-AGG-006', configName: 'BOM Fast Track Optimization', ancillaryName: 'Fast Track', category: 'Priority service', basePrice: 700, currency: 'INR', status: 'Inactive' },
+  { id: 'HUB-AGG-001', configName: 'BOM Fast Track', ancillaryName: 'Lounge Access', category: 'Lounge', basePrice: 1800, currency: 'INR', status: 'Active' },
+  { id: 'HUB-AGG-002', configName: 'DEL Fast Track', ancillaryName: 'Fast Track', category: 'Priority service', basePrice: 750, currency: 'INR', status: 'Active' },
+  { id: 'HUB-AGG-003', configName: 'BOM Lounge', ancillaryName: 'Parking', category: 'Parking', basePrice: 500, currency: 'INR', status: 'Active' },
+  { id: 'HUB-AGG-004', configName: 'DEL Lounge', ancillaryName: 'Wi-Fi', category: 'Connectivity', basePrice: 300, currency: 'INR', status: 'Onboarding' },
+  
+  { id: 'HUB-AGG-005', configName: 'DEL Wi-Fi', ancillaryName: 'Lounge Access', category: 'Lounge', basePrice: 2000, currency: 'INR', status: 'Active' },
+  { id: 'HUB-AGG-006', configName: 'BOM Wi-fi', ancillaryName: 'Fast Track', category: 'Priority service', basePrice: 700, currency: 'INR', status: 'Inactive' },
+  
+  { id: 'HUB-AGG-007', configName: 'DEL Parking', ancillaryName: 'Lounge Access', category: 'Lounge', basePrice: 2000, currency: 'INR', status: 'Active' },
+  { id: 'HUB-AGG-008', configName: 'BOM Parking', ancillaryName: 'Fast Track', category: 'Priority service', basePrice: 700, currency: 'INR', status: 'Inactive' },
 ];
+
 
 // ─── Filter Options ───────────────────────────────────────────────────────────
 const CATEGORY_OPTIONS = ["Lounge", "Priority service", "Parking", "Concierge", "Baggage", "Connectivity"].map((v) => ({ label: v, value: v }));

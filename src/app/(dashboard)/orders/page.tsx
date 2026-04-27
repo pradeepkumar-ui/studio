@@ -767,7 +767,7 @@ export default function OrdersPage() {
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Pipeline Value</p>
                 <CreditCard className="h-4 w-4 text-blue-500" />
             </div>
-            <p className="text-3xl font-black mt-2 text-gray-900">${totalValue.toLocaleString()}</p>
+            <p className="text-3xl font-black mt-2 text-gray-900">₹{totalValue.toLocaleString()}</p>
             <div className="mt-2 text-[10px] text-gray-500 font-medium">Gross retailing revenue.</div>
         </Card>
       </div>

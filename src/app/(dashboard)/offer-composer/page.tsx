@@ -190,8 +190,8 @@ export default function OffersenseSimulatorPage() {
         airline: 'GAB',
         flightNumber: 'AC101',
         travelDate: '2025-10-28',
-        origin: 'LHR',
-        destination: 'JFK',
+        origin: 'BOM',
+        destination: 'DXB',
         tripType: 'one_way',
         geography: 'International',
         durationBand: 'Long-haul',
@@ -691,7 +691,7 @@ export default function OffersenseSimulatorPage() {
                                 {ALL_OFFERS.filter(o => o.domain === 'Airline').map(o => (
                                     <div key={o.id} className="p-3 bg-white border rounded-xl flex justify-between items-center text-xs font-bold">
                                         <span>{o.name}</span>
-                                        <span className="text-muted-foreground font-mono">${o.basePrice}</span>
+                                        <span className="text-muted-foreground font-mono">₹{o.basePrice}</span>
                                     </div>
                                 ))}
                             </div>
@@ -702,7 +702,7 @@ export default function OffersenseSimulatorPage() {
                                 {ALL_OFFERS.filter(o => o.domain === 'Airport').map(o => (
                                     <div key={o.id} className="p-3 bg-white border rounded-xl flex justify-between items-center text-xs font-bold">
                                         <span>{o.name}</span>
-                                        <span className="text-muted-foreground font-mono">${o.basePrice}</span>
+                                        <span className="text-muted-foreground font-mono">₹{o.basePrice}</span>
                                     </div>
                                 ))}
                             </div>
@@ -778,14 +778,14 @@ export default function OffersenseSimulatorPage() {
                                     <h4 className="font-black uppercase text-md">{offer.name}</h4>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-2xl font-black text-primary font-mono">${offer.finalPrice.toFixed(2)}</p>
+                                    <p className="text-2xl font-black text-primary font-mono">₹{offer.finalPrice.toFixed(2)}</p>
                                     <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Final Price</p>
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest">
                                     <span>Calculation Steps</span>
-                                    <span>Base: ${offer.basePrice}</span>
+                                    <span>Base: ₹{offer.basePrice}</span>
                                 </div>
                                 <div className="p-3 rounded-xl bg-slate-50 space-y-2">
                                     {offer.reasons.length > 0 ? offer.reasons.map((r, i) => (
@@ -891,7 +891,7 @@ export default function OffersenseSimulatorPage() {
                                             <p className="text-xs text-muted-foreground">Tailored for {simulationData?.loyaltyTier} member.</p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-2xl font-black text-blue-600 font-mono">${offer.finalPrice.toFixed(2)}</p>
+                                            <p className="text-2xl font-black text-blue-600 font-mono">₹{offer.finalPrice.toFixed(2)}</p>
                                             <Checkbox checked={selectedOffers.includes(offer.id)} onCheckedChange={() => {}} className="mt-2" />
                                         </div>
                                     </CardContent>
@@ -913,7 +913,7 @@ export default function OffersenseSimulatorPage() {
                                             <p className="text-xs text-muted-foreground">LHR T5 Exclusives.</p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-2xl font-black text-amber-600 font-mono">${offer.finalPrice.toFixed(2)}</p>
+                                            <p className="text-2xl font-black text-amber-600 font-mono">₹{offer.finalPrice.toFixed(2)}</p>
                                             <Checkbox checked={selectedOffers.includes(offer.id)} onCheckedChange={() => {}} className="mt-2" />
                                         </div>
                                     </CardContent>
@@ -984,7 +984,7 @@ export default function OffersenseSimulatorPage() {
                             return (
                                 <div key={id} className="flex justify-between items-center text-sm font-bold">
                                     <span className="text-slate-600">{offer?.name}</span>
-                                    <span className="font-mono">${offer?.finalPrice.toFixed(2)}</span>
+                                    <span className="font-mono">₹{offer?.finalPrice.toFixed(2)}</span>
                                 </div>
                             );
                         })}
@@ -993,7 +993,7 @@ export default function OffersenseSimulatorPage() {
                     <div className="flex justify-between items-center">
                         <span className="text-lg font-black uppercase">Total Due</span>
                         <span className="text-3xl font-black text-primary font-mono">
-                            ${selectedOffers.reduce((sum, id) => sum + (limitedOffers.find(o => o.id === id)?.finalPrice || 0), 0).toFixed(2)}
+                            ₹{selectedOffers.reduce((sum, id) => sum + (limitedOffers.find(o => o.id === id)?.finalPrice || 0), 0).toFixed(2)}
                         </span>
                     </div>
                     <Button onClick={next} className="w-full h-14 text-md font-black uppercase tracking-widest shadow-xl">
@@ -1069,7 +1069,7 @@ export default function OffersenseSimulatorPage() {
                                              {selectedOffers.filter(id => ALL_OFFERS.find(o => o.id === id)?.domain === 'Airline').length > 0 ? selectedOffers.filter(id => ALL_OFFERS.find(o => o.id === id)?.domain === 'Airline').map(id => (
                                                  <div key={id} className="flex justify-between text-sm font-bold">
                                                      <span className="text-slate-700">{ALL_OFFERS.find(o => o.id === id)?.name}</span>
-                                                     <span className="font-mono">${pricedOffers.find(o => o.id === id)?.finalPrice.toFixed(2)}</span>
+                                                     <span className="font-mono">₹{pricedOffers.find(o => o.id === id)?.finalPrice.toFixed(2)}</span>
                                                  </div>
                                              )) : <p className="text-xs italic text-muted-foreground">None added.</p>}
                                         </div>
@@ -1078,7 +1078,7 @@ export default function OffersenseSimulatorPage() {
                                              {selectedOffers.filter(id => ALL_OFFERS.find(o => o.id === id)?.domain === 'Airport').length > 0 ? selectedOffers.filter(id => ALL_OFFERS.find(o => o.id === id)?.domain === 'Airport').map(id => (
                                                  <div key={id} className="flex justify-between text-sm font-bold">
                                                      <span className="text-slate-700">{ALL_OFFERS.find(o => o.id === id)?.name}</span>
-                                                     <span className="font-mono">${pricedOffers.find(o => o.id === id)?.finalPrice.toFixed(2)}</span>
+                                                     <span className="font-mono">₹{pricedOffers.find(o => o.id === id)?.finalPrice.toFixed(2)}</span>
                                                  </div>
                                              )) : <p className="text-xs italic text-muted-foreground">None added.</p>}
                                         </div>
@@ -1088,7 +1088,7 @@ export default function OffersenseSimulatorPage() {
                                 <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 flex justify-between items-center">
                                     <p className="font-black text-primary uppercase text-sm">Ecosystem Order Value</p>
                                     <p className="text-4xl font-black font-mono tracking-tighter text-slate-900">
-                                        ${selectedOffers.reduce((sum, id) => sum + (pricedOffers.find(o => o.id === id)?.finalPrice || 0), 0).toFixed(2)}
+                                        ₹{selectedOffers.reduce((sum, id) => sum + (pricedOffers.find(o => o.id === id)?.finalPrice || 0), 0).toFixed(2)}
                                     </p>
                                 </div>
                             </CardContent>
