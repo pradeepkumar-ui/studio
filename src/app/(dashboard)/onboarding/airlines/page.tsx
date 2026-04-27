@@ -235,22 +235,22 @@ const mockAirlines: any[] = [
   { 
   id: '1',
   name: 'Indigo',
-  icaoCode: 'GAB',
+  icaoCode: 'IGO',
   pssType: 'Amadeus',
   pnrMessagingType: 'EDIFACT',
   status: 'Active',
   contactEmail: 'ops@global.com',
-  operatingAirports: ['DEL', 'BLR', 'HYD', 'MAA'] 
+  operatingAirports: ['BOM', 'DXB', 'DEL', 'SIN'] 
 },
 { 
   id: '2',
   name: 'AirIndia',
-  icaoCode: 'SBA',
+  icaoCode: 'AIC',
   pssType: 'Sabre',
   pnrMessagingType: 'EDIFACT',
   status: 'Active',
   contactEmail: 'pss.tech@skybridge.com',
-  operatingAirports: ['DEL', 'BOM', 'JFK', 'LHR'] 
+  operatingAirports: ['BOM', 'DXB', 'DEL', 'SIN'] 
 }
 ];
 

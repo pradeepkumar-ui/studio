@@ -260,11 +260,10 @@ export type AirlineOnboarding = z.infer<typeof airlineOnboardingSchema>;
 
 // ─── Mock Airports (unchanged) ────────────────────────────────────────────────
 const mockAirports = [
-  { value: 'LHR', label: 'London Heathrow (LHR)' },
-  { value: 'JFK', label: 'John F. Kennedy (JFK)' },
-  { value: 'SIN', label: 'Singapore Changi (SIN)' },
-  { value: 'DXB', label: 'Dubai International (DXB)' },
-  { value: 'CDG', label: 'Paris Charles de Gaulle (CDG)' },
+  { value: 'DXB', label: 'Dubai International Airport (DXB)' },
+  { value: 'SIN', label: 'Changi Airport (SIN)' },
+  { value: 'BOM', label: 'Chhatrapati Shivaji Maharaj International Airport (BOM)' },
+  { value: 'DEL', label: 'Indira Gandhi International Airport (DEL)' },
 ];
 
 // ─── Steps Config (using StepItem type from old code) ─────────────────────────

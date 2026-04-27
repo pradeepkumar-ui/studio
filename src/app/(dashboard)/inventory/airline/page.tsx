@@ -265,11 +265,11 @@ import { TableFilterBar } from '@/components/TableFilterbar/TableFilterBar';
 import { useTableFilters } from '@/hooks/useTableFilters';
 
 const mockAirlineInventory: any[] = [
-    { id: '1', ancillaryName: 'Extra Legroom', pssCode: 'EXLG', flightNumber: 'AC101', totalCapacity: 12, available: 10, reserved: 2, status: 'Open', aircraftType: 'A350', quotas: { Direct: 8, OTA: 2, GDS: 2 }, realTimePssSync: true , baseFare: "1500" },
-    { id: '2', ancillaryName: 'Extra Seat', pssCode: 'MEAL', flightNumber: 'LH450', totalCapacity: 50, available: 5, reserved: 10, status: 'Waitlist', aircraftType: 'B787', quotas: { Direct: 40, OTA: 10, GDS: 0 }, realTimePssSync: false, baseFare: "800" },
-    { id: '3', ancillaryName: 'Premium Wi-Fi', pssCode: 'WIFI', flightNumber: 'Global', totalCapacity: 500, available: 450, reserved: 5, status: 'Open', aircraftType: 'All', quotas: { Direct: 300, OTA: 100, GDS: 100 }, realTimePssSync: true, baseFare:"500" },
+    { id: '1', ancillaryName: 'Extra Legroom Seat', pssCode: 'EXLG', flightNumber: 'AC101', totalCapacity: 12, available: 10, reserved: 2, status: 'Open', aircraftType: 'A350', quotas: { Direct: 8, OTA: 2, GDS: 2 }, realTimePssSync: true , baseFare: "1500" },
+    { id: '2', ancillaryName: 'Extra Seat', pssCode: 'MEAL', flightNumber: 'LH450', totalCapacity: 50, available: 40, reserved: 10, status: 'Waitlist', aircraftType: 'B787', quotas: { Direct: 40, OTA: 10, GDS: 0 }, realTimePssSync: false, baseFare: "800" },
+    { id: '3', ancillaryName: 'Premium Wi-Fi (Unlimited)', pssCode: 'WIFI', flightNumber: 'Global', totalCapacity: 500, available: 495, reserved: 5, status: 'Open', aircraftType: 'All', quotas: { Direct: 300, OTA: 100, GDS: 100 }, realTimePssSync: true, baseFare:"500" },
     // { id: '4', ancillaryName: 'Priority Boarding', pssCode: 'PBRD', flightNumber: 'BA202', totalCapacity: 30, available: 12, reserved: 4, status: 'Open', aircraftType: 'A380', quotas: { Direct: 15, OTA: 10, GDS: 5 }, realTimePssSync: true },
-    { id: '5', ancillaryName: 'Extra Baggage', pssCode: 'XBAG', flightNumber: 'SQ308', totalCapacity: 100, available: 45, reserved: 8, status: 'Waitlist', aircraftType: 'B777', quotas: { Direct: 60, OTA: 30, GDS: 10 }, realTimePssSync: false , baseFare: "1200"},
+    { id: '5', ancillaryName: 'Priority Baggage', pssCode: 'XBAG', flightNumber: 'SQ308', totalCapacity: 100, available: 92, reserved: 8, status: 'Waitlist', aircraftType: 'B777', quotas: { Direct: 60, OTA: 30, GDS: 10 }, realTimePssSync: false , baseFare: "1200"},
     // { id: '6', ancillaryName: 'Lounge Access', pssCode: 'LOUN', flightNumber: 'EK202', totalCapacity: 20, available: 3, reserved: 12, status: 'Closed', aircraftType: 'A380', quotas: { Direct: 10, OTA: 5, GDS: 5 }, realTimePssSync: true },
 ];
 

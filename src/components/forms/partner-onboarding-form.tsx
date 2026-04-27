@@ -256,11 +256,18 @@ const partnerOnboardingSchema = z.object({
 
 export type PartnerOnboarding = z.infer<typeof partnerOnboardingSchema>;
 
+// const mockAirports = [
+//   { id: 'LHR', name: 'London Heathrow (LHR)' },
+//   { id: 'JFK', name: 'John F. Kennedy (JFK)' },
+//   { id: 'SIN', name: 'Singapore Changi (SIN)' },
+//   { id: 'DXB', label: 'Dubai International (DXB)' },
+// ];
+
 const mockAirports = [
-  { id: 'LHR', name: 'London Heathrow (LHR)' },
-  { id: 'JFK', name: 'John F. Kennedy (JFK)' },
-  { id: 'SIN', name: 'Singapore Changi (SIN)' },
-  { id: 'DXB', label: 'Dubai International (DXB)' },
+  { value: 'DXB', label: 'Dubai International Airport (DXB)' },
+  { value: 'SIN', label: 'Changi Airport (SIN)' },
+  { value: 'BOM', label: 'Chhatrapati Shivaji Maharaj International Airport (BOM)' },
+  { value: 'DEL', label: 'Indira Gandhi International Airport (DEL)' },
 ];
 
 // ─── Steps Config ─────────────────────────────────────────────────────────────
