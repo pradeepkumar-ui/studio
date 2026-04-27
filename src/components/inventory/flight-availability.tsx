@@ -26,7 +26,7 @@ type FlightAvailabilityResult = {
 }
 
 const mockAvailability: FlightAvailabilityResult = {
-    flight: 'AC101',
+    flight: '6E-6045',
     date: '2025-11-15',
     availability: [
         { class: 'J', count: 9 }, { class: 'C', count: 9 }, { class: 'D', count: 9 }, { class: 'Z', count: 7 }, { class: 'P', count: 0 },
@@ -37,7 +37,7 @@ const mockAvailability: FlightAvailabilityResult = {
 }
 
 export function FlightAvailability() {
-    const [flightNumber, setFlightNumber] = useState('AC101');
+    const [flightNumber, setFlightNumber] = useState('6E-6045');
     const [date, setDate] = useState('2025-11-15');
     const [isLoading, setIsLoading] = useState(false);
     const [result, setResult] = useState<FlightAvailabilityResult | null>(null);

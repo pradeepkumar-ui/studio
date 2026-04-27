@@ -163,20 +163,15 @@ type Step =
 // --- MOCK CONSTANTS ---
 
 const ALL_OFFERS = [
-    { id: 'O-A1', name: 'Preferred Seat', domain: 'Airline', basePrice: 20, type: 'Seat' },
-    { id: 'O-A2', name: 'Extra Legroom Seat', domain: 'Airline', basePrice: 50, type: 'Seat' },
-    { id: 'O-A3', name: 'Extra Baggage (23kg)', domain: 'Airline', basePrice: 45, type: 'Baggage' },
-    { id: 'O-A4', name: 'Priority Boarding', domain: 'Airline', basePrice: 15, type: 'Priority' },
-    { id: 'O-A5', name: 'Gourmet Meal Upgrade', domain: 'Airline', basePrice: 25, type: 'Meal' },
-    { id: 'O-A6', name: 'In-flight Wi-Fi', domain: 'Airline', basePrice: 10, type: 'Digital' },
-    { id: 'O-A7', name: 'Lounge Access (Carrier)', domain: 'Airline', basePrice: 40, type: 'Lounge' },
-    { id: 'O-A8', name: 'Business Class Upgrade', domain: 'Airline', basePrice: 250, type: 'Upgrade' },
-    { id: 'O-P1', name: 'Executive Lounge Access', domain: 'Airport', basePrice: 55, type: 'Lounge' },
-    { id: 'O-P2', name: 'Security Fast Track', domain: 'Airport', basePrice: 12, type: 'Priority' },
-    { id: 'O-P3', name: 'Meet & Greet Assist', domain: 'Airport', basePrice: 80, type: 'Service' },
-    { id: 'O-P4', name: 'VIP Buggy Service', domain: 'Airport', basePrice: 30, type: 'Service' },
+    { id: 'O-A1', name: 'Preferred Seat', domain: 'Airline', basePrice: 720, type: 'Seat' },
+    { id: 'O-A2', name: 'Extra Legroom Seat', domain: 'Airline', basePrice: 1650, type: 'Seat' },
+    { id: 'O-A3', name: 'Extra Baggage (23kg)', domain: 'Airline', basePrice: 1140, type: 'Baggage' },
+    { id: 'O-A6', name: 'In-flight Wi-Fi', domain: 'Airline', basePrice: 500, type: 'Digital' },
+    { id: 'O-P1', name: 'Executive Lounge Access', domain: 'Airport', basePrice: 2070, type: 'Lounge' },
+    { id: 'O-P2', name: 'Security Fast Track', domain: 'Airport', basePrice: 770, type: 'Priority' },
+    { id: 'O-P3', name: 'Parking', domain: 'Airport', basePrice: 800, type: 'Service' },
+    { id: 'O-P4', name: 'Airport Wi-Fi', domain: 'Airport', basePrice: 500, type: 'Service' },
 ];
-
 export default function OffersenseSimulatorPage() {
   const [currentStep, setCurrentStep] = useState<Step>('INPUT');
   const [simulationData, setSimulationData] = useState<SimulationData | null>(null);
@@ -184,12 +179,57 @@ export default function OffersenseSimulatorPage() {
   const [selectedOffers, setSelectedOffers] = useState<string[]>([]);
   const { toast } = useToast();
 
+  // ─── QR Code ──────────────────────────────────────────────────────────────────
+const QR_DOTS = [
+  [73, 12], [79, 12], [85, 12], [91, 12], [97, 12], [103, 12], [109, 12],
+  [73, 18], [85, 18], [97, 18], [109, 18], [73, 24], [79, 24], [85, 24], [91, 24], [103, 24], [109, 24],
+  [73, 30], [85, 30], [97, 30], [103, 30], [73, 36], [79, 36], [91, 36], [97, 36], [109, 36],
+  [73, 42], [79, 42], [85, 42], [103, 42], [73, 48], [85, 48], [91, 48], [97, 48], [103, 48], [109, 48],
+  [12, 73], [18, 73], [30, 73], [36, 73], [48, 73], [54, 73], [12, 79], [24, 79], [36, 79], [48, 79], [60, 79],
+  [12, 85], [18, 85], [24, 85], [36, 85], [42, 85], [54, 85], [60, 85],
+  [12, 91], [24, 91], [30, 91], [42, 91], [54, 91], [12, 97], [18, 97], [30, 97], [36, 97], [48, 97], [60, 97],
+  [12, 103], [24, 103], [30, 103], [42, 103], [48, 103], [54, 103],
+  [12, 109], [18, 109], [24, 109], [30, 109], [42, 109], [54, 109], [60, 109],
+  [73, 73], [79, 73], [91, 73], [97, 73], [109, 73], [121, 73], [133, 73], [145, 73], [157, 73],
+  [73, 79], [85, 79], [97, 79], [109, 79], [127, 79], [139, 79], [151, 79], [163, 79],
+  [73, 85], [79, 85], [91, 85], [103, 85], [115, 85], [127, 85], [139, 85], [151, 85],
+  [73, 91], [85, 91], [97, 91], [115, 91], [121, 91], [133, 91], [145, 91], [157, 91], [163, 91],
+  [73, 97], [79, 97], [91, 97], [103, 97], [109, 97], [121, 97], [139, 97], [151, 97],
+  [73, 103], [85, 103], [97, 103], [109, 103], [127, 103], [133, 103], [145, 103], [157, 103],
+  [73, 109], [79, 109], [85, 109], [103, 109], [115, 109], [121, 109], [133, 109], [145, 109], [163, 109],
+  [73, 115], [91, 115], [97, 115], [109, 115], [127, 115], [139, 115], [151, 115],
+  [73, 121], [79, 121], [85, 121], [97, 121], [103, 121], [115, 121], [127, 121], [139, 121], [157, 121], [163, 121],
+  [73, 127], [85, 127], [103, 127], [109, 127], [121, 127], [133, 127], [145, 127],
+  [73, 133], [79, 133], [91, 133], [97, 133], [109, 133], [121, 133], [133, 133], [145, 133], [157, 133],
+  [73, 139], [85, 139], [91, 139], [103, 139], [115, 139], [127, 139], [139, 139], [151, 139],
+  [73, 145], [79, 145], [91, 145], [103, 145], [109, 145], [121, 145], [133, 145], [145, 145], [157, 145], [163, 145],
+  [73, 151], [85, 151], [97, 151], [109, 151], [121, 151], [127, 151], [139, 151], [151, 151],
+  [73, 157], [79, 157], [91, 157], [97, 157], [109, 157], [121, 157], [133, 157], [145, 157], [157, 157],
+  [73, 163], [85, 163], [91, 163], [103, 163], [115, 163], [127, 163], [145, 163], [157, 163], [163, 163],
+];
+  const QRCode = () => (
+  <svg width="160" height="160" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="QR code">
+    <rect width="180" height="180" fill="white" />
+    <rect x="12" y="12" width="49" height="49" rx="3" fill="#0f1c4d" />
+    <rect x="19" y="19" width="35" height="35" rx="2" fill="white" />
+    <rect x="25" y="25" width="23" height="23" rx="1" fill="#0f1c4d" />
+    <rect x="119" y="12" width="49" height="49" rx="3" fill="#0f1c4d" />
+    <rect x="126" y="19" width="35" height="35" rx="2" fill="white" />
+    <rect x="132" y="25" width="23" height="23" rx="1" fill="#0f1c4d" />
+    <rect x="12" y="119" width="49" height="49" rx="3" fill="#0f1c4d" />
+    <rect x="19" y="126" width="35" height="35" rx="2" fill="white" />
+    <rect x="25" y="132" width="23" height="23" rx="1" fill="#0f1c4d" />
+    {QR_DOTS.map(([x, y], i) => (
+      <rect key={i} x={x} y={y} width="5" height="5" fill="#0f1c4d" />
+    ))}
+  </svg>
+);
   const form = useForm<SimulationData>({
     resolver: zodResolver(simulationSchema),
     defaultValues: {
-        airline: 'GAB',
-        flightNumber: 'AC101',
-        travelDate: '2025-10-28',
+        airline: 'IGO',
+        flightNumber: '6E-6045',
+        travelDate: '2026-10-24',
         origin: 'BOM',
         destination: 'DXB',
         tripType: 'one_way',
@@ -200,7 +240,7 @@ export default function OffersenseSimulatorPage() {
         channel: 'CUSS',
         adults: 2,
         children: 1,
-        infants: 0,
+        infants: 1,
         paxType: 'Family',
         purpose: 'Leisure',
         isFrequent: true,
@@ -216,7 +256,7 @@ export default function OffersenseSimulatorPage() {
         premiumPref: 'Medium',
         priceSensitivity: 'Medium',
         loadFactor: 82,
-        aircraftType: 'A350-900',
+        aircraftType: ' Airbus A320/A3210',
         genAirlineOffers: true,
         genAirportOffers: true,
         runExplanation: true,
@@ -423,7 +463,7 @@ export default function OffersenseSimulatorPage() {
                                                         <FormLabel>Airline</FormLabel>
                                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                             <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                                            <SelectContent><SelectItem value="GAB">Global Airways</SelectItem><SelectItem value="SBA">SkyBridge Airlines</SelectItem></SelectContent></Select></FormItem>
+                                                            <SelectContent><SelectItem value="IGO">IndiGo</SelectItem><SelectItem value="AIC">AirIndia</SelectItem></SelectContent></Select></FormItem>
                                                     )} />
                                                     <FormField control={form.control} name="flightNumber" render={({field}) => (<FormItem><FormLabel>Flight #</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)} />
                                                     <FormField control={form.control} name="travelDate" render={({field}) => (<FormItem><FormLabel>Travel Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl></FormItem>)} />
@@ -590,7 +630,7 @@ export default function OffersenseSimulatorPage() {
                         <div className="space-y-4">
                             <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Passenger</p>
                             <div className="p-4 rounded-xl bg-slate-50 border space-y-1">
-                                <p className="font-bold text-sm">{simulationData.adults} Adults, {simulationData.children} Children</p>
+                                <p className="font-bold text-sm">{simulationData.adults} Adults, {simulationData.children} Children , {simulationData.infants} Infant</p>
                                 <p className="text-xs text-muted-foreground">{simulationData.paxType} • {simulationData.purpose}</p>
                                 <div className="flex items-center gap-1.5 mt-2">
                                     <Trophy className="h-3 w-3 text-amber-500" />
@@ -880,7 +920,7 @@ export default function OffersenseSimulatorPage() {
                     <section className="space-y-6">
                         <h3 className="text-sm font-black uppercase text-blue-600 flex items-center gap-2"><Plane className="h-4 w-4" /> Airline Offers</h3>
                         <div className="grid grid-cols-1 gap-4">
-                            {limitedOffers.filter(o => o.domain === 'Airline').map(offer => (
+                            {ALL_OFFERS.filter(o => o.domain === 'Airline').map(offer => (
                                 <Card key={offer.id} className={cn(
                                     "transition-all cursor-pointer border-2 hover:shadow-lg",
                                     selectedOffers.includes(offer.id) ? "border-blue-600 bg-blue-50/20" : "border-slate-100"
@@ -891,7 +931,7 @@ export default function OffersenseSimulatorPage() {
                                             <p className="text-xs text-muted-foreground">Tailored for {simulationData?.loyaltyTier} member.</p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-2xl font-black text-blue-600 font-mono">₹{offer.finalPrice.toFixed(2)}</p>
+                                            <p className="text-2xl font-black text-blue-600 font-mono">₹{(offer.finalPrice ?? offer.basePrice).toFixed(2)}</p>
                                             <Checkbox checked={selectedOffers.includes(offer.id)} onCheckedChange={() => {}} className="mt-2" />
                                         </div>
                                     </CardContent>
@@ -902,7 +942,7 @@ export default function OffersenseSimulatorPage() {
                     <section className="space-y-6">
                         <h3 className="text-sm font-black uppercase text-amber-600 flex items-center gap-2"><Building2 className="h-4 w-4" /> Airport Offers</h3>
                         <div className="grid grid-cols-1 gap-4">
-                            {limitedOffers.filter(o => o.domain === 'Airport').map(offer => (
+                            {ALL_OFFERS.filter(o => o.domain === 'Airport').map(offer => (
                                 <Card key={offer.id} className={cn(
                                     "transition-all cursor-pointer border-2 hover:shadow-lg",
                                     selectedOffers.includes(offer.id) ? "border-amber-600 bg-amber-50/20" : "border-slate-100"
@@ -913,7 +953,7 @@ export default function OffersenseSimulatorPage() {
                                             <p className="text-xs text-muted-foreground">LHR T5 Exclusives.</p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-2xl font-black text-amber-600 font-mono">₹{offer.finalPrice.toFixed(2)}</p>
+                                            <p className="text-2xl font-black text-amber-600 font-mono">₹{(offer.finalPrice ?? offer.basePrice).toFixed(2)}</p>
                                             <Checkbox checked={selectedOffers.includes(offer.id)} onCheckedChange={() => {}} className="mt-2" />
                                         </div>
                                     </CardContent>
@@ -980,11 +1020,11 @@ export default function OffersenseSimulatorPage() {
                     <div className="space-y-4">
                         <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Selected Add-ons</p>
                         {selectedOffers.map(id => {
-                            const offer = limitedOffers.find(o => o.id === id);
+                            const offer = limitedOffers.find(o => o.id === id)  ?? ALL_OFFERS.find(o => o.id === id);
                             return (
                                 <div key={id} className="flex justify-between items-center text-sm font-bold">
                                     <span className="text-slate-600">{offer?.name}</span>
-                                    <span className="font-mono">₹{offer?.finalPrice.toFixed(2)}</span>
+                                    <span className="font-mono">₹{(offer?.finalPrice ?? offer?.basePrice ?? 0).toFixed(2)}</span>
                                 </div>
                             );
                         })}
@@ -993,7 +1033,7 @@ export default function OffersenseSimulatorPage() {
                     <div className="flex justify-between items-center">
                         <span className="text-lg font-black uppercase">Total Due</span>
                         <span className="text-3xl font-black text-primary font-mono">
-                            ₹{selectedOffers.reduce((sum, id) => sum + (limitedOffers.find(o => o.id === id)?.finalPrice || 0), 0).toFixed(2)}
+                            ₹{selectedOffers.reduce((sum, id) => sum + (limitedOffers.find(o => o.id === id)?.finalPrice ?? ALL_OFFERS.find(o => o.id === id)?.basePrice ?? 0), 0).toFixed(2)}
                         </span>
                     </div>
                     <Button onClick={next} className="w-full h-14 text-md font-black uppercase tracking-widest shadow-xl">
@@ -1069,7 +1109,7 @@ export default function OffersenseSimulatorPage() {
                                              {selectedOffers.filter(id => ALL_OFFERS.find(o => o.id === id)?.domain === 'Airline').length > 0 ? selectedOffers.filter(id => ALL_OFFERS.find(o => o.id === id)?.domain === 'Airline').map(id => (
                                                  <div key={id} className="flex justify-between text-sm font-bold">
                                                      <span className="text-slate-700">{ALL_OFFERS.find(o => o.id === id)?.name}</span>
-                                                     <span className="font-mono">₹{pricedOffers.find(o => o.id === id)?.finalPrice.toFixed(2)}</span>
+                                                     <span className="font-mono">₹{pricedOffers.find(o => o.id === id)?.finalPrice.toFixed(2) ?? "1500.00"} </span>
                                                  </div>
                                              )) : <p className="text-xs italic text-muted-foreground">None added.</p>}
                                         </div>
@@ -1099,14 +1139,15 @@ export default function OffersenseSimulatorPage() {
                         <Card className="rounded-3xl p-6 space-y-4">
                              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest text-center">Digital Fulfillment Tokens</p>
                              <div className="p-4 bg-slate-50 rounded-2xl flex flex-col items-center">
-                                 <Image 
+                                 {/* <Image 
                                     src="https://picsum.photos/seed/final-qr/200/200" 
                                     alt="Unified Token" 
                                     width={120} 
                                     height={120} 
                                     className="rounded-lg opacity-80 mix-blend-multiply"
                                     data-ai-hint="qr code"
-                                />
+                                /> */}
+                                <QRCode />
                              </div>
                              <div className="space-y-2">
                                  <div className="flex items-center gap-2 text-[9px] font-black text-blue-600 bg-blue-50 p-2 rounded-lg border border-blue-100 uppercase">
