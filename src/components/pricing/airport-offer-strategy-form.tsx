@@ -94,22 +94,39 @@ interface AirportOfferStrategyFormProps {
   onCancel: () => void;
 }
 
+// const mockAirportAncillariesFallback = [
+//     { id: 'HUB-AGG-001', configName: 'LHR T5 Lounge Logic', ancillaryName: 'Executive Lounge Access', basePrice: 45.00, currency: 'INR' },
+//     { id: 'HUB-AGG-002', configName: 'JFK Fast Track Pacing', ancillaryName: 'Fast Track Security', basePrice: 15.00, currency: 'INR' },
+//     { id: 'HUB-AGG-003', configName: 'SIN Valet Hub SKU', ancillaryName: 'VIP Valet Parking', basePrice: 20.00, currency: 'INR' },
+//     { id: 'HUB-AGG-004', configName: 'LHR Priority Boarding', ancillaryName: 'Priority Boarding Hub', basePrice: 10.00, currency: 'INR' },
+//     { id: 'HUB-AGG-005', configName: 'DXB Sleeping Pod Logic', ancillaryName: 'Sleeping Pod (6h)', basePrice: 60.00, currency: 'INR' },
+//     { id: 'HUB-AGG-006', configName: 'FRA Chauffeur Service', ancillaryName: 'Airport Chauffeur', basePrice: 85.00, currency: 'INR' },
+//     { id: 'HUB-AGG-007', configName: 'SIN Transit Comfort', ancillaryName: 'Amenity Kit Hub', basePrice: 15.00, currency: 'INR' },
+// ];
+
 const mockAirportAncillariesFallback = [
-    { id: 'HUB-AGG-001', configName: 'LHR T5 Lounge Logic', ancillaryName: 'Executive Lounge Access', basePrice: 45.00, currency: 'INR' },
-    { id: 'HUB-AGG-002', configName: 'JFK Fast Track Pacing', ancillaryName: 'Fast Track Security', basePrice: 15.00, currency: 'INR' },
-    { id: 'HUB-AGG-003', configName: 'SIN Valet Hub SKU', ancillaryName: 'VIP Valet Parking', basePrice: 20.00, currency: 'INR' },
-    { id: 'HUB-AGG-004', configName: 'LHR Priority Boarding', ancillaryName: 'Priority Boarding Hub', basePrice: 10.00, currency: 'INR' },
-    { id: 'HUB-AGG-005', configName: 'DXB Sleeping Pod Logic', ancillaryName: 'Sleeping Pod (6h)', basePrice: 60.00, currency: 'INR' },
-    { id: 'HUB-AGG-006', configName: 'FRA Chauffeur Service', ancillaryName: 'Airport Chauffeur', basePrice: 85.00, currency: 'INR' },
-    { id: 'HUB-AGG-007', configName: 'SIN Transit Comfort', ancillaryName: 'Amenity Kit Hub', basePrice: 15.00, currency: 'INR' },
+    { id: 'HUB-AGG-001', configName: 'BOM Lounge Optimization', ancillaryName: 'Executive Lounge Access', basePrice: 45.00, currency: 'INR' },
+    { id: 'HUB-AGG-002', configName: 'DEL Security Pacing Logic', ancillaryName: 'Fast Track Security', basePrice: 15.00, currency: 'INR' },
+    { id: 'HUB-AGG-003', configName: 'BOM Parking Optimization', ancillaryName: 'VIP Valet Parking', basePrice: 20.00, currency: 'INR' },
+    { id: 'HUB-AGG-004', configName: 'DEL Wi-Fi Optimization', ancillaryName: 'Priority Boarding Hub', basePrice: 10.00, currency: 'INR' },
+    { id: 'HUB-AGG-005', configName: 'DEL Lounge Optimization', ancillaryName: 'Sleeping Pod (6h)', basePrice: 60.00, currency: 'INR' },
+    { id: 'HUB-AGG-006', configName: 'BOM Fast Track Optimization', ancillaryName: 'Airport Chauffeur', basePrice: 85.00, currency: 'INR' },
+    // { id: 'HUB-AGG-007', configName: 'SIN Transit Comfort', ancillaryName: 'Amenity Kit Hub', basePrice: 15.00, currency: 'INR' },
 ];
 
+// const mockAirportCohortsFallback = [
+//     { id: 'AC-001', cohortId: 'BOM_BIZ_WAIT', name: 'BOM High-Wait Business' },
+//     { id: 'AC-002', cohortId: 'DEL_FAM_TRANSIT', name: 'DEL Transit Family' },
+//     { id: 'AC-003', cohortId: 'DEL_ELITE_ARRIVE', name: 'DEL Elite Arrivals' },
+//     { id: 'AC-004', cohortId: 'TRANSIT_LONG_HAUL', name: 'Global Long-Haul Transit' }
+// ];
 const mockAirportCohortsFallback = [
-    { id: 'AC-001', cohortId: 'BOM_BIZ_WAIT', name: 'BOM High-Wait Business' },
-    { id: 'AC-002', cohortId: 'DEL_FAM_TRANSIT', name: 'DEL Transit Family' },
-    { id: 'AC-003', cohortId: 'DEL_ELITE_ARRIVE', name: 'DEL Elite Arrivals' },
-    { id: 'AC-004', cohortId: 'TRANSIT_LONG_HAUL', name: 'Global Long-Haul Transit' }
+    { id: 'AC-001', cohortId: 'BOM_BIZ_WAIT', name: 'Time Sensitive' },
+    { id: 'AC-002', cohortId: 'DEL_FAM_TRANSIT', name: 'Premium Taveller' },
+    { id: 'AC-003', cohortId: 'DEL_ELITE_ARRIVE', name: 'Family' },
+    { id: 'AC-004', cohortId: 'TRANSIT_LONG_HAUL', name: 'Leisure Traveller' }
 ];
+
 export function AirportOfferStrategyForm({ offer, onSubmit, onCancel }: AirportOfferStrategyFormProps) {
   const firestore = useFirestore();
   const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
@@ -276,13 +293,13 @@ export function AirportOfferStrategyForm({ offer, onSubmit, onCancel }: AirportO
                               {calculation.selectedProducts.map((p: any) => (
                                   <div key={p.id} className="flex justify-between items-center text-sm">
                                       <span className="text-muted-foreground font-medium">{p.ancillaryName || p.configName}</span>
-                                      <span className="font-mono font-bold">${p.basePrice?.toFixed(2)}</span>
+                                      <span className="font-mono font-bold">₹{p.basePrice?.toFixed(2)}</span>
                                   </div>
                               ))}
                               <Separator className="my-2" />
                               <div className="flex justify-between items-center text-sm font-black">
                                   <span>Total Registry Starting Sum</span>
-                                  <span className="text-primary">${calculation.baseTotal.toFixed(2)}</span>
+                                  <span className="text-primary">₹{calculation.baseTotal.toFixed(2)}</span>
                               </div>
                           </div>
                       </div>
@@ -303,7 +320,7 @@ export function AirportOfferStrategyForm({ offer, onSubmit, onCancel }: AirportO
                                 <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                                 <SelectContent>
                                     <SelectItem value="PercentageDiscount">Bundle Discount (%)</SelectItem>
-                                    <SelectItem value="FixedDiscount">Fixed Discount ($)</SelectItem>
+                                    <SelectItem value="FixedDiscount">Fixed Discount (₹)</SelectItem>
                                     <SelectItem value="FixedPrice">Specific Bundle Price</SelectItem>
                                 </SelectContent>
                             </Select>
@@ -372,10 +389,10 @@ export function AirportOfferStrategyForm({ offer, onSubmit, onCancel }: AirportO
                           <ShieldCheck className="h-3.5 w-3.5" /> 5. Commercial Integrity
                       </div>
                       <FormField control={form.control} name="guardRails.minPrice" render={({ field }) => (
-                          <FormItem><FormLabel className="text-xs">Absolute Floor ($)</FormLabel><FormControl><Input type="number" className="h-8 text-xs" {...field} /></FormControl></FormItem>
+                          <FormItem><FormLabel className="text-xs">Absolute Floor (₹)</FormLabel><FormControl><Input type="number" className="h-8 text-xs" {...field} /></FormControl></FormItem>
                       )} />
                       <FormField control={form.control} name="guardRails.maxPrice" render={({ field }) => (
-                          <FormItem><FormLabel className="text-xs">Absolute Ceiling ($)</FormLabel><FormControl><Input type="number" className="h-8 text-xs" {...field} /></FormControl></FormItem>
+                          <FormItem><FormLabel className="text-xs">Absolute Ceiling (₹)</FormLabel><FormControl><Input type="number" className="h-8 text-xs" {...field} /></FormControl></FormItem>
                       )} />
                       <p className="text-[9px] text-muted-foreground italic">Enforced at hub checkout to protect ecosystem margins.</p>
                   </div>
@@ -393,18 +410,18 @@ export function AirportOfferStrategyForm({ offer, onSubmit, onCancel }: AirportO
                         <div className="space-y-4">
                             <div className="flex justify-between items-center text-slate-400 text-xs uppercase font-bold tracking-tighter">
                                 <span>Hub Base Sum</span>
-                                <span className="font-mono text-slate-200">${calculation.baseTotal.toFixed(2)}</span>
+                                <span className="font-mono text-slate-200">₹{calculation.baseTotal.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between items-center text-slate-400 text-xs uppercase font-bold tracking-tighter">
                                 <span>Promo Adjustment</span>
                                 <div className="text-right">
-                                    <div className="font-mono text-emerald-400">-${(calculation.baseTotal - calculation.offerAdjusted).toFixed(2)}</div>
+                                    <div className="font-mono text-emerald-400">-₹{(calculation.baseTotal - calculation.offerAdjusted).toFixed(2)}</div>
                                 </div>
                             </div>
                             {watchDynamic.enabled && (
                                 <div className="flex justify-between items-center text-slate-400 text-xs uppercase font-bold tracking-tighter">
                                     <span>Hub Flex ({watchDynamic.adjustmentPercent}%)</span>
-                                    <span className="font-mono text-amber-400">+${(calculation.finalCalculated - calculation.offerAdjusted).toFixed(2)}</span>
+                                    <span className="font-mono text-amber-400">+₹{(calculation.finalCalculated - calculation.offerAdjusted).toFixed(2)}</span>
                                 </div>
                             )}
                         </div>
@@ -416,7 +433,7 @@ export function AirportOfferStrategyForm({ offer, onSubmit, onCancel }: AirportO
                                 <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Final Sellable Hub Price</span>
                                 <div className="text-right">
                                     <div className={cn("text-4xl font-black font-mono tracking-tighter", calculation.wasCapped ? "text-amber-500" : "text-white")}>
-                                        ${calculation.cappedPrice.toFixed(2)}
+                                        ₹{calculation.cappedPrice.toFixed(2)}
                                     </div>
                                     <div className="text-[10px] text-slate-500 font-bold uppercase">per unit</div>
                                 </div>
@@ -495,7 +512,7 @@ export function AirportOfferStrategyForm({ offer, onSubmit, onCancel }: AirportO
                                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{form.getValues('type')} Hub Offer</p>
                             </div>
                             <div className="text-right">
-                                <p className="text-3xl font-black text-primary font-mono">${calculation.cappedPrice.toFixed(2)}</p>
+                                <p className="text-3xl font-black text-primary font-mono">₹{calculation.cappedPrice.toFixed(2)}</p>
                                 <Badge variant="outline" className="text-[9px] font-bold uppercase">Dynamic Final Price</Badge>
                             </div>
                         </div>
@@ -510,7 +527,7 @@ export function AirportOfferStrategyForm({ offer, onSubmit, onCancel }: AirportO
                                             <p className="text-xs font-bold">{p.ancillaryName}</p>
                                             <p className="text-[9px] text-muted-foreground uppercase font-mono">{p.configName}</p>
                                         </div>
-                                        <Badge variant="outline" className="text-[9px] font-mono">${p.basePrice?.toFixed(2)}</Badge>
+                                        <Badge variant="outline" className="text-[9px] font-mono">₹{p.basePrice?.toFixed(2)}</Badge>
                                     </div>
                                 ))}
                             </div>

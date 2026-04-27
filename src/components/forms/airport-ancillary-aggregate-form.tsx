@@ -101,11 +101,11 @@
 //   const airportServicesQuery = React.useMemo(() => firestore ? collection(firestore, 'airportServices') : undefined, [firestore]);
 //   const { data: airportServicesCollection } = useCollection(airportServicesQuery);
 
-//   const availableAncillaries = React.useMemo(() => {
-//     return (airportServicesCollection && airportServicesCollection.length > 0) 
-//       ? (airportServicesCollection as any[]) 
-//       : mockAirportAncillariesFallback;
-//   }, [airportServicesCollection]);
+  // const availableAncillaries = React.useMemo(() => {
+  //   return (airportServicesCollection && airportServicesCollection.length > 0) 
+  //     ? (airportServicesCollection as any[]) 
+  //     : mockAirportAncillariesFallback;
+  // }, [airportServicesCollection]);
 
 //   const initialParameters = React.useMemo(() => {
 //     if (!aggregate?.parameters) return [];
@@ -425,6 +425,14 @@ const mockAirportInventory: any[] = [
 { id: '3', ancillaryName: 'VIP Valet Parking', airportCode: 'DEL', terminal: 'T1', zone: 'Carpark A', supplier: 'Changi Valet', totalCapacity: 20, available: 0, syncStatus: 'Critical', quotas: { CUSS: 2, CUTE: 2, Mobile: 16 }, timeSlotBased: true, operationalMode: 'NORMAL', realTimeSync: true, ancillaryCategory: 'Parking', basePrice: 600, currency: 'INR', timeSlot: '20:00 - 23:00', airportConfigMatch: true }
 ];
 
+const mockAirportAncillariesFallback = [
+  { id: 'ap1', name: 'Executive Lounge Access', ancillaryCode: 'LOU', category: 'Lounge', airportCode: 'LHR' },
+  { id: 'ap2', name: 'Fast Track Security', ancillaryCode: 'FST', category: 'Priority service', airportCode: 'JFK' },
+  { id: 'ap3', name: 'VIP Valet Parking', ancillaryCode: 'VAL', category: 'Parking', airportCode: 'SIN' },
+  { id: 'ap4', name: 'Premium Sleeping Pod (6h)', ancillaryCode: 'POD', category: 'Inflight comfort', airportCode: 'DXB' },
+  { id: 'ap5', name: 'Porter Service (3 Bags)', ancillaryCode: 'PTR', category: 'Special service', airportCode: 'LHR' },
+];
+
 // ─── Steps Config ─────────────────────────────────────────────────────────────
 const STEPS: StepItem[] = [
   { id: 1, label: 'Hub Configuration Target' },
@@ -577,7 +585,8 @@ export function AirportAncillaryAggregateForm({ aggregate, onSubmit, onCancel }:
                       Base Price (Per Unit) <span className="text-rose-500">*</span>
                     </FormLabel>
                     <div className="relative">
-                      <DollarSign className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      {/* <DollarSign className="absolute left-3 top-3 h-4 w-4 text-slate-400" /> */}
+                      <span className="absolute left-3 top-3 h-4 w-4 text-slate-400" >₹</span>
                       <FormControl>
                         <Input 
                           type="number" 

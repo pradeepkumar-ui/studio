@@ -230,15 +230,28 @@ import { useTableFilters } from '@/hooks/useTableFilters';
 
 // ─── Mock Data ─────────────────────────────────────────────────────────────────
 const mockAirlines: any[] = [
-  { id: '1', name: 'Global Airways',     icaoCode: 'GAB', pssType: 'Amadeus',   pnrMessagingType: 'EDIFACT', status: 'Active',     contactEmail: 'ops@global.com',           operatingAirports: ['LHR', 'JFK', 'DXB'] },
-  { id: '2', name: 'SkyBridge Airlines', icaoCode: 'SBA', pssType: 'Sabre',     pnrMessagingType: 'EDIFACT', status: 'Active',     contactEmail: 'pss.tech@skybridge.com',   operatingAirports: ['SIN', 'HKG'] },
-  { id: '3', name: 'MetroLink Air',      icaoCode: 'MLN', pssType: 'Navitaire', pnrMessagingType: 'NDC',     status: 'Onboarding', contactEmail: 'metro@ops.net',            operatingAirports: ['LHR'] },
-  { id: '4', name: 'ExpressJet',         icaoCode: 'EXJ', pssType: 'Amadeus',   pnrMessagingType: 'EDIFACT', status: 'Active',     contactEmail: 'ops@expressjet.com',       operatingAirports: ['JFK', 'CDG'] },
-  { id: '5', name: 'Pacific Wings',      icaoCode: 'PAW', pssType: 'Sabre',     pnrMessagingType: 'NDC',     status: 'Active',     contactEmail: 'contact@pacificwings.com', operatingAirports: ['SIN', 'HKG', 'NRT'] },
-  { id: '6', name: 'EuroConnect',        icaoCode: 'EUC', pssType: 'Navitaire', pnrMessagingType: 'EDIFACT', status: 'Onboarding', contactEmail: 'info@euroconnect.com',     operatingAirports: ['LHR', 'FRA', 'CDG'] },
-  { id: '7', name: 'Sunrise Air',        icaoCode: 'SUN', pssType: 'Amadeus',   pnrMessagingType: 'REST',    status: 'Inactive',   contactEmail: 'admin@sunriseair.com',     operatingAirports: ['DXB', 'JFK'] },
-  { id: '8', name: 'Northern Spirit',    icaoCode: 'NOS', pssType: 'Sabre',     pnrMessagingType: 'EDIFACT', status: 'Onboarding', contactEmail: 'info@northernspirit.com',  operatingAirports: ['LHR'] },
-  { id: '9', name: 'AsiaLink',           icaoCode: 'ASL', pssType: 'Navitaire', pnrMessagingType: 'SOAP',    status: 'Active',     contactEmail: 'contact@asialink.com',     operatingAirports: ['SIN', 'HKG'] },
+  // { id: '1', name: 'Indigo',     icaoCode: 'GAB', pssType: 'Amadeus',   pnrMessagingType: 'EDIFACT', status: 'Active',     contactEmail: 'ops@global.com',           operatingAirports: ['LHR', 'JFK', 'DXB'] },
+  // { id: '2', name: 'AirIndia', icaoCode: 'SBA', pssType: 'Sabre',     pnrMessagingType: 'EDIFACT', status: 'Active',     contactEmail: 'pss.tech@skybridge.com',   operatingAirports: ['SIN', 'HKG'] },
+  { 
+  id: '1',
+  name: 'Indigo',
+  icaoCode: 'GAB',
+  pssType: 'Amadeus',
+  pnrMessagingType: 'EDIFACT',
+  status: 'Active',
+  contactEmail: 'ops@global.com',
+  operatingAirports: ['DEL', 'BLR', 'HYD', 'MAA'] 
+},
+{ 
+  id: '2',
+  name: 'AirIndia',
+  icaoCode: 'SBA',
+  pssType: 'Sabre',
+  pnrMessagingType: 'EDIFACT',
+  status: 'Active',
+  contactEmail: 'pss.tech@skybridge.com',
+  operatingAirports: ['DEL', 'BOM', 'JFK', 'LHR'] 
+}
 ];
 
 // ─── Filter Options ───────────────────────────────────────────────────────────

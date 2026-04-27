@@ -356,19 +356,26 @@ const airlineInventorySchema = z.object({
 export type AirlineInventory = z.infer<typeof airlineInventorySchema>;
 
 const mockAncillaries = [
-  { id: 'a1', name: 'Extra Legroom Seat', pssCode: 'EXLG' },
-  { id: 'a2', name: 'Gourmet Meal Pre-order', pssCode: 'MEAL' },
-  { id: 'a3', name: 'Premium Wi-Fi (Unlimited)', pssCode: 'WIFI' },
-  { id: 'a4', name: 'Preferred Zone Seat', pssCode: 'PFRD' },
-  { id: 'a5', name: 'Twin-Seat Blocking', pssCode: 'TSEAT' },
-  { id: 'a6', name: '1st Checked Bag (23kg)', pssCode: 'BAG1' },
-  { id: 'a7', name: 'Heavy Checked Bag (32kg)', pssCode: 'BAGH' },
-  { id: 'a8', name: 'Sports Equipment (Oversize)', pssCode: 'SPRT' },
-  { id: 'a9', name: 'Lounge Access Voucher', pssCode: 'LOUA' },
-  { id: 'a10', name: 'Standby Upgrade (J Class)', pssCode: 'UPGS' },
-  { id: 'a11', name: 'Pet in Cabin', pssCode: 'PETC' },
-  { id: 'a12', name: 'Unaccompanied Minor', pssCode: 'UMNR' },
-  { id: 'a13', name: 'Priority Boarding', pssCode: 'PBDG' },
+  // { id: 'a1', name: 'Extra Legroom Seat', pssCode: 'EXLG' },
+  // { id: 'a2', name: 'Gourmet Meal Pre-order', pssCode: 'MEAL' },
+  // { id: 'a3', name: 'Premium Wi-Fi (Unlimited)', pssCode: 'WIFI' },
+  // { id: 'a4', name: 'Preferred Zone Seat', pssCode: 'PFRD' },
+  // { id: 'a5', name: 'Twin-Seat Blocking', pssCode: 'TSEAT' },
+  // { id: 'a6', name: '1st Checked Bag (23kg)', pssCode: 'BAG1' },
+  // { id: 'a7', name: 'Heavy Checked Bag (32kg)', pssCode: 'BAGH' },
+  // { id: 'a8', name: 'Sports Equipment (Oversize)', pssCode: 'SPRT' },
+  // { id: 'a9', name: 'Lounge Access Voucher', pssCode: 'LOUA' },
+  // { id: 'a10', name: 'Standby Upgrade (J Class)', pssCode: 'UPGS' },
+  // { id: 'a11', name: 'Pet in Cabin', pssCode: 'PETC' },
+  // { id: 'a12', name: 'Unaccompanied Minor', pssCode: 'UMNR' },
+  // { id: 'a13', name: 'Priority Boarding', pssCode: 'PBDG' },
+
+    { id: 'a1', name: 'Extra Legroom', pssCode: 'EXLG' },
+    { id: 'a2', name: 'Extra Seat', pssCode: 'PFRD' },
+    { id: 'a3', name: 'Premium Wi-Fi', pssCode: 'WIFI' },
+    { id: 'a4', name: 'Extra Baggage', pssCode: 'PBDG' },
+
+
 ];
 
 interface AirlineInventoryFormProps {
