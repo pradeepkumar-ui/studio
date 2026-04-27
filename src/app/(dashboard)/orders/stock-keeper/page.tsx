@@ -352,13 +352,13 @@ import { TableFilterBar } from '@/components/TableFilterbar/TableFilterBar';
 import { useTableFilters } from '@/hooks/useTableFilters';
 
 const initialMockStock: any[] = [
-    { id: '1', sku: 'LOU-BOM-T5-01', category: 'Lounge', supplier: 'Lounge Stars', available: 12, reserved: 4, threshold: 5, status: 'In Stock', fulfillmentSource: 'Offersense', type: 'Service_Capacity', realTimePssSync: true },
+    { id: '1', sku: 'BOM-DXB-T5-01', category: 'Lounge', supplier: 'Lounge Stars', available: 12, reserved: 4, threshold: 5, status: 'In Stock', fulfillmentSource: 'Offersense', type: 'Service_Capacity', realTimePssSync: true },
     { id: '2', sku: 'MEAL-PRE-VEG', category: 'Catering', supplier: 'SkyCafe', available: 3, reserved: 2, threshold: 5, status: 'Low Stock', fulfillmentSource: 'Offersense', type: 'Physical', realTimePssSync: false },
-    { id: '3', sku: 'SEAT-EX-LG', category: 'Seats', supplier: 'Carrier', available: 450, reserved: 22, threshold: 50, status: 'In Stock', fulfillmentSource: 'PSS', type: 'Service_Capacity', realTimePssSync: false },
-    { id: '4', sku: 'WIFI-PREM-PASS', category: 'Connectivity', supplier: 'Carrier', available: 1000, reserved: 12, threshold: 100, status: 'In Stock', fulfillmentSource: 'PSS', type: 'Digital', realTimePssSync: false },
-    { id: '5', sku: 'BAG-PRI-01', category: 'Baggage', supplier: 'Airport', available: 50, reserved: 8, threshold: 10, status: 'In Stock', fulfillmentSource: 'Offersense', type: 'Service', realTimePssSync: true },
-    { id: '6', sku: 'LOU-DEL-T3', category: 'Lounge', supplier: 'Plaza Premium', available: 2, reserved: 5, threshold: 5, status: 'Low Stock', fulfillmentSource: 'Offersense', type: 'Service_Capacity', realTimePssSync: false },
-    { id: '7', sku: 'PARK-VALET-DEL', category: 'Parking', supplier: 'DXB Airports', available: 0, reserved: 0, threshold: 5, status: 'Out of Stock', fulfillmentSource: 'Offersense', type: 'Physical', realTimePssSync: true }
+    // { id: '3', sku: 'SEAT-EX-LG', category: 'Seats', supplier: 'Carrier', available: 450, reserved: 22, threshold: 50, status: 'In Stock', fulfillmentSource: 'PSS', type: 'Service_Capacity', realTimePssSync: false },
+    // { id: '4', sku: 'WIFI-PREM-PASS', category: 'Connectivity', supplier: 'Carrier', available: 1000, reserved: 12, threshold: 100, status: 'In Stock', fulfillmentSource: 'PSS', type: 'Digital', realTimePssSync: false },
+    // { id: '5', sku: 'BAG-PRI-01', category: 'Baggage', supplier: 'Airport', available: 50, reserved: 8, threshold: 10, status: 'In Stock', fulfillmentSource: 'Offersense', type: 'Service', realTimePssSync: true },
+    { id: '3', sku: 'BOM-DXB-T3', category: 'Lounge', supplier: 'Plaza Premium', available: 2, reserved: 5, threshold: 5, status: 'In Stock', fulfillmentSource: 'Offersense', type: 'Service_Capacity', realTimePssSync: false },
+    { id: '4', sku: 'PARK-VALET-DEL', category: 'Parking', supplier: 'DXB Airports', available: 0, reserved: 0, threshold: 5, status: 'Out of Stock', fulfillmentSource: 'Offersense', type: 'Physical', realTimePssSync: true }
 ];
 
 const STATS = [

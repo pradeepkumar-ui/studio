@@ -230,8 +230,8 @@ const mockPartners: any[] = [
     // { id: '4', name: 'Tech Connect', airportCode: 'DXB', terminal: 'T3', category: 'Tech', status: 'Active', contactEmail: 'info@techconnect.com', commissionRate: 18 },
     // { id: '5', name: 'Duty Free World', airportCode: 'CDG', terminal: 'T2', category: 'Retail', status: 'Onboarding', contactEmail: 'ops@dfw.com', commissionRate: 12 },
     // { id: '6', name: 'Premium Lounge', airportCode: 'FRA', terminal: 'T1', category: 'Services', status: 'Active', contactEmail: 'contact@premiumlounge.com', commissionRate: 14 },
-    { id: '7', name: 'Fast Track', airportCode: 'BOM', terminal: 'T2', category: 'F&B', status: 'Inactive', contactEmail: 'ops@fastfood.com', commissionRate: 8 },
-    { id: '8', name: 'Parking', airportCode: 'DEL', terminal: 'T1', category: 'Retail', status: 'Onboarding', contactEmail: 'info@electronicshub.com', commissionRate: 20 },
+    { id: '7', name: 'Fast Track', airportCode: 'BOM', terminal: 'T2', category: 'Services', status: 'Active', contactEmail: 'ops@fastfood.com', commissionRate: 8 },
+    { id: '8', name: 'Parking', airportCode: 'DEL', terminal: 'T1', category: 'Services', status: 'Active', contactEmail: 'info@electronicshub.com', commissionRate: 20 },
 ];
 
 // ─── Filter Options ───────────────────────────────────────────────────────────
