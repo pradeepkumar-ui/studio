@@ -21,7 +21,7 @@ FROM node:18-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PORT=8006
 
 # Security user
 RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
@@ -34,6 +34,6 @@ COPY --from=builder /app/node_modules ./node_modules
 
 USER nextjs
 
-EXPOSE 3000
+EXPOSE 8006
 
 CMD ["yarn", "start"]
