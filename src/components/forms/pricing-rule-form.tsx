@@ -230,7 +230,7 @@ export function PricingRuleForm({ rule, onSubmit, onCancel }: PricingRuleFormPro
                                     <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                                     <SelectContent>
                                         <SelectItem value="PERCENTAGE">Percentage (%)</SelectItem>
-                                        <SelectItem value="FIXED_AMOUNT">Fixed Amount ($)</SelectItem>
+                                        <SelectItem value="FIXED_AMOUNT">Fixed Amount (₹)</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </FormItem>
@@ -257,13 +257,13 @@ export function PricingRuleForm({ rule, onSubmit, onCancel }: PricingRuleFormPro
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField control={form.control} name="guardrails.minPriceAdjustment" render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Max Floor Discount ($)</FormLabel>
+                        <FormLabel>Max Floor Discount (₹)</FormLabel>
                         <FormControl><Input type="number" placeholder="Limit how much price can drop" {...field} /></FormControl>
                     </FormItem>
                 )}/>
                 <FormField control={form.control} name="guardrails.maxPriceAdjustment" render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Max Ceiling Markup ($)</FormLabel>
+                        <FormLabel>Max Ceiling Markup (₹)</FormLabel>
                         <FormControl><Input type="number" placeholder="Limit how much price can rise" {...field} /></FormControl>
                     </FormItem>
                 )}/>

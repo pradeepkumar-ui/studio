@@ -195,7 +195,7 @@ export function PromotionForm({ promotion, onSubmit, onCancel }: PromotionFormPr
                         </FormControl>
                         <SelectContent>
                             <SelectItem value="Percentage">Percentage (%)</SelectItem>
-                            <SelectItem value="Fixed Amount">Fixed Amount ($)</SelectItem>
+                            <SelectItem value="Fixed Amount">Fixed Amount (₹)</SelectItem>
                         </SelectContent>
                         </Select>
                         <FormMessage />
@@ -243,7 +243,7 @@ export function PromotionForm({ promotion, onSubmit, onCancel }: PromotionFormPr
                     name="creditAmount"
                     render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Credit Amount ($)</FormLabel>
+                        <FormLabel>Credit Amount (₹)</FormLabel>
                         <FormControl>
                             <Input type="number" placeholder="e.g., 50" {...field} />
                         </FormControl>

@@ -239,7 +239,7 @@ export function FareProductForm({ product, onSubmit, onCancel }: FareProductForm
                         <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
                         <SelectContent>
                             <SelectItem value="PERCENTAGE">Percentage (%)</SelectItem>
-                            <SelectItem value="ABSOLUTE">Absolute ($)</SelectItem>
+                            <SelectItem value="ABSOLUTE">Absolute (₹)</SelectItem>
                         </SelectContent>
                         </Select>
                         <FormDescription>Calculated on top of Base Fare.</FormDescription>

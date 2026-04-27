@@ -372,10 +372,10 @@ export function BundleForm({ bundle, onSubmit, onCancel }: { bundle: any | null,
                 <div className="flex items-center gap-2 text-[10px] font-black uppercase text-destructive tracking-widest"><ShieldCheck className="h-3 h-3" /> Monetization Guardrails</div>
                 <div className="grid grid-cols-2 gap-4">
                     <FormField control={form.control} name="pricing.floorPrice" render={({ field }) => (
-                        <FormItem><FormLabel className="text-xs">Absolute Floor ($)</FormLabel><FormControl><Input type="number" className="h-8" {...field} /></FormControl></FormItem>
+                        <FormItem><FormLabel className="text-xs">Absolute Floor (₹)</FormLabel><FormControl><Input type="number" className="h-8" {...field} /></FormControl></FormItem>
                     )} />
                     <FormField control={form.control} name="pricing.ceilingPrice" render={({ field }) => (
-                        <FormItem><FormLabel className="text-xs">Absolute Ceiling ($)</FormLabel><FormControl><Input type="number" className="h-8" {...field} /></FormControl></FormItem>
+                        <FormItem><FormLabel className="text-xs">Absolute Ceiling (₹)</FormLabel><FormControl><Input type="number" className="h-8" {...field} /></FormControl></FormItem>
                     )} />
                 </div>
              </div>

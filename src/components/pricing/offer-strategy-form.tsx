@@ -94,21 +94,17 @@ interface OfferStrategyFormProps {
 }
 
 const mockAncillariesFallback = [
-    { id: 'AGG-001', configName: 'Premium Route Baggage', ancillaryName: '1st Checked Bag', basePrice: 1200, currency: 'INR' },
-    { id: 'AGG-002', configName: 'Long-Haul Seat', ancillaryName: 'Extra Legroom Seat', basePrice: 1500, currency: 'INR' },
-    { id: 'AGG-003', configName: 'Hub Lounge LHR', ancillaryName: 'Executive Lounge', basePrice: 1000, currency: 'INR' },
-    { id: 'AGG-004', configName: 'Fast Track Gate', ancillaryName: 'Priority Boarding', basePrice: 1500, currency: 'INR' },
-    { id: 'AGG-005', configName: 'Inflight Connect', ancillaryName: 'Streaming Wi-Fi', basePrice: 500, currency: 'INR' },
-    { id: 'AGG-006', configName: 'Gourmet Selection', ancillaryName: 'Premium Hot Meal', basePrice: 2500, currency: 'INR' },
-    { id: 'AGG-007', configName: 'Comfort Pack', ancillaryName: 'Amenity Kit', basePrice: 1200, currency: 'INR' },
+    { id: 'AGG-002', configName: 'Extra Legroom Seat', ancillaryName: 'Long-Haul Seat', basePrice: 1500, currency: 'INR' },
+    { id: 'AGG-003', configName: 'Premium Wi-Fi (Unlimited)', ancillaryName: 'Wi-Fi Pass', basePrice: 500, currency: 'INR' },
+    { id: 'AGG-001', configName: 'Priority Baggage', ancillaryName: 'Priority handling', basePrice: 1200, currency: 'INR' },
+    { id: 'AGG-004', configName: 'Extra Seats', ancillaryName: 'Extra seat', basePrice: 800, currency: 'INR' },
 ];
 
 const mockCohortsFallback = [
-    { id: 'C-001', cohortId: 'PLAT_SOLO_BIZ', name: 'Platinum Solo Business' },
-    { id: 'C-002', cohortId: 'IN_WEB_PROMO', name: 'India POS Web Promo' },
-    { id: 'C-003', cohortId: 'FAMILY_TRIP', name: 'Leisure Families' },
-    { id: 'C-004', cohortId: 'US_CORP_ELITE', name: 'US Corporate Elite' },
-    { id: 'C-005', cohortId: 'LAST_MINUTE_PAX', name: 'Last-Minute Travelers' },
+    { id: 'AC1', cohortId: 'PLAT_SOLO_BIZ', name: 'Frequent Traveller' },
+    { id: 'AC2', cohortId: 'IN_WEB_PROMO', name: 'Family Traveller' },
+    { id: 'AC3', cohortId: 'US_FAM_LM', name: 'Price Sensitive' },
+    { id: 'AC4', cohortId: 'PRE_LEISURE', name: 'Premium Upsell' },
 ];
 
 export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFormProps) {
@@ -278,13 +274,13 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
                               {calculation.selectedProducts.map((p: any) => (
                                   <div key={p.id} className="flex justify-between items-center text-sm">
                                       <span className="text-muted-foreground font-medium">{p.ancillaryName || p.configName}</span>
-                                      <span className="font-mono font-bold">${p.basePrice?.toFixed(2)}</span>
+                                      <span className="font-mono font-bold">₹{p.basePrice?.toFixed(2)}</span>
                                   </div>
                               ))}
                               <Separator className="my-2" />
                               <div className="flex justify-between items-center text-sm font-black">
                                   <span>Total Registry Base Value</span>
-                                  <span className="text-primary">${calculation.baseTotal.toFixed(2)}</span>
+                                  <span className="text-primary">₹{calculation.baseTotal.toFixed(2)}</span>
                               </div>
                           </div>
                       </div>
@@ -305,7 +301,7 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
                                 <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                                 <SelectContent>
                                     <SelectItem value="PercentageDiscount">Percentage Discount (%)</SelectItem>
-                                    <SelectItem value="FixedDiscount">Fixed Discount ($)</SelectItem>
+                                    <SelectItem value="FixedDiscount">Fixed Discount (₹)</SelectItem>
                                     <SelectItem value="FixedPrice">Override: Fixed Price</SelectItem>
                                 </SelectContent>
                             </Select>
@@ -374,10 +370,10 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
                           <ShieldCheck className="h-3.5 w-3.5" /> 5. Commercial Guardrails
                       </div>
                       <FormField control={form.control} name="guardRails.minPrice" render={({ field }) => (
-                          <FormItem><FormLabel className="text-xs">Absolute Floor Price ($)</FormLabel><FormControl><Input type="number" className="h-8 text-xs" {...field} /></FormControl></FormItem>
+                          <FormItem><FormLabel className="text-xs">Absolute Floor Price (₹)</FormLabel><FormControl><Input type="number" className="h-8 text-xs" {...field} /></FormControl></FormItem>
                       )} />
                       <FormField control={form.control} name="guardRails.maxPrice" render={({ field }) => (
-                          <FormItem><FormLabel className="text-xs">Absolute Ceiling Price ($)</FormLabel><FormControl><Input type="number" className="h-8 text-xs" {...field} /></FormControl></FormItem>
+                          <FormItem><FormLabel className="text-xs">Absolute Ceiling Price (₹)</FormLabel><FormControl><Input type="number" className="h-8 text-xs" {...field} /></FormControl></FormItem>
                       )} />
                       <p className="text-[9px] text-muted-foreground italic">Enforced at runtime before publishing.</p>
                   </div>
@@ -395,19 +391,19 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
                         <div className="space-y-4">
                             <div className="flex justify-between items-center text-slate-400 text-xs uppercase font-bold tracking-tighter">
                                 <span>Base Aggregate Sum</span>
-                                <span className="font-mono text-slate-200">${calculation.baseTotal.toFixed(2)}</span>
+                                <span className="font-mono text-slate-200">₹{calculation.baseTotal.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between items-center text-slate-400 text-xs uppercase font-bold tracking-tighter">
                                 <span>Offer Adjusted</span>
                                 <div className="text-right">
-                                    <div className="font-mono text-emerald-400">-${(calculation.baseTotal - calculation.offerAdjusted).toFixed(2)}</div>
+                                    <div className="font-mono text-emerald-400">-₹{(calculation.baseTotal - calculation.offerAdjusted).toFixed(2)}</div>
                                     <div className="text-[10px] text-slate-500">({watchPricing.type})</div>
                                 </div>
                             </div>
                             {watchDynamic.enabled && (
                                 <div className="flex justify-between items-center text-slate-400 text-xs uppercase font-bold tracking-tighter">
                                     <span>Dynamic Flex ({watchDynamic.adjustmentPercent}%)</span>
-                                    <span className="font-mono text-amber-400">+${(calculation.finalCalculated - calculation.offerAdjusted).toFixed(2)}</span>
+                                    <span className="font-mono text-amber-400">+₹{(calculation.finalCalculated - calculation.offerAdjusted).toFixed(2)}</span>
                                 </div>
                             )}
                         </div>
@@ -419,7 +415,7 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
                                 <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Final Sellable Price</span>
                                 <div className="text-right">
                                     <div className={cn("text-4xl font-black font-mono tracking-tighter", calculation.wasCapped ? "text-amber-500" : "text-white")}>
-                                        ${calculation.cappedPrice.toFixed(2)}
+                                        ₹{calculation.cappedPrice.toFixed(2)}
                                     </div>
                                     <div className="text-[10px] text-slate-500 font-bold uppercase">per {watchType.toLowerCase()}</div>
                                 </div>
@@ -499,7 +495,7 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
                                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{form.getValues('type')} Strategy</p>
                             </div>
                             <div className="text-right">
-                                <p className="text-3xl font-black text-primary font-mono">${calculation.cappedPrice.toFixed(2)}</p>
+                                <p className="text-3xl font-black text-primary font-mono">₹{calculation.cappedPrice.toFixed(2)}</p>
                                 <p className="text-[9px] font-bold text-muted-foreground uppercase">Inc. Dynamic Adjustments</p>
                             </div>
                         </div>
@@ -514,7 +510,7 @@ export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFo
                                             <p className="text-xs font-bold">{p.ancillaryName}</p>
                                             <p className="text-[9px] text-muted-foreground uppercase font-mono">{p.configName}</p>
                                         </div>
-                                        <Badge variant="outline" className="text-[9px] font-mono">${p.basePrice?.toFixed(2)}</Badge>
+                                        <Badge variant="outline" className="text-[9px] font-mono">₹{p.basePrice?.toFixed(2)}</Badge>
                                     </div>
                                 ))}
                             </div>
