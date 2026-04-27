@@ -285,13 +285,10 @@ import { TableFilterBar } from '@/components/TableFilterbar/TableFilterBar';
 import { useTableFilters } from '@/hooks/useTableFilters';
 
 const mockAirlineAncillaries: any[] = [
-  { id: '1', ancillaryCode: 'EXLG', name: 'Extra Legroom Seat', shortName: 'Legroom+', category: 'Seat', subcategory: 'Extra legroom seat', status: 'Active', version: 1, airlineCode: 'GAB', owningBusinessUnit: 'Revenue', providerName: 'Global Airways' },
-  { id: '2', ancillaryCode: 'WIFU', name: 'Premium Wi-Fi (Unlimited)', shortName: 'Ultra Wi-Fi', category: 'Wi-Fi / connectivity', subcategory: 'Wi-Fi pass', status: 'Active', version: 2, airlineCode: 'GAB', owningBusinessUnit: 'Inflight', providerName: 'Global Airways' },
-  { id: '3', ancillaryCode: 'UPGS', name: 'Standby Upgrade (J Class)', shortName: 'Standby Upgr', category: 'Upgrade', subcategory: 'Upgrade to business', status: 'Active', version: 1, airlineCode: 'SBA', owningBusinessUnit: 'Retailing', providerName: 'SkyBridge Airlines' },
-  { id: '4', ancillaryCode: 'BAGG', name: 'Priority Baggage', shortName: 'Priority Bag', category: 'Baggage', subcategory: 'Priority handling', status: 'Active', version: 1, airlineCode: 'GAB', owningBusinessUnit: 'Operations', providerName: 'Global Airways' },
-  { id: '5', ancillaryCode: 'MEAL', name: 'Premium Meal', shortName: 'Gourmet Meal', category: 'Meal', subcategory: 'Premium dining', status: 'Onboarding', version: 1, airlineCode: 'SBA', owningBusinessUnit: 'Inflight', providerName: 'SkyBridge Airlines' },
-  { id: '6', ancillaryCode: 'LOUN', name: 'Lounge Access', shortName: 'Lounge Pass', category: 'Lounge', subcategory: 'Airport lounge', status: 'Active', version: 2, airlineCode: 'MLN', owningBusinessUnit: 'Loyalty', providerName: 'MetroLink Air' },
-  { id: '7', ancillaryCode: 'PETS', name: 'Pet in Cabin', shortName: 'Pet Travel', category: 'Special', subcategory: 'Pet transport', status: 'Inactive', version: 1, airlineCode: 'GAB', owningBusinessUnit: 'Customer', providerName: 'Global Airways' },
+  { id: '1', ancillaryCode: 'EXLG', name: 'Extra Legroom Seat', shortName: 'Legroom+',              category: 'Seat', subcategory: 'Extra legroom seat', status: 'Active', version: 1, airlineCode: 'GAB', owningBusinessUnit: 'Revenue', providerName: 'Global Airways' },
+  { id: '2', ancillaryCode: 'WIFU', name: 'Premium Wi-Fi (Unlimited)', shortName: 'Ultra Wi-Fi',    category: 'Extra Legroom', subcategory: 'Wi-Fi pass', status: 'Active', version: 2, airlineCode: 'GAB', owningBusinessUnit: 'Inflight', providerName: 'Global Airways' },
+  { id: '3', ancillaryCode: 'UPGS', name: 'Standby Upgrade (J Class)', shortName: 'Standby Upgr',   category: 'Baggage (10kg)', subcategory: 'Upgrade to business', status: 'Active', version: 1, airlineCode: 'SBA', owningBusinessUnit: 'Retailing', providerName: 'SkyBridge Airlines' },
+  { id: '4', ancillaryCode: 'BAGG', name: 'Priority Baggage', shortName: 'Priority Bag',            category: 'Wi-Fi', subcategory: 'Priority handling', status: 'Active', version: 1, airlineCode: 'GAB', owningBusinessUnit: 'Operations', providerName: 'Global Airways' },
 ];
 
 // ─── Filter Options ───────────────────────────────────────────────────────────

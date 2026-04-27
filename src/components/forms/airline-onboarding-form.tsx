@@ -277,14 +277,14 @@ const STEPS: StepItem[] = [
 // ─── Eligibility Banner ───────────────────────────────────────────────────────
 const EligibilityBanner = ({ name }: { name: string }) => (
   <div className="flex items-start gap-3 px-4 py-3.5 rounded-2xl bg-violet-50 border border-violet-100">
-    <div className="w-8 h-8 rounded-xl bg-violet-600 flex items-center justify-center shrink-0 mt-0.5">
+    <div className="w-8 h-8 rounded-xl bg-[hsl(var(--primary))] flex items-center justify-center shrink-0 mt-0.5">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
         <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     </div>
     <div>
-      <p className="text-xs font-bold text-violet-800 mb-0.5">Carrier Eligibility</p>
-      <p className="text-xs text-violet-600/80 leading-relaxed">
+      <p className="text-xs font-bold text-indigo-600 mb-0.5">Carrier Eligibility</p>
+      <p className="text-xs text-indigo-600 leading-relaxed">
         By proceeding, you verify that{' '}
         <span className="font-semibold">{name || 'this carrier'}</span> has signed the
         Interline Retailing Agreement (IRA-2024). Standard onboarding fees apply to new Tier 1 connections.
@@ -594,7 +594,7 @@ export function AirlineOnboardingForm({ airline, onSubmit, onCancel }: AirlineOn
               <button
                 type="button"
                 onClick={handleNext}
-                className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white rounded-xl bg-violet-600 hover:bg-violet-700 active:bg-violet-800 shadow-lg shadow-violet-200 hover:shadow-violet-300 transition-all duration-150 cursor-pointer"
+                className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white rounded-xl bg-[hsl(var(--primary))] hover:bg-violet-700 active:bg-violet-800 shadow-lg shadow-violet-200 hover:shadow-violet-300 transition-all duration-150 cursor-pointer"
               >
                 Next Step
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">

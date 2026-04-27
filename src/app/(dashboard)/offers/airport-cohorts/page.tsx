@@ -287,11 +287,10 @@ import { TableFilterBar } from '@/components/TableFilterbar/TableFilterBar';
 import { useTableFilters } from '@/hooks/useTableFilters';
 
 const mockAirportCohorts: any[] = [
-{ id: 'AC-001', name: 'BOM High-Wait Business', cohortId: 'BOM_BIZ_WAIT', status: 'Active', airportCode: 'BOM', description: 'Business class passengers at BOM with >4h layover.', type: 'dynamic', priority: 90 },
-{ id: 'AC-002', name: 'DEL Transit Family', cohortId: 'DEL_FAM_TRANSIT', status: 'Active', airportCode: 'DEL', description: 'Families in transit at DEL requiring comfort services.', type: 'dynamic', priority: 70 },
-{ id: 'AC-003', name: 'DEL Premium Arrivals', cohortId: 'DEL_PRE_ARR', status: 'Active', airportCode: 'DEL', description: 'First/Business class passengers arriving at DEL.', type: 'static', priority: 85 },
-{ id: 'AC-004', name: 'BOM Transit Premium', cohortId: 'BOM_TRANSIT_PRE', status: 'Onboarding', airportCode: 'BOM', description: 'Premium cabin passengers with layover at BOM.', type: 'dynamic', priority: 80 },
-{ id: 'AC-005', name: 'DEL Student Travel', cohortId: 'DEL_STUDENT', status: 'Inactive', airportCode: 'DEL', description: 'Student travelers departing from DEL.', type: 'static', priority: 40 }
+{ id: 'APC1', name: 'Time Sensitive', cohortId: 'BOM_BIZ_WAIT', status: 'Active', airportCode: 'BOM', description: 'Business class passengers at BOM with >4h layover.', type: 'dynamic', priority: 90 },
+{ id: 'APC2', name: 'Premium Taveller', cohortId: 'DEL_FAM_TRANSIT', status: 'Active', airportCode: 'DEL', description: 'Families in transit at DEL requiring comfort services.', type: 'dynamic', priority: 70 },
+{ id: 'APC3', name: 'Family', cohortId: 'DEL_PRE_ARR', status: 'Active', airportCode: 'DEL', description: 'First/Business class passengers arriving at DEL.', type: 'static', priority: 85 },
+{ id: 'APC4', name: 'Leisure Traveller', cohortId: 'BOM_TRANSIT_PRE', status: 'Onboarding', airportCode: 'BOM', description: 'Premium cabin passengers with layover at BOM.', type: 'dynamic', priority: 80 },
 ];
 
 const STATS = [

@@ -298,8 +298,8 @@ import { useTableFilters } from '@/hooks/useTableFilters';
 
 const mockCohorts: Cohort[] = [
     { 
-        id: 'COH-001', 
-        name: 'Platinum Solo Business', 
+        id: 'AC1', 
+        name: 'Frequent Traveller', 
         cohortId: 'PLAT_SOLO_BIZ', 
         status: 'Active', 
         domain: 'Airline',
@@ -308,8 +308,8 @@ const mockCohorts: Cohort[] = [
         priority: 95,
     },
     { 
-        id: 'COH-002', 
-        name: 'India POS Web Promo', 
+        id: 'AC2', 
+        name: 'Family Traveller', 
         cohortId: 'IN_WEB_PROMO', 
         status: 'Active', 
         domain: 'Airline',
@@ -318,8 +318,8 @@ const mockCohorts: Cohort[] = [
         priority: 50,
     },
      { 
-        id: 'COH-003', 
-        name: 'Last Minute Family - US', 
+        id: 'AC3', 
+        name: 'Price Sensitive', 
         cohortId: 'US_FAM_LM', 
         status: 'Active', 
         domain: 'Airline',
@@ -328,34 +328,14 @@ const mockCohorts: Cohort[] = [
         priority: 75,
     },
     { 
-        id: 'COH-004', 
-        name: 'Premium Cabin Leisure', 
+        id: 'AC4', 
+        name: 'Premium Upsell', 
         cohortId: 'PRE_LEISURE', 
         status: 'Onboarding', 
         domain: 'Airline',
         description: 'Leisure travelers booking Business/First class on long-haul.', 
         type: 'dynamic',
         priority: 85,
-    },
-    { 
-        id: 'COH-005', 
-        name: 'Corporate Travel Program', 
-        cohortId: 'CORP_TRAVEL', 
-        status: 'Active', 
-        domain: 'Airline',
-        description: 'Corporate accounts with negotiated rates.', 
-        type: 'static',
-        priority: 100,
-    },
-    { 
-        id: 'COH-006', 
-        name: 'Student Travel Segment', 
-        cohortId: 'STUDENT', 
-        status: 'Inactive', 
-        domain: 'Airline',
-        description: 'Student travelers with youth fares.', 
-        type: 'static',
-        priority: 30,
     },
 ];
 

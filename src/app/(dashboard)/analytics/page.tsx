@@ -145,9 +145,11 @@ export default function SitaRetailingAnalyticsPage() {
             <div className="space-y-6 mt-6">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <Card className="lg:col-span-8">
+                      <div className='mb-5'>
                         <Title className="flex items-center gap-2"><Zap className="h-4 w-4 text-primary" /> Carrier Performance Matrix</Title>
                         <Text>Yield and conversion efficiency across participating airlines.</Text>
-                        <Table className="mt-6">
+                      </div>
+                        <Table className="">
                         <TableHeader>
                             <TableRow>
                             <TableHead>Airline Partner</TableHead>
@@ -187,9 +189,11 @@ export default function SitaRetailingAnalyticsPage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <Card>
+                      <div className='mb-5'>
                         <Title className="flex items-center gap-2"><Ticket className="h-4 w-4 text-primary" /> Airline Offer Summary</Title>
                         <Text>Top carrier-side monetization strategies by engagement.</Text>
-                        <Table className="mt-4">
+                      </div>
+                        <Table className="">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Offer Strategy</TableHead>
@@ -213,9 +217,11 @@ export default function SitaRetailingAnalyticsPage() {
                         </Table>
                     </Card>
                     <Card>
+                      <div className='mb-5'>
                         <Title className="flex items-center gap-2"><ShoppingCart className="h-4 w-4 text-primary" /> Recent Carrier Transactions</Title>
                         <Text>Unified summary of latest airline-domain ecosystem settlements.</Text>
-                        <Table className="mt-4">
+                      </div>
+                        <Table className="">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Order ID</TableHead>
@@ -255,9 +261,11 @@ export default function SitaRetailingAnalyticsPage() {
                     />
                 </Card>
                 <Card className="lg:col-span-8">
+                  <div className='mb-5'>
                     <Title className="flex items-center gap-2"><MapPin className="h-4 w-4 text-primary" /> Node Operational Intelligence</Title>
                     <Text>Real-time capture rates and throughput signals per terminal node.</Text>
-                    <Table className="mt-6">
+                  </div>
+                    <Table className="">
                     <TableHeader>
                         <TableRow>
                         <TableHead>Airport Hub & Terminal</TableHead>
@@ -293,9 +301,11 @@ export default function SitaRetailingAnalyticsPage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <Card>
+                      <div className='mb-5'>
                         <Title className="flex items-center gap-2"><Ticket className="h-4 w-4 text-primary" /> Hub Offer Performance</Title>
                         <Text>Top terminal-side services and bundles by conversion.</Text>
-                        <Table className="mt-4">
+                      </div>
+                        <Table className="">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Hub Service</TableHead>
@@ -319,9 +329,11 @@ export default function SitaRetailingAnalyticsPage() {
                         </Table>
                     </Card>
                     <Card>
+                      <div className='mb-5'>
                         <Title className="flex items-center gap-2"><ShoppingCart className="h-4 w-4 text-primary" /> Terminal Transaction Log</Title>
                         <Text>Summary of latest hub-domain ecosystem conversions.</Text>
-                        <Table className="mt-4">
+                      </div>
+                        <Table className="">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Order ID</TableHead>
