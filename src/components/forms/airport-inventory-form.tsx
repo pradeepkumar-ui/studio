@@ -329,7 +329,7 @@ export type AirportInventory = z.infer<typeof airportInventorySchema>;
 const mockAirportAncillaries = [
 { id: 'ap1', name: 'Executive Lounge Entry', airportId: 'BOM', terminal: 'T5', providerId: 'Lounge Stars' },
 { id: 'ap2', name: 'Fast Track Security', airportId: 'DEL', terminal: 'T4', providerId: 'Airport Authority' },
-{ id: 'ap3', name: 'Parking', airportId: 'DEL', terminal: 'T1', providerId: 'Changi Valet' },
+{ id: 'ap3', name: 'Food and Beverage', airportId: 'DEL', terminal: 'T1', providerId: 'Changi Valet' },
 { id: 'ap4', name: 'Premium WiFi Access', airportId: 'BOM', terminal: 'T3', providerId: "Sleep'nFly" },
 // { id: 'ap5', name: 'Porter Service (3 Bags)', airportId: 'DEL', terminal: 'T2', providerId: 'Baggage Helpers' }
 ];

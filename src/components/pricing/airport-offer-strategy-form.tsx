@@ -104,17 +104,19 @@ interface AirportOfferStrategyFormProps {
 //     { id: 'HUB-AGG-007', configName: 'SIN Transit Comfort', ancillaryName: 'Amenity Kit Hub', basePrice: 15.00, currency: 'INR' },
 // ];
 
- const mockAirportAncillariesFallback = [
-    { id: 'HUB-AGG-001', configName: 'BOM Fast Track', ancillaryName: 'Executive Lounge Access', basePrice: 45.00, currency: 'INR' },
+const mockAirportAncillariesFallback = [
+    { id: 'HUB-AGG-001', configName: 'BOM Fast Track', ancillaryName: 'Fast Track Security', basePrice: 45.00, currency: 'INR' },
     { id: 'HUB-AGG-002', configName: 'DEL Fast Track', ancillaryName: 'Fast Track Security', basePrice: 15.00, currency: 'INR' },
-    { id: 'HUB-AGG-003', configName: 'BOM Lounge', ancillaryName: 'VIP Valet Parking', basePrice: 20.00, currency: 'INR' },
-    { id: 'HUB-AGG-004', configName: 'DEL Lounge', ancillaryName: 'Priority Boarding Hub', basePrice: 10.00, currency: 'INR' },
-    { id: 'HUB-AGG-005', configName: 'DEL Wi-Fi', ancillaryName: 'Sleeping Pod (6h)', basePrice: 60.00, currency: 'INR' },
-    { id: 'HUB-AGG-006', configName: 'BOM Wi-Fi', ancillaryName: 'Airport Chauffeur', basePrice: 85.00, currency: 'INR' },
-    { id: 'HUB-AGG-007', configName: 'DEL Parking', ancillaryName: 'Sleeping Pod (6h)', basePrice: 60.00, currency: 'INR' },
-    { id: 'HUB-AGG-008', configName: 'BOM Parking', ancillaryName: 'Airport Chauffeur', basePrice: 85.00, currency: 'INR' },
-];
 
+    { id: 'HUB-AGG-003', configName: 'BOM Lounge', ancillaryName: 'Executive Lounge Access', basePrice: 20.00, currency: 'INR' },
+    { id: 'HUB-AGG-004', configName: 'DEL Lounge', ancillaryName: 'Executive Lounge Access', basePrice: 10.00, currency: 'INR' },
+
+    { id: 'HUB-AGG-005', configName: 'DEL Wi-Fi', ancillaryName: 'Airport Wi-Fi Access', basePrice: 60.00, currency: 'INR' },
+    { id: 'HUB-AGG-006', configName: 'BOM Wi-Fi', ancillaryName: 'Airport Wi-Fi Access', basePrice: 85.00, currency: 'INR' },
+
+    { id: 'HUB-AGG-007', configName: 'DEL Food and Beverage', ancillaryName: 'Meal Voucher / F&B Credit', basePrice: 60.00, currency: 'INR' },
+    { id: 'HUB-AGG-008', configName: 'BOM Food and Beverage', ancillaryName: 'Meal Voucher / F&B Credit', basePrice: 85.00, currency: 'INR' },
+];
 
 // const mockAirportCohortsFallback = [
 //     { id: 'AC-001', cohortId: 'BOM_BIZ_WAIT', name: 'BOM High-Wait Business' },

@@ -268,8 +268,8 @@ const initialMockAggregates: any[] = [
   { id: 'HUB-AGG-005', configName: 'DEL Wi-Fi', ancillaryName: 'Wi-Fi', category: 'Wi-fi', basePrice: 2000, currency: 'INR', status: 'Active' },
   { id: 'HUB-AGG-006', configName: 'BOM Wi-fi', ancillaryName: 'Wi-Fi', category: 'Wi-Fi', basePrice: 700, currency: 'INR', status: 'Active' },
   
-  { id: 'HUB-AGG-007', configName: 'DEL Parking', ancillaryName: 'Parking', category: 'Parking', basePrice: 2000, currency: 'INR', status: 'Active' },
-  { id: 'HUB-AGG-008', configName: 'BOM Parking', ancillaryName: 'Parking', category: 'Parking', basePrice: 700, currency: 'INR', status: 'Active' },
+  { id: 'HUB-AGG-007', configName: 'DEL Food and Beverage', ancillaryName: 'Food and Beverage', category: 'Food', basePrice: 2000, currency: 'INR', status: 'Active' },
+  { id: 'HUB-AGG-008', configName: 'BOM Food and Beverage', ancillaryName: 'Food and Beverage', category: 'Food', basePrice: 700, currency: 'INR', status: 'Active' },
 ];
 
 

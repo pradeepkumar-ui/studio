@@ -337,6 +337,16 @@ const mockCohorts: Cohort[] = [
         type: 'dynamic',
         priority: 85,
     },
+    { 
+        id: 'AC5', 
+        name: 'Business Traveller', 
+        cohortId: 'CORP_FREQ_EXEC', 
+        status: 'Active', 
+        domain: 'Airline',
+        description: 'Corporate or work-related travel, prioritizes time, flexibility, and comfort', 
+        type: 'dynamic',
+        priority: 90,
+    }
 ];
 
 const STATS = [

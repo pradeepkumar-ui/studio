@@ -163,14 +163,14 @@ type Step =
 // --- MOCK CONSTANTS ---
 
 const ALL_OFFERS = [
-    { id: 'O-A1', name: 'Seat', domain: 'Airline', basePrice: 720, type: 'Seat' },
-    { id: 'O-A2', name: 'Extra Legroom', domain: 'Airline', basePrice: 1650, type: 'Seat' },
-    { id: 'O-A3', name: 'Extra Baggage (23kg)', domain: 'Airline', basePrice: 1140, type: 'Baggage' },
-    { id: 'O-A6', name: 'In-flight Wi-Fi', domain: 'Airline', basePrice: 500, type: 'Digital' },
-    { id: 'O-P1', name: 'Executive Lounge Access', domain: 'Airport', basePrice: 2070, type: 'Lounge' },
-    { id: 'O-P2', name: 'Security Fast Track', domain: 'Airport', basePrice: 770, type: 'Priority' },
-    { id: 'O-P3', name: 'Parking', domain: 'Airport', basePrice: 800, type: 'Service' },
-    { id: 'O-P4', name: 'Airport Wi-Fi', domain: 'Airport', basePrice: 500, type: 'Service' },
+    { id: 'O-A2', name: 'Extra Legroom Plus', domain: 'Airline', basePrice: 1650, type: 'Seat' },
+    { id: 'O-A6', name: 'Wi-Fi Plus', domain: 'Airline', basePrice: 500, type: 'Digital' },
+    { id: 'O-A3', name: 'Baggage Plus', domain: 'Airline', basePrice: 1140, type: 'Baggage' },
+    { id: 'O-A1', name: 'Seat Plus', domain: 'Airline', basePrice: 500, type: 'Seat' },
+    { id: 'O-P2', name: 'Fast Track Plus', domain: 'Airport', basePrice: 990, type: 'Priority' },
+    { id: 'O-P1', name: 'Lounge Plus', domain: 'Airport', basePrice: 2070, type: 'Lounge' },
+    { id: 'O-P3', name: 'Food and Beverage', domain: 'Airport', basePrice: 800, type: 'Service' },
+    { id: 'O-P4', name: 'Wi-Fi Plus', domain: 'Airport', basePrice: 500, type: 'Service' },
 ];
 export default function OffersenseSimulatorPage() {
   const [currentStep, setCurrentStep] = useState<Step>('INPUT');
@@ -1109,7 +1109,7 @@ const QR_DOTS = [
                                              {selectedOffers.filter(id => ALL_OFFERS.find(o => o.id === id)?.domain === 'Airline').length > 0 ? selectedOffers.filter(id => ALL_OFFERS.find(o => o.id === id)?.domain === 'Airline').map(id => (
                                                  <div key={id} className="flex justify-between text-sm font-bold">
                                                      <span className="text-slate-700">{ALL_OFFERS.find(o => o.id === id)?.name}</span>
-                                                     <span className="font-mono">₹{pricedOffers.find(o => o.id === id)?.finalPrice.toFixed(2) ?? "1500.00"} </span>
+                                                     <span className="font-mono"> ₹{(pricedOffers.find(o => o.id === id)?.finalPrice ?? ALL_OFFERS.find(o => o.id === id)?.basePrice ?? 0).toFixed(2)}</span>
                                                  </div>
                                              )) : <p className="text-xs italic text-muted-foreground">None added.</p>}
                                         </div>
@@ -1118,7 +1118,7 @@ const QR_DOTS = [
                                              {selectedOffers.filter(id => ALL_OFFERS.find(o => o.id === id)?.domain === 'Airport').length > 0 ? selectedOffers.filter(id => ALL_OFFERS.find(o => o.id === id)?.domain === 'Airport').map(id => (
                                                  <div key={id} className="flex justify-between text-sm font-bold">
                                                      <span className="text-slate-700">{ALL_OFFERS.find(o => o.id === id)?.name}</span>
-                                                     <span className="font-mono">₹{pricedOffers.find(o => o.id === id)?.finalPrice.toFixed(2)}</span>
+                                                    <span className="font-mono"> ₹{(pricedOffers.find(o => o.id === id)?.finalPrice ?? ALL_OFFERS.find(o => o.id === id)?.basePrice  ?? 0).toFixed(2)}</span>
                                                  </div>
                                              )) : <p className="text-xs italic text-muted-foreground">None added.</p>}
                                         </div>
@@ -1128,8 +1128,7 @@ const QR_DOTS = [
                                 <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 flex justify-between items-center">
                                     <p className="font-black text-primary uppercase text-sm">Ecosystem Order Value</p>
                                     <p className="text-4xl font-black font-mono tracking-tighter text-slate-900">
-                                        ₹{selectedOffers.reduce((sum, id) => sum + (pricedOffers.find(o => o.id === id)?.finalPrice || 0), 0).toFixed(2)}
-                                    </p>
+                                       ₹{selectedOffers.reduce((sum, id) => {const price = pricedOffers.find(o => o.id === id)?.finalPrice ?? ALL_OFFERS.find(o => o.id === id)?.basePrice ?? 0; return sum + price;}, 0).toFixed(2)}   </p>
                                 </div>
                             </CardContent>
                         </Card>

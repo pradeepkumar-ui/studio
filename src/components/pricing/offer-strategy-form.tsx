@@ -105,6 +105,7 @@ const mockCohortsFallback = [
     { id: 'AC2', cohortId: 'IN_WEB_PROMO', name: 'Family Traveller' },
     { id: 'AC3', cohortId: 'US_FAM_LM', name: 'Price Sensitive' },
     { id: 'AC4', cohortId: 'PRE_LEISURE', name: 'Premium Upsell' },
+    { id: 'AC5', cohortId: 'CORP_FREQ_EXEC', name: 'Business Traveller' },
 ];
 
 export function OfferStrategyForm({ offer, onSubmit, onCancel }: OfferStrategyFormProps) {

@@ -351,7 +351,7 @@ const initialMockStock: any[] = [
     { id: '3', sku: 'BUGGY-DEL-T3', airportCode: 'DEL', terminal: 'T3', category: 'Ground Transport', available: 2, reserved: 1, threshold: 2, status: 'Low Stock', fulfillmentSource: 'Offersense', protocol: 'Resource-count', realTimeSync: false },
     // { id: '4', sku: 'ASSIST-BOM-T3', airportCode: 'BOM', terminal: 'T3', category: 'Meet & Assist', available: 8, reserved: 0, threshold: 2, status: 'In Stock', fulfillmentSource: 'Offersense', protocol: 'Resource-count', realTimeSync: true },
     { id: '5', sku: 'LOUNGE-DEL-T2E', airportCode: 'DEL', terminal: 'T2E', category: 'Lounge', available: 0, reserved: 0, threshold: 3, status: 'Out of Stock', fulfillmentSource: 'Offersense', protocol: 'Slot-based', isSlotActive: true, realTimeSync: true },
-    { id: '6', sku: 'PARK-BOM-T1', airportCode: 'BOM', terminal: 'T1', category: 'Parking', available: 25, reserved: 8, threshold: 10, status: 'In Stock', fulfillmentSource: 'Supplier_API', protocol: 'Capacity-based', realTimeSync: false }
+    { id: '6', sku: 'FOOD-BOM-T1', airportCode: 'BOM', terminal: 'T1', category: 'Food and Beverage', available: 25, reserved: 8, threshold: 10, status: 'In Stock', fulfillmentSource: 'Supplier_API', protocol: 'Capacity-based', realTimeSync: false }
 ];
 const STATS = [
   { label: "Total Hub SKUs", value: 42, color: "purple" as const, icon: <Globe /> },
